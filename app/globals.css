@@ -122,4 +122,45 @@
   body {
     @apply bg-background text-foreground;
   }
+
+  /* RTL-aware scrollbar styling */
+  [dir="rtl"] ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  [dir="rtl"] ::-webkit-scrollbar-thumb {
+    @apply bg-muted-foreground/20 rounded;
+  }
+
+  [dir="rtl"] ::-webkit-scrollbar-thumb:hover {
+    @apply bg-muted-foreground/30;
+  }
+}
+
+@layer utilities {
+  /* Smooth scroll behavior */
+  .scroll-smooth {
+    scroll-behavior: smooth;
+  }
+
+  /* RTL-aware text alignment */
+  [dir="rtl"] .text-start {
+    text-align: right;
+  }
+
+  [dir="rtl"] .text-end {
+    text-align: left;
+  }
+
+  /* Animation utilities with reduced motion support */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
 }

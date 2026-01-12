@@ -1,0 +1,22 @@
+{
+  "mcpServers": {
+    "ai-elements": {
+      "type": "http",
+      "url": "https://registry.ai-sdk.dev/api/mcp"
+    },
+    "next-devtools": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "next-devtools-mcp@latest"
+      ]
+    },
+    "shadcn": {
+      "command": "npx",
+      "args": [
+        "shadcn@latest",
+        "mcp"
+      ]
+    }
+  }
+}
