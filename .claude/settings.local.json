@@ -1,0 +1,7 @@
+{
+  "enabledMcpjsonServers": [
+    "ai-elements",
+    "next-devtools"
+  ],
+  "enableAllProjectMcpServers": true
+}
