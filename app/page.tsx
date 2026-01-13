@@ -51,39 +51,40 @@ interface ToolCallCardProps {
 }
 
 function ToolCallCard({ part, isLatest = false }: ToolCallCardProps) {
-  const [isOpen, setIsOpen] = useState(isLatest);
+  const [isOpen, setIsOpen] = useState(false);
   const toolName = part.type.replace('tool-', '');
 
   return (
     <Card className={`my-2 transition-all duration-200 hover:shadow-md ${!isOpen ? 'w-fit mx-auto' : ''}`}>
       <Collapsible open={isOpen} onOpenChange={setIsOpen}>
-        <CardHeader className="pb-3 transition-all">
-          <div className={`flex items-center gap-2 ${!isOpen ? '' : 'justify-between'}`}>
-            <CardTitle className="text-sm font-mono md:text-xs">{toolName}</CardTitle>
-            <CollapsibleTrigger asChild>
-              <Button variant="ghost" size="sm" className={`h-8 w-8 p-0 ${!isOpen ? 'hidden' : ''}`}>
-                {isOpen ? (
+        <CollapsibleTrigger asChild>
+          <CardHeader className={`pb-3 transition-all cursor-pointer hover:bg-muted/50 ${!isOpen ? 'px-6 py-4' : ''}`}>
+            <div className={`flex items-center gap-2 ${!isOpen ? '' : 'justify-between'}`}>
+              <CardTitle className="text-sm font-mono md:text-xs">{toolName}</CardTitle>
+              {isOpen && (
+                <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={(e) => {
+                  e.stopPropagation();
+                  setIsOpen(false);
+                }}>
                   <ChevronUpIcon className="h-4 w-4 md:h-3.5 md:w-3.5" />
-                ) : (
-                  <ChevronDownIcon className="h-4 w-4 md:h-3.5 md:w-3.5" />
-                )}
-                <span className="sr-only">החלף תצוגה</span>
-              </Button>
-            </CollapsibleTrigger>
-          </div>
-        </CardHeader>
+                  <span className="sr-only">החלף תצוגה</span>
+                </Button>
+              )}
+            </div>
+          </CardHeader>
+        </CollapsibleTrigger>
         <CollapsibleContent>
           <CardContent className="md:text-xs">
             {part.state === 'input-streaming' ? (
               <div className="text-sm text-muted-foreground md:text-xs">טוען...</div>
             ) : (part.state === 'input-available' || part.state === 'approval-requested') && part.input ? (
-              <div className="text-xs md:text-[10px]">
+              <div className="text-xs md:text-[10px]" dir="ltr">
                 <CodeBlock code={JSON.stringify(part.input, null, 2)} language="json">
                   <CodeBlockCopyButton />
                 </CodeBlock>
               </div>
             ) : (part.state === 'output-available' || part.state === 'approval-responded') && part.output ? (
-              <div className="text-xs md:text-[10px]">
+              <div className="text-xs md:text-[10px]" dir="ltr">
                 <CodeBlock code={JSON.stringify(part.output, null, 2)} language="json">
                   <CodeBlockCopyButton />
                 </CodeBlock>
@@ -222,16 +223,18 @@ export default function Home() {
         </Conversation>
 
         <PromptInput onSubmit={handleSubmit} className="mt-4">
-          <PromptInputBody>
-            <PromptInputTextarea
-              onChange={(e) => setInput(e.target.value)}
-              value={input}
-              placeholder="שאל על מאגרי מידע, ארגונים או קטגוריות נתונים..."
-            />
-          </PromptInputBody>
-          <PromptInputFooter>
-            <PromptInputSubmit disabled={!input && !status} status={status} />
-          </PromptInputFooter>
+          <div className="flex items-center gap-3 p-2 rounded-lg border bg-background">
+            <PromptInputBody className="flex-1">
+              <PromptInputTextarea
+                onChange={(e) => setInput(e.target.value)}
+                value={input}
+                placeholder="שאל על מאגרי מידע, ארגונים או קטגוריות נתונים..."
+                className="min-h-[44px] resize-none border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
+                rows={1}
+              />
+            </PromptInputBody>
+            <PromptInputSubmit disabled={!input && !status} status={status} className="shrink-0" />
+          </div>
         </PromptInput>
       </div>
     </div>
