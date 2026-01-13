@@ -223,13 +223,13 @@ export default function Home() {
         </Conversation>
 
         <PromptInput onSubmit={handleSubmit} className="mt-4">
-          <div className="flex items-center justify-between gap-4 px-4 py-3 rounded-lg border bg-background">
+          <div className="flex items-center gap-3 px-4 py-3 rounded-lg border bg-background">
             <PromptInputBody className="flex-1">
               <PromptInputTextarea
                 onChange={(e) => setInput(e.target.value)}
                 value={input}
                 placeholder="שאל על מאגרי מידע, ארגונים או קטגוריות נתונים..."
-                className="resize-none border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 p-0"
+                className="resize-none border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 p-0 text-foreground"
                 rows={1}
               />
             </PromptInputBody>
