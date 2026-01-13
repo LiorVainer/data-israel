@@ -28,8 +28,13 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from '@/components/ui/collapsible';
 import { Loader } from '@/components/ai-elements/loader';
-import { CopyIcon, RefreshCcwIcon, MessageSquare } from 'lucide-react';
+import { CopyIcon, RefreshCcwIcon, MessageSquare, ChevronDownIcon } from 'lucide-react';
 
 interface ToolCallCardProps {
   part: {
@@ -42,34 +47,44 @@ interface ToolCallCardProps {
 }
 
 function ToolCallCard({ part }: ToolCallCardProps) {
+  const [isOpen, setIsOpen] = useState(false);
+  const toolName = part.type.replace('tool-', '');
+
   return (
-    <Card className="my-2">
-      <CardHeader>
-        <CardTitle className="text-sm font-mono">
-          {part.type.replace('tool-', '')}
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        {part.state === 'input-streaming' && (
-          <div className="text-sm text-muted-foreground">Loading...</div>
-        )}
-        {(part.state === 'input-available' || part.state === 'approval-requested') && (
-          <pre className="text-xs overflow-x-auto">
-            {JSON.stringify(part.input, null, 2)}
-          </pre>
-        )}
-        {(part.state === 'output-available' || part.state === 'approval-responded') && (
-          <pre className="text-xs overflow-x-auto">
-            {JSON.stringify(part.output, null, 2)}
-          </pre>
-        )}
-        {(part.state === 'output-error' || part.state === 'output-denied') && (
-          <div className="text-sm text-red-500">
-            Error: {part.errorText || 'Operation denied or failed'}
-          </div>
-        )}
-      </CardContent>
-    </Card>
+    <Collapsible open={isOpen} onOpenChange={setIsOpen} className="my-2">
+      <Card>
+        <CollapsibleTrigger className="w-full">
+          <CardHeader className={`flex flex-row items-center gap-2 p-3 transition-all ${!isOpen ? 'justify-center' : 'justify-between'}`}>
+            <CardTitle className="text-sm font-mono md:text-xs">
+              {toolName}
+            </CardTitle>
+            <ChevronDownIcon className={`size-4 text-muted-foreground transition-transform md:size-3.5 ${isOpen ? 'rotate-180' : ''} ${!isOpen ? 'hidden' : ''}`} />
+          </CardHeader>
+        </CollapsibleTrigger>
+        <CollapsibleContent>
+          <CardContent className="pt-0">
+            {part.state === 'input-streaming' && (
+              <div className="text-sm text-muted-foreground md:text-xs">Loading...</div>
+            )}
+            {(part.state === 'input-available' || part.state === 'approval-requested') && (
+              <pre className="text-xs overflow-x-auto md:text-[10px]">
+                {JSON.stringify(part.input, null, 2)}
+              </pre>
+            )}
+            {(part.state === 'output-available' || part.state === 'approval-responded') && (
+              <pre className="text-xs overflow-x-auto md:text-[10px]">
+                {JSON.stringify(part.output, null, 2)}
+              </pre>
+            )}
+            {(part.state === 'output-error' || part.state === 'output-denied') && (
+              <div className="text-sm text-red-500 md:text-xs">
+                Error: {part.errorText || 'Operation denied or failed'}
+              </div>
+            )}
+          </CardContent>
+        </CollapsibleContent>
+      </Card>
+    </Collapsible>
   );
 }
 
