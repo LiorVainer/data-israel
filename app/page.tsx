@@ -55,10 +55,10 @@ function ToolCallCard({ part, isLatest = false }: ToolCallCardProps) {
   const toolName = part.type.replace('tool-', '');
 
   return (
-    <Card className="my-2 transition-all duration-200 hover:shadow-md">
+    <Card className={`my-2 transition-all duration-200 hover:shadow-md ${!isOpen ? 'w-fit mx-auto' : ''}`}>
       <Collapsible open={isOpen} onOpenChange={setIsOpen}>
-        <CardHeader className={`pb-3 transition-all ${!isOpen ? 'flex justify-center' : ''}`}>
-          <div className={`flex items-center gap-2 ${!isOpen ? 'justify-center' : 'justify-between'}`}>
+        <CardHeader className="pb-3 transition-all">
+          <div className={`flex items-center gap-2 ${!isOpen ? '' : 'justify-between'}`}>
             <CardTitle className="text-sm font-mono md:text-xs">{toolName}</CardTitle>
             <CollapsibleTrigger asChild>
               <Button variant="ghost" size="sm" className={`h-8 w-8 p-0 ${!isOpen ? 'hidden' : ''}`}>
@@ -113,6 +113,12 @@ function MessageSkeleton() {
   );
 }
 
+const examplePrompts = [
+  'מה מאגרי הנתונים הזמינים על תחבורה ציבורית?',
+  'הצג לי נתונים על חינוך בישראל',
+  'אילו ארגונים מפרסמים נתונים פתוחים?',
+];
+
 export default function Home() {
   const [input, setInput] = useState('');
   const { messages, sendMessage, status, regenerate } = useChat();
@@ -123,6 +129,10 @@ export default function Home() {
 
     sendMessage({ text: message.text || '' });
     setInput('');
+  };
+
+  const handleExampleClick = (prompt: string) => {
+    setInput(prompt);
   };
 
   return (
@@ -141,15 +151,16 @@ export default function Home() {
                 </p>
                 <div className="flex flex-col gap-2 w-full max-w-md text-sm">
                   <div className="text-muted-foreground font-medium mb-1">דוגמאות לשאלות:</div>
-                  <div className="p-3 rounded-lg bg-muted/50 text-right hover:bg-muted/70 transition-colors cursor-default">
-                    מה מאגרי הנתונים הזמינים על תחבורה ציבורית?
-                  </div>
-                  <div className="p-3 rounded-lg bg-muted/50 text-right hover:bg-muted/70 transition-colors cursor-default">
-                    הצג לי נתונים על חינוך בישראל
-                  </div>
-                  <div className="p-3 rounded-lg bg-muted/50 text-right hover:bg-muted/70 transition-colors cursor-default">
-                    אילו ארגונים מפרסמים נתונים פתוחים?
-                  </div>
+                  {examplePrompts.map((prompt, index) => (
+                    <Button
+                      key={index}
+                      variant="outline"
+                      className="h-auto p-3 text-right justify-start whitespace-normal"
+                      onClick={() => handleExampleClick(prompt)}
+                    >
+                      {prompt}
+                    </Button>
+                  ))}
                 </div>
               </div>
             ) : (
