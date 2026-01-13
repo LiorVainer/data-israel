@@ -138,7 +138,7 @@ export default function Home() {
   return (
     <div className="max-w-4xl mx-auto p-6 relative size-full h-screen">
       <div className="flex flex-col h-full">
-        <Conversation className="h-full">
+        <Conversation className="h-full" data-scroll-container>
           <ConversationContent>
             {messages.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-full text-center px-4 animate-in fade-in duration-500">

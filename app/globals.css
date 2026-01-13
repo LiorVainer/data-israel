@@ -162,18 +162,50 @@
     scrollbar-color: oklch(0.556 0 0 / 40%) transparent;
   }
 
-  /* RTL-aware scrollbar styling */
+  /* RTL-aware scrollbar styling - keep scrollbar on right side */
   [dir="rtl"] ::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
+    width: 6px;
+    height: 6px;
+  }
+
+  [dir="rtl"] ::-webkit-scrollbar-track {
+    background: transparent;
   }
 
   [dir="rtl"] ::-webkit-scrollbar-thumb {
-    @apply bg-muted-foreground/20 rounded;
+    background: oklch(0.708 0 0 / 30%);
+    border-radius: 3px;
   }
 
   [dir="rtl"] ::-webkit-scrollbar-thumb:hover {
-    @apply bg-muted-foreground/30;
+    background: oklch(0.708 0 0 / 50%);
+  }
+
+  .dark [dir="rtl"] ::-webkit-scrollbar-thumb {
+    background: oklch(0.556 0 0 / 40%);
+  }
+
+  .dark [dir="rtl"] ::-webkit-scrollbar-thumb:hover {
+    background: oklch(0.556 0 0 / 60%);
+  }
+
+  /* Force scrollbar to appear on right side for RTL */
+  [dir="rtl"] * {
+    scrollbar-width: thin;
+    scrollbar-color: oklch(0.708 0 0 / 30%) transparent;
+  }
+
+  [dir="rtl"].dark * {
+    scrollbar-color: oklch(0.556 0 0 / 40%) transparent;
+  }
+
+  /* Ensure overflow containers maintain RTL text flow but keep scrollbar on right */
+  [dir="rtl"] [data-scroll-container] {
+    direction: ltr;
+  }
+
+  [dir="rtl"] [data-scroll-container] > * {
+    direction: rtl;
   }
 }
 
