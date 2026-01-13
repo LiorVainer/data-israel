@@ -14,6 +14,7 @@ const eslintConfig = defineConfig([
     "next-env.d.ts",
     // Reference files not part of the application:
     "mcp-ref/**",
+    "components-ref/**",
   ]),
 ]);
 
