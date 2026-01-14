@@ -8,3 +8,4 @@ export { searchDatasets } from './search-datasets';
 export { getDatasetDetails } from './get-dataset-details';
 export { listGroups } from './list-groups';
 export { listTags } from './list-tags';
+export { queryDatastoreResource } from './query-datastore-resource';

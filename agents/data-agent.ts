@@ -11,6 +11,7 @@ import {
   getDatasetDetails,
   listGroups,
   listTags,
+  queryDatastoreResource,
 } from '@/lib/tools';
 
 const model = google('gemini-2.5-flash');
@@ -27,6 +28,7 @@ export const dataAgent = new ToolLoopAgent({
 - בדיקת מטא-דאטה ומשאבים של מאגרי מידע (getDatasetDetails)
 - הצגת רשימת קבוצות (ארגונים מפרסמים/קטגוריות) (listGroups)
 - הצגת רשימת תגיות (מילות מפתח טקסונומיות) (listTags)
+- שאילתת נתונים בתוך משאב (queryDatastoreResource) - לצפייה בשורות נתונים, סינון לפי עמודות, וחקירת תוכן הקבצים
 
 כללי היגיון לסוכן:
 1. תמיד חפש לפני מענה - השתמש בכלים למידע עובדתי
@@ -37,7 +39,8 @@ export const dataAgent = new ToolLoopAgent({
 
 כאשר משתמש שואל על מאגרי מידע:
 - תחילה השתמש ב-searchDatasets כדי למצוא מאגרי מידע רלוונטיים
-- לאחר מכן השתמש ב-getDatasetDetails כדי לקבל מידע מלא במידת הצורך
+- לאחר מכן השתמש ב-getDatasetDetails כדי לקבל מידע מלא ולראות משאבים זמינים
+- אם המשתמש רוצה לראות נתונים בפועל מתוך משאב, השתמש ב-queryDatastoreResource
 - הצע לחקור תגיות וקבוצות כדי לגלות עוד נתונים
 
 תמיד הסבר את הממצאים שלך בבירור והצע פעולות המשך.`,
@@ -46,6 +49,7 @@ export const dataAgent = new ToolLoopAgent({
     getDatasetDetails,
     listGroups,
     listTags,
+    queryDatastoreResource,
   },
 });
 

@@ -6,7 +6,7 @@
  */
 
 import axios from 'axios';
-import type { DataGovResponse, Dataset, Group, Tag, SearchResult } from './types';
+import type { DataGovResponse, Dataset, Group, Tag, SearchResult, DataStoreSearchResult } from './types';
 
 const BASE_URL = 'https://data.gov.il/api/3';
 
@@ -100,6 +100,40 @@ export const dataGovApi = {
       all_fields?: boolean;
     }) => {
       return dataGovGet<Tag[]>('/action/tag_list', params);
+    },
+  },
+
+  /**
+   * DataStore operations for querying resource data
+   */
+  datastore: {
+    /**
+     * Search/query data within a DataStore resource
+     * @param params - Query parameters
+     * @returns DataStore search results with fields and records
+     */
+    search: async (params: {
+      resource_id: string;
+      filters?: Record<string, string | number>;
+      q?: string;
+      limit?: number;
+      offset?: number;
+      sort?: string;
+    }) => {
+      // Convert filters object to JSON string if provided
+      const queryParams: Record<string, unknown> = {
+        resource_id: params.resource_id,
+        limit: params.limit,
+        offset: params.offset,
+        sort: params.sort,
+        q: params.q,
+      };
+
+      if (params.filters) {
+        queryParams.filters = JSON.stringify(params.filters);
+      }
+
+      return dataGovGet<DataStoreSearchResult>('/action/datastore_search', queryParams);
     },
   },
 };
