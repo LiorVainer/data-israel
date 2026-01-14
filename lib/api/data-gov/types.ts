@@ -122,3 +122,24 @@ export interface SearchResult {
   sort?: string;
   search_facets?: Record<string, unknown>;
 }
+
+/**
+ * DataStore field definition
+ */
+export interface DataStoreField {
+  id: string;
+  type: string;
+}
+
+/**
+ * DataStore search result for datastore_search
+ */
+export interface DataStoreSearchResult {
+  fields: DataStoreField[];
+  records: Record<string, unknown>[];
+  total: number;
+  _links?: {
+    start: string;
+    next?: string;
+  };
+}

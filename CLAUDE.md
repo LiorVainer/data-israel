@@ -36,6 +36,8 @@ The agent architecture is **tool-first**: rather than hallucinating dataset info
 
 ## Development Commands
 
+### Dont Change the `ui/` and `ai-elements/` folders files unless instructed.
+
 ### Running the Application
 ```bash
 npm run dev      # Start development server at localhost:3000
