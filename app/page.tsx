@@ -32,6 +32,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { CopyIcon, RefreshCcwIcon, MessageSquare, ChevronDownIcon, ChevronUpIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import clsx from 'clsx';
+import {DataAgentUIMessage} from "@/agents/data-agent";
 
 interface ToolCallCardProps {
   part: {
@@ -105,7 +106,7 @@ function MessageSkeleton() {
 
 export default function Home() {
   const [input, setInput] = useState('');
-  const { messages, sendMessage, status, regenerate } = useChat();
+  const { messages, sendMessage, status, regenerate } = useChat<DataAgentUIMessage>();
 
   const handleSubmit = () => {
     if (!input.trim()) return;

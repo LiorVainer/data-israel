@@ -4,7 +4,7 @@
  * ToolLoopAgent for exploring Israeli open datasets
  */
 
-import { ToolLoopAgent, type InferAgentUIMessage } from 'ai';
+import { ToolLoopAgent, type InferAgentUIMessage, type StepResult } from 'ai';
 import { google } from '@ai-sdk/google';
 import {
   searchDatasets,
@@ -15,6 +15,55 @@ import {
 } from '@/lib/tools';
 
 const model = google('gemini-2.5-flash');
+
+/**
+ * Custom stop condition for task completion
+ * Stops when agent signals completion or hits safety limit
+ */
+const taskCompletionStop = ({
+  steps
+}: {
+  steps: StepResult<any>[]
+}): boolean => {
+  const stepCount = steps.length;
+  const lastStep = steps[steps.length - 1];
+
+  // Safety: Hard limit at 25 steps
+  if (stepCount >= 25) {
+    return true;
+  }
+
+  // Minimum 3 steps before stopping
+  if (stepCount < 3) {
+    return false;
+  }
+
+  // Check for completion markers in agent's text response
+  if (lastStep.text) {
+    const completionMarkers = [
+      'סיכום:',
+      'מצאתי את כל הנתונים',
+      'לא מצאתי נתונים',
+      'סיימתי לחפש',
+      'סיימתי את החיפוש',
+    ];
+
+    const hasCompletionMarker = completionMarkers.some(marker =>
+      lastStep.text?.includes(marker)
+    );
+
+    if (hasCompletionMarker) {
+      return true;
+    }
+  }
+
+  // Stop if agent produced text without tool calls (done thinking)
+  if (lastStep.text && (!lastStep.toolCalls || lastStep.toolCalls.length === 0)) {
+    return true;
+  }
+
+  return false;
+};
 
 /**
  * Agent for exploring Israeli open data from data.gov.il
@@ -54,6 +103,27 @@ export const dataAgent = new ToolLoopAgent({
 2. getDatasetDetails → להבין מה יש במאגר ואילו משאבים זמינים
 3. queryDatastoreResource → להציג את הנתונים בפועל
 
+=== תהליך עבודה אוטונומי למשימות מורכבות ===
+
+כאשר המשתמש מבקש מידע ספציפי (למשל "מחירי קוטג'", "נתוני חינוך בירושלים"):
+
+תהליך מלא:
+1. חפש מאגרי מידע רלוונטיים (searchDatasets)
+2. בדוק פרטי כל מאגר שמצאת (getDatasetDetails) - עד 7 מאגרים
+3. שאל את כל המאגרים עבור המידע המבוקש (queryDatastoreResource)
+4. צור סיכום מכל הנתונים שאספת
+5. הצג את התוצאות למשתמש
+
+דוגמה:
+שאלה: "מה מחירי הקוטג'?"
+→ searchDatasets(query="מחירים") → מצאתי 5 מאגרים
+→ getDatasetDetails על כל אחד → מצאתי 3 עם משאבים רלוונטיים
+→ queryDatastoreResource על כל 3 (filters={"product": "cottage"} או q="קוטג'")
+→ אסוף תוצאות מכולם
+→ סיכום: "מצאתי מחירי קוטג' ב-3 מאגרים..."
+
+אל תעצור באמצע! סיים את כל התהליך לפני שאתה עונה למשתמש.
+
 === כללי תצוגה ===
 
 כאשר מציג מאגרי מידע:
@@ -66,6 +136,36 @@ export const dataAgent = new ToolLoopAgent({
 - הגבל ל-10-20 שורות וציין כמה יש בסך הכל
 - סכם: "מציג 10 מתוך 150 רשומות. רוצה לראות עוד?"
 - הצע סינון או ניתוח: "רוצה שאסנן לפי עיר מסוימת? או שאציג סטטיסטיקות?"
+
+=== הצגת תוצאות ממספר מאגרים ===
+
+כאשר מצאת נתונים במספר מאגרים - אל תציג שורות גולמיות!
+
+במקום זה, צור סיכום עם סטטיסטיקות:
+- כמה רשומות מצאת בכל מאגר
+- מחיר ממוצע / מינימום / מקסימום
+- השוואה בין מאגרים
+- מגמות שזיהית
+
+דוגמה טובה:
+"מצאתי נתונים על מחירי קוטג' ב-3 מאגרים:
+📊 מאגר מחירי מזון 2024:
+   - 847 רשומות קוטג'
+   - מחיר ממוצע: 11.2 ₪
+   - טווח: 9.5-14.8 ₪
+
+📊 מאגר מוצרי חלב:
+   - 234 רשומות קוטג'
+   - מחיר ממוצע: 12.1 ₪
+
+📊 מאגר משרד החקלאות:
+   - 156 רשומות קוטג'
+   - מחיר ממוצע: 10.9 ₪
+
+🎯 סיכום: מחיר קוטג' נע בין 9.5-14.8 ₪, עם ממוצע של 11.4 ₪"
+
+דוגמה רעה:
+❌ "מצאתי 1000 שורות במאגר A ו-500 במאגר B"
 
 דוגמאות למה לא לעשות:
 ❌ "מצאתי מאגר d882fbb6-179b-475b-9d3b-edd82ec262c5"
@@ -83,6 +183,16 @@ export const dataAgent = new ToolLoopAgent({
 - הסבר מה אתה עושה במילים פשוטות
 - תמיד סיים עם הצעה למה לעשות הלאה
 
+=== איך לסיים משימה ===
+
+כאשר סיימת לאסוף ולנתח את כל הנתונים, הוסף סימן סיום:
+
+✅ אם מצאת נתונים: התחל ב-"סיכום:" ואחר כך הסבר מה מצאת
+❌ אם לא מצאת: "לא מצאתי נתונים על [נושא]. חיפשתי במאגרים: [רשימה]"
+💡 אם רוצה להציע המשך: "סיימתי את החיפוש. רוצה [הצעה]?"
+
+זה אומר למערכת שסיימת את העבודה.
+
 זכור: המשתמש רוצה מידע, לא פרטים טכניים. תפקידך להיות גשר בין הנתונים הטכניים לבין צרכי המשתמש.`,
   tools: {
     searchDatasets,
@@ -91,6 +201,7 @@ export const dataAgent = new ToolLoopAgent({
     listTags,
     queryDatastoreResource,
   },
+  stopWhen: taskCompletionStop
 });
 
 /**
