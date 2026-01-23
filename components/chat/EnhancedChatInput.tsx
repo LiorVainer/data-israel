@@ -1,22 +1,26 @@
 'use client';
 
 import { cn } from '@/lib/utils';
-import { FC, useLayoutEffect, useRef, useState } from 'react';
+import { FC, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
 import { Button } from '@/components/ui/button';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Loader2, Send, X } from 'lucide-react';
+import { Loader2, Send, Square, X } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
+import type { ChatStatus } from 'ai';
 
 interface EnhancedChatInputProps {
   value: string;
   setValue: (value: string) => void;
   onSubmit?: () => void;
+  onStop?: () => void;
   placeholder?: string;
   className?: string;
-  isLoading?: boolean;
+  status?: ChatStatus;
+  /** Slot for additional controls (e.g., model selector) */
+  startContent?: ReactNode;
 }
 
-type InputState = 'idle' | 'focused' | 'loading';
+type InputState = 'idle' | 'focused' | 'loading' | 'streaming';
 
 const ACTION_BAR_W = 96; // reserved space for actions
 const ACTION_BTN = 36; // 9 (w-9/h-9) * 4px = 36px
@@ -26,11 +30,13 @@ const MAX_CONTENT_H = 220;
 
 export const EnhancedChatInput: FC<EnhancedChatInputProps> = ({
   onSubmit,
+  onStop,
   placeholder = 'שאל על מאגרי מידע, ארגונים או קטגוריות נתונים...',
   className,
   value,
   setValue,
-  isLoading = false,
+  status = 'ready',
+  startContent,
 }) => {
   const [state, setState] = useState<InputState>('idle');
 
@@ -46,8 +52,10 @@ export const EnhancedChatInput: FC<EnhancedChatInputProps> = ({
     setHeight(contentH + PADDING_Y); // animate the form height including vertical padding
   }, [value]);
 
-  // Update state based on loading prop
-  const effectiveState = isLoading ? 'loading' : state;
+  // Update state based on status prop
+  const isLoading = status === 'submitted';
+  const isStreaming = status === 'streaming';
+  const effectiveState = isStreaming ? 'streaming' : isLoading ? 'loading' : state;
 
   const handleSubmit = async (e: React.FormEvent | React.KeyboardEvent) => {
     e.preventDefault();
@@ -62,11 +70,12 @@ export const EnhancedChatInput: FC<EnhancedChatInputProps> = ({
     }
   };
 
-  const handleFocus = () => !isLoading && state === 'idle' && setState('focused');
-  const handleBlur = () => !isLoading && state === 'focused' && setState('idle');
+  const handleFocus = () => !isLoading && !isStreaming && state === 'idle' && setState('focused');
+  const handleBlur = () => !isLoading && !isStreaming && state === 'focused' && setState('idle');
 
   const isDisabled = effectiveState === 'loading';
-  const canSubmit = value.trim().length > 0 && !isDisabled;
+  const canSubmit = value.trim().length > 0 && !isDisabled && !isStreaming;
+  const canStop = isStreaming && onStop;
 
   return (
     <motion.form
@@ -120,6 +129,9 @@ export const EnhancedChatInput: FC<EnhancedChatInputProps> = ({
 
       {/* Action bar (inside the form; no portal lag) */}
       <div className='flex gap-2 h-9 items-center self-end justify-end'>
+        {/* Start content slot (e.g., model selector) */}
+        {startContent}
+
         <Button
           type='button'
           size='icon'
@@ -133,40 +145,53 @@ export const EnhancedChatInput: FC<EnhancedChatInputProps> = ({
           <X className='w-4 h-4' />
         </Button>
 
-        <Button
-          type='submit'
-          size='icon'
-          variant='gradient'
-          disabled={!canSubmit}
-          className={cn(
-            'w-9 h-9 transform-gpu hover:scale-105 active:scale-95',
-            !canSubmit && 'opacity-50 cursor-not-allowed hover:scale-100',
-          )}
-        >
-          <AnimatePresence mode='wait' initial={false}>
-            {effectiveState === 'loading' ? (
-              <motion.div
-                key='loading'
-                initial={{ opacity: 0, rotate: -180 }}
-                animate={{ opacity: 1, rotate: 0 }}
-                exit={{ opacity: 0, rotate: 180 }}
-                transition={{ duration: 0.25 }}
-              >
-                <Loader2 className='h-4 w-4 animate-spin' />
-              </motion.div>
-            ) : (
-              <motion.div
-                key='send'
-                initial={{ opacity: 0, x: -8 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: 8 }}
-                transition={{ duration: 0.25 }}
-              >
-                <Send className='h-4 w-4' />
-              </motion.div>
+        {/* Submit or Stop button */}
+        {canStop ? (
+          <Button
+            type='button'
+            size='icon'
+            variant='destructive'
+            onClick={onStop}
+            className='w-9 h-9 transform-gpu hover:scale-105 active:scale-95'
+          >
+            <Square className='h-4 w-4' />
+          </Button>
+        ) : (
+          <Button
+            type='submit'
+            size='icon'
+            variant='gradient'
+            disabled={!canSubmit}
+            className={cn(
+              'w-9 h-9 transform-gpu hover:scale-105 active:scale-95',
+              !canSubmit && 'opacity-50 cursor-not-allowed hover:scale-100',
             )}
-          </AnimatePresence>
-        </Button>
+          >
+            <AnimatePresence mode='wait' initial={false}>
+              {effectiveState === 'loading' ? (
+                <motion.div
+                  key='loading'
+                  initial={{ opacity: 0, rotate: -180 }}
+                  animate={{ opacity: 1, rotate: 0 }}
+                  exit={{ opacity: 0, rotate: 180 }}
+                  transition={{ duration: 0.25 }}
+                >
+                  <Loader2 className='h-4 w-4 animate-spin' />
+                </motion.div>
+              ) : (
+                <motion.div
+                  key='send'
+                  initial={{ opacity: 0, x: -8 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: 8 }}
+                  transition={{ duration: 0.25 }}
+                >
+                  <Send className='h-4 w-4' />
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </Button>
+        )}
       </div>
     </motion.form>
   );

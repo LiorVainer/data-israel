@@ -30,7 +30,8 @@ const openrouter = createOpenRouter({
   apiKey: process.env.OPENROUTER_API_KEY,
 });
 
-const chatModel = openrouter.chat(AgentConfig.model.ID);
+/** Get model instance by ID */
+const getModel = (modelId: string) => openrouter.chat(modelId);
 
 /**
  * Custom stop condition for task completion
@@ -45,19 +46,19 @@ const taskCompletionStop = ({
   const lastStep = steps[steps.length - 1];
 
   // Safety: Hard limit at max steps
-  if (stepCount >= AgentConfig.toolCalls.MAX_STEPS) {
+  if (stepCount >= AgentConfig.TOOL_CALLS.MAX_STEPS) {
     return true;
   }
 
   // Minimum steps before stopping
-  if (stepCount < AgentConfig.toolCalls.MIN_STEPS_BEFORE_STOP) {
+  if (stepCount < AgentConfig.TOOL_CALLS.MIN_STEPS_BEFORE_STOP) {
     return false;
   }
 
 
   // Check for completion markers in agent's text response
   if (lastStep.text) {
-    const hasCompletionMarker = AgentConfig.completionMarkers.some(marker =>
+    const hasCompletionMarker = AgentConfig.COMPLETION_MARKERS.some(marker =>
       lastStep.text?.includes(marker)
     );
 
@@ -74,13 +75,8 @@ const taskCompletionStop = ({
   return false;
 };
 
-/**
- * Agent for exploring Israeli open data from data.gov.il
- */
-export const dataAgent = new ToolLoopAgent({
-  model: chatModel,
-  toolChoice: AgentConfig.model.TOOL_CHOICE,
-  instructions: `אתה עוזר AI ידידותי שעוזר למשתמשים למצוא ולחקור נתונים פתוחים ישראליים מאתר data.gov.il.
+/** Agent instructions for data.gov.il exploration */
+const agentInstructions = `אתה עוזר AI ידידותי שעוזר למשתמשים למצוא ולחקור נתונים פתוחים ישראליים מאתר data.gov.il.
 
 === גישה למשתמש ===
 אתה מדבר עם אנשים רגילים, לא מפתחים טכניים. המטרה שלך היא לעזור להם למצוא מידע, לא לחשוף פרטים טכניים.
@@ -203,10 +199,25 @@ export const dataAgent = new ToolLoopAgent({
 
 זה אומר למערכת שסיימת את העבודה.
 
-זכור: המשתמש רוצה מידע, לא פרטים טכניים. תפקידך להיות גשר בין הנתונים הטכניים לבין צרכי המשתמש.`,
-  tools: agentTools,
-  stopWhen: taskCompletionStop
-});
+זכור: המשתמש רוצה מידע, לא פרטים טכניים. תפקידך להיות גשר בין הנתונים הטכניים לבין צרכי המשתמש.`;
+
+/**
+ * Factory function to create a data agent with a specific model
+ */
+export function createDataAgent(modelId: string = AgentConfig.MODEL.DEFAULT_ID) {
+  return new ToolLoopAgent({
+    model: getModel(modelId),
+    toolChoice: AgentConfig.MODEL.TOOL_CHOICE,
+    instructions: agentInstructions,
+    tools: agentTools,
+    stopWhen: taskCompletionStop,
+  });
+}
+
+/**
+ * Default agent instance for backwards compatibility
+ */
+export const dataAgent = createDataAgent();
 
 /**
  * Type for messages compatible with this agent

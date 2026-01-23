@@ -1,7 +1,7 @@
 'use client';
 
 import { useChat } from '@ai-sdk/react';
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import {
   Conversation,
   ConversationContent,
@@ -17,7 +17,6 @@ import {
 import {
   Reasoning,
   ReasoningTrigger,
-  ReasoningContent,
 } from '@/components/ai-elements/reasoning';
 import {
   Sources,
@@ -25,12 +24,32 @@ import {
   SourcesContent,
   Source,
 } from '@/components/ai-elements/sources';
-import { EnhancedChatInput } from '@/components/chat/EnhancedChatInput';
+import {
+  ModelSelector,
+  ModelSelectorContent,
+  ModelSelectorEmpty,
+  ModelSelectorGroup,
+  ModelSelectorInput,
+  ModelSelectorItem,
+  ModelSelectorList,
+  ModelSelectorLogo,
+  ModelSelectorName,
+  ModelSelectorTrigger,
+} from '@/components/ai-elements/model-selector';
+import {
+  PromptInput,
+  PromptInputTextarea,
+  PromptInputFooter,
+  PromptInputTools,
+  PromptInputSubmit,
+  PromptInputButton,
+} from '@/components/ai-elements/prompt-input';
 import { PromptSuggestions } from '@/components/chat/PromptSuggestions';
 import { ToolCallCard } from '@/components/chat/ToolCallCard';
 import { Skeleton } from '@/components/ui/skeleton';
-import { CopyIcon, RefreshCcwIcon, MessageSquare } from 'lucide-react';
+import { CopyIcon, RefreshCcwIcon, MessageSquare, CheckIcon } from 'lucide-react';
 import { DataAgentUIMessage } from '@/agents/data-agent';
+import { AgentConfig } from '@/agents/agent.config';
 import type { ReactNode } from 'react';
 
 /**
@@ -71,20 +90,24 @@ function MessageSkeleton() {
 }
 
 export default function Home() {
-  const [input, setInput] = useState('');
-  const { messages, sendMessage, status, regenerate } = useChat<DataAgentUIMessage>();
+  const [selectedModel, setSelectedModel] = useState(AgentConfig.AVAILABLE_MODELS[0].id);
+  const [modelSelectorOpen, setModelSelectorOpen] = useState(false);
+  const modelRef = useRef(selectedModel);
+  modelRef.current = selectedModel;
 
-  const handleSubmit = () => {
-    if (!input.trim()) return;
-    sendMessage({ text: input });
-    setInput('');
-  };
+  const { messages, sendMessage, status, regenerate, stop } = useChat<DataAgentUIMessage>();
+
+  const selectedModelData = AgentConfig.AVAILABLE_MODELS.find(m => m.id === selectedModel);
+
+  // Group models by provider
+  const providers = Array.from(new Set(AgentConfig.AVAILABLE_MODELS.map(m => m.provider)));
 
   const handleSuggestionClick = (prompt: string) => {
-    setInput(prompt);
+    sendMessage(
+      { text: prompt },
+      { body: { model: modelRef.current } }
+    );
   };
-
-  console.log(messages);
 
   return (
     <div className="max-w-4xl mx-auto p-6 relative size-full h-screen">
@@ -144,7 +167,6 @@ export default function Home() {
                             );
                           }
                           case 'reasoning': {
-                            const reasoningPart = part as { type: 'reasoning'; text: string };
                             return (
                               <Reasoning
                                 key={`${message.id}-${i}`}
@@ -154,10 +176,6 @@ export default function Home() {
                                 <ReasoningTrigger labelOnly getThinkingMessage={getHebrewThinkingMessage} />
                               </Reasoning>
                             );
-                          }
-                          case 'source-url': {
-                            // Sources are collected and rendered after all parts
-                            return null;
                           }
                           case 'tool-searchDatasets':
                           case 'tool-getDatasetDetails':
@@ -202,14 +220,68 @@ export default function Home() {
           <ConversationScrollButton />
         </Conversation>
 
-        <EnhancedChatInput
-          value={input}
-          setValue={setInput}
-          onSubmit={handleSubmit}
-          placeholder="שאל על מאגרי מידע"
-          isLoading={status === 'submitted'}
+        <PromptInput
           className="mt-4"
-        />
+          onSubmit={(message) => {
+            if (!message.text.trim()) return;
+            sendMessage(
+              { text: message.text },
+              { body: { model: modelRef.current } }
+            );
+          }}
+        >
+          <PromptInputTextarea placeholder="שאל על מאגרי מידע" />
+          <PromptInputFooter>
+            <PromptInputTools>
+              <ModelSelector open={modelSelectorOpen} onOpenChange={setModelSelectorOpen}>
+                <ModelSelectorTrigger asChild>
+                  <PromptInputButton className="gap-2">
+                    {selectedModelData?.providerSlug && (
+                      <ModelSelectorLogo provider={selectedModelData.providerSlug} />
+                    )}
+                    <ModelSelectorName className="hidden sm:inline">
+                      {selectedModelData?.name}
+                    </ModelSelectorName>
+                  </PromptInputButton>
+                </ModelSelectorTrigger>
+                <ModelSelectorContent>
+                  <ModelSelectorInput placeholder="חפש מודל..." />
+                  <ModelSelectorList>
+                    <ModelSelectorEmpty>לא נמצאו מודלים</ModelSelectorEmpty>
+                    {providers.map((provider) => (
+                      <ModelSelectorGroup key={provider} heading={provider}>
+                        {AgentConfig.AVAILABLE_MODELS
+                          .filter((m) => m.provider === provider)
+                          .map((m) => (
+                            <ModelSelectorItem
+                              key={m.id}
+                              value={m.id}
+                              onSelect={() => {
+                                setSelectedModel(m.id);
+                                setModelSelectorOpen(false);
+                              }}
+                            >
+                              <ModelSelectorLogo provider={m.providerSlug} />
+                              <ModelSelectorName>{m.name}</ModelSelectorName>
+                              {selectedModel === m.id ? (
+                                <CheckIcon className="mr-auto size-4" />
+                              ) : (
+                                <div className="mr-auto size-4" />
+                              )}
+                            </ModelSelectorItem>
+                          ))}
+                      </ModelSelectorGroup>
+                    ))}
+                  </ModelSelectorList>
+                </ModelSelectorContent>
+              </ModelSelector>
+            </PromptInputTools>
+            <PromptInputSubmit
+              status={status}
+              onClick={status === 'streaming' ? stop : undefined}
+            />
+          </PromptInputFooter>
+        </PromptInput>
       </div>
     </div>
   );
