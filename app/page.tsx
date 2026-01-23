@@ -14,73 +14,47 @@ import {
   MessageActions,
   MessageAction,
 } from '@/components/ai-elements/message';
+import {
+  Reasoning,
+  ReasoningTrigger,
+  ReasoningContent,
+} from '@/components/ai-elements/reasoning';
+import {
+  Sources,
+  SourcesTrigger,
+  SourcesContent,
+  Source,
+} from '@/components/ai-elements/sources';
 import { EnhancedChatInput } from '@/components/chat/EnhancedChatInput';
 import { PromptSuggestions } from '@/components/chat/PromptSuggestions';
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from '@/components/ui/collapsible';
-import { CodeBlock, CodeBlockCopyButton } from '@/components/ai-elements/code-block';
+import { ToolCallCard } from '@/components/chat/ToolCallCard';
 import { Skeleton } from '@/components/ui/skeleton';
-import { CopyIcon, RefreshCcwIcon, MessageSquare, ChevronDownIcon, ChevronUpIcon } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import clsx from 'clsx';
-import {DataAgentUIMessage} from "@/agents/data-agent";
+import { CopyIcon, RefreshCcwIcon, MessageSquare } from 'lucide-react';
+import { DataAgentUIMessage } from '@/agents/data-agent';
+import type { ReactNode } from 'react';
 
-interface ToolCallCardProps {
-  part: {
-    type: string;
-    state: 'input-streaming' | 'input-available' | 'output-available' | 'output-error' | 'approval-requested' | 'approval-responded' | 'output-denied';
-    input?: unknown;
-    output?: unknown;
-    errorText?: string;
-  };
-  isLatest?: boolean;
+/**
+ * Hebrew reasoning message for the Reasoning component trigger
+ */
+function getHebrewThinkingMessage(isStreaming: boolean, duration?: number): ReactNode {
+  if (isStreaming || duration === 0) {
+    return <span>חושב...</span>;
+  }
+  if (duration === undefined) {
+    return <span>חשב כמה שניות</span>;
+  }
+
+  return <span>חשב {duration} שניות</span>;
 }
 
-function ToolCallCard({ part, isLatest = false }: ToolCallCardProps) {
-  const [isOpen, setIsOpen] = useState(false);
-  const toolName = part.type.replace('tool-', '');
-
-  return (
-    <Card className="my-2 transition-all duration-200 hover:shadow-md py-3">
-      <Collapsible open={isOpen} onOpenChange={setIsOpen}>
-        <CardHeader className={clsx('items-center gap-0 px-3 dir-ltr', isOpen && 'gap-2')}>
-          <div className="flex items-center justify-between">
-            <CardTitle className="text-sm font-mono">{toolName}</CardTitle>
-            <CollapsibleTrigger asChild>
-              <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                {isOpen ? (
-                  <ChevronUpIcon className="h-4 w-4" />
-                ) : (
-                  <ChevronDownIcon className="h-4 w-4" />
-                )}
-                <span className="sr-only">החלף תצוגה</span>
-              </Button>
-            </CollapsibleTrigger>
-          </div>
-        </CardHeader>
-        <CollapsibleContent>
-          <CardContent className="dir-ltr px-3">
-            {part.state === 'input-streaming' ? (
-              <div className="text-sm text-muted-foreground">טוען...</div>
-            ) : (part.state === 'input-available' || part.state === 'approval-requested') && part.input ? (
-              <CodeBlock code={JSON.stringify(part.input, null, 2)} language="json">
-                <CodeBlockCopyButton />
-              </CodeBlock>
-            ) : null}
-          </CardContent>
-        </CollapsibleContent>
-      </Collapsible>
-    </Card>
-  );
+/**
+ * Interface for source-url parts from AI SDK
+ */
+interface SourceUrlPart {
+  type: 'source-url';
+  sourceId: string;
+  url: string;
+  title?: string;
 }
 
 function MessageSkeleton() {
@@ -110,7 +84,7 @@ export default function Home() {
     setInput(prompt);
   };
 
-  console.log({messages})
+  console.log(messages);
 
   return (
     <div className="max-w-4xl mx-auto p-6 relative size-full h-screen">
@@ -133,56 +107,94 @@ export default function Home() {
               </div>
             ) : (
               <>
-                {messages.map((message, messageIndex) => (
-                  <div key={message.id} className="animate-in fade-in slide-in-from-bottom-2 flex flex-col gap-2 duration-300">
-                    {message.parts.map((part, i) => {
-                      switch (part.type) {
-                        case 'text': {
-                          const isLastMessage =
-                            i === message.parts.length - 1 &&
-                            message.id === messages.at(-1)?.id;
+                {messages.map((message, messageIndex) => {
+                  // Collect source-url parts for this message
+                  const sourceParts = message.parts.filter(
+                    (part): part is SourceUrlPart => part.type === 'source-url'
+                  );
 
-                          return (
-                            <Message key={`${message.id}-${i}`} from={message.role}>
-                              <MessageContent>
-                                <MessageResponse>{part.text}</MessageResponse>
-                              </MessageContent>
-                              {message.role === 'assistant' && isLastMessage && (
-                                <MessageActions>
-                                  <MessageAction onClick={() => regenerate()} label="נסה שוב">
-                                    <RefreshCcwIcon className="size-3" />
-                                  </MessageAction>
-                                  <MessageAction
-                                    onClick={() => navigator.clipboard.writeText(part.text)}
-                                    label="העתק"
-                                  >
-                                    <CopyIcon className="size-3" />
-                                  </MessageAction>
-                                </MessageActions>
-                              )}
-                            </Message>
-                          );
+                  return (
+                    <div key={message.id} className="animate-in fade-in slide-in-from-bottom-2 flex flex-col gap-2 duration-300">
+                      {message.parts.map((part, i) => {
+                        switch (part.type) {
+                          case 'text': {
+                            const isLastMessage =
+                              i === message.parts.length - 1 &&
+                              message.id === messages.at(-1)?.id;
+
+                            return (
+                              <Message key={`${message.id}-${i}`} from={message.role}>
+                                <MessageContent>
+                                  <MessageResponse>{part.text}</MessageResponse>
+                                </MessageContent>
+                                {message.role === 'assistant' && isLastMessage && (
+                                  <MessageActions>
+                                    <MessageAction onClick={() => regenerate()} label="נסה שוב">
+                                      <RefreshCcwIcon className="size-3" />
+                                    </MessageAction>
+                                    <MessageAction
+                                      onClick={() => navigator.clipboard.writeText(part.text)}
+                                      label="העתק"
+                                    >
+                                      <CopyIcon className="size-3" />
+                                    </MessageAction>
+                                  </MessageActions>
+                                )}
+                              </Message>
+                            );
+                          }
+                          case 'reasoning': {
+                            const reasoningPart = part as { type: 'reasoning'; text: string };
+                            return (
+                              <Reasoning
+                                key={`${message.id}-${i}`}
+                                isStreaming={status === 'streaming' && i === message.parts.length - 1 && message.id === messages.at(-1)?.id}
+                                defaultOpen={false}
+                              >
+                                <ReasoningTrigger labelOnly getThinkingMessage={getHebrewThinkingMessage} />
+                              </Reasoning>
+                            );
+                          }
+                          case 'source-url': {
+                            // Sources are collected and rendered after all parts
+                            return null;
+                          }
+                          case 'tool-searchDatasets':
+                          case 'tool-getDatasetDetails':
+                          case 'tool-listGroups':
+                          case 'tool-listTags':
+                          case 'tool-queryDatastoreResource': {
+                            return (
+                              <ToolCallCard
+                                key={`${message.id}-${i}`}
+                                part={part}
+                              />
+                            );
+                          }
+                          default:
+                            return null;
                         }
-                        case 'tool-searchDatasets':
-                        case 'tool-getDatasetDetails':
-                        case 'tool-listGroups':
-                        case 'tool-listTags': {
-                          console.log({part});
-                          const isLatestToolCall = messageIndex === messages.length - 1;
-                          return (
-                            <ToolCallCard
-                              key={`${message.id}-${i}`}
-                              part={part}
-                              isLatest={isLatestToolCall}
-                            />
-                          );
-                        }
-                        default:
-                          return null;
-                      }
-                    })}
-                  </div>
-                ))}
+                      })}
+                      {/* Render collected sources at the end of the message */}
+                      {sourceParts.length > 0 && (
+                        <Sources>
+                          <SourcesTrigger count={sourceParts.length}>
+                            <span className="font-medium">השתמש ב-{sourceParts.length} מקורות</span>
+                          </SourcesTrigger>
+                          <SourcesContent>
+                            {sourceParts.map((source) => (
+                              <Source
+                                key={source.sourceId}
+                                href={source.url}
+                                title={source.title ?? new URL(source.url).hostname}
+                              />
+                            ))}
+                          </SourcesContent>
+                        </Sources>
+                      )}
+                    </div>
+                  );
+                })}
                 {status === 'submitted' && <MessageSkeleton />}
               </>
             )}

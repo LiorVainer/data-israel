@@ -18,5 +18,7 @@ export async function POST(request: Request) {
   return createAgentUIStreamResponse({
     agent: dataAgent,
     uiMessages: messages,
+    sendReasoning: true,
+    sendSources: true,
   });
 }

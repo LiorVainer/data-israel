@@ -113,6 +113,7 @@ export const Reasoning = memo(
 
 export type ReasoningTriggerProps = ComponentProps<typeof CollapsibleTrigger> & {
   getThinkingMessage?: (isStreaming: boolean, duration?: number) => ReactNode;
+  labelOnly?: boolean;
 };
 
 const defaultGetThinkingMessage = (isStreaming: boolean, duration?: number) => {
@@ -126,21 +127,28 @@ const defaultGetThinkingMessage = (isStreaming: boolean, duration?: number) => {
 };
 
 export const ReasoningTrigger = memo(
-  ({ className, children, getThinkingMessage = defaultGetThinkingMessage, ...props }: ReasoningTriggerProps) => {
+  ({ className, children, labelOnly, getThinkingMessage = defaultGetThinkingMessage, ...props }: ReasoningTriggerProps) => {
     const { isStreaming, isOpen, duration } = useReasoning();
+    const containerClassName   = "flex w-full items-center gap-2 text-muted-foreground text-sm transition-colors hover:text-foreground";
 
-    return (
+    const LabelContent = (
+        <div className={containerClassName}>
+          <BrainIcon className="size-4" />
+          {getThinkingMessage(isStreaming, duration)}
+        </div>
+    );
+
+    return labelOnly ?  LabelContent :(
       <CollapsibleTrigger
         className={cn(
-          "flex w-full items-center gap-2 text-muted-foreground text-sm transition-colors hover:text-foreground",
+          containerClassName,
           className
         )}
         {...props}
       >
         {children ?? (
           <>
-            <BrainIcon className="size-4" />
-            {getThinkingMessage(isStreaming, duration)}
+            {LabelContent}
             <ChevronDownIcon
               className={cn(
                 "size-4 transition-transform",
