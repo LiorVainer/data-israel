@@ -4,8 +4,7 @@
  * ToolLoopAgent for exploring Israeli open datasets
  */
 
-import { ToolLoopAgent, type InferAgentUIMessage, type StepResult } from 'ai';
-import { google } from '@ai-sdk/google';
+import { ToolLoopAgent, type InferAgentUIMessage, type StepResult } from 'ai'
 import {
   searchDatasets,
   getDatasetDetails,
@@ -13,8 +12,13 @@ import {
   listTags,
   queryDatastoreResource,
 } from '@/lib/tools';
+import { createOpenRouter } from '@openrouter/ai-sdk-provider';
 
-const model = google('gemini-2.5-flash');
+const openrouter = createOpenRouter({
+  apiKey: process.env.OPENROUTER_API_KEY,
+});
+
+const chatModel = openrouter.chat('x-ai/grok-4.1-fast');
 
 /**
  * Custom stop condition for task completion
@@ -69,7 +73,8 @@ const taskCompletionStop = ({
  * Agent for exploring Israeli open data from data.gov.il
  */
 export const dataAgent = new ToolLoopAgent({
-  model,
+  model: chatModel,
+  toolChoice: 'required', // Force tool use on every request
   instructions: `אתה עוזר AI ידידותי שעוזר למשתמשים למצוא ולחקור נתונים פתוחים ישראליים מאתר data.gov.il.
 
 === גישה למשתמש ===

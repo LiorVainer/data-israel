@@ -75,14 +75,6 @@ function ToolCallCard({ part, isLatest = false }: ToolCallCardProps) {
               <CodeBlock code={JSON.stringify(part.input, null, 2)} language="json">
                 <CodeBlockCopyButton />
               </CodeBlock>
-            ) : (part.state === 'output-available' || part.state === 'approval-responded') && part.output ? (
-              <CodeBlock code={JSON.stringify(part.output, null, 2)} language="json">
-                <CodeBlockCopyButton />
-              </CodeBlock>
-            ) : (part.state === 'output-error' || part.state === 'output-denied') ? (
-              <div className="text-sm text-red-500">
-                שגיאה: {part.errorText || 'הפעולה נדחתה או נכשלה'}
-              </div>
             ) : null}
           </CardContent>
         </CollapsibleContent>
@@ -117,6 +109,8 @@ export default function Home() {
   const handleSuggestionClick = (prompt: string) => {
     setInput(prompt);
   };
+
+  console.log({messages})
 
   return (
     <div className="max-w-4xl mx-auto p-6 relative size-full h-screen">
@@ -173,6 +167,7 @@ export default function Home() {
                         case 'tool-getDatasetDetails':
                         case 'tool-listGroups':
                         case 'tool-listTags': {
+                          console.log({part});
                           const isLatestToolCall = messageIndex === messages.length - 1;
                           return (
                             <ToolCallCard
