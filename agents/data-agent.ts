@@ -4,24 +4,104 @@
  * ToolLoopAgent for exploring Israeli open datasets
  */
 
-import { ToolLoopAgent, type InferAgentUIMessage } from 'ai';
-import { google } from '@ai-sdk/google';
+import { ToolLoopAgent, type InferAgentUIMessage, type StepResult, type ToolSet } from 'ai'
 import {
+  // System tools
+  getStatus,
+  listLicenses,
+  getDatasetSchema,
+  // Dataset tools
   searchDatasets,
+  listAllDatasets,
   getDatasetDetails,
+  getDatasetActivity,
+  // Organization tools
+  listOrganizations,
+  getOrganizationDetails,
+  getOrganizationActivity,
+  // Group and tag tools
   listGroups,
   listTags,
+  // Resource tools
+  searchResources,
+  getResourceDetails,
   queryDatastoreResource,
 } from '@/lib/tools';
+import { createOpenRouter } from '@openrouter/ai-sdk-provider';
+import { AgentConfig } from './agent.config';
 
-const model = google('gemini-2.5-flash');
+/** Agent tools for type inference */
+const agentTools = {
+  getStatus,
+  listLicenses,
+  getDatasetSchema,
+  searchDatasets,
+  listAllDatasets,
+  getDatasetActivity,
+  getDatasetDetails,
+  listOrganizations,
+  getOrganizationDetails,
+  getOrganizationActivity,
+  listGroups,
+  listTags,
+  searchResources,
+  getResourceDetails,
+  queryDatastoreResource,
+} satisfies ToolSet;
+
+type AgentTools = typeof agentTools;
+
+const openrouter = createOpenRouter({
+  apiKey: process.env.OPENROUTER_API_KEY,
+});
+
+/** Get model instance by ID */
+const getModel = (modelId: string) => openrouter.chat(modelId);
 
 /**
- * Agent for exploring Israeli open data from data.gov.il
+ * Custom stop condition for task completion
+ * Stops when agent signals completion or hits safety limit
  */
-export const dataAgent = new ToolLoopAgent({
-  model,
-  instructions: `אתה עוזר AI ידידותי שעוזר למשתמשים למצוא ולחקור נתונים פתוחים ישראליים מאתר data.gov.il.
+const taskCompletionStop = ({
+  steps
+}: {
+  steps: StepResult<AgentTools>[]
+}): boolean => {
+  const stepCount = steps.length;
+  const lastStep = steps[steps.length - 1];
+
+  // Safety: Hard limit at max steps
+  if (stepCount >= AgentConfig.TOOL_CALLS.MAX_STEPS) {
+    return true;
+  }
+
+  // Minimum steps before stopping
+  if (stepCount < AgentConfig.TOOL_CALLS.MIN_STEPS_BEFORE_STOP) {
+    return false;
+  }
+
+
+  // Check for completion markers in agent's text response
+  if (lastStep.text) {
+    const hasCompletionMarker = AgentConfig.COMPLETION_MARKERS.some(marker =>
+      lastStep.text?.includes(marker)
+    );
+
+    if (hasCompletionMarker) {
+      return true;
+    }
+  }
+
+  // Stop if agent produced text without tool calls (done thinking)
+  if (lastStep.text && (!lastStep.toolCalls || lastStep.toolCalls.length === 0)) {
+    return true;
+  }
+
+  return false;
+};
+
+/** Agent instructions for data.gov.il exploration */
+const agentInstructions = `אתה עוזר AI ידידותי שעוזר למשתמשים למצוא ולחקור נתונים פתוחים ישראליים מאתר data.gov.il.
 
 === גישה למשתמש ===
 אתה מדבר עם אנשים רגילים, לא מפתחים טכניים. המטרה שלך היא לעזור להם למצוא מידע, לא לחשוף פרטים טכניים.
@@ -54,6 +134,27 @@ export const dataAgent = new ToolLoopAgent({
 2. getDatasetDetails → להבין מה יש במאגר ואילו משאבים זמינים
 3. queryDatastoreResource → להציג את הנתונים בפועל
 
+=== תהליך עבודה אוטונומי למשימות מורכבות ===
+
+כאשר המשתמש מבקש מידע ספציפי (למשל "מחירי קוטג'", "נתוני חינוך בירושלים"):
+
+תהליך מלא:
+1. חפש מאגרי מידע רלוונטיים (searchDatasets)
+2. בדוק פרטי כל מאגר שמצאת (getDatasetDetails) - עד 7 מאגרים
+3. שאל את כל המאגרים עבור המידע המבוקש (queryDatastoreResource)
+4. צור סיכום מכל הנתונים שאספת
+5. הצג את התוצאות למשתמש
+
+דוגמה:
+שאלה: "מה מחירי הקוטג'?"
+→ searchDatasets(query="מחירים") → מצאתי 5 מאגרים
+→ getDatasetDetails על כל אחד → מצאתי 3 עם משאבים רלוונטיים
+→ queryDatastoreResource על כל 3 (filters={"product": "cottage"} או q="קוטג'")
+→ אסוף תוצאות מכולם
+→ סיכום: "מצאתי מחירי קוטג' ב-3 מאגרים..."
+
+אל תעצור באמצע! סיים את כל התהליך לפני שאתה עונה למשתמש.
+
 === כללי תצוגה ===
 
 כאשר מציג מאגרי מידע:
@@ -66,6 +167,36 @@ export const dataAgent = new ToolLoopAgent({
 - הגבל ל-10-20 שורות וציין כמה יש בסך הכל
 - סכם: "מציג 10 מתוך 150 רשומות. רוצה לראות עוד?"
 - הצע סינון או ניתוח: "רוצה שאסנן לפי עיר מסוימת? או שאציג סטטיסטיקות?"
+
+=== הצגת תוצאות ממספר מאגרים ===
+
+כאשר מצאת נתונים במספר מאגרים - אל תציג שורות גולמיות!
+
+במקום זה, צור סיכום עם סטטיסטיקות:
+- כמה רשומות מצאת בכל מאגר
+- מחיר ממוצע / מינימום / מקסימום
+- השוואה בין מאגרים
+- מגמות שזיהית
+
+דוגמה טובה:
+"מצאתי נתונים על מחירי קוטג' ב-3 מאגרים:
+📊 מאגר מחירי מזון 2024:
+   - 847 רשומות קוטג'
+   - מחיר ממוצע: 11.2 ₪
+   - טווח: 9.5-14.8 ₪
+
+📊 מאגר מוצרי חלב:
+   - 234 רשומות קוטג'
+   - מחיר ממוצע: 12.1 ₪
+
+📊 מאגר משרד החקלאות:
+   - 156 רשומות קוטג'
+   - מחיר ממוצע: 10.9 ₪
+
+🎯 סיכום: מחיר קוטג' נע בין 9.5-14.8 ₪, עם ממוצע של 11.4 ₪"
+
+דוגמה רעה:
+❌ "מצאתי 1000 שורות במאגר A ו-500 במאגר B"
 
 דוגמאות למה לא לעשות:
 ❌ "מצאתי מאגר d882fbb6-179b-475b-9d3b-edd82ec262c5"
@@ -83,15 +214,35 @@ export const dataAgent = new ToolLoopAgent({
 - הסבר מה אתה עושה במילים פשוטות
 - תמיד סיים עם הצעה למה לעשות הלאה
 
-זכור: המשתמש רוצה מידע, לא פרטים טכניים. תפקידך להיות גשר בין הנתונים הטכניים לבין צרכי המשתמש.`,
-  tools: {
-    searchDatasets,
-    getDatasetDetails,
-    listGroups,
-    listTags,
-    queryDatastoreResource,
-  },
-});
+=== איך לסיים משימה ===
+
+כאשר סיימת לאסוף ולנתח את כל הנתונים, הוסף סימן סיום:
+
+✅ אם מצאת נתונים: התחל ב-"סיכום:" ואחר כך הסבר מה מצאת
+❌ אם לא מצאת: "לא מצאתי נתונים על [נושא]. חיפשתי במאגרים: [רשימה]"
+💡 אם רוצה להציע המשך: "סיימתי את החיפוש. רוצה [הצעה]?"
+
+זה אומר למערכת שסיימת את העבודה.
+
+זכור: המשתמש רוצה מידע, לא פרטים טכניים. תפקידך להיות גשר בין הנתונים הטכניים לבין צרכי המשתמש.`;
+
+/**
+ * Factory function to create a data agent with a specific model
+ */
+export function createDataAgent(modelId: string = AgentConfig.MODEL.DEFAULT_ID) {
+  return new ToolLoopAgent({
+    model: getModel(modelId),
+    toolChoice: "auto",
+    instructions: agentInstructions,
+    tools: agentTools,
+    stopWhen: taskCompletionStop,
+  });
+}
+
+/**
+ * Default agent instance for backwards compatibility
+ */
+export const dataAgent = createDataAgent();
 
 /**
  * Type for messages compatible with this agent

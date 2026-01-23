@@ -143,3 +143,80 @@ export interface DataStoreSearchResult {
     next?: string;
   };
 }
+
+/**
+ * CKAN Status information
+ */
+export interface CKANStatus {
+  site_title?: string;
+  site_description?: string;
+  site_url?: string;
+  ckan_version?: string;
+  extensions?: string[];
+}
+
+/**
+ * License information
+ */
+export interface License {
+  id: string;
+  title: string;
+  url?: string;
+  status?: string;
+  maintainer?: string;
+  family?: string;
+  domain_content?: boolean;
+  domain_data?: boolean;
+  domain_software?: boolean;
+  is_generic?: boolean;
+  is_okd_compliant?: boolean;
+  is_osi_compliant?: boolean;
+}
+
+/**
+ * Activity stream item
+ */
+export interface Activity {
+  id: string;
+  timestamp: string;
+  user_id: string;
+  object_id?: string;
+  activity_type: string;
+  data?: Record<string, unknown>;
+}
+
+/**
+ * Resource search result
+ */
+export interface ResourceSearchResult {
+  count: number;
+  results: Resource[];
+}
+
+/**
+ * Dataset schema from scheming_dataset_schema_show
+ */
+export interface DatasetSchema {
+  scheming_version?: number;
+  dataset_type?: string;
+  about?: string;
+  about_url?: string;
+  dataset_fields?: SchemaField[];
+  resource_fields?: SchemaField[];
+}
+
+/**
+ * Schema field definition
+ */
+export interface SchemaField {
+  field_name: string;
+  label?: string | Record<string, string>;
+  preset?: string;
+  form_snippet?: string;
+  display_snippet?: string;
+  validators?: string;
+  output_validators?: string;
+  help_text?: string | Record<string, string>;
+  required?: boolean;
+  choices?: Array<{ value: string; label: string | Record<string, string> }>;
+}

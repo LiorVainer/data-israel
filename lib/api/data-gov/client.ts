@@ -6,7 +6,20 @@
  */
 
 import axios from 'axios';
-import type { DataGovResponse, Dataset, Group, Tag, SearchResult, DataStoreSearchResult } from './types';
+import type {
+  DataGovResponse,
+  Dataset,
+  Group,
+  Tag,
+  SearchResult,
+  DataStoreSearchResult,
+  CKANStatus,
+  License,
+  Activity,
+  Resource,
+  ResourceSearchResult,
+  DatasetSchema,
+} from './types';
 
 const BASE_URL = 'https://data.gov.il/api/3';
 
@@ -40,9 +53,47 @@ async function dataGovGet<T>(
  */
 export const dataGovApi = {
   /**
+   * System operations
+   */
+  system: {
+    /**
+     * Get CKAN version and installed extensions
+     * @returns Status information including CKAN version
+     */
+    status: async () => {
+      return dataGovGet<CKANStatus>('/action/status_show');
+    },
+
+    /**
+     * Get list of available licenses
+     * @returns Array of license objects
+     */
+    licenses: async () => {
+      return dataGovGet<License[]>('/action/license_list');
+    },
+
+    /**
+     * Get the schema for a dataset type
+     * @param type - Dataset type ('dataset' or 'info')
+     * @returns Schema definition
+     */
+    schema: async (type: 'dataset' | 'info' = 'dataset') => {
+      return dataGovGet<DatasetSchema>('/action/scheming_dataset_schema_show', { type });
+    },
+  },
+
+  /**
    * Dataset operations
    */
   dataset: {
+    /**
+     * Get all dataset IDs
+     * @returns Array of dataset IDs/names
+     */
+    list: async () => {
+      return dataGovGet<string[]>('/action/package_list');
+    },
+
     /**
      * Search for datasets
      * @param params - Search parameters
@@ -64,6 +115,86 @@ export const dataGovApi = {
      */
     show: async (id: string) => {
       return dataGovGet<Dataset>('/action/package_show', { id });
+    },
+
+    /**
+     * Get activity stream of a dataset
+     * @param id - Dataset ID
+     * @param params - Pagination parameters
+     * @returns Array of activities
+     */
+    activity: async (
+      id: string,
+      params?: { offset?: number; limit?: number }
+    ) => {
+      return dataGovGet<Activity[]>('/action/package_activity_list', { id, ...params });
+    },
+  },
+
+  /**
+   * Organization operations
+   */
+  organization: {
+    /**
+     * List all organizations
+     * @returns Array of organization names
+     */
+    list: async () => {
+      return dataGovGet<string[]>('/action/organization_list');
+    },
+
+    /**
+     * Get details of a specific organization
+     * @param id - Organization ID or name
+     * @returns Organization details
+     */
+    show: async (id: string) => {
+      return dataGovGet<Group>('/action/organization_show', { id });
+    },
+
+    /**
+     * Get activity stream of an organization
+     * @param id - Organization ID or name
+     * @param params - Pagination parameters
+     * @returns Array of activities
+     */
+    activity: async (
+      id: string,
+      params?: { offset?: number; limit?: number }
+    ) => {
+      return dataGovGet<Activity[]>('/action/organization_activity_list', { id, ...params });
+    },
+  },
+
+  /**
+   * Resource operations
+   */
+  resource: {
+    /**
+     * Search for resources
+     * @param params - Search parameters
+     * @returns Search results with count and resources
+     */
+    search: async (params: {
+      query: string;
+      order_by?: string;
+      offset?: number;
+      limit?: number;
+    }) => {
+      return dataGovGet<ResourceSearchResult>('/action/resource_search', params);
+    },
+
+    /**
+     * Get metadata for a specific resource
+     * @param id - Resource ID
+     * @param includeTracking - Include tracking information
+     * @returns Resource metadata
+     */
+    show: async (id: string, includeTracking = false) => {
+      return dataGovGet<Resource>('/action/resource_show', {
+        id,
+        include_tracking: includeTracking,
+      });
     },
   },
 
@@ -116,6 +247,7 @@ export const dataGovApi = {
       resource_id: string;
       filters?: Record<string, string | number>;
       q?: string;
+      plain?: boolean;
       limit?: number;
       offset?: number;
       sort?: string;
@@ -127,6 +259,7 @@ export const dataGovApi = {
         offset: params.offset,
         sort: params.sort,
         q: params.q,
+        plain: params.plain,
       };
 
       if (params.filters) {
