@@ -4,7 +4,7 @@
  * ToolLoopAgent for exploring Israeli open datasets
  */
 
-import { ToolLoopAgent, type InferAgentUIMessage, type StepResult } from 'ai'
+import { ToolLoopAgent, type InferAgentUIMessage, type StepResult, type ToolSet } from 'ai'
 import {
   searchDatasets,
   getDatasetDetails,
@@ -13,12 +13,24 @@ import {
   queryDatastoreResource,
 } from '@/lib/tools';
 import { createOpenRouter } from '@openrouter/ai-sdk-provider';
+import { AgentConfig } from './agent.config';
+
+/** Agent tools for type inference */
+const agentTools = {
+  searchDatasets,
+  getDatasetDetails,
+  listGroups,
+  listTags,
+  queryDatastoreResource,
+} satisfies ToolSet;
+
+type AgentTools = typeof agentTools;
 
 const openrouter = createOpenRouter({
   apiKey: process.env.OPENROUTER_API_KEY,
 });
 
-const chatModel = openrouter.chat('x-ai/grok-4.1-fast');
+const chatModel = openrouter.chat(AgentConfig.model.ID);
 
 /**
  * Custom stop condition for task completion
@@ -27,32 +39,25 @@ const chatModel = openrouter.chat('x-ai/grok-4.1-fast');
 const taskCompletionStop = ({
   steps
 }: {
-  steps: StepResult<any>[]
+  steps: StepResult<AgentTools>[]
 }): boolean => {
   const stepCount = steps.length;
   const lastStep = steps[steps.length - 1];
 
-  // Safety: Hard limit at 25 steps
-  if (stepCount >= 25) {
+  // Safety: Hard limit at max steps
+  if (stepCount >= AgentConfig.toolCalls.MAX_STEPS) {
     return true;
   }
 
-  // Minimum 3 steps before stopping
-  if (stepCount < 3) {
+  // Minimum steps before stopping
+  if (stepCount < AgentConfig.toolCalls.MIN_STEPS_BEFORE_STOP) {
     return false;
   }
 
+
   // Check for completion markers in agent's text response
   if (lastStep.text) {
-    const completionMarkers = [
-      'סיכום:',
-      'מצאתי את כל הנתונים',
-      'לא מצאתי נתונים',
-      'סיימתי לחפש',
-      'סיימתי את החיפוש',
-    ];
-
-    const hasCompletionMarker = completionMarkers.some(marker =>
+    const hasCompletionMarker = AgentConfig.completionMarkers.some(marker =>
       lastStep.text?.includes(marker)
     );
 
@@ -74,7 +79,7 @@ const taskCompletionStop = ({
  */
 export const dataAgent = new ToolLoopAgent({
   model: chatModel,
-  toolChoice: 'required', // Force tool use on every request
+  toolChoice: AgentConfig.model.TOOL_CHOICE,
   instructions: `אתה עוזר AI ידידותי שעוזר למשתמשים למצוא ולחקור נתונים פתוחים ישראליים מאתר data.gov.il.
 
 === גישה למשתמש ===
@@ -199,13 +204,7 @@ export const dataAgent = new ToolLoopAgent({
 זה אומר למערכת שסיימת את העבודה.
 
 זכור: המשתמש רוצה מידע, לא פרטים טכניים. תפקידך להיות גשר בין הנתונים הטכניים לבין צרכי המשתמש.`,
-  tools: {
-    searchDatasets,
-    getDatasetDetails,
-    listGroups,
-    listTags,
-    queryDatastoreResource,
-  },
+  tools: agentTools,
   stopWhen: taskCompletionStop
 });
 
