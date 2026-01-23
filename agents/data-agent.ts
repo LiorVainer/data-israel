@@ -6,10 +6,25 @@
 
 import { ToolLoopAgent, type InferAgentUIMessage, type StepResult, type ToolSet } from 'ai'
 import {
+  // System tools
+  getStatus,
+  listLicenses,
+  getDatasetSchema,
+  // Dataset tools
   searchDatasets,
+  listAllDatasets,
   getDatasetDetails,
+  getDatasetActivity,
+  // Organization tools
+  listOrganizations,
+  getOrganizationDetails,
+  getOrganizationActivity,
+  // Group and tag tools
   listGroups,
   listTags,
+  // Resource tools
+  searchResources,
+  getResourceDetails,
   queryDatastoreResource,
 } from '@/lib/tools';
 import { createOpenRouter } from '@openrouter/ai-sdk-provider';
@@ -17,10 +32,20 @@ import { AgentConfig } from './agent.config';
 
 /** Agent tools for type inference */
 const agentTools = {
+  getStatus,
+  listLicenses,
+  getDatasetSchema,
   searchDatasets,
+  listAllDatasets,
+  getDatasetActivity,
   getDatasetDetails,
+  listOrganizations,
+  getOrganizationDetails,
+  getOrganizationActivity,
   listGroups,
   listTags,
+  searchResources,
+  getResourceDetails,
   queryDatastoreResource,
 } satisfies ToolSet;
 
@@ -207,7 +232,7 @@ const agentInstructions = `אתה עוזר AI ידידותי שעוזר למשת
 export function createDataAgent(modelId: string = AgentConfig.MODEL.DEFAULT_ID) {
   return new ToolLoopAgent({
     model: getModel(modelId),
-    toolChoice: AgentConfig.MODEL.TOOL_CHOICE,
+    toolChoice: "auto",
     instructions: agentInstructions,
     tools: agentTools,
     stopWhen: taskCompletionStop,

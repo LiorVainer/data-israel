@@ -12,7 +12,7 @@ export const AgentConfig = {
     /** Minimum steps before stopping is allowed */
     MIN_STEPS_BEFORE_STOP: 0,
     /** Hard limit on maximum steps */
-    MAX_STEPS: 10,
+    MAX_STEPS: 25,
   },
 
   /** Model configuration */
@@ -20,7 +20,6 @@ export const AgentConfig = {
     /** Default OpenRouter model ID */
     DEFAULT_ID: 'x-ai/grok-4.1-fast',
     /** Tool choice strategy */
-    TOOL_CHOICE: 'required' as const,
   },
 
   /** Available models for selection */

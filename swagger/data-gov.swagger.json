@@ -1,0 +1,954 @@
+{
+  "openapi": "3.0.0",
+  "servers": [
+    {
+      "url": "https://data.gov.il/api/3",
+      "description": "Data gov IL CKAN API"
+    }
+  ],
+  "info": {
+    "title": "Data Gov CKAN API Documentation",
+    "description": "This API provides live access to the CKAN portion of Data gov IL.",
+    "contact": {
+      "name": "Data Gov",
+      "url": "https://data.gov.il"
+    },
+    "version": "1.0.0"
+  },
+  "tags": [
+    {
+      "name": "action",
+      "description": "### CKAN's Action API is a powerful, RPC-style API that exposes all of CKAN's core features.\n All endpoints support POST requests with an `application/json` or a `multipart/form-data` body.\n Use an `application/json` POST request when nested json parameters are required.\n\n   Use a `multipart/form-data` POST request when file uploads are required.\n Read-only endpoints (`*_show`, `*_list`, `*_search` etc.) accept GET requests with query parameters.\n Responses are returned in a JSON envelope. On success:```json{  \"help\": \"url to complete endpoint help\",  \"success\": true,  \"result\": {...}}``` or on errors:```json{  \"help\": \"url to complete endpoint help\",  \"success\": false,  \"error\": {    \"__type\": \"error type\",    \"message\": \"error message\",    \"field-with-error\": [\"first-error\", \"second-error\"],    ...  }}```",
+      "externalDocs": {
+        "description": "Full docs here",
+        "url": "https://docs.ckan.org/en/2.10/api/"
+      }
+    }
+  ],
+  "paths": {
+    "/action/status_show": {
+      "post": {
+        "summary": "Get the CKAN version and a list of installed extensions",
+        "description": "Use this API to check that you can reach the server and to check its capabilities.",
+        "tags": [
+          "action"
+        ],
+        "responses": {
+          "200": {
+            "description": "Returns the CKAN version and a list of installed extensions"
+          }
+        }
+      }
+    },
+    "/action/license_list": {
+      "get": {
+        "summary": "Get the list of licenses available for datasets on the site.",
+        "tags": [
+          "action"
+        ],
+        "responses": {
+          "200": {
+            "type": "array",
+            "description": "Returns the list of licenses available for datasets on the site."
+          }
+        }
+      }
+    },
+    "/action/package_list": {
+      "get": {
+        "summary": "Get a list of all package ids (datasets)",
+        "description": "Note: our site uses the same value for the \"name\" and \"id\" fields of datasets",
+        "tags": [
+          "action"
+        ],
+        "responses": {
+          "200": {
+            "description": "Returns a list of package ids"
+          }
+        }
+      }
+    },
+    "/action/package_search": {
+      "get": {
+        "summary": "Find packages (datasets) matching query terms",
+        "description": "Searches for packages (datasets) matching the specified query terms",
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "description": "A solr query string that will be used to filter and score results",
+            "schema": {
+              "type": "string"
+            },
+            "examples": {
+              "All data": {
+                "value": ""
+              },
+              "Analytics": {
+                "value": "analytics"
+              }
+            }
+          },
+          {
+            "name": "fq",
+            "in": "query",
+            "description": "A solr filter query that will facet results by removing non-matching items.The available parameters may be discovered by interacting with thefacets on https://open.canada.ca/data/dataset and observing thequery parameters generated.",
+            "schema": {
+              "type": "string"
+            },
+            "examples": {
+              "No filter": {
+                "value": ""
+              },
+              "Published by digital ministry": {
+                "value": "organization:digital"
+              },
+              "Transport data": {
+                "value": "subject:transport"
+              }
+            }
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "description": "Sort order for the search results, defaults to `score desc, metadata_modified desc`meaning sort by query score order, and with no query sort by most recently modified.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "rows",
+            "in": "query",
+            "description": "Maximum rows to return, clamped to 1000",
+            "schema": {
+              "type": "integer",
+              "default": 20
+            }
+          },
+          {
+            "name": "start",
+            "in": "query",
+            "description": "The offset from the beginning of results (0) for pagination",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "include_private",
+            "in": "query",
+            "description": "Must be set to `true` to retrieve results on the Registry,no effect on the Portal",
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of packages (datasets) including all metadata available."
+          }
+        },
+        "tags": [
+          "action"
+        ]
+      },
+      "post": {
+        "summary": "Find packages (datasets) matching query terms",
+        "description": "Searches for packages (datasets) matching the specified query terms",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "q": {
+                    "type": "string",
+                    "description": "A solr query string that will be used to filter and score results"
+                  },
+                  "fq": {
+                    "type": "string",
+                    "description": "A solr filter query that will facet results by removing non-matching items.The available parameters may be discovered by interacting with thefacets on https://open.canada.ca/data/dataset and observing thequery parameters generated."
+                  },
+                  "sort": {
+                    "type": "string",
+                    "description": "Sort order for the search results, defaults to `score desc, metadata_modified desc`meaning sort by query score order, and with no query sort by most recently modified."
+                  },
+                  "rows": {
+                    "type": "integer",
+                    "description": "Maximum rows to return, clamped to 1000"
+                  },
+                  "start": {
+                    "type": "integer",
+                    "description": "The offset from the beginning of results (0) for pagination"
+                  },
+                  "include_private": {
+                    "type": "boolean",
+                    "description": "Must be set to `true` to retrieve results on the Registry,no effect on the Portal"
+                  }
+                }
+              },
+              "examples": {
+                "10 most recently modified datasets": {
+                  "value": {
+                    "rows": 10
+                  }
+                },
+                "3 datasets that best match \"water use\"": {
+                  "value": {
+                    "q": "water use",
+                    "rows": 3
+                  }
+                },
+                "Datasets number 101-120 by last modified date": {
+                  "value": {
+                    "sort": "metadata_modified desc",
+                    "start": 100,
+                    "rows": 20
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "action"
+        ],
+        "responses": {
+          "200": {
+            "description": "List of packages (datasets) including all metadata available."
+          }
+        }
+      }
+    },
+    "/action/package_show": {
+      "get": {
+        "summary": "Get metadata about one specific package (dataset)",
+        "description": "Returns metadata about the package (dataset) corresponding to its UUID.Refer to the [open data schema (type=dataset)](https://open.canada.ca/data/api/action/scheming_dataset_schema_show?type=dataset)or the [open information schema (type=info)](https://open.canada.ca/data/api/action/scheming_dataset_schema_show?type=info)for information about the metadata fields returned.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "query",
+            "description": "The package UUID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "tags": [
+          "action"
+        ],
+        "responses": {
+          "200": {
+            "description": "A package metadata object",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/action/package_activity_list": {
+      "get": {
+        "summary": "Get the activity stream of a package (dataset)",
+        "description": "Returns a package's activity stream, newest activities first",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "query",
+            "description": "The package UUID",
+            "schema": {
+              "type": "string",
+              "default": "2916fad5-ebcc-4c86-b0f3-4f619b29f412"
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "description": "The offset of the first activity to return, used for pagination",
+            "schema": {
+              "type": "integer",
+              "default": 0
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "The maximum number of activities to return",
+            "schema": {
+              "type": "integer",
+              "default": 31
+            }
+          }
+        ],
+        "tags": [
+          "action"
+        ],
+        "responses": {
+          "200": {
+            "description": "List of activities"
+          }
+        }
+      }
+    },
+    "/action/organization_activity_list": {
+      "get": {
+        "summary": "Get the activity stream of an organization",
+        "description": "Return an organization's activity stream, newest activities first",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "query",
+            "description": "The id or name (short form) of the organization",
+            "schema": {
+              "type": "string",
+              "default": "ec"
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "description": "The offset of the first activity to return, used for pagination",
+            "schema": {
+              "type": "integer",
+              "default": 0
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "The maximum number of activities to return",
+            "schema": {
+              "type": "integer",
+              "default": 31
+            }
+          }
+        ],
+        "tags": [
+          "action"
+        ],
+        "responses": {
+          "200": {
+            "description": "List of an organization's activities"
+          }
+        }
+      }
+    },
+    "/action/organization_show": {
+      "get": {
+        "summary": "Get details of a specific organization",
+        "description": "Return the details of an organization",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "query",
+            "description": "The id or name (short form) of the organization",
+            "schema": {
+              "type": "string",
+              "default": "tbs-sct"
+            }
+          }
+        ],
+        "tags": [
+          "action"
+        ],
+        "responses": {
+          "200": {
+            "description": "List organization details"
+          }
+        }
+      }
+    },
+    "/action/organization_list": {
+      "get": {
+        "summary": "Get names of all organizations",
+        "description": "Returns the names (short forms) of all indexed organizations",
+        "parameters": [],
+        "tags": [
+          "action"
+        ],
+        "responses": {
+          "200": {
+            "description": "List of organizations"
+          }
+        }
+      }
+    },
+    "/action/resource_search": {
+      "get": {
+        "summary": "Find resources",
+        "description": "Search resources based on their field values. Note that[package_search](#/action/get_action_package_search) has better performanceand more search functionality than this endpoint.",
+        "parameters": [
+          {
+            "name": "query",
+            "in": "query",
+            "description": "The search criteria string or list of strings of the form ``{field}:{term1}``",
+            "schema": {
+              "type": "string",
+              "default": "format:csv"
+            }
+          },
+          {
+            "name": "order_by",
+            "in": "query",
+            "description": "A field on the resource model that orders the results",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "description": "Apply an offset to the query",
+            "schema": {
+              "type": "integer",
+              "default": 0
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Apply a limit to the query",
+            "schema": {
+              "type": "integer",
+              "default": 0
+            }
+          }
+        ],
+        "tags": [
+          "action"
+        ],
+        "responses": {
+          "200": {
+            "description": "List of resources"
+          }
+        }
+      }
+    },
+    "/action/resource_show": {
+      "get": {
+        "summary": "Get metadata for a specific resource",
+        "description": "Returns the metadata of a resource. Refer to the[resource_fields value in the dataset schema](https://open.canada.ca/data/api/action/scheming_dataset_schema_show?type=dataset)for information about the metadata fields.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "query",
+            "description": "The id of the resource",
+            "schema": {
+              "type": "string",
+              "default": "e6c8bb1d-3726-418b-9b7e-1d97a9bbb817"
+            }
+          },
+          {
+            "name": "include_tracking",
+            "in": "query",
+            "description": "Return tracking (usage) information",
+            "schema": {
+              "type": "boolean",
+              "default": false
+            }
+          }
+        ],
+        "tags": [
+          "action"
+        ],
+        "responses": {
+          "200": {
+            "description": "Return metadata of a resource",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Dataset/properties/resources/items"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/action/datastore_search": {
+      "get": {
+        "summary": "Search a datastore resource",
+        "description": "The datastore_search action allows you to search data in a resource.Well-formatted CSV files that are uploaded (not linked) are automaticallyloaded into the datastore.",
+        "parameters": [
+          {
+            "name": "resource_id",
+            "in": "query",
+            "description": "id or alias of the resource to be searched against",
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "required": true
+            },
+            "required": true
+          },
+          {
+            "name": "filters",
+            "in": "query",
+            "description": "matching conditions to select, `application/json` POST requests only",
+            "schema": {
+              "type": "object"
+            },
+            "examples": {
+              "(Value not supported for GET requests)": {
+                "value": ""
+              }
+            }
+          },
+          {
+            "name": "q",
+            "in": "query",
+            "description": "full text query searching across all columns in each row",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "distinct",
+            "in": "query",
+            "description": "return only distinct rows",
+            "schema": {
+              "type": "boolean",
+              "default": false
+            }
+          },
+          {
+            "name": "plain",
+            "in": "query",
+            "description": "treat as plain text query",
+            "schema": {
+              "type": "boolean",
+              "default": true
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "maximum number of rows to return",
+            "schema": {
+              "type": "integer",
+              "default": 100
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "description": "offset this number of rows",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "fields",
+            "in": "query",
+            "description": "comma-separated string of column names to return",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "description": "comma-separated string of column names with sort order",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "include_total",
+            "in": "query",
+            "description": "calculate and return the total number of matching rows, set to `false` for improved performance",
+            "schema": {
+              "type": "boolean",
+              "default": true
+            }
+          },
+          {
+            "name": "records_format",
+            "in": "query",
+            "description": "the format for the records return value, set to `csv` or `tsv` for improved performance",
+            "schema": {
+              "type": "string",
+              "default": "objects",
+              "enum": [
+                "objects",
+                "lists",
+                "csv",
+                "tsv"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of packages (datasets) including all metadata available."
+          }
+        },
+        "tags": [
+          "action"
+        ]
+      },
+      "post": {
+        "summary": "Search a datastore resource",
+        "description": "The datastore_search action allows you to search data in a resource.Well-formatted CSV files that are uploaded (not linked) are automaticallyloaded into the datastore.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "resource_id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "required": true,
+                    "description": "id or alias of the resource to be searched against"
+                  },
+                  "filters": {
+                    "type": "object",
+                    "description": "matching conditions to select, `application/json` POST requests only"
+                  },
+                  "q": {
+                    "oneOf": [
+                      {
+                        "type": "string",
+                        "description": "full text query searching across all columns in each row",
+                        "example": ""
+                      },
+                      {
+                        "type": "object",
+                        "description": "fill text search on each field given"
+                      }
+                    ]
+                  },
+                  "distinct": {
+                    "type": "boolean",
+                    "description": "return only distinct rows"
+                  },
+                  "plain": {
+                    "type": "boolean",
+                    "description": "treat as plain text query"
+                  },
+                  "limit": {
+                    "type": "integer",
+                    "description": "maximum number of rows to return",
+                    "example": 10
+                  },
+                  "offset": {
+                    "type": "integer",
+                    "description": "offset this number of rows"
+                  },
+                  "fields": {
+                    "oneOf": [
+                      {
+                        "type": "array",
+                        "description": "list of column names to return",
+                        "items": {
+                          "type": "string"
+                        }
+                      },
+                      {
+                        "type": "string",
+                        "description": "comma-separated string of column names to return"
+                      }
+                    ],
+                    "example": []
+                  },
+                  "sort": {
+                    "type": "string",
+                    "description": "comma-separated string of column names with sort order",
+                    "example": ""
+                  },
+                  "include_total": {
+                    "type": "boolean",
+                    "description": "calculate and return the total number of matching rows, set to `false` for improved performance"
+                  },
+                  "records_format": {
+                    "type": "string",
+                    "description": "the format for the records return value, set to `csv` or `tsv` for improved performance",
+                    "enum": [
+                      "objects",
+                      "lists",
+                      "csv",
+                      "tsv"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "action"
+        ],
+        "responses": {
+          "200": {
+            "description": "List of packages (datasets) including all metadata available."
+          }
+        }
+      }
+    },
+    "/action/scheming_dataset_schema_show": {
+      "get": {
+        "summary": "Return the schema for a dataset type",
+        "description": "Dataset metadata schemas are defined in the [ckanext-scheming](https://github.com/ckan/ckanext-scheming)format.",
+        "parameters": [
+          {
+            "name": "type",
+            "in": "query",
+            "description": "The dataset type",
+            "schema": {
+              "type": "string",
+              "default": "dataset",
+              "enum": [
+                "dataset",
+                "info"
+              ]
+            }
+          }
+        ],
+        "tags": [
+          "action"
+        ],
+        "responses": {
+          "200": {
+            "description": "Returns metadata schema"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Dataset": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "The name of the new dataset, must be between 2 and 100 characters long and contain only lowercase alphanumeric characters,``-`` and ``_``, e.g. ``'warandpeace'``"
+          },
+          "title": {
+            "type": "string",
+            "description": "The title of the dataset (optional, default: same as``name``)"
+          },
+          "private": {
+            "type": "boolean",
+            "description": "If ``True`` creates a private dataset"
+          },
+          "author": {
+            "type": "string",
+            "description": "The name of the dataset's author (optional)"
+          },
+          "author_email": {
+            "type": "string",
+            "description": "The email address of the dataset's author (optional)"
+          },
+          "maintainer": {
+            "type": "string",
+            "description": "The name of the dataset's maintainer (optional)"
+          },
+          "maintainer_email": {
+            "type": "string",
+            "description": "The email address of the dataset's maintainer (optional)"
+          },
+          "license_id": {
+            "type": "string",
+            "description": "The id of the dataset's license, see :py:func:`~ckan.logic.action.get.license_list` for available values(optional)"
+          },
+          "notes": {
+            "type": "string",
+            "description": "A description of the dataset (optional)"
+          },
+          "url": {
+            "type": "string",
+            "description": "A URL for the dataset's source (optional)"
+          },
+          "version": {
+            "type": "string",
+            "description": "Version, no longer than 100 characters (optional)"
+          },
+          "state": {
+            "type": "string",
+            "description": "The current state of the dataset, e.g. ``'active'`` or ``'deleted'``, only active datasets show up in search results and other lists of datasets, this parameter will be ignored if you are not authorized to change the state of the dataset (optional, default: ``'active'``)",
+            "example": "active"
+          },
+          "type": {
+            "type": "string",
+            "description": "The type of the dataset (optional) :py:class:`~ckan.plugins.interfaces.IDatasetForm` plugins associate themselves with different dataset types and provide custom dataset handling behaviour for these types",
+            "example": "dataset"
+          },
+          "resources": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ResourceMultipart"
+            }
+          },
+          "tags": {
+            "type": "array",
+            "description": "The dataset's tags, see :py:func:`tag_create` for the format of tag dictionaries (optional)",
+            "items": {
+              "type": "object"
+            }
+          },
+          "extras": {
+            "type": "array",
+            "description": "The dataset's extras (optional), extras are arbitrary (key: value) metadata items that can be added to datasets, each extra dictionary should have keys ``'key'`` (a string), ``'value'`` (a string)",
+            "items": {
+              "type": "object",
+              "properties": {
+                "key": {
+                  "type": "string"
+                },
+                "value": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "relationships_as_object": {
+            "$ref": "#/components/schemas/PackageRelationships"
+          },
+          "relationships_as_subject": {
+            "$ref": "#/components/schemas/PackageRelationships"
+          },
+          "groups": {
+            "type": "array",
+            "description": "The groups to which the dataset belongs (optional), each group dictionary should have one or more of the following keys which identify an existing group ``'id'`` (the id of the group, string), or ``'name'`` (the name of the group, string),  to see which groups exist call :py:func:`~ckan.logic.action.get.group_list`",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "id": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "owner_org": {
+            "type": "string",
+            "description": "The id of the dataset's owning organization, see :py:func:`~ckan.logic.action.get.organization_list` or :py:func:`~ckan.logic.action.get.organization_list_for_user` for available values. This parameter can be made optional if the config option :ref:`ckan.auth.create_unowned_dataset` is set to ``True``."
+          }
+        }
+      },
+      "ResourceMultipart": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "The id of the resource"
+          },
+          "description": {
+            "type": "string",
+            "description": "(optional)"
+          },
+          "format": {
+            "type": "string",
+            "description": "(optional)",
+            "example": "CSV"
+          },
+          "hash": {
+            "type": "string",
+            "description": "(optional)"
+          },
+          "name": {
+            "type": "string",
+            "description": "(optional)"
+          },
+          "resource_type": {
+            "type": "string",
+            "description": "(optional)"
+          },
+          "mimetype": {
+            "type": "string",
+            "description": "(optional)",
+            "example": "text/csv"
+          },
+          "package_id": {
+            "type": "string",
+            "description": "Id of package that the resource should be added to."
+          },
+          "Frequency": {
+            "type": "string",
+            "required": true,
+            "description": "Frequency that the resource should by updated",
+            "enum": [
+              "Year",
+              "Quarter",
+              "Month",
+              "Week",
+              "Day",
+              "Times in day",
+              "NoUpdate",
+              "NotConstant"
+            ]
+          },
+          "how_update": {
+            "type": "string",
+            "required": true,
+            "description": "How this resource should be updated",
+            "enum": [
+              "Manual",
+              "Automat"
+            ]
+          },
+          "category": {
+            "type": "string",
+            "required": true,
+            "description": "Category of this resource",
+            "enum": [
+              "information",
+              "description",
+              "archive"
+            ]
+          },
+          "upload": {
+            "type": "string",
+            "format": "binary",
+            "description": "FieldStorage (optional) needs multipart/form-data"
+          }
+        }
+      },
+      "PackageRelationships": {
+        "type": "array",
+        "description": "See :py:func:`package_relationship_create` for the format of relationship dictionaries. when you send on package_create 'relationships_as_object' parameter, don't send object. when you send 'relationships_as_subject', don't send subject (optional)",
+        "items": {
+          "type": "object",
+          "properties": {
+            "subject": {
+              "type": "string",
+              "description": "The id or name of the dataset that is the subject of the relationship"
+            },
+            "object": {
+              "type": "string",
+              "description": "The id or name of the dataset that is the object of the relationship"
+            },
+            "type": {
+              "type": "string",
+              "description": "The type of the relationship",
+              "enum": [
+                "depends_on",
+                "dependency_of",
+                "derives_from",
+                "has_derivation",
+                "links_to",
+                "linked_from",
+                "child_of",
+                "parent_of"
+              ],
+              "default": "child_of"
+            },
+            "comment": {
+              "type": "string",
+              "description": "A comment about the relationship (optional)"
+            }
+          }
+        }
+      }
+    }
+  }
+}
