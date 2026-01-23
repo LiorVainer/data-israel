@@ -10,7 +10,7 @@ import { dataGovApi } from '@/lib/api/data-gov/client';
 
 export const queryDatastoreResource = tool({
   description:
-    'Query tabular data within a DataStore resource. Use when user wants to see actual data rows, filter data by column values, or explore the contents of a resource. Supports pagination, filtering, and sorting.',
+    'Query tabular data within a DataStore resource. Use when user wants to see actual data rows, filter data by column values, or explore the contents of a resource. Supports pagination, filtering, sorting, and partial word search for Hebrew.',
   inputSchema: z.object({
     resource_id: z
       .string()
@@ -25,6 +25,12 @@ export const queryDatastoreResource = tool({
       .string()
       .optional()
       .describe('Full-text search query across all fields'),
+    partialMatch: z
+      .boolean()
+      .optional()
+      .describe(
+        'Enable partial/prefix matching for Hebrew text search. When true, searches for words starting with the query (e.g., "ירו" matches "ירושלים"). Useful for Hebrew autocomplete.'
+      ),
     limit: z
       .number()
       .int()
@@ -43,12 +49,16 @@ export const queryDatastoreResource = tool({
       .optional()
       .describe('Sort order (e.g., "population desc" or "name asc")'),
   }),
-  execute: async ({ resource_id, filters, q, limit = 100, offset = 0, sort }) => {
+  execute: async ({ resource_id, filters, q, partialMatch, limit = 100, offset = 0, sort }) => {
     try {
+      // Format query for partial matching if enabled
+      const searchQuery = q && partialMatch ? `${q}:*` : q;
+
       const result = await dataGovApi.datastore.search({
         resource_id,
         filters,
-        q,
+        q: searchQuery,
+        plain: partialMatch ? false : undefined,
         limit,
         offset,
         sort,

@@ -116,6 +116,7 @@ export const dataGovApi = {
       resource_id: string;
       filters?: Record<string, string | number>;
       q?: string;
+      plain?: boolean;
       limit?: number;
       offset?: number;
       sort?: string;
@@ -127,6 +128,7 @@ export const dataGovApi = {
         offset: params.offset,
         sort: params.sort,
         q: params.q,
+        plain: params.plain,
       };
 
       if (params.filters) {
