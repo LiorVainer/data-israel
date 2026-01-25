@@ -56,7 +56,7 @@ export default function Home() {
 
 
   return (
-    <AuroraBackground className="max-w-4xl mx-auto p-4 md:p-6 relative h-dvh">
+    <div className="max-w-4xl mx-auto p-4 md:p-6 relative h-dvh">
       <motion.div
           initial={{ opacity: 0.0, y: 40 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -111,6 +111,6 @@ export default function Home() {
           </PromptInputFooter>
         </PromptInput>
         </motion.div>
-      </AuroraBackground>
+      </div>
   );
 }
