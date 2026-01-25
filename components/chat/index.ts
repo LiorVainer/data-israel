@@ -2,7 +2,7 @@
 export type {
   ToolState,
   ToolCallPart,
-  SourceUrlPart,
+  SourceUrlUIPart,
   ToolInfo,
   StepStatus,
 } from './types';
