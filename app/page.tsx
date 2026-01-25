@@ -46,20 +46,19 @@ export default function Home() {
   const { messages, sendMessage, status, regenerate, stop } = useChat<DataAgentUIMessage>();
 
   const handleSuggestionClick = (prompt: string) => {
-    sendMessage({ text: prompt }, { body: { model: modelRef.current } });
+    void sendMessage({ text: prompt }, { body: { model: modelRef.current } });
   };
 
   const isStreaming = status === 'submitted' || status === 'streaming';
 
   return (
-    <div className="max-w-4xl mx-auto p-6 relative h-dvh">
+    <div className="max-w-4xl mx-auto p-4 md:p-6 relative h-dvh">
       <div className="flex flex-col h-full">
-        <Conversation className="h-full flex-1">
+        {messages.length === 0 ?
+            <EmptyConversation onSuggestionClick={handleSuggestionClick} />
+        :
+          <Conversation className="h-full flex-1">
           <ConversationContent>
-            {messages.length === 0 ? (
-              <EmptyConversation onSuggestionClick={handleSuggestionClick} />
-            ) : (
-              <>
                 {messages.map((message, messageIndex) => (
                   <MessageItem
                     key={message.id}
@@ -70,17 +69,15 @@ export default function Home() {
                   />
                 ))}
                 {status === 'submitted' && <LoadingShimmer />}
-              </>
-            )}
           </ConversationContent>
           <ConversationScrollButton />
-        </Conversation>
+        </Conversation>}
 
         <PromptInput
           className="mt-4"
           onSubmit={(message) => {
             if (!message.text.trim()) return;
-            sendMessage(
+            void sendMessage(
               { text: message.text },
               { body: { model: modelRef.current } }
             );

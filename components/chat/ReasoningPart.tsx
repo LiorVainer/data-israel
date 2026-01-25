@@ -7,13 +7,10 @@ export interface ReasoningPartProps {
 }
 
 export function ReasoningPart({ isCurrentlyReasoning }: ReasoningPartProps) {
-  return (
-    <div className="py-2">
-      {isCurrentlyReasoning ? (
+  return isCurrentlyReasoning ? (<div className="py-2">
         <Shimmer as="span" className="text-sm text-muted-foreground" duration={1.5}>
           חושב...
         </Shimmer>
-      ) : null }
     </div>
-  );
+      ) : null
 }

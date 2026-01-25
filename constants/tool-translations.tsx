@@ -131,7 +131,7 @@ export const toolTranslations: ToolTranslationsMap = {
   getDatasetDetails: {
     name: 'טוען פרטי מאגר',
     icon: <FileTextIcon className="h-4 w-4" />,
-    formatInput: () => {
+    formatInput: (input) => {
       return 'טוען פרטים מלאים...';
     },
     formatOutput: (output) => {

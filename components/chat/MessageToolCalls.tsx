@@ -193,8 +193,8 @@ export function MessageToolCalls({
                   <span className="text-red-500">{part.errorText}</span>
                 ) : (
                     <>
-                   <p>{io?.input}</p>
-                      <p>{io?.output}</p>
+                      <p className='text-muted-foreground'>{io?.input}</p>
+                      <p className='text-primary font-semibold'>{io?.output}</p>
                     </>
                 )
               }
