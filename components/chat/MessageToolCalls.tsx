@@ -133,7 +133,7 @@ export function MessageToolCalls({
   isProcessing,
 }: MessageToolCallsProps) {
   // User's preferred open state (can be toggled via header click)
-  const [userWantsOpen, setUserWantsOpen] = useState(true);
+  const [userWantsOpen, setUserWantsOpen] = useState(false);
 
   // Check if any tool is currently active
   const hasActiveTools = toolParts.some(
@@ -141,10 +141,12 @@ export function MessageToolCalls({
   );
 
 
+
   // Force open when processing or has active tools, otherwise respect user preference
   const shouldForceOpen = isProcessing || hasActiveTools;
   const isOpen = shouldForceOpen || userWantsOpen;
 
+  console.log({isProcessing, shouldForceOpen, userWantsOpen})
   // Handle user toggling
   const handleOpenChange = (open: boolean) => {
     setUserWantsOpen(open);
@@ -167,7 +169,6 @@ export function MessageToolCalls({
           const { name, icon } = getToolInfo(toolKey);
           const io = getToolIO(part);
           const toolStatus: StepStatus = getToolStatus(part.state);
-          const description = getToolDescription(part);
           const hasError = part.state === 'output-error';
 
           return (
@@ -193,7 +194,7 @@ export function MessageToolCalls({
                   <span className="text-red-500">{part.errorText}</span>
                 ) : (
                     <>
-                      <p className='text-muted-foreground'>{io?.input}</p>
+                      {io?.input && <p className='text-muted-foreground'>{io.input}</p>}
                       <p className='text-primary font-semibold'>{io?.output}</p>
                     </>
                 )

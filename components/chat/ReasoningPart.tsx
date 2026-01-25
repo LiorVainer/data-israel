@@ -1,5 +1,6 @@
 'use client';
 
+import { LoadingShimmer } from '@/app/page';
 import { Shimmer } from '@/components/ai-elements/shimmer';
 
 export interface ReasoningPartProps {
@@ -8,9 +9,7 @@ export interface ReasoningPartProps {
 
 export function ReasoningPart({ isCurrentlyReasoning }: ReasoningPartProps) {
   return isCurrentlyReasoning ? (<div className="py-2">
-        <Shimmer as="span" className="text-sm text-muted-foreground" duration={1.5}>
-          חושב...
-        </Shimmer>
+        <LoadingShimmer text='חושב...'/>
     </div>
       ) : null
 }

@@ -20,7 +20,7 @@ export const queryDatastoreResourceInputSchema = z.object({
     .record(z.string(), z.union([z.string(), z.number()]))
     .optional()
     .describe(
-      'Filter records by column values (e.g., {"city": "Jerusalem", "year": 2023})'
+      'Filter records by column values (e.g., {"city": "Jerusalem", "year": 2023}), Better for exact matches'
     ),
   q: z
     .string()

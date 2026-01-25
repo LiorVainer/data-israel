@@ -88,7 +88,7 @@ export function translateSort(sort: string): string {
 export interface ToolTranslation<T extends ToolName> {
   name: string;
   icon: React.ReactNode;
-  formatInput: (input: ToolInput<T>) => string;
+  formatInput: (input: ToolInput<T>) => string | undefined;
   formatOutput: (output: ToolOutput<T>) => string;
 }
 
@@ -131,8 +131,8 @@ export const toolTranslations: ToolTranslationsMap = {
   getDatasetDetails: {
     name: 'טוען פרטי מאגר',
     icon: <FileTextIcon className="h-4 w-4" />,
-    formatInput: (input) => {
-      return 'טוען פרטים מלאים...';
+    formatInput: () => {
+      return undefined;
     },
     formatOutput: (output) => {
       if (!output.success) {
@@ -203,9 +203,9 @@ export const toolTranslations: ToolTranslationsMap = {
           parts.push(`מסנן לפי: ${filterStr}`);
         }
       }
-
+      
       if (input.limit) {
-        parts.push(`עד ${input.limit} רשומות`);
+        parts.push(`שולף את ה-${input.limit} רשומות המתאימות ביותר `);
       }
 
       if (input.sort) {
@@ -228,11 +228,8 @@ export const toolTranslations: ToolTranslationsMap = {
         return 'לא נמצאו רשומות';
       }
 
-      if (recordCount === output.total) {
-        return `נמצאו ${output.total} רשומות`;
-      }
 
-      return `מציג ${recordCount} מתוך ${output.total} רשומות`;
+      return `נשלפו ${recordCount} רשומות`;
     },
   },
   getDatasetActivity: {
