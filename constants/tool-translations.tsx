@@ -6,389 +6,384 @@
  */
 
 import {
-  SearchIcon,
-  FileTextIcon,
-  FolderIcon,
-  TagIcon,
-  DatabaseIcon,
-  BuildingIcon,
-  ActivityIcon,
-  FileIcon,
-  ServerIcon,
-  ListIcon,
-  ScrollTextIcon,
+    SearchIcon,
+    FileTextIcon,
+    FolderIcon,
+    TagIcon,
+    DatabaseIcon,
+    BuildingIcon,
+    ActivityIcon,
+    FileIcon,
+    ServerIcon,
+    ListIcon,
+    ScrollTextIcon,
 } from 'lucide-react';
-import type {
-  ToolName,
-  ToolInput,
-  ToolOutput,
-} from '@/lib/tools/types';
+import type { ToolName, ToolInput, ToolOutput } from '@/lib/tools/types';
 
 /**
  * Translate common field names to Hebrew
  */
 export const fieldTranslations: Record<string, string> = {
-  package_count: 'מספר מאגרים',
-  name: 'שם',
-  title: 'כותרת',
-  created: 'תאריך יצירה',
-  modified: 'תאריך עדכון',
-  metadata_modified: 'תאריך עדכון',
-  metadata_created: 'תאריך יצירה',
-  score: 'רלוונטיות',
-  popularity: 'פופולריות',
-  views: 'צפיות',
-  downloads: 'הורדות',
-  size: 'גודל',
-  year: 'שנה',
-  date: 'תאריך',
-  city: 'עיר',
-  population: 'אוכלוסייה',
-  price: 'מחיר',
-  count: 'כמות',
+    package_count: 'מספר מאגרים',
+    name: 'שם',
+    title: 'כותרת',
+    created: 'תאריך יצירה',
+    modified: 'תאריך עדכון',
+    metadata_modified: 'תאריך עדכון',
+    metadata_created: 'תאריך יצירה',
+    score: 'רלוונטיות',
+    popularity: 'פופולריות',
+    views: 'צפיות',
+    downloads: 'הורדות',
+    size: 'גודל',
+    year: 'שנה',
+    date: 'תאריך',
+    city: 'עיר',
+    population: 'אוכלוסייה',
+    price: 'מחיר',
+    count: 'כמות',
 };
 
 /**
  * Translate sort direction to Hebrew
  */
 export function translateSortDirection(dir: string): string {
-  const normalized = dir.toLowerCase().trim();
-  if (normalized === 'desc' || normalized === 'descending') {
-    return 'יורד';
-  }
-  if (normalized === 'asc' || normalized === 'ascending') {
-    return 'עולה';
-  }
-  return dir;
+    const normalized = dir.toLowerCase().trim();
+    if (normalized === 'desc' || normalized === 'descending') {
+        return 'יורד';
+    }
+    if (normalized === 'asc' || normalized === 'ascending') {
+        return 'עולה';
+    }
+    return dir;
 }
 
 /**
  * Translate a sort string like "package_count desc" to Hebrew
  */
 export function translateSort(sort: string): string {
-  if (!sort) return '';
+    if (!sort) return '';
 
-  // Handle multiple sort fields separated by comma
-  const parts = sort.split(',').map(part => {
-    const trimmed = part.trim();
-    const [field, direction] = trimmed.split(/\s+/);
+    // Handle multiple sort fields separated by comma
+    const parts = sort.split(',').map((part) => {
+        const trimmed = part.trim();
+        const [field, direction] = trimmed.split(/\s+/);
 
-    const hebrewField = fieldTranslations[field] || field;
-    const hebrewDir = direction ? translateSortDirection(direction) : '';
+        const hebrewField = fieldTranslations[field] || field;
+        const hebrewDir = direction ? translateSortDirection(direction) : '';
 
-    return hebrewDir ? `${hebrewField} (${hebrewDir})` : hebrewField;
-  });
+        return hebrewDir ? `${hebrewField} (${hebrewDir})` : hebrewField;
+    });
 
-  return parts.join(', ');
+    return parts.join(', ');
 }
 
 /**
  * Type-safe tool translation metadata
  */
 export interface ToolTranslation<T extends ToolName> {
-  name: string;
-  icon: React.ReactNode;
-  formatInput: (input: ToolInput<T>) => string | undefined;
-  formatOutput: (output: ToolOutput<T>) => string;
+    name: string;
+    icon: React.ReactNode;
+    formatInput: (input: ToolInput<T>) => string | undefined;
+    formatOutput: (output: ToolOutput<T>) => string;
 }
 
 export type ToolTranslationsMap = {
-  [K in ToolName]?: ToolTranslation<K>;
+    [K in ToolName]?: ToolTranslation<K>;
 };
 
 export const toolTranslations: ToolTranslationsMap = {
-  searchDatasets: {
-    name: 'חיפוש מאגרי מידע',
-    icon: <SearchIcon className="h-4 w-4" />,
-    formatInput: (input) => {
-      const parts: string[] = [];
-      if (input.query) {
-        parts.push(`מחפש: "${input.query}"`);
-      } else {
-        parts.push('מציג את כל המאגרים');
-      }
-      if (input.limit) {
-        parts.push(`עד ${input.limit} תוצאות`);
-      }
-      if (input.organization) {
-        parts.push(`ארגון: ${input.organization}`);
-      }
-      if (input.tag) {
-        parts.push(`תגית: ${input.tag}`);
-      }
-      return parts.join(' • ');
+    searchDatasets: {
+        name: 'חיפוש מאגרי מידע',
+        icon: <SearchIcon className='h-4 w-4' />,
+        formatInput: (input) => {
+            const parts: string[] = [];
+            if (input.query) {
+                parts.push(`מחפש: "${input.query}"`);
+            } else {
+                parts.push('מציג את כל המאגרים');
+            }
+            if (input.limit) {
+                parts.push(`עד ${input.limit} תוצאות`);
+            }
+            if (input.organization) {
+                parts.push(`ארגון: ${input.organization}`);
+            }
+            if (input.tag) {
+                parts.push(`תגית: ${input.tag}`);
+            }
+            return parts.join(' • ');
+        },
+        formatOutput: (output) => {
+            if (!output.success) {
+                return `שגיאה: ${output.error}`;
+            }
+            if (output.count === 0) {
+                return 'לא נמצאו מאגרים';
+            }
+            return `נמצאו ${output.count} מאגרים`;
+        },
     },
-    formatOutput: (output) => {
-      if (!output.success) {
-        return `שגיאה: ${output.error}`;
-      }
-      if (output.count === 0) {
-        return 'לא נמצאו מאגרים';
-      }
-      return `נמצאו ${output.count} מאגרים`;
+    getDatasetDetails: {
+        name: 'טוען פרטי מאגר',
+        icon: <FileTextIcon className='h-4 w-4' />,
+        formatInput: () => {
+            return undefined;
+        },
+        formatOutput: (output) => {
+            if (!output.success) {
+                return `שגיאה: ${output.error}`;
+            }
+            const resourceCount = output.dataset.resources?.length || 0;
+            const title = output.dataset.title || 'מאגר';
+            return `${title} • ${resourceCount} קבצים`;
+        },
     },
-  },
-  getDatasetDetails: {
-    name: 'טוען פרטי מאגר',
-    icon: <FileTextIcon className="h-4 w-4" />,
-    formatInput: () => {
-      return undefined;
+    listGroups: {
+        name: 'רשימת קבוצות',
+        icon: <FolderIcon className='h-4 w-4' />,
+        formatInput: (input) => {
+            const parts: string[] = ['מציג קבוצות נושאים'];
+            if (input.limit) {
+                parts.push(`עד ${input.limit} תוצאות`);
+            }
+            if (input.orderBy) {
+                parts.push(`ממוין לפי ${translateSort(input.orderBy)}`);
+            }
+            return parts.join(' • ');
+        },
+        formatOutput: (output) => {
+            if (!output.success) {
+                return `שגיאה: ${output.error}`;
+            }
+            const count = output.groups?.length || 0;
+            return count === 0 ? 'לא נמצאו קבוצות' : `נמצאו ${count} קבוצות`;
+        },
     },
-    formatOutput: (output) => {
-      if (!output.success) {
-        return `שגיאה: ${output.error}`;
-      }
-      const resourceCount = output.dataset.resources?.length || 0;
-      const title = output.dataset.title || 'מאגר';
-      return `${title} • ${resourceCount} קבצים`;
+    listTags: {
+        name: 'רשימת תגיות',
+        icon: <TagIcon className='h-4 w-4' />,
+        formatInput: (input) => {
+            if (input.query) {
+                return `מחפש תגיות: "${input.query}"`;
+            }
+            return 'מציג את כל התגיות';
+        },
+        formatOutput: (output) => {
+            if (!output.success) {
+                return `שגיאה: ${output.error}`;
+            }
+            const count = output.tags?.length || 0;
+            return count === 0 ? 'לא נמצאו תגיות' : `נמצאו ${count} תגיות`;
+        },
     },
-  },
-  listGroups: {
-    name: 'רשימת קבוצות',
-    icon: <FolderIcon className="h-4 w-4" />,
-    formatInput: (input) => {
-      const parts: string[] = ['מציג קבוצות נושאים'];
-      if (input.limit) {
-        parts.push(`עד ${input.limit} תוצאות`);
-      }
-      if (input.orderBy) {
-        parts.push(`ממוין לפי ${translateSort(input.orderBy)}`);
-      }
-      return parts.join(' • ');
-    },
-    formatOutput: (output) => {
-      if (!output.success) {
-        return `שגיאה: ${output.error}`;
-      }
-      const count = output.groups?.length || 0;
-      return count === 0 ? 'לא נמצאו קבוצות' : `נמצאו ${count} קבוצות`;
-    },
-  },
-  listTags: {
-    name: 'רשימת תגיות',
-    icon: <TagIcon className="h-4 w-4" />,
-    formatInput: (input) => {
-      if (input.query) {
-        return `מחפש תגיות: "${input.query}"`;
-      }
-      return 'מציג את כל התגיות';
-    },
-    formatOutput: (output) => {
-      if (!output.success) {
-        return `שגיאה: ${output.error}`;
-      }
-      const count = output.tags?.length || 0;
-      return count === 0 ? 'לא נמצאו תגיות' : `נמצאו ${count} תגיות`;
-    },
-  },
-  queryDatastoreResource: {
-    name: 'שליפת נתונים',
-    icon: <DatabaseIcon className="h-4 w-4" />,
-    formatInput: (input) => {
-      const parts: string[] = [];
+    queryDatastoreResource: {
+        name: 'שליפת נתונים',
+        icon: <DatabaseIcon className='h-4 w-4' />,
+        formatInput: (input) => {
+            const parts: string[] = [];
 
-      if (input.q) {
-        parts.push(`מחפש: "${input.q}"`);
-      }
+            if (input.q) {
+                parts.push(`מחפש: "${input.q}"`);
+            }
 
-      if (input.filters && typeof input.filters === 'object') {
-        const filterEntries = Object.entries(input.filters);
-        if (filterEntries.length > 0) {
-          const filterStr = filterEntries
-            .map(([key, value]) => {
-              const hebrewKey = fieldTranslations[key] || key;
-              return `${hebrewKey}="${value}"`;
-            })
-            .join(', ');
-          parts.push(`מסנן לפי: ${filterStr}`);
-        }
-      }
-      
-      if (input.limit) {
-        parts.push(`שולף את ה-${input.limit} רשומות המתאימות ביותר `);
-      }
+            if (input.filters && typeof input.filters === 'object') {
+                const filterEntries = Object.entries(input.filters);
+                if (filterEntries.length > 0) {
+                    const filterStr = filterEntries
+                        .map(([key, value]) => {
+                            const hebrewKey = fieldTranslations[key] || key;
+                            return `${hebrewKey}="${value}"`;
+                        })
+                        .join(', ');
+                    parts.push(`מסנן לפי: ${filterStr}`);
+                }
+            }
 
-      if (input.sort) {
-        parts.push(`ממוין לפי ${translateSort(input.sort)}`);
-      }
+            if (input.limit) {
+                parts.push(`שולף את ה-${input.limit} רשומות המתאימות ביותר `);
+            }
 
-      if (parts.length === 0) {
-        parts.push('שולף נתונים מהמאגר');
-      }
+            if (input.sort) {
+                parts.push(`ממוין לפי ${translateSort(input.sort)}`);
+            }
 
-      return parts.join(' • ');
-    },
-    formatOutput: (output) => {
-      if (!output.success) {
-        return `שגיאה: ${output.error}`;
-      }
-      const recordCount = output.records?.length || 0;
+            if (parts.length === 0) {
+                parts.push('שולף נתונים מהמאגר');
+            }
 
-      if (output.total === 0) {
-        return 'לא נמצאו רשומות';
-      }
+            return parts.join(' • ');
+        },
+        formatOutput: (output) => {
+            if (!output.success) {
+                return `שגיאה: ${output.error}`;
+            }
+            const recordCount = output.records?.length || 0;
 
+            if (output.total === 0) {
+                return 'לא נמצאו רשומות';
+            }
 
-      return `נשלפו ${recordCount} רשומות`;
+            return `נשלפו ${recordCount} רשומות`;
+        },
     },
-  },
-  getDatasetActivity: {
-    name: 'היסטוריית מאגר',
-    icon: <ActivityIcon className="h-4 w-4" />,
-    formatInput: (input) => {
-      const parts: string[] = ['טוען היסטוריית שינויים'];
-      if (input.limit) {
-        parts.push(`עד ${input.limit} פעילויות`);
-      }
-      return parts.join(' • ');
+    getDatasetActivity: {
+        name: 'היסטוריית מאגר',
+        icon: <ActivityIcon className='h-4 w-4' />,
+        formatInput: (input) => {
+            const parts: string[] = ['טוען היסטוריית שינויים'];
+            if (input.limit) {
+                parts.push(`עד ${input.limit} פעילויות`);
+            }
+            return parts.join(' • ');
+        },
+        formatOutput: (output) => {
+            if (!output.success) {
+                return `שגיאה: ${output.error}`;
+            }
+            const count = output.activities?.length || 0;
+            return count === 0 ? 'לא נמצאו פעילויות' : `נמצאו ${count} פעילויות`;
+        },
     },
-    formatOutput: (output) => {
-      if (!output.success) {
-        return `שגיאה: ${output.error}`;
-      }
-      const count = output.activities?.length || 0;
-      return count === 0 ? 'לא נמצאו פעילויות' : `נמצאו ${count} פעילויות`;
+    getDatasetSchema: {
+        name: 'סכמת מאגר',
+        icon: <ScrollTextIcon className='h-4 w-4' />,
+        formatInput: (input) => {
+            return `טוען סכמה: ${input.type || 'dataset'}`;
+        },
+        formatOutput: (output) => {
+            if (!output.success) {
+                return `שגיאה: ${output.error}`;
+            }
+            const fieldCount = output.schema.datasetFields?.length || 0;
+            return `נטענה סכמה עם ${fieldCount} שדות`;
+        },
     },
-  },
-  getDatasetSchema: {
-    name: 'סכמת מאגר',
-    icon: <ScrollTextIcon className="h-4 w-4" />,
-    formatInput: (input) => {
-      return `טוען סכמה: ${input.type || 'dataset'}`;
+    getOrganizationActivity: {
+        name: 'היסטוריית ארגון',
+        icon: <ActivityIcon className='h-4 w-4' />,
+        formatInput: (input) => {
+            const parts: string[] = ['טוען פעילות ארגון'];
+            if (input.limit) {
+                parts.push(`עד ${input.limit} פעילויות`);
+            }
+            return parts.join(' • ');
+        },
+        formatOutput: (output) => {
+            if (!output.success) {
+                return `שגיאה: ${output.error}`;
+            }
+            const count = output.activities?.length || 0;
+            return count === 0 ? 'לא נמצאו פעילויות' : `נמצאו ${count} פעילויות`;
+        },
     },
-    formatOutput: (output) => {
-      if (!output.success) {
-        return `שגיאה: ${output.error}`;
-      }
-      const fieldCount = output.schema.datasetFields?.length || 0;
-      return `נטענה סכמה עם ${fieldCount} שדות`;
+    getOrganizationDetails: {
+        name: 'פרטי ארגון',
+        icon: <BuildingIcon className='h-4 w-4' />,
+        formatInput: () => {
+            return 'טוען פרטי ארגון...';
+        },
+        formatOutput: (output) => {
+            if (!output.success) {
+                return `שגיאה: ${output.error}`;
+            }
+            const title = output.organization.title || output.organization.name;
+            const count = output.organization.packageCount;
+            return `${title} • ${count} מאגרים`;
+        },
     },
-  },
-  getOrganizationActivity: {
-    name: 'היסטוריית ארגון',
-    icon: <ActivityIcon className="h-4 w-4" />,
-    formatInput: (input) => {
-      const parts: string[] = ['טוען פעילות ארגון'];
-      if (input.limit) {
-        parts.push(`עד ${input.limit} פעילויות`);
-      }
-      return parts.join(' • ');
+    getResourceDetails: {
+        name: 'פרטי קובץ',
+        icon: <FileIcon className='h-4 w-4' />,
+        formatInput: () => {
+            return 'טוען פרטי קובץ...';
+        },
+        formatOutput: (output) => {
+            if (!output.success) {
+                return `שגיאה: ${output.error}`;
+            }
+            const name = output.resource.name;
+            const format = output.resource.format;
+            return `${name} (${format})`;
+        },
     },
-    formatOutput: (output) => {
-      if (!output.success) {
-        return `שגיאה: ${output.error}`;
-      }
-      const count = output.activities?.length || 0;
-      return count === 0 ? 'לא נמצאו פעילויות' : `נמצאו ${count} פעילויות`;
+    getStatus: {
+        name: 'סטטוס מערכת',
+        icon: <ServerIcon className='h-4 w-4' />,
+        formatInput: () => {
+            return 'בודק סטטוס מערכת...';
+        },
+        formatOutput: (output) => {
+            if (!output.success) {
+                return `שגיאה: ${output.error}`;
+            }
+            return `CKAN ${output.status.ckanVersion}`;
+        },
     },
-  },
-  getOrganizationDetails: {
-    name: 'פרטי ארגון',
-    icon: <BuildingIcon className="h-4 w-4" />,
-    formatInput: () => {
-      return 'טוען פרטי ארגון...';
+    listAllDatasets: {
+        name: 'רשימת כל המאגרים',
+        icon: <ListIcon className='h-4 w-4' />,
+        formatInput: () => {
+            return 'טוען רשימת כל המאגרים...';
+        },
+        formatOutput: (output) => {
+            if (!output.success) {
+                return `שגיאה: ${output.error}`;
+            }
+            return `נמצאו ${output.count} מאגרים`;
+        },
     },
-    formatOutput: (output) => {
-      if (!output.success) {
-        return `שגיאה: ${output.error}`;
-      }
-      const title = output.organization.title || output.organization.name;
-      const count = output.organization.packageCount;
-      return `${title} • ${count} מאגרים`;
+    listLicenses: {
+        name: 'רשימת רישיונות',
+        icon: <ScrollTextIcon className='h-4 w-4' />,
+        formatInput: () => {
+            return 'טוען רשימת רישיונות...';
+        },
+        formatOutput: (output) => {
+            if (!output.success) {
+                return `שגיאה: ${output.error}`;
+            }
+            const count = output.licenses?.length || 0;
+            return `נמצאו ${count} רישיונות`;
+        },
     },
-  },
-  getResourceDetails: {
-    name: 'פרטי קובץ',
-    icon: <FileIcon className="h-4 w-4" />,
-    formatInput: () => {
-      return 'טוען פרטי קובץ...';
+    listOrganizations: {
+        name: 'רשימת ארגונים',
+        icon: <BuildingIcon className='h-4 w-4' />,
+        formatInput: () => {
+            return 'טוען רשימת ארגונים...';
+        },
+        formatOutput: (output) => {
+            if (!output.success) {
+                return `שגיאה: ${output.error}`;
+            }
+            return `נמצאו ${output.count} ארגונים`;
+        },
     },
-    formatOutput: (output) => {
-      if (!output.success) {
-        return `שגיאה: ${output.error}`;
-      }
-      const name = output.resource.name;
-      const format = output.resource.format;
-      return `${name} (${format})`;
+    searchResources: {
+        name: 'חיפוש קבצים',
+        icon: <SearchIcon className='h-4 w-4' />,
+        formatInput: (input) => {
+            const parts: string[] = [];
+            if (input.query) {
+                parts.push(`מחפש: "${input.query}"`);
+            }
+            if (input.format) {
+                parts.push(`פורמט: ${input.format}`);
+            }
+            if (input.limit) {
+                parts.push(`עד ${input.limit} תוצאות`);
+            }
+            return parts.length > 0 ? parts.join(' • ') : 'מחפש קבצים...';
+        },
+        formatOutput: (output) => {
+            if (!output.success) {
+                return `שגיאה: ${output.error}`;
+            }
+            if (output.count === 0) {
+                return 'לא נמצאו קבצים';
+            }
+            return `נמצאו ${output.count} קבצים`;
+        },
     },
-  },
-  getStatus: {
-    name: 'סטטוס מערכת',
-    icon: <ServerIcon className="h-4 w-4" />,
-    formatInput: () => {
-      return 'בודק סטטוס מערכת...';
-    },
-    formatOutput: (output) => {
-      if (!output.success) {
-        return `שגיאה: ${output.error}`;
-      }
-      return `CKAN ${output.status.ckanVersion}`;
-    },
-  },
-  listAllDatasets: {
-    name: 'רשימת כל המאגרים',
-    icon: <ListIcon className="h-4 w-4" />,
-    formatInput: () => {
-      return 'טוען רשימת כל המאגרים...';
-    },
-    formatOutput: (output) => {
-      if (!output.success) {
-        return `שגיאה: ${output.error}`;
-      }
-      return `נמצאו ${output.count} מאגרים`;
-    },
-  },
-  listLicenses: {
-    name: 'רשימת רישיונות',
-    icon: <ScrollTextIcon className="h-4 w-4" />,
-    formatInput: () => {
-      return 'טוען רשימת רישיונות...';
-    },
-    formatOutput: (output) => {
-      if (!output.success) {
-        return `שגיאה: ${output.error}`;
-      }
-      const count = output.licenses?.length || 0;
-      return `נמצאו ${count} רישיונות`;
-    },
-  },
-  listOrganizations: {
-    name: 'רשימת ארגונים',
-    icon: <BuildingIcon className="h-4 w-4" />,
-    formatInput: () => {
-      return 'טוען רשימת ארגונים...';
-    },
-    formatOutput: (output) => {
-      if (!output.success) {
-        return `שגיאה: ${output.error}`;
-      }
-      return `נמצאו ${output.count} ארגונים`;
-    },
-  },
-  searchResources: {
-    name: 'חיפוש קבצים',
-    icon: <SearchIcon className="h-4 w-4" />,
-    formatInput: (input) => {
-      const parts: string[] = [];
-      if (input.query) {
-        parts.push(`מחפש: "${input.query}"`);
-      }
-      if (input.format) {
-        parts.push(`פורמט: ${input.format}`);
-      }
-      if (input.limit) {
-        parts.push(`עד ${input.limit} תוצאות`);
-      }
-      return parts.length > 0 ? parts.join(' • ') : 'מחפש קבצים...';
-    },
-    formatOutput: (output) => {
-      if (!output.success) {
-        return `שגיאה: ${output.error}`;
-      }
-      if (output.count === 0) {
-        return 'לא נמצאו קבצים';
-      }
-      return `נמצאו ${output.count} קבצים`;
-    },
-  },
 };

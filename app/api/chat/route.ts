@@ -15,20 +15,18 @@ import { AgentConfig } from '@/agents/agent.config';
  * Accepts optional model parameter for dynamic model selection
  */
 export async function POST(request: Request) {
-  const { messages, model } = await request.json();
+    const { messages, model } = await request.json();
 
-  // Validate model is in available models list, fallback to default
-  const validModelIds = AgentConfig.AVAILABLE_MODELS.map(m => m.id);
-  const selectedModel = model && validModelIds.includes(model)
-    ? model
-    : AgentConfig.MODEL.DEFAULT_ID;
+    // Validate model is in available models list, fallback to default
+    const validModelIds = AgentConfig.AVAILABLE_MODELS.map((m) => m.id);
+    const selectedModel = model && validModelIds.includes(model) ? model : AgentConfig.MODEL.DEFAULT_ID;
 
-  const agent = createDataAgent(selectedModel);
+    const agent = createDataAgent(selectedModel);
 
-  return createAgentUIStreamResponse({
-    agent,
-    uiMessages: messages,
-    sendReasoning: true,
-    sendSources: true,
-  });
+    return createAgentUIStreamResponse({
+        agent,
+        uiMessages: messages,
+        sendReasoning: true,
+        sendSources: true,
+    });
 }

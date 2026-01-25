@@ -4,102 +4,93 @@
  * ToolLoopAgent for exploring Israeli open datasets
  */
 
-import { ToolLoopAgent, type InferAgentUIMessage, type StepResult, type ToolSet } from 'ai'
+import { ToolLoopAgent, type InferAgentUIMessage, type StepResult, type ToolSet } from 'ai';
 import {
-  // System tools
-  getStatus,
-  listLicenses,
-  getDatasetSchema,
-  // Dataset tools
-  searchDatasets,
-  listAllDatasets,
-  getDatasetDetails,
-  getDatasetActivity,
-  // Organization tools
-  listOrganizations,
-  getOrganizationDetails,
-  getOrganizationActivity,
-  // Group and tag tools
-  listGroups,
-  listTags,
-  // Resource tools
-  searchResources,
-  getResourceDetails,
-  queryDatastoreResource,
+    // System tools
+    getStatus,
+    listLicenses,
+    getDatasetSchema,
+    // Dataset tools
+    searchDatasets,
+    listAllDatasets,
+    getDatasetDetails,
+    getDatasetActivity,
+    // Organization tools
+    listOrganizations,
+    getOrganizationDetails,
+    getOrganizationActivity,
+    // Group and tag tools
+    listGroups,
+    listTags,
+    // Resource tools
+    searchResources,
+    getResourceDetails,
+    queryDatastoreResource,
 } from '@/lib/tools';
 import { createOpenRouter } from '@openrouter/ai-sdk-provider';
 import { AgentConfig } from './agent.config';
 
 /** Agent tools for type inference */
 const agentTools = {
-  getStatus,
-  listLicenses,
-  getDatasetSchema,
-  searchDatasets,
-  listAllDatasets,
-  getDatasetActivity,
-  getDatasetDetails,
-  listOrganizations,
-  getOrganizationDetails,
-  getOrganizationActivity,
-  listGroups,
-  listTags,
-  searchResources,
-  getResourceDetails,
-  queryDatastoreResource,
+    getStatus,
+    listLicenses,
+    getDatasetSchema,
+    searchDatasets,
+    listAllDatasets,
+    getDatasetActivity,
+    getDatasetDetails,
+    listOrganizations,
+    getOrganizationDetails,
+    getOrganizationActivity,
+    listGroups,
+    listTags,
+    searchResources,
+    getResourceDetails,
+    queryDatastoreResource,
 } satisfies ToolSet;
 
 type AgentTools = typeof agentTools;
 
 const openrouter = createOpenRouter({
-  apiKey: process.env.OPENROUTER_API_KEY,
+    apiKey: process.env.OPENROUTER_API_KEY,
 });
 
 /** Get model instance by ID */
-const getModel = (modelId: string) =>
-    openrouter.chat(modelId);
-
+const getModel = (modelId: string) => openrouter.chat(modelId);
 
 /**
  * Custom stop condition for task completion
  * Stops when agent signals completion or hits safety limit
  */
-const taskCompletionStop = ({
-  steps
-}: {
-  steps: StepResult<AgentTools>[]
-}): boolean => {
-  const stepCount = steps.length;
-  const lastStep = steps[steps.length - 1];
+const taskCompletionStop = ({ steps }: { steps: StepResult<AgentTools>[] }): boolean => {
+    const stepCount = steps.length;
+    const lastStep = steps[steps.length - 1];
 
-  // Safety: Hard limit at max steps
-  if (stepCount >= AgentConfig.TOOL_CALLS.MAX_STEPS) {
-    return true;
-  }
-
-  // Minimum steps before stopping
-  if (stepCount < AgentConfig.TOOL_CALLS.MIN_STEPS_BEFORE_STOP) {
-    return false;
-  }
-
-
-  // Check for completion markers in agent's text response
-  if (lastStep.text) {
-    const hasCompletionMarker = AgentConfig.COMPLETION_MARKERS.some(marker =>
-      lastStep.text?.includes(marker)
-    );
-
-    if (hasCompletionMarker) {
-      return true;
+    // Safety: Hard limit at max steps
+    if (stepCount >= AgentConfig.TOOL_CALLS.MAX_STEPS) {
+        return true;
     }
-  }
 
-  // Stop if agent produced text without tool calls (done thinking)
-  if (lastStep.text && (!lastStep.toolCalls || lastStep.toolCalls.length === 0)) {
-    return true;
-  }
+    // Minimum steps before stopping
+    if (stepCount < AgentConfig.TOOL_CALLS.MIN_STEPS_BEFORE_STOP) {
+        return false;
+    }
 
-  return false;
+    // Check for completion markers in agent's text response
+    if (lastStep.text) {
+        const hasCompletionMarker = AgentConfig.COMPLETION_MARKERS.some((marker) => lastStep.text?.includes(marker));
+
+        if (hasCompletionMarker) {
+            return true;
+        }
+    }
+
+    // Stop if agent produced text without tool calls (done thinking)
+    if (lastStep.text && (!lastStep.toolCalls || lastStep.toolCalls.length === 0)) {
+        return true;
+    }
+
+    return false;
 };
 
 /** Agent instructions for data.gov.il exploration */
@@ -232,13 +223,13 @@ const agentInstructions = `אתה עוזר AI ידידותי שעוזר למשת
  * Factory function to create a data agent with a specific model
  */
 export function createDataAgent(modelId: string = AgentConfig.MODEL.DEFAULT_ID) {
-  return new ToolLoopAgent({
-    model: getModel(modelId),
-    toolChoice: "auto",
-    instructions: agentInstructions,
-    tools: agentTools,
-    stopWhen: taskCompletionStop,
-  });
+    return new ToolLoopAgent({
+        model: getModel(modelId),
+        toolChoice: 'auto',
+        instructions: agentInstructions,
+        tools: agentTools,
+        stopWhen: taskCompletionStop,
+    });
 }
 
 /**

@@ -5,13 +5,13 @@ import type { LucideIcon } from 'lucide-react';
  * @see https://ai-sdk.dev/docs/reference/ai-sdk-core/ui-message
  */
 export type {
-  UIMessage,
-  TextUIPart,
-  ReasoningUIPart,
-  SourceUrlUIPart,
-  SourceDocumentUIPart,
-  FileUIPart,
-  UIToolInvocation,
+    UIMessage,
+    TextUIPart,
+    ReasoningUIPart,
+    SourceUrlUIPart,
+    SourceDocumentUIPart,
+    FileUIPart,
+    UIToolInvocation,
 } from 'ai';
 
 /**
@@ -21,13 +21,13 @@ export type {
  * @see https://ai-sdk.dev/docs/reference/ai-sdk-core/ui-message
  */
 export type ToolState =
-  | 'input-streaming'
-  | 'input-available'
-  | 'output-available'
-  | 'output-error'
-  | 'approval-requested'
-  | 'approval-responded'
-  | 'output-denied';
+    | 'input-streaming'
+    | 'input-available'
+    | 'output-available'
+    | 'output-error'
+    | 'approval-requested'
+    | 'approval-responded'
+    | 'output-denied';
 
 /**
  * Simplified interface for tool call parts in messages.
@@ -38,20 +38,20 @@ export type ToolState =
  * so we use this simplified interface that captures the common fields we need.
  */
 export interface ToolCallPart {
-  type: string;
-  toolCallId?: string;
-  state: ToolState;
-  input?: unknown;
-  output?: unknown;
-  errorText?: string;
+    type: string;
+    toolCallId?: string;
+    state: ToolState;
+    input?: unknown;
+    output?: unknown;
+    errorText?: string;
 }
 
 /**
  * Tool info containing display name and icon
  */
 export interface ToolInfo {
-  name: string;
-  icon: LucideIcon;
+    name: string;
+    icon: LucideIcon;
 }
 
 /**
@@ -63,24 +63,24 @@ export type StepStatus = 'complete' | 'active' | 'pending';
  * Check if a part is a tool call
  */
 export function isToolPart(part: { type: string }): part is ToolCallPart {
-  return part.type.startsWith('tool-');
+    return part.type.startsWith('tool-');
 }
 
 /**
  * Map tool state to ChainOfThoughtStep status
  */
 export function getToolStatus(state: ToolState): StepStatus {
-  switch (state) {
-    case 'input-streaming':
-    case 'input-available':
-    case 'approval-requested':
-      return 'active';
-    case 'output-available':
-    case 'approval-responded':
-    case 'output-error':
-    case 'output-denied':
-      return 'complete';
-    default:
-      return 'pending';
-  }
+    switch (state) {
+        case 'input-streaming':
+        case 'input-available':
+        case 'approval-requested':
+            return 'active';
+        case 'output-available':
+        case 'approval-responded':
+        case 'output-error':
+        case 'output-denied':
+            return 'complete';
+        default:
+            return 'pending';
+    }
 }
