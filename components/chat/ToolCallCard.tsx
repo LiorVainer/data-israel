@@ -94,7 +94,7 @@ function formatInputDescription(toolKey: string, input: unknown): string | null 
   const meta = getToolMeta(toolKey);
   if (!meta) return null;
   // We know the input matches the tool's expected type based on runtime behavior
-  return meta.formatInput(input as ToolInput<typeof toolKey>);
+  return meta.formatInput(input as ToolInput<typeof toolKey>) ?? null;
 }
 
 /**

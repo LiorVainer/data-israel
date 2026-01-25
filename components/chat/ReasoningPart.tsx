@@ -1,7 +1,7 @@
 'use client';
 
-import { LoadingShimmer } from '@/app/page';
-import { Shimmer } from '@/components/ai-elements/shimmer';
+
+import {LoadingShimmer} from "@/components/chat/LoadingShimmer";
 
 export interface ReasoningPartProps {
   isCurrentlyReasoning: boolean;

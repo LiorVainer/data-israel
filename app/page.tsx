@@ -2,7 +2,6 @@
 
 
   import { motion } from "framer-motion";
-  import { AuroraBackground } from "@/components/ui/aurora-background";
 import { useChat } from '@ai-sdk/react';
 import { useState, useRef, useEffect } from 'react';
 import {
@@ -17,24 +16,13 @@ import {
   PromptInputTools,
   PromptInputSubmit,
 } from '@/components/ai-elements/prompt-input';
-import { Shimmer } from '@/components/ai-elements/shimmer';
 import { EmptyConversation } from '@/components/chat/EmptyConversation';
 import { MessageItem } from '@/components/chat/MessageItem';
 import { ModelSelectorSection } from '@/components/chat/ModelSelectorSection';
 import type { DataAgentUIMessage } from '@/agents/data-agent';
 import { AgentConfig } from '@/agents/agent.config';
+import {LoadingShimmer} from "@/components/chat/LoadingShimmer";
 
-export function LoadingShimmer({text = 'מעבד את הבקשה שלך...'}: {text?: string}) {
-  return (
-    <div className="flex gap-3 animate-in fade-in duration-300">
-      <div className="flex-1">
-        <Shimmer as="p" duration={1.5}>
-            {text}
-        </Shimmer>
-      </div>
-    </div>
-  );
-}
 
 export default function Home() {
   const [selectedModel, setSelectedModel] = useState(AgentConfig.AVAILABLE_MODELS[0].id);
