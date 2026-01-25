@@ -14,10 +14,7 @@ import {
   MessageActions,
   MessageAction,
 } from '@/components/ai-elements/message';
-import {
-  Reasoning,
-  ReasoningTrigger,
-} from '@/components/ai-elements/reasoning';
+import { Shimmer } from '@/components/ai-elements/shimmer';
 import {
   Sources,
   SourcesTrigger,
@@ -46,25 +43,9 @@ import {
 } from '@/components/ai-elements/prompt-input';
 import { PromptSuggestions } from '@/components/chat/PromptSuggestions';
 import { ToolCallCard } from '@/components/chat/ToolCallCard';
-import { Skeleton } from '@/components/ui/skeleton';
 import { CopyIcon, RefreshCcwIcon, MessageSquare, CheckIcon } from 'lucide-react';
 import { DataAgentUIMessage } from '@/agents/data-agent';
 import { AgentConfig } from '@/agents/agent.config';
-import type { ReactNode } from 'react';
-
-/**
- * Hebrew reasoning message for the Reasoning component trigger
- */
-function getHebrewThinkingMessage(isStreaming: boolean, duration?: number): ReactNode {
-  if (isStreaming || duration === 0) {
-    return <span>חושב...</span>;
-  }
-  if (duration === undefined) {
-    return <span>חשב כמה שניות</span>;
-  }
-
-  return <span>חשב {duration} שניות</span>;
-}
 
 /**
  * Interface for source-url parts from AI SDK
@@ -76,14 +57,13 @@ interface SourceUrlPart {
   title?: string;
 }
 
-function MessageSkeleton() {
+function LoadingShimmer() {
   return (
     <div className="flex gap-3 animate-in fade-in duration-300">
-      <Skeleton className="h-8 w-8 rounded-full shrink-0" />
-      <div className="flex-1 space-y-2">
-        <Skeleton className="h-4 w-3/4" />
-        <Skeleton className="h-4 w-full" />
-        <Skeleton className="h-4 w-2/3" />
+      <div className="flex-1">
+        <Shimmer as="p" duration={1.5}>
+          מעבד את הבקשה שלך...
+        </Shimmer>
       </div>
     </div>
   );
@@ -167,14 +147,17 @@ export default function Home() {
                             );
                           }
                           case 'reasoning': {
+                            const isCurrentlyReasoning = status === 'streaming' && i === message.parts.length - 1 && message.id === messages.at(-1)?.id;
                             return (
-                              <Reasoning
-                                key={`${message.id}-${i}`}
-                                isStreaming={status === 'streaming' && i === message.parts.length - 1 && message.id === messages.at(-1)?.id}
-                                defaultOpen={false}
-                              >
-                                <ReasoningTrigger labelOnly getThinkingMessage={getHebrewThinkingMessage} />
-                              </Reasoning>
+                              <div key={`${message.id}-${i}`} className="py-2">
+                                {isCurrentlyReasoning ? (
+                                  <Shimmer as="span" className="text-sm text-muted-foreground" duration={1.5}>
+                                    חושב...
+                                  </Shimmer>
+                                ) : (
+                                  <span className="text-sm text-muted-foreground">סיים לחשוב</span>
+                                )}
+                              </div>
                             );
                           }
                           case 'tool-searchDatasets':
@@ -213,7 +196,7 @@ export default function Home() {
                     </div>
                   );
                 })}
-                {status === 'submitted' && <MessageSkeleton />}
+                {status === 'submitted' && <LoadingShimmer />}
               </>
             )}
           </ConversationContent>
