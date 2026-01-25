@@ -40,7 +40,7 @@ export const ModelSelectorContent = ({
   title = "Model Selector",
   ...props
 }: ModelSelectorContentProps) => (
-  <DialogContent className={cn("p-0", className)} {...props}>
+  <DialogContent showCloseButton={false} className={cn("p-0", className)} {...props}>
     <DialogTitle className="sr-only">{title}</DialogTitle>
     <Command className="**:data-[slot=command-input-wrapper]:h-auto">
       {children}
@@ -78,13 +78,13 @@ export const ModelSelectorEmpty = (props: ModelSelectorEmptyProps) => (
 export type ModelSelectorGroupProps = ComponentProps<typeof CommandGroup>;
 
 export const ModelSelectorGroup = (props: ModelSelectorGroupProps) => (
-  <CommandGroup {...props} />
+  <CommandGroup className='dir-ltr' {...props} />
 );
 
 export type ModelSelectorItemProps = ComponentProps<typeof CommandItem>;
 
 export const ModelSelectorItem = (props: ModelSelectorItemProps) => (
-  <CommandItem {...props} />
+  <CommandItem className='hover:cursor-pointer' {...props} />
 );
 
 export type ModelSelectorShortcutProps = ComponentProps<typeof CommandShortcut>;

@@ -1,1 +1,0 @@
-fetch-url: https://docs.convex.dev/llms.txt

@@ -3,7 +3,6 @@
 import {
   Card,
   CardContent,
-  CardHeader,
   CardTitle,
 } from '@/components/ui/card';
 import {
@@ -11,234 +10,29 @@ import {
   CheckCircle2Icon,
   XCircleIcon,
   SearchIcon,
-  FileTextIcon,
-  FolderIcon,
-  TagIcon,
-  DatabaseIcon,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import type {
+  ToolName,
+  ToolInput,
+  ToolOutput,
+} from '@/lib/tools/types';
+import {
+  toolTranslations,
+  type ToolTranslation,
+} from '@/constants/tool-translations';
+
+type ToolState = 'input-streaming' | 'input-available' | 'output-available' | 'output-error' | 'approval-requested' | 'approval-responded' | 'output-denied';
 
 export interface ToolCallCardProps {
   part: {
     type: string;
-    state: 'input-streaming' | 'input-available' | 'output-available' | 'output-error' | 'approval-requested' | 'approval-responded' | 'output-denied';
+    state: ToolState;
     input?: unknown;
     output?: unknown;
     errorText?: string;
   };
 }
-
-/**
- * Translate common field names to Hebrew
- */
-const fieldTranslations: Record<string, string> = {
-  package_count: 'מספר מאגרים',
-  name: 'שם',
-  title: 'כותרת',
-  created: 'תאריך יצירה',
-  modified: 'תאריך עדכון',
-  metadata_modified: 'תאריך עדכון',
-  metadata_created: 'תאריך יצירה',
-  score: 'רלוונטיות',
-  popularity: 'פופולריות',
-  views: 'צפיות',
-  downloads: 'הורדות',
-  size: 'גודל',
-  year: 'שנה',
-  date: 'תאריך',
-  city: 'עיר',
-  population: 'אוכלוסייה',
-  price: 'מחיר',
-  count: 'כמות',
-};
-
-/**
- * Translate sort direction to Hebrew
- */
-function translateSortDirection(dir: string): string {
-  const normalized = dir.toLowerCase().trim();
-  if (normalized === 'desc' || normalized === 'descending') {
-    return 'יורד';
-  }
-  if (normalized === 'asc' || normalized === 'ascending') {
-    return 'עולה';
-  }
-  return dir;
-}
-
-/**
- * Translate a sort string like "package_count desc" to Hebrew
- */
-function translateSort(sort: string): string {
-  if (!sort) return '';
-
-  // Handle multiple sort fields separated by comma
-  const parts = sort.split(',').map(part => {
-    const trimmed = part.trim();
-    const [field, direction] = trimmed.split(/\s+/);
-
-    const hebrewField = fieldTranslations[field] || field;
-    const hebrewDir = direction ? translateSortDirection(direction) : '';
-
-    return hebrewDir ? `${hebrewField} (${hebrewDir})` : hebrewField;
-  });
-
-  return parts.join(', ');
-}
-
-/**
- * Tool translations and metadata
- */
-const toolTranslations: Record<string, {
-  name: string;
-  icon: React.ReactNode;
-  formatInput: (input: Record<string, unknown>) => string;
-  formatOutput: (output: Record<string, unknown>) => string;
-}> = {
-  searchDatasets: {
-    name: 'חיפוש מאגרי מידע',
-    icon: <SearchIcon className="h-4 w-4" />,
-    formatInput: (input) => {
-      const parts: string[] = [];
-      if (input.query) {
-        parts.push(`מחפש: "${input.query}"`);
-      } else {
-        parts.push('מציג את כל המאגרים');
-      }
-      if (input.rows) {
-        parts.push(`עד ${input.rows} תוצאות`);
-      }
-      if (input.sort) {
-        parts.push(`ממוין לפי ${translateSort(String(input.sort))}`);
-      }
-      return parts.join(' • ');
-    },
-    formatOutput: (output) => {
-      if (!output.success) {
-        return `שגיאה: ${output.error}`;
-      }
-      const count = output.count as number;
-      const datasets = output.datasets as Array<{ title: string }>;
-      if (count === 0) {
-        return 'לא נמצאו מאגרים';
-      }
-      return `נמצאו ${count} מאגרים`;
-    },
-  },
-  getDatasetDetails: {
-    name: 'טוען פרטי מאגר',
-    icon: <FileTextIcon className="h-4 w-4" />,
-    formatInput: (input) => {
-      // Don't show the technical ID, just say we're loading details
-      return 'טוען פרטים מלאים...';
-    },
-    formatOutput: (output) => {
-      if (!output.success) {
-        return `שגיאה: ${output.error}`;
-      }
-      const dataset = output.dataset as { title: string; resources: unknown[] };
-      const resourceCount = dataset?.resources?.length || 0;
-      const title = dataset?.title || 'מאגר';
-      return `${title} • ${resourceCount} קבצים`;
-    },
-  },
-  listGroups: {
-    name: 'רשימת ארגונים',
-    icon: <FolderIcon className="h-4 w-4" />,
-    formatInput: (input) => {
-      const parts: string[] = ['מציג ארגונים מפרסמים'];
-      if (input.limit) {
-        parts.push(`עד ${input.limit} תוצאות`);
-      }
-      if (input.orderBy) {
-        parts.push(`ממוין לפי ${translateSort(String(input.orderBy))}`);
-      }
-      return parts.join(' • ');
-    },
-    formatOutput: (output) => {
-      if (!output.success) {
-        return `שגיאה: ${output.error}`;
-      }
-      const groups = output.groups as unknown[];
-      const count = groups?.length || 0;
-      return count === 0 ? 'לא נמצאו ארגונים' : `נמצאו ${count} ארגונים`;
-    },
-  },
-  listTags: {
-    name: 'רשימת תגיות',
-    icon: <TagIcon className="h-4 w-4" />,
-    formatInput: (input) => {
-      if (input.query) {
-        return `מחפש תגיות: "${input.query}"`;
-      }
-      return 'מציג את כל התגיות';
-    },
-    formatOutput: (output) => {
-      if (!output.success) {
-        return `שגיאה: ${output.error}`;
-      }
-      const tags = output.tags as unknown[];
-      const count = tags?.length || 0;
-      return count === 0 ? 'לא נמצאו תגיות' : `נמצאו ${count} תגיות`;
-    },
-  },
-  queryDatastoreResource: {
-    name: 'שליפת נתונים',
-    icon: <DatabaseIcon className="h-4 w-4" />,
-    formatInput: (input) => {
-      const parts: string[] = [];
-
-      if (input.q) {
-        parts.push(`מחפש: "${input.q}"`);
-      }
-
-      if (input.filters && typeof input.filters === 'object') {
-        const filterEntries = Object.entries(input.filters as Record<string, unknown>);
-        if (filterEntries.length > 0) {
-          const filterStr = filterEntries
-            .map(([key, value]) => {
-              const hebrewKey = fieldTranslations[key] || key;
-              return `${hebrewKey}="${value}"`;
-            })
-            .join(', ');
-          parts.push(`מסנן לפי: ${filterStr}`);
-        }
-      }
-
-      if (input.limit) {
-        parts.push(`עד ${input.limit} רשומות`);
-      }
-
-      if (input.sort) {
-        parts.push(`ממוין לפי ${translateSort(String(input.sort))}`);
-      }
-
-      if (parts.length === 0) {
-        parts.push('שולף נתונים מהמאגר');
-      }
-
-      return parts.join(' • ');
-    },
-    formatOutput: (output) => {
-      if (!output.success) {
-        return `שגיאה: ${output.error}`;
-      }
-      const total = output.total as number;
-      const records = output.records as unknown[];
-      const recordCount = records?.length || 0;
-
-      if (total === 0) {
-        return 'לא נמצאו רשומות';
-      }
-
-      if (recordCount === total) {
-        return `נמצאו ${total} רשומות`;
-      }
-
-      return `מציג ${recordCount} מתוך ${total} רשומות`;
-    },
-  },
-};
 
 function getStateIcon(state: ToolCallCardProps['part']['state']) {
   switch (state) {
@@ -276,9 +70,50 @@ function getStateLabel(state: ToolCallCardProps['part']['state']): string {
   }
 }
 
+/**
+ * Type guard to check if a string is a valid tool name
+ */
+function isValidToolName(key: string): key is ToolName {
+  return key in toolTranslations;
+}
+
+/**
+ * Get typed tool translation for a given tool key
+ */
+function getToolMeta<T extends ToolName>(key: T): ToolTranslation<T> | undefined {
+  return toolTranslations[key] as ToolTranslation<T> | undefined;
+}
+
+/**
+ * Format input description with proper typing
+ */
+function formatInputDescription(toolKey: string, input: unknown): string | null {
+  if (!isValidToolName(toolKey) || input === undefined) {
+    return null;
+  }
+  const meta = getToolMeta(toolKey);
+  if (!meta) return null;
+  // We know the input matches the tool's expected type based on runtime behavior
+  return meta.formatInput(input as ToolInput<typeof toolKey>);
+}
+
+/**
+ * Format output description with proper typing
+ */
+function formatOutputDescription(toolKey: string, output: unknown): string | null {
+  if (!isValidToolName(toolKey) || output === undefined) {
+    return null;
+  }
+  const meta = getToolMeta(toolKey);
+  if (!meta) return null;
+  // We know the output matches the tool's expected type based on runtime behavior
+  return meta.formatOutput(output as ToolOutput<typeof toolKey>);
+}
+
 export function ToolCallCard({ part }: ToolCallCardProps) {
   const toolKey = part.type.replace('tool-', '');
-  const toolMeta = toolTranslations[toolKey];
+  const isKnownTool = isValidToolName(toolKey);
+  const toolMeta = isKnownTool ? toolTranslations[toolKey] : undefined;
 
   const toolName = toolMeta?.name || toolKey;
   const toolIcon = toolMeta?.icon || <SearchIcon className="h-4 w-4" />;
@@ -287,12 +122,12 @@ export function ToolCallCard({ part }: ToolCallCardProps) {
   const hasOutput = part.state === 'output-available' && part.output !== undefined;
   const hasError = part.state === 'output-error' && part.errorText;
 
-  // Format human-readable descriptions
-  const inputDescription = hasInput && toolMeta
-    ? toolMeta.formatInput(part.input as Record<string, unknown>)
+  // Format human-readable descriptions using type-safe helpers
+  const inputDescription = hasInput
+    ? formatInputDescription(toolKey, part.input)
     : null;
-  const outputDescription = hasOutput && toolMeta
-    ? toolMeta.formatOutput(part.output as Record<string, unknown>)
+  const outputDescription = hasOutput
+    ? formatOutputDescription(toolKey, part.output)
     : null;
 
   const isLoading = part.state === 'input-streaming' || part.state === 'input-available';

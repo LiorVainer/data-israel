@@ -56,7 +56,9 @@ const openrouter = createOpenRouter({
 });
 
 /** Get model instance by ID */
-const getModel = (modelId: string) => openrouter.chat(modelId);
+const getModel = (modelId: string) =>
+    openrouter.chat(modelId);
+
 
 /**
  * Custom stop condition for task completion

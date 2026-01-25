@@ -65,7 +65,7 @@ export const ChainOfThought = memo(
     return (
       <ChainOfThoughtContext.Provider value={chainOfThoughtContext}>
         <div
-          className={cn("not-prose max-w-prose space-y-4", className)}
+          className={cn("not-prose max-w-prose", isOpen && 'space-y-4', className)}
           {...props}
         >
           {children}
@@ -93,7 +93,7 @@ export const ChainOfThoughtHeader = memo(
           {...props}
         >
           <BrainIcon className="size-4" />
-          <span className="flex-1 text-left">
+          <span className="flex-1 text-start">
             {children ?? "Chain of Thought"}
           </span>
           <ChevronDownIcon

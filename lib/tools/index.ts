@@ -4,6 +4,44 @@
  * Exports all agent tools for Israeli open data exploration
  */
 
+// Type definitions
+export type {
+  ToolIOMap,
+  ToolName,
+  ToolInput,
+  ToolOutput,
+  SearchDatasetsInput,
+  SearchDatasetsOutput,
+  GetDatasetDetailsInput,
+  GetDatasetDetailsOutput,
+  ListGroupsInput,
+  ListGroupsOutput,
+  ListTagsInput,
+  ListTagsOutput,
+  QueryDatastoreResourceInput,
+  QueryDatastoreResourceOutput,
+  GetDatasetActivityInput,
+  GetDatasetActivityOutput,
+  GetDatasetSchemaInput,
+  GetDatasetSchemaOutput,
+  GetOrganizationActivityInput,
+  GetOrganizationActivityOutput,
+  GetOrganizationDetailsInput,
+  GetOrganizationDetailsOutput,
+  GetResourceDetailsInput,
+  GetResourceDetailsOutput,
+  GetStatusInput,
+  GetStatusOutput,
+  ListAllDatasetsInput,
+  ListAllDatasetsOutput,
+  ListLicensesInput,
+  ListLicensesOutput,
+  ListOrganizationsInput,
+  ListOrganizationsOutput,
+  SearchResourcesInput,
+  SearchResourcesOutput,
+} from './types';
+
 // System tools
 export { getStatus } from './get-status';
 export { listLicenses } from './list-licenses';

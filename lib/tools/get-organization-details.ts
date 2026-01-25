@@ -8,12 +8,46 @@ import { tool } from 'ai';
 import { z } from 'zod';
 import { dataGovApi } from '@/lib/api/data-gov/client';
 
+// ============================================================================
+// Schemas (Single Source of Truth)
+// ============================================================================
+
+export const getOrganizationDetailsInputSchema = z.object({
+  id: z.string().describe('Organization ID or name (short form)'),
+});
+
+export const getOrganizationDetailsOutputSchema = z.discriminatedUnion('success', [
+  z.object({
+    success: z.literal(true),
+    organization: z.object({
+      id: z.string(),
+      name: z.string(),
+      title: z.string(),
+      displayName: z.string(),
+      description: z.string(),
+      imageUrl: z.string(),
+      created: z.string(),
+      packageCount: z.number(),
+      state: z.string(),
+    }),
+  }),
+  z.object({
+    success: z.literal(false),
+    error: z.string(),
+  }),
+]);
+
+export type GetOrganizationDetailsInput = z.infer<typeof getOrganizationDetailsInputSchema>;
+export type GetOrganizationDetailsOutput = z.infer<typeof getOrganizationDetailsOutputSchema>;
+
+// ============================================================================
+// Tool Definition
+// ============================================================================
+
 export const getOrganizationDetails = tool({
   description:
     'Get detailed information about a specific organization. Use when user wants to know about a government body or organization that publishes data.',
-  inputSchema: z.object({
-    id: z.string().describe('Organization ID or name (short form)'),
-  }),
+  inputSchema: getOrganizationDetailsInputSchema,
   execute: async ({ id }) => {
     try {
       const org = await dataGovApi.organization.show(id);

@@ -8,12 +8,58 @@ import { tool } from 'ai';
 import { z } from 'zod';
 import { dataGovApi } from '@/lib/api/data-gov/client';
 
+// ============================================================================
+// Schemas (Single Source of Truth)
+// ============================================================================
+
+export const getDatasetDetailsInputSchema = z.object({
+  id: z.string().describe('Dataset ID or name'),
+});
+
+export const getDatasetDetailsOutputSchema = z.discriminatedUnion('success', [
+  z.object({
+    success: z.literal(true),
+    dataset: z.object({
+      id: z.string(),
+      title: z.string(),
+      name: z.string(),
+      organization: z.unknown(),
+      tags: z.array(z.unknown()),
+      notes: z.string(),
+      author: z.string(),
+      maintainer: z.string(),
+      license: z.string(),
+      metadata_created: z.string(),
+      metadata_modified: z.string(),
+      resources: z.array(z.object({
+        id: z.string(),
+        name: z.string(),
+        url: z.string(),
+        format: z.string(),
+        description: z.string(),
+        size: z.number(),
+        created: z.string(),
+        last_modified: z.string(),
+      })),
+    }),
+  }),
+  z.object({
+    success: z.literal(false),
+    error: z.string(),
+  }),
+]);
+
+export type GetDatasetDetailsInput = z.infer<typeof getDatasetDetailsInputSchema>;
+export type GetDatasetDetailsOutput = z.infer<typeof getDatasetDetailsOutputSchema>;
+
+// ============================================================================
+// Tool Definition
+// ============================================================================
+
 export const getDatasetDetails = tool({
   description:
     'Get full details for a specific dataset by ID. Use when user wants detailed information about a dataset, including resources and metadata.',
-  inputSchema: z.object({
-    id: z.string().describe('Dataset ID or name'),
-  }),
+  inputSchema: getDatasetDetailsInputSchema,
   execute: async ({ id }) => {
     try {
       const dataset = await dataGovApi.dataset.show(id);

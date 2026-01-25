@@ -10,29 +10,62 @@ import { z } from 'zod';
 import { convexClient, api } from '@/lib/convex/client';
 import { dataGovApi } from '@/lib/api/data-gov/client';
 
+// ============================================================================
+// Schemas (Single Source of Truth)
+// ============================================================================
+
+export const searchResourcesInputSchema = z.object({
+  query: z
+    .string()
+    .describe('Search query - can be natural language (e.g., "CSV files about schools", "education data")'),
+  datasetId: z
+    .string()
+    .optional()
+    .describe('Filter by dataset CKAN ID to search within a specific dataset'),
+  format: z
+    .string()
+    .optional()
+    .describe('Filter by file format (e.g., "csv", "json", "xlsx")'),
+  limit: z
+    .number()
+    .int()
+    .min(1)
+    .max(100)
+    .optional()
+    .describe('Maximum number of resources to return (default 10)'),
+});
+
+export const searchResourcesOutputSchema = z.discriminatedUnion('success', [
+  z.object({
+    success: z.literal(true),
+    count: z.number(),
+    source: z.enum(['convex-rag', 'ckan-api', 'ckan-api-fallback']),
+    resources: z.array(z.object({
+      id: z.string(),
+      name: z.string(),
+      url: z.string(),
+      format: z.string(),
+      description: z.string(),
+      datasetId: z.string(),
+    })),
+  }),
+  z.object({
+    success: z.literal(false),
+    error: z.string(),
+  }),
+]);
+
+export type SearchResourcesInput = z.infer<typeof searchResourcesInputSchema>;
+export type SearchResourcesOutput = z.infer<typeof searchResourcesOutputSchema>;
+
+// ============================================================================
+// Tool Definition
+// ============================================================================
+
 export const searchResources = tool({
   description:
     'Search for resources (files) using semantic search. Use when user wants to find specific file types or resources across datasets.',
-  inputSchema: z.object({
-    query: z
-      .string()
-      .describe('Search query - can be natural language (e.g., "CSV files about schools", "education data")'),
-    datasetId: z
-      .string()
-      .optional()
-      .describe('Filter by dataset CKAN ID to search within a specific dataset'),
-    format: z
-      .string()
-      .optional()
-      .describe('Filter by file format (e.g., "csv", "json", "xlsx")'),
-    limit: z
-      .number()
-      .int()
-      .min(1)
-      .max(100)
-      .optional()
-      .describe('Maximum number of resources to return (default 10)'),
-  }),
+  inputSchema: searchResourcesInputSchema,
   execute: async ({ query, datasetId, format, limit = 10 }) => {
     try {
       // Try Convex RAG semantic search first
