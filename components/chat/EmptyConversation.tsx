@@ -9,7 +9,7 @@ export interface EmptyConversationProps {
 
 export function EmptyConversation({ onSuggestionClick }: EmptyConversationProps) {
   return (
-    <div className="flex flex-col items-center justify-center h-full text-center px-4 animate-in fade-in duration-500">
+    <div className="flex flex-col items-center justify-center flex-1 overflow-y-auto text-center px-4 animate-in fade-in duration-500">
       <MessageSquare className="size-16 text-muted-foreground mb-6 animate-pulse" />
       <h2 className="text-3xl font-semibold mb-3">
         שאל על נתונים פתוחים ישראליים

@@ -1,5 +1,8 @@
 'use client';
 
+
+  import { motion } from "framer-motion";
+  import { AuroraBackground } from "@/components/ui/aurora-background";
 import { useChat } from '@ai-sdk/react';
 import { useState, useRef, useEffect } from 'react';
 import {
@@ -51,9 +54,17 @@ export default function Home() {
 
   const isStreaming = status === 'submitted' || status === 'streaming';
 
+
   return (
-    <div className="max-w-4xl mx-auto p-4 md:p-6 relative h-dvh">
-      <div className="flex flex-col h-full">
+    <AuroraBackground className="max-w-4xl mx-auto p-4 md:p-6 relative h-dvh">
+      <motion.div
+          initial={{ opacity: 0.0, y: 40 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{
+          delay: 0.3,
+          duration: 0.8,
+          ease: "easeInOut",
+      }} className="flex flex-col h-full">
         {messages.length === 0 ?
             <EmptyConversation onSuggestionClick={handleSuggestionClick} />
         :
@@ -99,7 +110,7 @@ export default function Home() {
             />
           </PromptInputFooter>
         </PromptInput>
-      </div>
-    </div>
+        </motion.div>
+      </AuroraBackground>
   );
 }
