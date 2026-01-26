@@ -1,7 +1,7 @@
 'use client';
 
-import { MessageSquare } from 'lucide-react';
 import { PromptSuggestions } from './PromptSuggestions';
+import { HeroBadge, HeroTitle, HeroSubtitle } from '@/components/ui/shape-landing-hero';
 
 export interface EmptyConversationProps {
     onSuggestionClick: (prompt: string) => void;
@@ -9,14 +9,17 @@ export interface EmptyConversationProps {
 
 export function EmptyConversation({ onSuggestionClick }: EmptyConversationProps) {
     return (
-        <div className='flex flex-col items-center justify-center flex-1 overflow-y-auto text-center px-4 animate-in fade-in duration-500'>
-            <MessageSquare className='size-16 text-muted-foreground mb-6 animate-pulse' />
-            <h2 className='text-3xl font-semibold mb-3'>שאל על נתונים פתוחים ישראליים</h2>
-            <p className='text-muted-foreground max-w-md mb-6'>
-                חפש מאגרי מידע, חקור קטגוריות וגלה נתונים ציבוריים מאתר data.gov.il
-            </p>
-            <div className='w-full max-w-2xl'>
-                <div className='text-muted-foreground font-medium mb-3 text-center'>דוגמאות לשאלות:</div>
+        <div className='w-full max-w-2xl mx-auto px-4 text-center flex flex-col items-center flex-1 min-h-0'>
+            <div className='flex-shrink-0 pt-8'>
+                <HeroBadge>data.gov.il</HeroBadge>
+                <HeroTitle line1='שאל על נתונים' line2='פתוחים ישראליים' />
+                <HeroSubtitle>חפש מאגרי מידע, חקור קטגוריות וגלה נתונים ציבוריים</HeroSubtitle>
+            </div>
+
+            <div className='w-full flex-1 min-h-32 overflow-y-auto mt-4 flex flex-col items-center'>
+                <div className='text-muted-foreground font-medium mb-3 text-center flex-shrink-0'>
+                    דוגמאות לשאלות:
+                </div>
                 <PromptSuggestions onSuggestionClick={onSuggestionClick} />
             </div>
         </div>
