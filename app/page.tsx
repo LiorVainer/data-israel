@@ -54,8 +54,8 @@ export default function Home() {
                     className='flex flex-col gap-4 md:gap-6 h-full w-full items-center'
                 >
                     {hasMessages ? (
-                        <Conversation className='h-full flex-1 w-full [&>*]:flex [&>*]:justify-center children-noscrollbar'>
-                            <ConversationContent className='w-full md:w-4xl pt-8 md:pt-10'>
+                        <Conversation className='w-full children-noscrollbar'>
+                            <ConversationContent className='w-full md:w-4xl pt-8 md:pt-10 mx-auto'>
                                 {messages.map((message, messageIndex) => (
                                     <MessageItem
                                         key={message.id}
