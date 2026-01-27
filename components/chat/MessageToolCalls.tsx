@@ -13,6 +13,9 @@ import {
     ServerIcon,
     ListIcon,
     ScrollTextIcon,
+    BarChart2Icon,
+    LineChartIcon,
+    PieChartIcon,
     type LucideIcon,
 } from 'lucide-react';
 import {
@@ -46,6 +49,9 @@ const toolIconMap: Record<string, LucideIcon> = {
     listLicenses: ScrollTextIcon,
     listOrganizations: BuildingIcon,
     searchResources: SearchIcon,
+    displayBarChart: BarChart2Icon,
+    displayLineChart: LineChartIcon,
+    displayPieChart: PieChartIcon,
 };
 
 /**
@@ -132,7 +138,6 @@ export function MessageToolCalls({ messageId, toolParts, isProcessing }: Message
     const shouldForceOpen = isProcessing || hasActiveTools;
     const isOpen = shouldForceOpen || userWantsOpen;
 
-    console.log({ isProcessing, shouldForceOpen, userWantsOpen });
     // Handle user toggling
     const handleOpenChange = (open: boolean) => {
         setUserWantsOpen(open);

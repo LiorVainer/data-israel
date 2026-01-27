@@ -22,7 +22,7 @@ export const Conversation = ({ className, ...props }: ConversationProps) => (
 export type ConversationContentProps = ComponentProps<typeof StickToBottom.Content>;
 
 export const ConversationContent = ({ className, ...props }: ConversationContentProps) => (
-    <StickToBottom.Content className={cn('flex flex-col gap-6 md:gap-8 p-2 md:p-4', className)} {...props} />
+    <StickToBottom.Content className={cn('flex flex-col gap-6 md:gap-8', className)} {...props} />
 );
 
 export type ConversationEmptyStateProps = ComponentProps<'div'> & {

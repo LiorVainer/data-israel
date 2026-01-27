@@ -17,6 +17,9 @@ import {
     ServerIcon,
     ListIcon,
     ScrollTextIcon,
+    BarChart2Icon,
+    LineChartIcon,
+    PieChartIcon,
 } from 'lucide-react';
 import type { ToolName, ToolInput, ToolOutput } from '@/lib/tools/types';
 
@@ -384,6 +387,54 @@ export const toolTranslations: ToolTranslationsMap = {
                 return 'לא נמצאו קבצים';
             }
             return `נמצאו ${output.count} קבצים`;
+        },
+    },
+    displayBarChart: {
+        name: 'הצגת תרשים עמודות',
+        icon: <BarChart2Icon className='h-4 w-4' />,
+        formatInput: (input) => {
+            if (input.title) {
+                return `מציג תרשים עמודות: "${input.title}"`;
+            }
+            return 'מציג תרשים עמודות';
+        },
+        formatOutput: (output) => {
+            if (output.rendered) {
+                return 'התרשים הוצג בהצלחה';
+            }
+            return 'שגיאה בהצגת התרשים';
+        },
+    },
+    displayLineChart: {
+        name: 'הצגת תרשים קו',
+        icon: <LineChartIcon className='h-4 w-4' />,
+        formatInput: (input) => {
+            if (input.title) {
+                return `מציג תרשים קו: "${input.title}"`;
+            }
+            return 'מציג תרשים קו';
+        },
+        formatOutput: (output) => {
+            if (output.rendered) {
+                return 'התרשים הוצג בהצלחה';
+            }
+            return 'שגיאה בהצגת התרשים';
+        },
+    },
+    displayPieChart: {
+        name: 'הצגת תרשים עוגה',
+        icon: <PieChartIcon className='h-4 w-4' />,
+        formatInput: (input) => {
+            if (input.title) {
+                return `מציג תרשים עוגה: "${input.title}"`;
+            }
+            return 'מציג תרשים עוגה';
+        },
+        formatOutput: (output) => {
+            if (output.rendered) {
+                return 'התרשים הוצג בהצלחה';
+            }
+            return 'שגיאה בהצגת התרשים';
         },
     },
 };

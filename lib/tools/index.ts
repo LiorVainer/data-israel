@@ -40,6 +40,14 @@ export type {
     ListOrganizationsOutput,
     SearchResourcesInput,
     SearchResourcesOutput,
+    DisplayBarChartInput,
+    DisplayBarChartOutput,
+    DisplayLineChartInput,
+    DisplayLineChartOutput,
+    DisplayPieChartInput,
+    DisplayPieChartOutput,
+    DisplayChartInput,
+    ChartType,
 } from './types';
 
 // System tools
@@ -66,3 +74,6 @@ export { listTags } from './list-tags';
 export { searchResources } from './search-resources';
 export { getResourceDetails } from './get-resource-details';
 export { queryDatastoreResource } from './query-datastore-resource';
+
+// Chart display tools
+export { displayBarChart, displayLineChart, displayPieChart } from './display-chart';

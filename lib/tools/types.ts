@@ -36,6 +36,17 @@ export type { ListOrganizationsInput, ListOrganizationsOutput } from './list-org
 
 export type { SearchResourcesInput, SearchResourcesOutput } from './search-resources';
 
+export type {
+    DisplayBarChartInput,
+    DisplayBarChartOutput,
+    DisplayLineChartInput,
+    DisplayLineChartOutput,
+    DisplayPieChartInput,
+    DisplayPieChartOutput,
+    DisplayChartInput,
+    ChartType,
+} from './display-chart';
+
 // Import types for the ToolIOMap
 import type { SearchDatasetsInput, SearchDatasetsOutput } from './search-datasets';
 import type { GetDatasetDetailsInput, GetDatasetDetailsOutput } from './get-dataset-details';
@@ -52,6 +63,14 @@ import type { ListAllDatasetsInput, ListAllDatasetsOutput } from './list-all-dat
 import type { ListLicensesInput, ListLicensesOutput } from './list-licenses';
 import type { ListOrganizationsInput, ListOrganizationsOutput } from './list-organizations';
 import type { SearchResourcesInput, SearchResourcesOutput } from './search-resources';
+import type {
+    DisplayBarChartInput,
+    DisplayBarChartOutput,
+    DisplayLineChartInput,
+    DisplayLineChartOutput,
+    DisplayPieChartInput,
+    DisplayPieChartOutput,
+} from './display-chart';
 
 // ============================================================================
 // Tool Map Type
@@ -117,6 +136,18 @@ export interface ToolIOMap {
     searchResources: {
         input: SearchResourcesInput;
         output: SearchResourcesOutput;
+    };
+    displayBarChart: {
+        input: DisplayBarChartInput;
+        output: DisplayBarChartOutput;
+    };
+    displayLineChart: {
+        input: DisplayLineChartInput;
+        output: DisplayLineChartOutput;
+    };
+    displayPieChart: {
+        input: DisplayPieChartInput;
+        output: DisplayPieChartOutput;
     };
 }
 

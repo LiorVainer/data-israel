@@ -2,14 +2,14 @@
 
 import { motion } from 'framer-motion';
 import { useChat } from '@ai-sdk/react';
-import { useState, useRef, useEffect } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Conversation, ConversationContent, ConversationScrollButton } from '@/components/ai-elements/conversation';
 import {
     PromptInput,
-    PromptInputTextarea,
     PromptInputFooter,
-    PromptInputTools,
     PromptInputSubmit,
+    PromptInputTextarea,
+    PromptInputTools,
 } from '@/components/ai-elements/prompt-input';
 import { EmptyConversation } from '@/components/chat/EmptyConversation';
 import { MessageItem } from '@/components/chat/MessageItem';
@@ -29,7 +29,7 @@ export default function Home() {
         modelRef.current = selectedModel;
     }, [selectedModel]);
 
-    const { messages, sendMessage, status, regenerate, stop } = useChat<DataAgentUIMessage>();
+    const { messages, sendMessage, status, regenerate, stop } = useChat<DataAgentUIMessage>({});
 
     const handleSuggestionClick = (prompt: string) => {
         void sendMessage({ text: prompt }, { body: { model: modelRef.current } });
@@ -39,10 +39,10 @@ export default function Home() {
     const hasMessages = messages.length > 0;
 
     return (
-        <div className='relative h-dvh'>
-            {!hasMessages ? <GeometricBackground /> : null}
+        <div className='relative h-dvh w-screen'>
+            <GeometricBackground />
 
-            <div className='max-w-4xl mx-auto p-4 md:p-6 relative h-full'>
+            <div className='mx-auto px-4 md:px-0 pb-4 md:pb-6 relative h-full w'>
                 <motion.div
                     initial={{ opacity: 0.0, y: 40 }}
                     whileInView={{ opacity: 1, y: 0 }}
@@ -51,11 +51,11 @@ export default function Home() {
                         duration: 0.8,
                         ease: 'easeInOut',
                     }}
-                    className='flex flex-col h-full gap-4 md:gap-6'
+                    className='flex flex-col gap-4 md:gap-6 h-full w-full items-center'
                 >
                     {hasMessages ? (
-                        <Conversation className='h-full flex-1'>
-                            <ConversationContent>
+                        <Conversation className='h-full flex-1 w-full [&>*]:flex [&>*]:justify-center children-noscrollbar'>
+                            <ConversationContent className='w-full md:w-4xl pt-8 md:pt-10'>
                                 {messages.map((message, messageIndex) => (
                                     <MessageItem
                                         key={message.id}
@@ -77,9 +77,8 @@ export default function Home() {
                         </div>
                     )}
 
-                    <div className='relative z-20'>
+                    <div className='relative z-20 w-full md:w-4xl'>
                         <PromptInput
-                            className={hasMessages ? 'mt-4' : ''}
                             onSubmit={(message) => {
                                 if (!message.text.trim()) return;
                                 void sendMessage({ text: message.text }, { body: { model: modelRef.current } });
