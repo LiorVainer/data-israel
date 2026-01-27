@@ -18,23 +18,23 @@ export const AgentConfig = {
     /** Model configuration */
     MODEL: {
         /** Default OpenRouter model ID */
-        DEFAULT_ID: 'x-ai/grok-4.1-fast',
+        DEFAULT_ID: 'google/gemini-3-flash-preview',
         /** Tool choice strategy */
     },
 
     /** Available models for selection */
     AVAILABLE_MODELS: [
         {
-            id: 'x-ai/grok-4.1-fast',
-            name: 'Grok 4.1 Fast',
-            provider: 'xAI',
-            providerSlug: 'xai',
-        },
-        {
             id: 'google/gemini-3-flash-preview',
             name: 'Gemini 3 Flash Preview',
             provider: 'Google',
             providerSlug: 'google',
+        },
+        {
+            id: 'x-ai/grok-4.1-fast',
+            name: 'Grok 4.1 Fast',
+            provider: 'xAI',
+            providerSlug: 'xai',
         },
         {
             id: 'z-ai/glm-4.7-flash',
