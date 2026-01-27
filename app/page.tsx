@@ -11,7 +11,7 @@ import {
     PromptInputTextarea,
     PromptInputTools,
 } from '@/components/ai-elements/prompt-input';
-import { EmptyConversation } from '@/components/chat/EmptyConversation';
+import { LandingPage } from '@/components/chat/LandingPage';
 import { MessageItem } from '@/components/chat/MessageItem';
 import { ModelSelectorSection } from '@/components/chat/ModelSelectorSection';
 import type { DataAgentUIMessage } from '@/agents/data-agent';
@@ -73,7 +73,7 @@ export default function Home() {
 
                     {!hasMessages && (
                         <div className='relative z-20 flex-1 flex flex-col min-h-0 overflow-hidden'>
-                            <EmptyConversation onSuggestionClick={handleSuggestionClick} />
+                            <LandingPage onSuggestionClick={handleSuggestionClick} />
                         </div>
                     )}
 

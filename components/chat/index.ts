@@ -15,8 +15,8 @@ export type { ReasoningPartProps } from './ReasoningPart';
 export { SourcesPart } from './SourcesPart';
 export type { SourcesPartProps } from './SourcesPart';
 
-export { EmptyConversation } from './EmptyConversation';
-export type { EmptyConversationProps } from './EmptyConversation';
+export { LandingPage } from './LandingPage';
+export type { LandingPageProps } from './LandingPage';
 
 export { MessageItem } from './MessageItem';
 export type { MessageItemProps } from './MessageItem';

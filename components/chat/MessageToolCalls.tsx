@@ -131,8 +131,6 @@ export function MessageToolCalls({ messageId, toolParts, isProcessing }: Message
     // User's preferred open state (can be toggled via header click)
     const [userWantsOpen, setUserWantsOpen] = useState(false);
 
-    console.log({ toolParts });
-
     // Check if any tool is currently active
     const hasActiveTools = toolParts.some(({ part }) => getToolStatus(part.state) === 'active');
 
