@@ -2,32 +2,32 @@
 
 import { useState } from 'react';
 import {
-    SearchIcon,
+    ActivityIcon,
+    BarChart2Icon,
+    BuildingIcon,
+    DatabaseIcon,
+    FileIcon,
     FileTextIcon,
     FolderIcon,
-    TagIcon,
-    DatabaseIcon,
-    BuildingIcon,
-    ActivityIcon,
-    FileIcon,
-    ServerIcon,
-    ListIcon,
-    ScrollTextIcon,
-    BarChart2Icon,
     LineChartIcon,
-    PieChartIcon,
+    ListIcon,
     type LucideIcon,
+    PieChartIcon,
+    ScrollTextIcon,
+    SearchIcon,
+    ServerIcon,
+    TagIcon,
 } from 'lucide-react';
 import {
     ChainOfThought,
-    ChainOfThoughtHeader,
     ChainOfThoughtContent,
+    ChainOfThoughtHeader,
     ChainOfThoughtStep,
 } from '@/components/ai-elements/chain-of-thought';
 import { Shimmer } from '@/components/ai-elements/shimmer';
 import { toolTranslations } from '@/constants/tool-translations';
 import type { ToolName } from '@/lib/tools/types';
-import type { ToolCallPart, ToolInfo, StepStatus } from './types';
+import type { StepStatus, ToolCallPart, ToolInfo } from './types';
 import { getToolStatus } from './types';
 
 /**
@@ -130,6 +130,8 @@ export interface MessageToolCallsProps {
 export function MessageToolCalls({ messageId, toolParts, isProcessing }: MessageToolCallsProps) {
     // User's preferred open state (can be toggled via header click)
     const [userWantsOpen, setUserWantsOpen] = useState(false);
+
+    console.log({ toolParts });
 
     // Check if any tool is currently active
     const hasActiveTools = toolParts.some(({ part }) => getToolStatus(part.state) === 'active');

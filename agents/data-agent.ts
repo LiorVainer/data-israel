@@ -4,32 +4,26 @@
  * ToolLoopAgent for exploring Israeli open datasets
  */
 
-import { ToolLoopAgent, type InferAgentUIMessage, type StepResult, type ToolSet } from 'ai';
+import { type InferAgentUIMessage, type StepResult, ToolLoopAgent, type ToolSet } from 'ai';
 import {
-    // System tools
-    getStatus,
-    listLicenses,
-    getDatasetSchema,
-    // Dataset tools
-    searchDatasets,
-    listAllDatasets,
-    getDatasetDetails,
-    getDatasetActivity,
-    // Organization tools
-    listOrganizations,
-    getOrganizationDetails,
-    getOrganizationActivity,
-    // Group and tag tools
-    listGroups,
-    listTags,
-    // Resource tools
-    searchResources,
-    getResourceDetails,
-    queryDatastoreResource,
-    // Chart display tools
     displayBarChart,
     displayLineChart,
     displayPieChart,
+    getDatasetActivity,
+    getDatasetDetails,
+    getDatasetSchema,
+    getOrganizationActivity,
+    getOrganizationDetails,
+    getResourceDetails,
+    getStatus,
+    listAllDatasets,
+    listGroups,
+    listLicenses,
+    listOrganizations,
+    listTags,
+    queryDatastoreResource,
+    searchDatasets,
+    searchResources,
 } from '@/lib/tools';
 import { createOpenRouter } from '@openrouter/ai-sdk-provider';
 import { AgentConfig } from './agent.config';
@@ -113,6 +107,7 @@ const agentInstructions = `אתה עוזר AI ידידותי שעוזר למשת
 3. הצג מידע מסודר - השתמש בטבלאות, רשימות וסיכומים
 4. היה פרואקטיבי - תמיד הצע למשתמש מה לעשות הלאה
 5. סיים משימות - אל תעצור באמצע, השלם את כל התהליך לפני שאתה עונה
+6. המידע שאתה נותן תמיד חייב להתבסס על תוצאות של נתונים ששלפת ממאגרי המידע הרשמיים באתר של data.gov.il.
 
 === זרימת עבודה טיפוסית ===
 1. חפש מאגרים רלוונטיים
