@@ -4,6 +4,10 @@
       "type": "http",
       "url": "https://registry.ai-sdk.dev/api/mcp"
     },
+    "grep_app": {
+      "type": "http",
+      "url": "http://localhost:8603/mcp"
+    },
     "next-devtools": {
       "command": "npx",
       "args": [

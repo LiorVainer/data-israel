@@ -65,7 +65,7 @@
   --destructive: oklch(0.577 0.245 27.325);
   --border: oklch(0.88 0.01 250);
   --input: oklch(0.88 0.01 250);
-  --ring: oklch(0.98 0.005 250);
+  --ring: oklch(0.55 0.18 250);
   --chart-1: oklch(0.55 0.18 250);
   --chart-2: oklch(0.6 0.14 220);
   --chart-3: oklch(0.65 0.16 270);
@@ -140,12 +140,12 @@
   }
 
   /* RTL-aware scrollbar styling */
-  [dir="rtl"] ::-webkit-scrollbar {
+  [dir="rtl"] *::-webkit-scrollbar {
     width: 8px;
     height: 8px;
   }
 
-  [dir="rtl"] ::-webkit-scrollbar-thumb {
+  [dir="rtl"] *::-webkit-scrollbar-thumb {
     @apply bg-muted-foreground/20 rounded;
   }
 
@@ -158,6 +158,29 @@
   /* Smooth scroll behavior */
   .scroll-smooth {
     scroll-behavior: smooth;
+  }
+
+
+  .children-noscrollbar > * {
+    scrollbar-width: auto !important;
+    -ms-overflow-style: auto !important;
+  }
+
+  .children-noscrollbar > *::-webkit-scrollbar {
+    display: block !important;
+  }
+
+  /* Restore scrollbar on md+ */
+  @media (max-width: 768px) {
+
+    .children-noscrollbar > * {
+      scrollbar-width: none !important;        /* Firefox */
+      -ms-overflow-style: none !important;     /* IE / Edge */
+    }
+
+    .children-noscrollbar > *::-webkit-scrollbar {
+      display: none !important;                /* Chrome / Safari / iOS */
+    }
   }
 
   /* LTR direction override for JSON and code blocks */
