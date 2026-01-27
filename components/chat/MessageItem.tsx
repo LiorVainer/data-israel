@@ -5,9 +5,9 @@ import { MessageToolCalls } from './MessageToolCalls';
 import { TextMessagePart } from './TextMessagePart';
 import { ReasoningPart } from './ReasoningPart';
 import { SourcesPart } from './SourcesPart';
-import { ChartRenderer, ChartLoadingState, ChartError } from './ChartRenderer';
-import type { ToolCallPart, SourceUrlUIPart } from './types';
-import { isToolPart, getToolStatus } from './types';
+import { ChartError, ChartLoadingState, ChartRenderer } from './ChartRenderer';
+import type { SourceUrlUIPart, ToolCallPart } from './types';
+import { getToolStatus, isToolPart } from './types';
 import type { DisplayChartInput } from '@/lib/tools';
 
 export interface MessageItemProps {
@@ -28,8 +28,6 @@ export function MessageItem({ message, isLastMessage, isStreaming, onRegenerate 
     const toolParts = message.parts
         .map((part, index) => ({ part: part as ToolCallPart, index }))
         .filter(({ part }) => isToolPart(part) && !chartToolTypes.includes(part.type));
-
-    console.log({ message });
 
     // Check if any tool is currently active (streaming/processing)
     const hasActiveTools = toolParts.some(({ part }) => isToolPart(part) && getToolStatus(part.state) === 'active');
@@ -73,7 +71,10 @@ export function MessageItem({ message, isLastMessage, isStreaming, onRegenerate 
                     case 'tool-displayLineChart':
                     case 'tool-displayPieChart': {
                         const toolPart = part as ToolCallPart;
-                        const chartType = part.type.replace('tool-display', '').replace('Chart', '').toLowerCase() as 'bar' | 'line' | 'pie';
+                        const chartType = part.type.replace('tool-display', '').replace('Chart', '').toLowerCase() as
+                            | 'bar'
+                            | 'line'
+                            | 'pie';
 
                         // Handle different tool states
                         if (toolPart.state === 'input-streaming') {
