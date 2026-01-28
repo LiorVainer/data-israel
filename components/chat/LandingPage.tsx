@@ -27,9 +27,15 @@ export function LandingPage({ onSuggestionClick }: LandingPageProps) {
     const isMobile = useIsMobile();
 
     return (
-        <div className='w-full max-w-4xl mx-auto px-4 text-center flex flex-col items-center justify-center flex-1 min-h-0 gap-4 md:gap-8'>
+        <div className='w-full max-w-4xl mx-auto px-4 pt-8 text-center flex flex-col items-center justify-center flex-1 min-h-0 gap-4 md:gap-8'>
             <motion.div variants={fadeUpVariants} initial='hidden' animate='visible'>
-                <Image src='/data-israel.png' alt='DataGov Logo' width={150} height={50} priority />
+                <Image
+                    src='/data-israel.svg'
+                    alt='DataGov Logo'
+                    width={isMobile ? 100 : 150}
+                    height={isMobile ? 33 : 50}
+                    priority
+                />
             </motion.div>
             <div className='flex-shrink-0 flex flex-col items-center gap-4'>
                 <HeroTitle line1='חפש מידע ציבורי' line2='ממאגרי הממשלה' />

@@ -1,6 +1,5 @@
 import type { Metadata } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
-import { AIDevtools } from '@ai-sdk-tools/devtools';
 
 import './globals.css';
 
@@ -15,7 +14,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-    title: 'סוכן נתונים פתוחים ישראלי',
+    title: 'סוכן המידע הציבורי של ישראל',
     description: 'חקור מאגרי נתונים ציבוריים מ-data.gov.il באמצעות בינה מלאכותית',
 };
 
