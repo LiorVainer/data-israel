@@ -18,6 +18,8 @@ import type { DataAgentUIMessage } from '@/agents/data-agent';
 import { AgentConfig } from '@/agents/agent.config';
 import { LoadingShimmer } from '@/components/chat/LoadingShimmer';
 import { GeometricBackground } from '@/components/ui/shape-landing-hero';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { MobileSuggestions } from '@/components/chat/MobileSuggestions';
 
 export default function Home() {
     const [selectedModel, setSelectedModel] = useState(AgentConfig.AVAILABLE_MODELS[0].id);
@@ -30,6 +32,7 @@ export default function Home() {
     }, [selectedModel]);
 
     const { messages, sendMessage, status, regenerate, stop } = useChat<DataAgentUIMessage>({});
+    const isMobile = useIsMobile();
 
     const handleSuggestionClick = (prompt: string) => {
         void sendMessage({ text: prompt }, { body: { model: modelRef.current } });
@@ -78,6 +81,11 @@ export default function Home() {
                     )}
 
                     <div className='relative z-20 w-full md:w-4xl'>
+                        {isMobile && !hasMessages && (
+                            <div className='mb-3'>
+                                <MobileSuggestions onSuggestionClick={handleSuggestionClick} />
+                            </div>
+                        )}
                         <PromptInput
                             onSubmit={(message) => {
                                 if (!message.text.trim()) return;
