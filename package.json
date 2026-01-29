@@ -20,6 +20,7 @@
     "@convex-dev/rag": "^0.7.0",
     "@mastra/ai-sdk": "^1.0.2",
     "@mastra/core": "^1.0.4",
+    "@mastra/deployer-vercel": "^1.0.1",
     "@mastra/libsql": "^1.0.0",
     "@mastra/memory": "^1.0.0",
     "@nivo/bar": "^0.99.0",
