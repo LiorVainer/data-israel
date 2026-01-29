@@ -36,6 +36,7 @@ The agent architecture is **tool-first**: rather than hallucinating dataset info
 
 ## Development Commands
 
+### use pnpm to install dependencies, already installed in the environment
 ### Dont Change the `ui/` and `ai-elements/` folders files unless instructed.
 
 ### Running the Application

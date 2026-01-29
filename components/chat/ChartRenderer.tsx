@@ -7,13 +7,7 @@ import type { DisplayChartInput, DisplayBarChartInput, DisplayLineChartInput, Di
 import { Shimmer } from '@/components/ai-elements/shimmer';
 
 // Theme colors matching globals.css chart colors
-const CHART_COLORS = [
-    'var(--chart-1)',
-    'var(--chart-2)',
-    'var(--chart-3)',
-    'var(--chart-4)',
-    'var(--chart-5)',
-];
+const CHART_COLORS = ['var(--chart-1)', 'var(--chart-2)', 'var(--chart-3)', 'var(--chart-4)', 'var(--chart-5)'];
 
 // ============================================================================
 // Chart Loading State

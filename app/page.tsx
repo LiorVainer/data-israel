@@ -2,6 +2,7 @@
 
 import { motion } from 'framer-motion';
 import { useChat } from '@ai-sdk/react';
+import { DefaultChatTransport } from 'ai';
 import { useEffect, useRef, useState } from 'react';
 import { Conversation, ConversationContent, ConversationScrollButton } from '@/components/ai-elements/conversation';
 import {
@@ -31,11 +32,13 @@ export default function Home() {
         modelRef.current = selectedModel;
     }, [selectedModel]);
 
-    const { messages, sendMessage, status, regenerate, stop } = useChat<DataAgentUIMessage>({});
+    const { messages, sendMessage, status, regenerate, stop } = useChat<DataAgentUIMessage>({
+        transport: new DefaultChatTransport({ api: '/api/chat' }),
+    });
     const isMobile = useIsMobile();
 
     const handleSuggestionClick = (prompt: string) => {
-        void sendMessage({ text: prompt }, { body: { model: modelRef.current } });
+        void sendMessage({ text: prompt });
     };
 
     const isStreaming = status === 'submitted' || status === 'streaming';

@@ -9,14 +9,14 @@
       "url": "http://localhost:8603/mcp"
     },
     "next-devtools": {
-      "command": "npx",
+      "command": "cmd /c npx",
       "args": [
         "-y",
         "next-devtools-mcp@latest"
       ]
     },
     "shadcn": {
-      "command": "npx",
+      "command": "cmd /c npx",
       "args": [
         "shadcn@latest",
         "mcp"

@@ -71,17 +71,22 @@ export function getToolInfo(toolKey: string): ToolInfo {
  */
 export function getToolDescription(part: ToolCallPart): string | undefined {
     const toolKey = part.type.replace('tool-', '');
-    const meta = toolKey in toolTranslations ? toolTranslations[toolKey as ToolName] : null;
+    const meta =
+        toolKey in toolTranslations
+            ? (toolTranslations[toolKey as ToolName] as
+                  | { formatInput: (input: unknown) => string | undefined; formatOutput: (output: unknown) => string }
+                  | undefined)
+            : null;
 
     if (!meta) return undefined;
 
     try {
         if (part.state === 'output-available' && part.output !== undefined) {
-            return meta.formatOutput(part.output as any);
+            return meta.formatOutput(part.output);
         }
 
         if (part.input !== undefined) {
-            return meta.formatInput(part.input as any);
+            return meta.formatInput(part.input);
         }
     } catch {
         return undefined;
@@ -94,26 +99,29 @@ type ToolIO = { input?: string; output?: string };
 
 export function getToolIO(part: ToolCallPart): ToolIO | undefined {
     const toolKey = part.type.replace('tool-', '');
-    const meta = toolKey in toolTranslations ? toolTranslations[toolKey as ToolName] : null;
+    const meta =
+        toolKey in toolTranslations
+            ? (toolTranslations[toolKey as ToolName] as
+                  | { formatInput: (input: unknown) => string | undefined; formatOutput: (output: unknown) => string }
+                  | undefined)
+            : null;
 
     if (!meta) return undefined;
 
     try {
         const toolIO: ToolIO = {};
         if (part.state === 'output-available' && part.output !== undefined) {
-            toolIO.output = meta.formatOutput(part.output as any);
+            toolIO.output = meta.formatOutput(part.output);
         }
 
         if (part.input !== undefined) {
-            toolIO.input = meta.formatInput(part.input as any);
+            toolIO.input = meta.formatInput(part.input);
         }
 
         return toolIO;
     } catch {
         return undefined;
     }
-
-    return undefined;
 }
 
 export interface MessageToolCallsProps {
