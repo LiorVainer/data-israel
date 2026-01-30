@@ -13,6 +13,8 @@ import { mastra } from '@/agents/mastra';
  *
  * Handles chat messages and streams agent responses via the routing agent.
  */
+export const maxDuration = 60;
+
 export async function POST(req: Request) {
     const params = await req.json();
 
