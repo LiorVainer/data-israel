@@ -5,9 +5,9 @@
  */
 
 import { Mastra } from '@mastra/core';
-import { cbsAgent, datagovAgent, routingAgent } from './network';
+import { routingAgent } from './network';
 
-export const agents = { routingAgent, datagovAgent, cbsAgent };
+export const agents = { routingAgent };
 
 export const mastra = new Mastra({
     agents,
