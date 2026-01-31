@@ -48,6 +48,11 @@ export function AgentsNetworkDataParts({ messageId, parts, activeAgentLabel }: A
 
     const hasActiveTools = parts.some(({ data }) => data.status === 'running');
     const groupedSteps = useMemo(() => groupSteps(parts), [parts]);
+    const tokenUsage = useMemo(() => {
+        return parts.reduce((total, { data }) => {
+            return total + (data.usage?.totalTokens ?? 0);
+        }, 0);
+    }, [parts]);
 
     const handleOpenChange = (open: boolean) => {
         setUserWantsOpen(open);
@@ -69,6 +74,7 @@ export function AgentsNetworkDataParts({ messageId, parts, activeAgentLabel }: A
                     <AgentNetworkDataStep
                         key={`${messageId}-${step.name}-${step.failed ? 'failed' : 'ok'}`}
                         step={step}
+                        tokenUsage={tokenUsage}
                     />
                 ))}
             </ChainOfThoughtContent>

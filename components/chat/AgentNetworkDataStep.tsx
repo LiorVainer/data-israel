@@ -5,6 +5,7 @@ import { ChainOfThoughtStep } from '@/components/ai-elements/chain-of-thought';
 import { Shimmer } from '@/components/ai-elements/shimmer';
 import { Badge } from '@/components/ui/badge';
 import type { AgentName } from '@/agents/types';
+import { isProduction } from '@/lib/env.utis';
 
 const AgentsDisplayMap: Record<AgentName, { label: string; icon: LucideIcon }> = {
     datagovAgent: { label: 'בודק במאגרי המידע הממשלתי', icon: DatabaseIcon },
@@ -22,9 +23,10 @@ export interface GroupedStep {
 
 export interface AgentNetworkDataStepProps {
     step: GroupedStep;
+    tokenUsage: number;
 }
 
-export function AgentNetworkDataStep({ step }: AgentNetworkDataStepProps) {
+export function AgentNetworkDataStep({ step, tokenUsage }: AgentNetworkDataStepProps) {
     const { label, icon } = AgentsDisplayMap[step.name as AgentName] ?? {
         label: step.name,
         icon: ActivityIcon,
@@ -39,6 +41,11 @@ export function AgentNetworkDataStep({ step }: AgentNetworkDataStepProps) {
                     {step.count > 1 && (
                         <Badge variant='secondary' className='mr-2 px-1.5 py-0 text-xs font-normal'>
                             {step.count}
+                        </Badge>
+                    )}
+                    {!isProduction && (
+                        <Badge variant='secondary' className='mr-2 px-1.5 py-0 text-xs font-normal'>
+                            {tokenUsage} טוקנים
                         </Badge>
                     )}
                 </span>

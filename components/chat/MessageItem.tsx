@@ -54,6 +54,23 @@ export function MessageItem({ message, isLastMessage, isStreaming, onRegenerate 
             {/* Render non-tool parts and chart tools */}
             {message.parts.map((part, i) => {
                 switch (part.type) {
+                    // TODO: Re-enable network data part rendering when needed
+                    // case 'data-network': {
+                    //     const isLastPart = i === message.parts.length - 1 && isLastMessage;
+                    //     const typedPart = part as NetworkDataPart;
+                    //     const text = (typedPart.data.steps.at(-1)?.output as string) ?? '';
+                    //
+                    //     return (
+                    //         <TextMessagePart
+                    //             key={`${message.id}-${i}`}
+                    //             messageId={message.id}
+                    //             text={text}
+                    //             role={message.role}
+                    //             isLastMessage={isLastPart}
+                    //             onRegenerate={onRegenerate}
+                    //         />
+                    //     );
+                    // }
                     case 'text': {
                         const isLastPart = i === message.parts.length - 1 && isLastMessage;
 

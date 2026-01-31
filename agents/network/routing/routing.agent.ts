@@ -12,12 +12,12 @@ import { getModelId } from '../model';
 import { datagovAgent } from '../datagov';
 import { cbsAgent } from '../cbs';
 import { visualizationAgent } from '../visualization';
-import { ORCHESTRATOR_CONFIG } from './config';
+import { ROUTING_CONFIG } from './config';
 
 export const routingAgent = new Agent({
     id: 'routingAgent',
-    name: ORCHESTRATOR_CONFIG.name,
-    instructions: ORCHESTRATOR_CONFIG.instructions,
+    name: ROUTING_CONFIG.name,
+    instructions: ROUTING_CONFIG.instructions,
     model: getModelId(),
     agents: { datagovAgent, cbsAgent, visualizationAgent },
     memory: new Memory({
