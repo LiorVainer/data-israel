@@ -6,6 +6,37 @@
  */
 
 // Re-export all types from datagov tool files
+// Import types for the ToolIOMap
+import type { SearchDatasetsInput, SearchDatasetsOutput } from './datagov/search-datasets';
+import type { GetDatasetDetailsInput, GetDatasetDetailsOutput } from './datagov/get-dataset-details';
+import type { ListGroupsInput, ListGroupsOutput } from './datagov/list-groups';
+import type { ListTagsInput, ListTagsOutput } from './datagov/list-tags';
+import type { QueryDatastoreResourceInput, QueryDatastoreResourceOutput } from './datagov/query-datastore-resource';
+import type { GetDatasetActivityInput, GetDatasetActivityOutput } from './datagov/get-dataset-activity';
+import type { GetDatasetSchemaInput, GetDatasetSchemaOutput } from './datagov/get-dataset-schema';
+import type { GetOrganizationActivityInput, GetOrganizationActivityOutput } from './datagov/get-organization-activity';
+import type { GetOrganizationDetailsInput, GetOrganizationDetailsOutput } from './datagov/get-organization-details';
+import type { GetResourceDetailsInput, GetResourceDetailsOutput } from './datagov/get-resource-details';
+import type { GetStatusInput, GetStatusOutput } from './datagov/get-status';
+import type { ListAllDatasetsInput, ListAllDatasetsOutput } from './datagov/list-all-datasets';
+import type { ListLicensesInput, ListLicensesOutput } from './datagov/list-licenses';
+import type { ListOrganizationsInput, ListOrganizationsOutput } from './datagov/list-organizations';
+import type { SearchResourcesInput, SearchResourcesOutput } from './datagov/search-resources';
+import type {
+    DisplayBarChartInput,
+    DisplayBarChartOutput,
+    DisplayLineChartInput,
+    DisplayLineChartOutput,
+    DisplayPieChartInput,
+    DisplayPieChartOutput,
+} from './client/display-chart';
+import type { BrowseCbsCatalogInput, BrowseCbsCatalogOutput } from './cbs/series/browse-cbs-catalog';
+import type { GetCbsSeriesDataInput, GetCbsSeriesDataOutput } from './cbs/series/get-cbs-series-data';
+import type { BrowseCbsPriceIndicesInput, BrowseCbsPriceIndicesOutput } from './cbs/price/browse-cbs-price-indices';
+import type { GetCbsPriceDataInput, GetCbsPriceDataOutput } from './cbs/price/get-cbs-price-data';
+import type { CalculateCbsPriceIndexInput, CalculateCbsPriceIndexOutput } from './cbs/price/calculate-cbs-price-index';
+import type { SearchCbsLocalitiesInput, SearchCbsLocalitiesOutput } from './cbs/dictionary/search-cbs-localities';
+
 export type { SearchDatasetsInput, SearchDatasetsOutput } from './datagov/search-datasets';
 
 export type { GetDatasetDetailsInput, GetDatasetDetailsOutput } from './datagov/get-dataset-details';
@@ -61,40 +92,13 @@ export type { CalculateCbsPriceIndexInput, CalculateCbsPriceIndexOutput } from '
 
 export type { SearchCbsLocalitiesInput, SearchCbsLocalitiesOutput } from './cbs/dictionary/search-cbs-localities';
 
-// Import types for the ToolIOMap
-import type { SearchDatasetsInput, SearchDatasetsOutput } from './datagov/search-datasets';
-import type { GetDatasetDetailsInput, GetDatasetDetailsOutput } from './datagov/get-dataset-details';
-import type { ListGroupsInput, ListGroupsOutput } from './datagov/list-groups';
-import type { ListTagsInput, ListTagsOutput } from './datagov/list-tags';
-import type { QueryDatastoreResourceInput, QueryDatastoreResourceOutput } from './datagov/query-datastore-resource';
-import type { GetDatasetActivityInput, GetDatasetActivityOutput } from './datagov/get-dataset-activity';
-import type { GetDatasetSchemaInput, GetDatasetSchemaOutput } from './datagov/get-dataset-schema';
-import type { GetOrganizationActivityInput, GetOrganizationActivityOutput } from './datagov/get-organization-activity';
-import type { GetOrganizationDetailsInput, GetOrganizationDetailsOutput } from './datagov/get-organization-details';
-import type { GetResourceDetailsInput, GetResourceDetailsOutput } from './datagov/get-resource-details';
-import type { GetStatusInput, GetStatusOutput } from './datagov/get-status';
-import type { ListAllDatasetsInput, ListAllDatasetsOutput } from './datagov/list-all-datasets';
-import type { ListLicensesInput, ListLicensesOutput } from './datagov/list-licenses';
-import type { ListOrganizationsInput, ListOrganizationsOutput } from './datagov/list-organizations';
-import type { SearchResourcesInput, SearchResourcesOutput } from './datagov/search-resources';
-import type {
-    DisplayBarChartInput,
-    DisplayBarChartOutput,
-    DisplayLineChartInput,
-    DisplayLineChartOutput,
-    DisplayPieChartInput,
-    DisplayPieChartOutput,
-} from './client/display-chart';
-import type { BrowseCbsCatalogInput, BrowseCbsCatalogOutput } from './cbs/series/browse-cbs-catalog';
-import type { GetCbsSeriesDataInput, GetCbsSeriesDataOutput } from './cbs/series/get-cbs-series-data';
-import type { BrowseCbsPriceIndicesInput, BrowseCbsPriceIndicesOutput } from './cbs/price/browse-cbs-price-indices';
-import type { GetCbsPriceDataInput, GetCbsPriceDataOutput } from './cbs/price/get-cbs-price-data';
-import type { CalculateCbsPriceIndexInput, CalculateCbsPriceIndexOutput } from './cbs/price/calculate-cbs-price-index';
-import type { SearchCbsLocalitiesInput, SearchCbsLocalitiesOutput } from './cbs/dictionary/search-cbs-localities';
-
 // ============================================================================
 // Tool Map Type
 // ============================================================================
+
+type NetworkAgentInput = {
+    prompt: string;
+};
 
 export interface ToolIOMap {
     searchDatasets: {
@@ -191,6 +195,22 @@ export interface ToolIOMap {
     };
     searchCbsLocalities: {
         input: SearchCbsLocalitiesInput;
+        output: SearchCbsLocalitiesOutput;
+    };
+    'agent-cbsAgent': {
+        input: NetworkAgentInput;
+        output: SearchCbsLocalitiesOutput;
+    };
+    'agent-datagovAgent': {
+        input: NetworkAgentInput;
+        output: SearchCbsLocalitiesOutput;
+    };
+    'agent-routingAgent': {
+        input: NetworkAgentInput;
+        output: SearchCbsLocalitiesOutput;
+    };
+    'agent-visualizationAgent': {
+        input: NetworkAgentInput;
         output: SearchCbsLocalitiesOutput;
     };
 }

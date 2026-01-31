@@ -15,7 +15,7 @@ import { visualizationAgent } from '../visualization';
 import { ORCHESTRATOR_CONFIG } from './config';
 
 export const routingAgent = new Agent({
-    id: 'routing-agent',
+    id: 'routingAgent',
     name: ORCHESTRATOR_CONFIG.name,
     instructions: ORCHESTRATOR_CONFIG.instructions,
     model: getModelId(),

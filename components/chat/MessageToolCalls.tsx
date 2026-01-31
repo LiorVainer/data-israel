@@ -144,14 +144,14 @@ export interface MessageToolCallsProps {
  */
 export function MessageToolCalls({ messageId, toolParts, isProcessing, activeAgentLabel }: MessageToolCallsProps) {
     // User's preferred open state (can be toggled via header click)
-    const [userWantsOpen, setUserWantsOpen] = useState(false);
+    const [userWantsOpen, setUserWantsOpen] = useState(true);
 
     // Check if any tool is currently active
     const hasActiveTools = toolParts.some(({ part }) => getToolStatus(part.state) === 'active');
 
     // Force open when processing or has active tools, otherwise respect user preference
     const shouldForceOpen = isProcessing || hasActiveTools;
-    const isOpen = shouldForceOpen || userWantsOpen;
+    const isOpen = userWantsOpen && shouldForceOpen;
 
     // Handle user toggling
     const handleOpenChange = (open: boolean) => {
@@ -197,7 +197,7 @@ export function MessageToolCalls({ messageId, toolParts, isProcessing, activeAge
                                 ) : (
                                     <>
                                         {io?.input && <p className='text-muted-foreground'>{io.input}</p>}
-                                        <p className='text-primary font-semibold'>{io?.output}</p>
+                                        {io?.output && <p className='text-primary font-semibold'>{io?.output}</p>}
                                     </>
                                 )
                             }

@@ -1,17 +1,17 @@
 'use client';
 
-import type { DataAgentUIMessage } from '@/agents/data-agent';
 import { MessageToolCalls } from './MessageToolCalls';
 import { TextMessagePart } from './TextMessagePart';
 import { ReasoningPart } from './ReasoningPart';
 import { SourcesPart } from './SourcesPart';
 import { ChartError, ChartLoadingState, ChartRenderer } from './ChartRenderer';
-import type { SourceUrlUIPart, ToolCallPart } from './types';
-import { getToolStatus, isToolPart } from './types';
+import { getToolStatus, isAgentsNetworkDataPart, isToolPart, SourceUrlUIPart, ToolCallPart } from './types';
 import type { DisplayChartInput } from '@/lib/tools';
+import { UIMessage } from 'ai';
+import { AgentsNetworkDataParts } from '@/components/chat/AgentsNetworkMessages';
 
 export interface MessageItemProps {
-    message: DataAgentUIMessage;
+    message: UIMessage;
     isLastMessage: boolean;
     isStreaming: boolean;
     onRegenerate: () => void;
@@ -29,6 +29,8 @@ export function MessageItem({ message, isLastMessage, isStreaming, onRegenerate 
         .map((part, index) => ({ part: part as ToolCallPart, index }))
         .filter(({ part }) => isToolPart(part) && !chartToolTypes.includes(part.type));
 
+    const agentsNetworkDataParts = message.parts.filter((part) => isAgentsNetworkDataPart(part));
+
     // Check if any tool is currently active (streaming/processing)
     const hasActiveTools = toolParts.some(({ part }) => isToolPart(part) && getToolStatus(part.state) === 'active');
 
@@ -38,6 +40,9 @@ export function MessageItem({ message, isLastMessage, isStreaming, onRegenerate 
     return (
         <div className='animate-in fade-in slide-in-from-bottom-2 flex flex-col gap-6 duration-300'>
             {/* Render tool calls in a ChainOfThought timeline */}
+            {agentsNetworkDataParts.length > 0 && (
+                <AgentsNetworkDataParts messageId={message.id} parts={agentsNetworkDataParts} />
+            )}
             {toolParts.length > 0 && (
                 <MessageToolCalls
                     messageId={message.id}

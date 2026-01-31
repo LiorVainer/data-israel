@@ -2,7 +2,6 @@
 
 import { motion } from 'framer-motion';
 import { useChat } from '@ai-sdk/react';
-import { DefaultChatTransport } from 'ai';
 import { useEffect, useRef, useState } from 'react';
 import { Conversation, ConversationContent, ConversationScrollButton } from '@/components/ai-elements/conversation';
 import {
@@ -15,7 +14,6 @@ import {
 import { LandingPage } from '@/components/chat/LandingPage';
 import { MessageItem } from '@/components/chat/MessageItem';
 import { ModelSelectorSection } from '@/components/chat/ModelSelectorSection';
-import type { DataAgentUIMessage } from '@/agents/data-agent';
 import { AgentConfig } from '@/agents/agent.config';
 import { LoadingShimmer } from '@/components/chat/LoadingShimmer';
 import { GeometricBackground } from '@/components/ui/shape-landing-hero';
@@ -32,9 +30,9 @@ export default function Home() {
         modelRef.current = selectedModel;
     }, [selectedModel]);
 
-    const { messages, sendMessage, status, regenerate, stop } = useChat<DataAgentUIMessage>({
-        transport: new DefaultChatTransport({ api: '/api/chat' }),
-    });
+    const { messages, sendMessage, status, regenerate, stop } = useChat();
+
+    console.log({ messages });
     const isMobile = useIsMobile();
 
     const handleSuggestionClick = (prompt: string) => {
