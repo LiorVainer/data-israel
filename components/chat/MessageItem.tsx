@@ -8,7 +8,7 @@ import { ChartError, ChartLoadingState, ChartRenderer } from './ChartRenderer';
 import { getToolStatus, isAgentsNetworkDataPart, isToolPart, SourceUrlUIPart, ToolCallPart } from './types';
 import type { DisplayChartInput } from '@/lib/tools';
 import { UIMessage } from 'ai';
-import { AgentsNetworkDataParts } from '@/components/chat/AgentsNetworkMessages';
+import { AgentsNetworkDataParts } from '@/components/chat/AgentsNetworkDataParts';
 
 export interface MessageItemProps {
     message: UIMessage;

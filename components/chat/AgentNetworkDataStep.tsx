@@ -7,9 +7,9 @@ import { Badge } from '@/components/ui/badge';
 import type { AgentName } from '@/agents/types';
 
 const AgentsDisplayMap: Record<AgentName, { label: string; icon: LucideIcon }> = {
-    datagovAgent: { label: 'סוכן המידע הממשלתי', icon: DatabaseIcon },
-    cbsAgent: { label: 'סוכן הלשכה המרכזית לסטטיסטיקה', icon: BarChart2Icon },
-    visualizationAgent: { label: 'סוכן הוויזואליזציה', icon: PieChartIcon },
+    datagovAgent: { label: 'בודק במאגרי המידע הממשלתי', icon: DatabaseIcon },
+    cbsAgent: { label: 'בודק בנתוני הלשכה המרכזית לסטטיסטיקה', icon: BarChart2Icon },
+    visualizationAgent: { label: 'יוצר תרשים', icon: PieChartIcon },
     routingAgent: { label: 'סוכן הניתוב', icon: ActivityIcon },
 };
 
