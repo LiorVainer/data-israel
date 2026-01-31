@@ -9,6 +9,9 @@ import { displayBarChart, displayLineChart, displayPieChart } from '@/lib/tools'
 import { getModelId } from '../model';
 import { VISUALIZATION_AGENT_CONFIG } from './config';
 
+/**
+ * @deprecated - Visualization Agent
+ */
 export const visualizationAgent = new Agent({
     id: 'visualizationAgent',
     name: VISUALIZATION_AGENT_CONFIG.name,

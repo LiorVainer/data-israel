@@ -4,7 +4,7 @@
  * Streaming endpoint using Mastra agent network
  */
 
-import { handleNetworkStream } from '@mastra/ai-sdk';
+import { handleChatStream } from '@mastra/ai-sdk';
 import { createUIMessageStreamResponse } from 'ai';
 import { mastra } from '@/agents/mastra';
 
@@ -18,7 +18,7 @@ export const maxDuration = 120;
 export async function POST(req: Request) {
     const params = await req.json();
 
-    const stream = await handleNetworkStream({
+    const stream = await handleChatStream({
         mastra,
         agentId: 'routingAgent',
         params,

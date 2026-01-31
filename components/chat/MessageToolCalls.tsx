@@ -151,7 +151,6 @@ export function MessageToolCalls({ messageId, toolParts, isProcessing, activeAge
 
     // Force open when processing or has active tools, otherwise respect user preference
     const shouldForceOpen = isProcessing || hasActiveTools;
-    const isOpen = userWantsOpen && shouldForceOpen;
 
     // Handle user toggling
     const handleOpenChange = (open: boolean) => {
@@ -159,7 +158,7 @@ export function MessageToolCalls({ messageId, toolParts, isProcessing, activeAge
     };
 
     return (
-        <ChainOfThought open={isOpen} onOpenChange={handleOpenChange}>
+        <ChainOfThought open={userWantsOpen} onOpenChange={handleOpenChange}>
             <ChainOfThoughtHeader>
                 {hasActiveTools ? (
                     <Shimmer as='span' duration={1.5}>

@@ -11,19 +11,20 @@ import { LibSQLStore } from '@mastra/libsql';
 import { getModelId } from '../model';
 import { datagovAgent } from '../datagov';
 import { cbsAgent } from '../cbs';
-import { visualizationAgent } from '../visualization';
 import { ROUTING_CONFIG } from './config';
+import { displayBarChart, displayLineChart, displayPieChart } from '@/lib/tools';
 
 export const routingAgent = new Agent({
     id: 'routingAgent',
     name: ROUTING_CONFIG.name,
     instructions: ROUTING_CONFIG.instructions,
     model: getModelId(),
-    agents: { datagovAgent, cbsAgent, visualizationAgent },
+    agents: { datagovAgent, cbsAgent },
     memory: new Memory({
         storage: new LibSQLStore({
             id: 'mastra-storage',
             url: ':memory:',
         }),
     }),
+    tools: { displayBarChart, displayLineChart, displayPieChart },
 });

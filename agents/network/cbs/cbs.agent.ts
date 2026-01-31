@@ -6,14 +6,7 @@
  */
 
 import { Agent } from '@mastra/core/agent';
-import {
-    browseCbsCatalog,
-    browseCbsPriceIndices,
-    calculateCbsPriceIndex,
-    getCbsPriceData,
-    getCbsSeriesData,
-    searchCbsLocalities,
-} from '@/lib/tools';
+import { browseCbsPriceIndices, calculateCbsPriceIndex, getCbsPriceData, searchCbsLocalities } from '@/lib/tools';
 import { getModelId } from '../model';
 import { CBS_AGENT_CONFIG } from './config';
 import { Memory } from '@mastra/memory';
@@ -23,12 +16,12 @@ export const cbsAgent = new Agent({
     id: 'cbsAgent',
     name: CBS_AGENT_CONFIG.name,
     description:
-        'Queries Israeli Central Bureau of Statistics (CBS) — statistical series, price indices, CPI calculations, and locality dictionary.',
+        'Queries Israeli Central Bureau of Statistics (CBS) — statistical price indices, CPI calculations, and locality dictionary.',
     instructions: CBS_AGENT_CONFIG.instructions,
     model: getModelId(),
     tools: {
-        browseCbsCatalog,
-        getCbsSeriesData,
+        // browseCbsCatalog,
+        // getCbsSeriesData,
         browseCbsPriceIndices,
         getCbsPriceData,
         calculateCbsPriceIndex,
