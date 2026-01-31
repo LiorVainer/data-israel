@@ -1,10 +1,10 @@
 'use client';
 
 import { Card, CardContent, CardTitle } from '@/components/ui/card';
-import { Loader2Icon, CheckCircle2Icon, XCircleIcon, SearchIcon } from 'lucide-react';
+import { CheckCircle2Icon, Loader2Icon, SearchIcon, XCircleIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import type { ToolName, ToolInput, ToolOutput } from '@/lib/tools/types';
-import { toolTranslations, type ToolTranslation } from '@/constants/tool-translations';
+import type { ToolInput, ToolName, ToolOutput } from '@/lib/tools/types';
+import { type ToolTranslation, toolTranslations } from '@/constants/tool-translations';
 
 type ToolState =
     | 'input-streaming'
@@ -91,12 +91,12 @@ function formatInputDescription(toolKey: string, input: unknown): string | null 
 /**
  * Format output description with proper typing
  */
-function formatOutputDescription(toolKey: string, output: unknown): string | null {
+function formatOutputDescription(toolKey: string, output: unknown): string | undefined {
     if (!isValidToolName(toolKey) || output === undefined) {
-        return null;
+        return undefined;
     }
     const meta = getToolMeta(toolKey);
-    if (!meta) return null;
+    if (!meta) return undefined;
     // We know the output matches the tool's expected type based on runtime behavior
     return meta.formatOutput(output as ToolOutput<typeof toolKey>);
 }

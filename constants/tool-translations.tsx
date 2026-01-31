@@ -22,7 +22,6 @@ import {
     TagIcon,
 } from 'lucide-react';
 import type { ToolInput, ToolName, ToolOutput } from '@/lib/tools/types';
-import { NetworkAgentToolNames } from '@/agents/mastra';
 
 /**
  * Translate common field names to Hebrew
@@ -94,7 +93,7 @@ export interface ToolTranslation<T extends ToolName> {
 
 export type ToolTranslationsMap = {
     [K in ToolName]?: ToolTranslation<K>;
-} & { [K in NetworkAgentToolNames]: ToolTranslation<K> };
+};
 
 export const toolTranslations: ToolTranslationsMap = {
     searchDatasets: {
@@ -497,29 +496,5 @@ export const toolTranslations: ToolTranslationsMap = {
             if (!output.success) return `שגיאה: ${output.error}`;
             return `נמצאו ${output.localities?.length ?? 0} יישובים`;
         },
-    },
-    'agent-cbsAgent': {
-        name: 'סוכן הלמ"ס',
-        icon: <ActivityIcon className='h-4 w-4' />,
-        formatInput: (input) => input.prompt,
-        formatOutput: (output) => '',
-    },
-    'agent-datagovAgent': {
-        name: 'סוכן נתונים ממשלתיים',
-        icon: <DatabaseIcon className='h-4 w-4' />,
-        formatInput: (input) => input.prompt,
-        formatOutput: (output) => '',
-    },
-    'agent-routingAgent': {
-        name: 'סוכן ניתוב',
-        icon: <ServerIcon className='h-4 w-4' />,
-        formatInput: (input) => input.prompt,
-        formatOutput: (output) => '',
-    },
-    'agent-visualizationAgent': {
-        name: 'סוכן ויזואליזציה',
-        icon: <BarChart2Icon className='h-4 w-4' />,
-        formatInput: (input) => input.prompt,
-        formatOutput: (output) => '',
     },
 };
