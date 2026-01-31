@@ -33,7 +33,7 @@ import { getToolStatus } from './types';
 /**
  * Map tool names to their LucideIcon components for ChainOfThoughtStep
  */
-const toolIconMap: Record<string, LucideIcon> = {
+const toolIconMap: Partial<Record<ToolName, LucideIcon>> = {
     searchDatasets: SearchIcon,
     getDatasetDetails: FileTextIcon,
     listGroups: FolderIcon,
@@ -52,6 +52,12 @@ const toolIconMap: Record<string, LucideIcon> = {
     displayBarChart: BarChart2Icon,
     displayLineChart: LineChartIcon,
     displayPieChart: PieChartIcon,
+    browseCbsCatalog: DatabaseIcon,
+    getCbsSeriesData: BarChart2Icon,
+    browseCbsPriceIndices: LineChartIcon,
+    getCbsPriceData: LineChartIcon,
+    calculateCbsPriceIndex: ActivityIcon,
+    searchCbsLocalities: SearchIcon,
 };
 
 /**
@@ -59,7 +65,7 @@ const toolIconMap: Record<string, LucideIcon> = {
  */
 export function getToolInfo(toolKey: string): ToolInfo {
     const meta = toolKey in toolTranslations ? toolTranslations[toolKey as ToolName] : null;
-    const icon = toolIconMap[toolKey] ?? SearchIcon;
+    const icon = (toolKey in toolIconMap ? toolIconMap[toolKey as ToolName] : undefined) ?? SearchIcon;
     return {
         name: meta?.name ?? toolKey,
         icon,
@@ -128,6 +134,7 @@ export interface MessageToolCallsProps {
     messageId: string;
     toolParts: Array<{ part: ToolCallPart; index: number }>;
     isProcessing: boolean;
+    activeAgentLabel?: string;
 }
 
 /**
@@ -135,7 +142,7 @@ export interface MessageToolCallsProps {
  * Manages its own open state while auto-opening during processing
  * User can click header to toggle open/close
  */
-export function MessageToolCalls({ messageId, toolParts, isProcessing }: MessageToolCallsProps) {
+export function MessageToolCalls({ messageId, toolParts, isProcessing, activeAgentLabel }: MessageToolCallsProps) {
     // User's preferred open state (can be toggled via header click)
     const [userWantsOpen, setUserWantsOpen] = useState(false);
 
@@ -156,7 +163,7 @@ export function MessageToolCalls({ messageId, toolParts, isProcessing }: Message
             <ChainOfThoughtHeader>
                 {hasActiveTools ? (
                     <Shimmer as='span' duration={1.5}>
-                        מעבד...
+                        {activeAgentLabel ?? 'מעבד...'}
                     </Shimmer>
                 ) : (
                     `${toolParts.length} פעולות הושלמו`

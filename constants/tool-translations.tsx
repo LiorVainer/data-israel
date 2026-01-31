@@ -437,4 +437,64 @@ export const toolTranslations: ToolTranslationsMap = {
             return 'שגיאה בהצגת התרשים';
         },
     },
+    browseCbsCatalog: {
+        name: 'עיון בקטלוג הלמ"ס',
+        icon: <DatabaseIcon className='h-4 w-4' />,
+        formatInput: (input) => {
+            if (input.subject) return `מחפש: "${input.subject}"`;
+            return 'טוען קטלוג נתונים סטטיסטיים';
+        },
+        formatOutput: (output) => {
+            if (!output.success) return `שגיאה: ${output.error}`;
+            return `נמצאו ${output.items?.length ?? 0} סדרות`;
+        },
+    },
+    getCbsSeriesData: {
+        name: 'שליפת נתונים סטטיסטיים',
+        icon: <BarChart2Icon className='h-4 w-4' />,
+        formatInput: () => 'שולף נתונים סטטיסטיים...',
+        formatOutput: (output) => {
+            if (!output.success) return `שגיאה: ${output.error}`;
+            return `נשלפו ${output.data?.length ?? 0} רשומות`;
+        },
+    },
+    browseCbsPriceIndices: {
+        name: 'עיון במדדי מחירים',
+        icon: <LineChartIcon className='h-4 w-4' />,
+        formatInput: () => 'טוען מדדי מחירים...',
+        formatOutput: (output) => {
+            if (!output.success) return `שגיאה: ${output.error}`;
+            return `נמצאו ${output.items?.length ?? 0} מדדים`;
+        },
+    },
+    getCbsPriceData: {
+        name: 'שליפת נתוני מחירים',
+        icon: <LineChartIcon className='h-4 w-4' />,
+        formatInput: () => 'שולף נתוני מחירים...',
+        formatOutput: (output) => {
+            if (!output.success) return `שגיאה: ${output.error}`;
+            return `נשלפו ${output.data?.length ?? 0} רשומות`;
+        },
+    },
+    calculateCbsPriceIndex: {
+        name: 'חישוב שינוי מדד',
+        icon: <ActivityIcon className='h-4 w-4' />,
+        formatInput: () => 'מחשב שינוי מדד...',
+        formatOutput: (output) => {
+            if (!output.success) return `שגיאה: ${output.error}`;
+            return 'החישוב הושלם';
+        },
+    },
+    searchCbsLocalities: {
+        name: 'חיפוש יישובים',
+        icon: <SearchIcon className='h-4 w-4' />,
+        formatInput: (input) => {
+            if (input.query) return `מחפש יישוב: "${input.query}"`;
+            return 'מחפש יישובים...';
+        },
+        formatOutput: (output) => {
+            if (!output.success) return `שגיאה: ${output.error}`;
+            return `נמצאו ${output.localities?.length ?? 0} יישובים`;
+        },
+    },
 };
