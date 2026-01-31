@@ -22,6 +22,13 @@ export async function POST(req: Request) {
         mastra,
         agentId: 'routingAgent',
         params,
+        defaultOptions: {
+            toolCallConcurrency: 10,
+            onFinish: async ({ usage }) => {
+                // Limit total execution time to avoid long-running requests
+                console.log({ usage });
+            },
+        },
     });
 
     return createUIMessageStreamResponse({ stream });

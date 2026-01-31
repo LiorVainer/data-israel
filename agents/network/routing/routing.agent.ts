@@ -10,16 +10,9 @@ import { Memory } from '@mastra/memory';
 import { LibSQLStore } from '@mastra/libsql';
 import { getModelId } from '../model';
 import { ROUTING_CONFIG } from './config';
-import {
-    browseCbsPriceIndices,
-    calculateCbsPriceIndex,
-    displayBarChart,
-    displayLineChart,
-    displayPieChart,
-    getCbsPriceData,
-    searchCbsLocalities,
-} from '@/lib/tools';
 import { DataGovTools } from '@/lib/tools/datagov';
+import { CbsTools } from '@/lib/tools/cbs';
+import { ClientTools } from '@/lib/tools/client';
 
 export const routingAgent = new Agent({
     id: 'routingAgent',
@@ -33,13 +26,8 @@ export const routingAgent = new Agent({
         }),
     }),
     tools: {
-        displayBarChart,
-        displayLineChart,
-        displayPieChart,
-        browseCbsPriceIndices,
-        getCbsPriceData,
-        calculateCbsPriceIndex,
-        searchCbsLocalities,
-        DataGovTools,
+        ...ClientTools,
+        ...CbsTools,
+        ...DataGovTools,
     },
 });
