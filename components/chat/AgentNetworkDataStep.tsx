@@ -32,7 +32,6 @@ export function AgentNetworkDataStep({ step }: AgentNetworkDataStepProps) {
 
     return (
         <ChainOfThoughtStep
-            className='min-h-10'
             icon={icon}
             label={
                 <span className={step.failed ? 'text-red-500' : undefined}>
