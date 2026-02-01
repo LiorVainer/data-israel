@@ -6,11 +6,13 @@
  */
 
 import { Agent } from '@mastra/core/agent';
-import { getModelId } from '../model';
+import { getAiSdkModelId, getMastraModelId } from '../model';
 import { CBS_AGENT_CONFIG } from './config';
 import { Memory } from '@mastra/memory';
 import { LibSQLStore } from '@mastra/libsql';
 import { CbsTools } from '@/lib/tools/cbs';
+import { ToolResultSummarizerProcessor } from '../../processors/tool-result-summarizer.processor';
+import { extractToolDescriptions } from '../../../lib/tools/tools.utils';
 
 export const cbsAgent = new Agent({
     id: 'cbsAgent',
@@ -18,8 +20,15 @@ export const cbsAgent = new Agent({
     description:
         'Queries Israeli Central Bureau of Statistics (CBS) — statistical price indices, CPI calculations, and locality dictionary.',
     instructions: CBS_AGENT_CONFIG.instructions,
-    model: getModelId(),
+    model: getMastraModelId(),
     tools: CbsTools,
+    outputProcessors: [
+        new ToolResultSummarizerProcessor(
+            getAiSdkModelId(),
+            CBS_AGENT_CONFIG.instructions,
+            extractToolDescriptions(CbsTools),
+        ),
+    ],
     memory: new Memory({
         storage: new LibSQLStore({
             id: 'mastra-storage',

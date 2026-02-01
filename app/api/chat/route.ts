@@ -4,9 +4,9 @@
  * Streaming endpoint using Mastra agent network
  */
 
-import { handleNetworkStream } from '@mastra/ai-sdk';
 import { createUIMessageStreamResponse, StopCondition } from 'ai';
 import { mastra } from '@/agents/mastra';
+import { handleChatStream } from '@mastra/ai-sdk';
 
 /**
  * POST /api/chat
@@ -17,15 +17,13 @@ export const maxDuration = 120;
 
 const hasLastPartAsTextPart: StopCondition<any> = ({ steps }) => {
     const lastStep = steps[steps.length - 1];
-    // Stop if the last step ends with text (not a tool call)
-    console.log({ lastStep });
     return !!lastStep?.text && !lastStep?.toolCalls?.length;
 };
 
 export async function POST(req: Request) {
     const params = await req.json();
 
-    const stream = await handleNetworkStream({
+    const stream = await handleChatStream({
         mastra,
         agentId: 'routingAgent',
         params,

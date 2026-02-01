@@ -8,11 +8,11 @@
 import { Agent } from '@mastra/core/agent';
 import { Memory } from '@mastra/memory';
 import { LibSQLStore } from '@mastra/libsql';
-import { getModelId } from '../model';
+import { getMastraModelId } from '../model';
 import { ROUTING_CONFIG } from './config';
 import { ClientTools } from '@/lib/tools/client';
-import { CbsTools } from '@/lib/tools/cbs';
 import { DataGovTools } from '@/lib/tools/datagov';
+import { CbsTools } from '@/lib/tools/cbs';
 
 export const routingAgent = new Agent({
     id: 'routingAgent',
@@ -22,7 +22,7 @@ export const routingAgent = new Agent({
     //     cbsAgent,
     //     datagovAgent,
     // },
-    model: getModelId(),
+    model: getMastraModelId(),
     memory: new Memory({
         storage: new LibSQLStore({
             id: 'mastra-storage',

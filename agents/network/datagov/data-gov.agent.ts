@@ -5,11 +5,13 @@
  */
 
 import { Agent } from '@mastra/core/agent';
-import { getModelId } from '../model';
+import { getAiSdkModelId, getMastraModelId } from '../model';
 import { DATAGOV_AGENT_CONFIG } from './config';
 import { Memory } from '@mastra/memory';
 import { LibSQLStore } from '@mastra/libsql';
 import { DataGovTools } from '@/lib/tools/datagov';
+import { ToolResultSummarizerProcessor } from '../../processors/tool-result-summarizer.processor';
+import { extractToolDescriptions } from '../../../lib/tools/tools.utils';
 
 export const datagovAgent = new Agent({
     id: 'datagovAgent',
@@ -17,8 +19,15 @@ export const datagovAgent = new Agent({
     description:
         'Searches and explores Israeli open datasets from data.gov.il — datasets, organizations, groups, tags, resources, and DataStore queries.',
     instructions: DATAGOV_AGENT_CONFIG.instructions,
-    model: getModelId(),
+    model: getMastraModelId(),
     tools: DataGovTools,
+    outputProcessors: [
+        new ToolResultSummarizerProcessor(
+            getAiSdkModelId(),
+            DATAGOV_AGENT_CONFIG.instructions,
+            extractToolDescriptions(DataGovTools),
+        ),
+    ],
     memory: new Memory({
         storage: new LibSQLStore({
             id: 'mastra-storage',

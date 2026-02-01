@@ -4,10 +4,9 @@ import { ActivityIcon, BarChart2Icon, DatabaseIcon, type LucideIcon, PieChartIco
 import { ChainOfThoughtStep } from '@/components/ai-elements/chain-of-thought';
 import { Shimmer } from '@/components/ai-elements/shimmer';
 import { Badge } from '@/components/ui/badge';
-import type { AgentName } from '@/agents/types';
 import { isProduction } from '@/lib/env.utis';
 
-const AgentsDisplayMap: Record<AgentName, { label: string; icon: LucideIcon }> = {
+const AgentsDisplayMap: Record<string, { label: string; icon: LucideIcon }> = {
     datagovAgent: { label: 'בודק במאגרי המידע הממשלתי', icon: DatabaseIcon },
     cbsAgent: { label: 'בודק בנתוני הלשכה המרכזית לסטטיסטיקה', icon: BarChart2Icon },
     visualizationAgent: { label: 'יוצר תרשים', icon: PieChartIcon },
@@ -27,7 +26,7 @@ export interface AgentNetworkDataStepProps {
 }
 
 export function AgentNetworkDataStep({ step, tokenUsage }: AgentNetworkDataStepProps) {
-    const { label, icon } = AgentsDisplayMap[step.name as AgentName] ?? {
+    const { label, icon } = AgentsDisplayMap[step.name] ?? {
         label: step.name,
         icon: ActivityIcon,
     };

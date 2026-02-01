@@ -18,7 +18,7 @@ import { AgentConfig } from '@/agents/agent.config';
 import { LoadingShimmer } from '@/components/chat/LoadingShimmer';
 import { GeometricBackground } from '@/components/ui/shape-landing-hero';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { MobileSuggestions } from '@/components/chat/MobileSuggestions';
+import { Suggestions } from '@/components/chat/Suggestions';
 
 export default function Home() {
     const [selectedModel, setSelectedModel] = useState(AgentConfig.AVAILABLE_MODELS[0].id);
@@ -39,6 +39,7 @@ export default function Home() {
         void sendMessage({ text: prompt });
     };
 
+    console.log({ status });
     const isStreaming = status === 'submitted' || status === 'streaming';
     const hasMessages = messages.length > 0;
 
@@ -82,9 +83,9 @@ export default function Home() {
                     )}
 
                     <div className='relative z-20 w-full md:w-4xl'>
-                        {isMobile && !hasMessages && (
+                        {!hasMessages && (
                             <div className='mb-3'>
-                                <MobileSuggestions onSuggestionClick={handleSuggestionClick} />
+                                <Suggestions onClick={handleSuggestionClick} />
                             </div>
                         )}
                         <PromptInput

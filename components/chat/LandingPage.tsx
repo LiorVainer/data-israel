@@ -2,7 +2,6 @@
 
 import Image from 'next/image';
 import { motion } from 'framer-motion';
-import { PromptSuggestions } from './PromptSuggestions';
 import { HeroBadge, HeroSubtitle, HeroTitle } from '@/components/ui/shape-landing-hero';
 import { useIsMobile } from '@/hooks/use-mobile';
 
@@ -45,15 +44,6 @@ export function LandingPage({ onSuggestionClick }: LandingPageProps) {
                 </div>
                 <HeroBadge>data.gov.il</HeroBadge>
             </div>
-
-            {!isMobile && (
-                <div className='w-full min-h-32 overflow-y-auto mt-4 flex flex-col items-center'>
-                    <div className='text-muted-foreground font-medium mb-3 text-center flex-shrink-0'>
-                        דוגמאות לשאלות:
-                    </div>
-                    <PromptSuggestions onSuggestionClick={onSuggestionClick} />
-                </div>
-            )}
         </div>
     );
 }

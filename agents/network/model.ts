@@ -7,6 +7,10 @@
 
 import { AgentConfig } from '../agent.config';
 
-export const getModelId = (): string => {
+export const getMastraModelId = (): string => {
     return `openrouter/${AgentConfig.MODEL.DEFAULT_ID}`;
+};
+
+export const getAiSdkModelId = (): string => {
+    return AgentConfig.MODEL.DEFAULT_ID;
 };

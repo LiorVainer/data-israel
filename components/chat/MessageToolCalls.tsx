@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import {useState} from 'react';
 import {
     ActivityIcon,
     BarChart2Icon,
@@ -24,11 +24,11 @@ import {
     ChainOfThoughtHeader,
     ChainOfThoughtStep,
 } from '@/components/ai-elements/chain-of-thought';
-import { Shimmer } from '@/components/ai-elements/shimmer';
-import { toolTranslations } from '@/constants/tool-translations';
-import type { ToolName } from '@/lib/tools/types';
-import type { StepStatus, ToolCallPart, ToolInfo } from './types';
-import { getToolStatus } from './types';
+import {Shimmer} from '@/components/ai-elements/shimmer';
+import {toolTranslations} from '@/constants/tool-translations';
+import type {ToolName} from '@/lib/tools/types';
+import type {StepStatus, ToolCallPart, ToolInfo} from './types';
+import {getToolStatus} from './types';
 
 /**
  * Map tool names to their LucideIcon components for ChainOfThoughtStep

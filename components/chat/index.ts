@@ -3,8 +3,11 @@ export type { ToolState, ToolCallPart, SourceUrlUIPart, ToolInfo, StepStatus } f
 export { isToolPart, getToolStatus } from './types';
 
 // Components
-export { MessageToolCalls, getToolInfo, getToolDescription, getToolIO } from './MessageToolCalls';
-export type { MessageToolCallsProps } from './MessageToolCalls';
+export { getToolInfo, getToolDescription, getToolIO } from './MessageToolCalls';
+export { ToolCallParts } from './ToolCallParts';
+export type { ToolCallPartsProps } from './ToolCallParts';
+export { ToolCallStep } from './ToolCallStep';
+export type { ToolCallStepProps, GroupedToolCall } from './ToolCallStep';
 
 export { TextMessagePart } from './TextMessagePart';
 export type { TextMessagePartProps } from './TextMessagePart';
