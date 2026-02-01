@@ -191,6 +191,71 @@
         }
       }
     },
+    "/data/path": {
+      "get": {
+        "tags": ["Series"],
+        "summary": "Get series data by catalog path",
+        "description": "Retrieve time series data for all series under a specific catalog path (e.g., '2,1,1,2,379').",
+        "operationId": "getSeriesDataByPath",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "query",
+            "required": true,
+            "description": "Comma-separated catalog path (e.g., '2,1,1,2,379')",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "startperiod",
+            "in": "query",
+            "description": "Start date (mm-yyyy format)",
+            "schema": { "type": "string", "pattern": "^\\d{2}-\\d{4}$" }
+          },
+          {
+            "name": "endperiod",
+            "in": "query",
+            "description": "End date (mm-yyyy format)",
+            "schema": { "type": "string", "pattern": "^\\d{2}-\\d{4}$" }
+          },
+          {
+            "name": "last",
+            "in": "query",
+            "description": "Number of latest entries to return",
+            "schema": { "type": "integer" }
+          },
+          {
+            "name": "lang",
+            "in": "query",
+            "schema": { "type": "string", "enum": ["he", "en"], "default": "he" }
+          },
+          {
+            "name": "format",
+            "in": "query",
+            "schema": { "type": "string", "enum": ["json", "xml", "csv", "xls"], "default": "json" }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": { "type": "integer", "default": 1 }
+          },
+          {
+            "name": "pagesize",
+            "in": "query",
+            "schema": { "type": "integer", "default": 100, "maximum": 1000 }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Series data for all series under the path",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/SeriesDataResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
     "/catalog/catalog": {
       "get": {
         "tags": ["Price Index"],
@@ -214,10 +279,7 @@
             "description": "List of chapters",
             "content": {
               "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": { "$ref": "#/components/schemas/PriceChapter" }
-                }
+                "schema": { "$ref": "#/components/schemas/PriceChaptersResponse" }
               }
             }
           }
@@ -251,13 +313,10 @@
         ],
         "responses": {
           "200": {
-            "description": "List of topics in chapter",
+            "description": "Chapter with its topics",
             "content": {
               "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": { "$ref": "#/components/schemas/PriceTopic" }
-                }
+                "schema": { "$ref": "#/components/schemas/PriceChapterResponse" }
               }
             }
           }
@@ -291,13 +350,10 @@
         ],
         "responses": {
           "200": {
-            "description": "List of index codes",
+            "description": "Subject with its index codes",
             "content": {
               "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": { "$ref": "#/components/schemas/PriceIndexCode" }
-                }
+                "schema": { "$ref": "#/components/schemas/PriceSubjectResponse" }
               }
             }
           }
@@ -545,117 +601,238 @@
     "schemas": {
       "CatalogItem": {
         "type": "object",
+        "required": ["path", "name", "pathDesc"],
         "properties": {
-          "id": { "type": "string" },
-          "code": { "type": "string" },
+          "path": {
+            "type": "array",
+            "items": { "type": "integer" }
+          },
           "name": { "type": "string" },
-          "nameEng": { "type": "string" },
-          "parentCode": { "type": "string" },
-          "level": { "type": "integer" },
-          "path": { "type": "string" },
-          "seriesCount": { "type": "integer" },
-          "childCount": { "type": "integer" }
+          "pathDesc": { "type": ["string", "null"] }
+        }
+      },
+      "CatalogPaging": {
+        "type": "object",
+        "properties": {
+          "total_items": { "type": "integer" },
+          "page_size": { "type": "integer" },
+          "current_page": { "type": "integer" },
+          "last_page": { "type": "integer" },
+          "first_url": { "type": "string" },
+          "previous_url": { "type": ["string", "null"] },
+          "current_url": { "type": "string" },
+          "next_url": { "type": ["string", "null"] },
+          "last_url": { "type": "string" },
+          "base_url": { "type": ["string", "null"] }
         }
       },
       "CatalogResponse": {
         "type": "object",
+        "required": ["catalogs"],
         "properties": {
-          "level": { "type": "integer" },
-          "subject": { "type": "string" },
-          "items": {
+          "catalogs": {
+            "type": "object",
+            "required": ["catalog", "level", "paging"],
+            "properties": {
+              "catalog": {
+                "type": "array",
+                "items": { "$ref": "#/components/schemas/CatalogItem" }
+              },
+              "level": { "type": "integer" },
+              "paging": { "$ref": "#/components/schemas/CatalogPaging" }
+            }
+          }
+        }
+      },
+      "LabeledValue": {
+        "type": "object",
+        "required": ["value", "name"],
+        "properties": {
+          "value": { "type": "integer" },
+          "name": { "type": "string" }
+        }
+      },
+      "SeriesObservation": {
+        "type": "object",
+        "required": ["TimePeriod", "Value"],
+        "properties": {
+          "TimePeriod": { "type": "string", "description": "Date in yyyy-MM format" },
+          "Value": { "type": "number" }
+        }
+      },
+      "SeriesPathLevel": {
+        "type": "object",
+        "required": ["value", "name"],
+        "properties": {
+          "value": { "type": "integer" },
+          "name": { "type": "string" }
+        }
+      },
+      "SeriesPath": {
+        "type": "object",
+        "properties": {
+          "level1": { "$ref": "#/components/schemas/SeriesPathLevel" },
+          "level2": { "$ref": "#/components/schemas/SeriesPathLevel" },
+          "level3": { "$ref": "#/components/schemas/SeriesPathLevel" },
+          "level4": { "$ref": "#/components/schemas/SeriesPathLevel" },
+          "name_id": { "$ref": "#/components/schemas/SeriesPathLevel" }
+        }
+      },
+      "SeriesEntry": {
+        "type": "object",
+        "required": ["id", "time", "data", "unit", "calc", "price", "path", "precis", "update", "obs"],
+        "properties": {
+          "id": { "type": "integer" },
+          "ffu_num": { "type": ["integer", "null"] },
+          "time": { "$ref": "#/components/schemas/LabeledValue" },
+          "data": { "$ref": "#/components/schemas/LabeledValue" },
+          "unit": { "$ref": "#/components/schemas/LabeledValue" },
+          "calc": { "$ref": "#/components/schemas/LabeledValue" },
+          "price": { "$ref": "#/components/schemas/LabeledValue" },
+          "path": { "$ref": "#/components/schemas/SeriesPath" },
+          "precis": { "type": "integer" },
+          "update": { "type": "string", "description": "Last update date (yyyy-MM-dd)" },
+          "obs": {
             "type": "array",
-            "items": { "$ref": "#/components/schemas/CatalogItem" }
-          },
-          "totalItems": { "type": "integer" },
-          "page": { "type": "integer" },
-          "pageSize": { "type": "integer" }
-        }
-      },
-      "SeriesDataPoint": {
-        "type": "object",
-        "properties": {
-          "date": { "type": "string" },
-          "value": { "oneOf": [{ "type": "number" }, { "type": "string" }, { "type": "null" }] },
-          "statusCode": { "type": "string" },
-          "statusText": { "type": "string" }
-        }
-      },
-      "SeriesInfo": {
-        "type": "object",
-        "properties": {
-          "id": { "type": "string" },
-          "code": { "type": "string" },
-          "name": { "type": "string" },
-          "nameEng": { "type": "string" },
-          "unit": { "type": "string" },
-          "unitEng": { "type": "string" },
-          "frequency": { "type": "string" },
-          "lastUpdate": { "type": "string" },
-          "subject": { "type": "string" }
+            "items": { "$ref": "#/components/schemas/SeriesObservation" }
+          }
         }
       },
       "SeriesDataResponse": {
         "type": "object",
+        "required": ["DataSet"],
         "properties": {
-          "series": { "$ref": "#/components/schemas/SeriesInfo" },
-          "data": {
-            "type": "array",
-            "items": { "$ref": "#/components/schemas/SeriesDataPoint" }
-          },
-          "totalItems": { "type": "integer" }
+          "DataSet": {
+            "type": "object",
+            "required": ["Series", "paging"],
+            "properties": {
+              "Series": {
+                "type": "array",
+                "items": { "$ref": "#/components/schemas/SeriesEntry" }
+              },
+              "paging": { "$ref": "#/components/schemas/CatalogPaging" }
+            }
+          }
         }
       },
       "PriceChapter": {
         "type": "object",
+        "required": ["chapterId", "chapterName", "chapterOrder"],
         "properties": {
-          "id": { "type": "string" },
-          "code": { "type": "string" },
-          "name": { "type": "string" },
-          "nameEng": { "type": "string" }
+          "chapterId": { "type": "string" },
+          "chapterName": { "type": "string" },
+          "chapterOrder": { "type": "integer" },
+          "mainCode": { "type": ["integer", "null"] },
+          "subject": { "type": ["object", "null"] }
         }
       },
-      "PriceTopic": {
+      "PriceChaptersResponse": {
+        "type": "object",
+        "required": ["chapters"],
+        "properties": {
+          "chapters": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/PriceChapter" }
+          }
+        }
+      },
+      "PriceSubject": {
+        "type": "object",
+        "required": ["subjectId", "subjectName"],
+        "properties": {
+          "subjectId": { "type": "integer" },
+          "subjectName": { "type": "string" },
+          "code": { "type": ["object", "null"] }
+        }
+      },
+      "PriceChapterResponse": {
         "type": "object",
         "properties": {
-          "id": { "type": "string" },
-          "code": { "type": "string" },
-          "name": { "type": "string" },
-          "nameEng": { "type": "string" },
-          "chapterId": { "type": "string" }
+          "chapterId": { "type": "string" },
+          "chapterName": { "type": ["string", "null"] },
+          "chapterOrder": { "type": ["integer", "null"] },
+          "mainCode": { "type": ["integer", "null"] },
+          "subject": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/PriceSubject" }
+          }
         }
       },
       "PriceIndexCode": {
         "type": "object",
+        "required": ["codeId", "codeName"],
         "properties": {
-          "id": { "type": "string" },
-          "code": { "type": "string" },
-          "name": { "type": "string" },
-          "nameEng": { "type": "string" },
-          "subjectId": { "type": "string" },
-          "base": { "type": "string" }
+          "codeId": { "type": "integer" },
+          "codePrefix": { "type": "integer" },
+          "codeName": { "type": "string" },
+          "codeNote": { "type": "string" },
+          "codeLevel": { "type": "integer" },
+          "codeLine": { "type": "integer" },
+          "codeType": { "type": "integer" },
+          "codeFromDate": { "type": "string" },
+          "codeToDate": { "type": "string" },
+          "codeCalcFromDate": { "type": "string" },
+          "codeCalcToDate": { "type": "string" },
+          "isMonth": { "type": "boolean" }
         }
       },
-      "PriceDataPoint": {
+      "PriceSubjectResponse": {
         "type": "object",
         "properties": {
-          "date": { "type": "string" },
-          "value": { "oneOf": [{ "type": "number" }, { "type": "string" }, { "type": "null" }] },
-          "change": { "oneOf": [{ "type": "number" }, { "type": "string" }, { "type": "null" }] },
-          "base": { "type": "string" }
+          "subjectId": { "type": "integer" },
+          "subjectName": { "type": ["string", "null"] },
+          "code": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/PriceIndexCode" }
+          }
+        }
+      },
+      "PriceBase": {
+        "type": "object",
+        "required": ["baseDesc", "value"],
+        "properties": {
+          "baseDesc": { "type": "string" },
+          "value": { "type": "number" }
+        }
+      },
+      "PriceDateEntry": {
+        "type": "object",
+        "required": ["year", "month", "monthDesc", "percent", "percentYear", "currBase"],
+        "properties": {
+          "year": { "type": "integer" },
+          "percent": { "type": "number" },
+          "percentYear": { "type": "number" },
+          "currBase": { "$ref": "#/components/schemas/PriceBase" },
+          "prevBase": { "oneOf": [{ "$ref": "#/components/schemas/PriceBase" }, { "type": "null" }] },
+          "month": { "type": "integer" },
+          "monthDesc": { "type": "string" }
+        }
+      },
+      "PriceMonthEntry": {
+        "type": "object",
+        "required": ["code", "name", "date"],
+        "properties": {
+          "code": { "type": "integer" },
+          "name": { "type": "string" },
+          "date": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/PriceDateEntry" }
+          }
         }
       },
       "PriceDataResponse": {
         "type": "object",
         "properties": {
-          "index": { "$ref": "#/components/schemas/PriceIndexCode" },
-          "data": {
-            "type": "array",
-            "items": { "$ref": "#/components/schemas/PriceDataPoint" }
+          "month": {
+            "type": ["array", "null"],
+            "items": { "$ref": "#/components/schemas/PriceMonthEntry" }
           },
-          "totalItems": { "type": "integer" }
+          "quarter": {},
+          "paging": { "$ref": "#/components/schemas/CatalogPaging" }
         }
       },
       "PriceCalculatorResult": {
+        "description": "Calculator endpoint currently unavailable",
         "type": "object",
         "properties": {
           "originalAmount": { "type": "number" },
@@ -668,26 +845,98 @@
           "endValue": { "type": "number" }
         }
       },
-      "DictionaryItem": {
+      "DictionaryId": {
         "type": "object",
         "properties": {
-          "id": { "oneOf": [{ "type": "string" }, { "type": "integer" }] },
+          "id": { "type": ["string", "null"] },
+          "year": { "type": "string" }
+        }
+      },
+      "DictionaryRelated": {
+        "type": "object",
+        "properties": {
+          "ID": { "$ref": "#/components/schemas/DictionaryId" },
+          "name_eng": { "type": ["string", "null"] },
+          "name_heb": { "type": ["string", "null"] }
+        }
+      },
+      "LocalityData": {
+        "type": "object",
+        "properties": {
+          "ID": { "$ref": "#/components/schemas/DictionaryId" },
+          "district": { "type": "string" },
+          "locality_type": { "type": "string" },
+          "metropolin": { "type": ["string", "null"] },
+          "municipal_or_council_status": { "type": ["string", "null"] },
+          "name_eng": { "type": ["string", "null"] },
           "name_heb": { "type": "string" },
-          "name_eng": { "type": "string" },
-          "year": { "type": "integer" }
-        },
-        "additionalProperties": true
+          "natural_area": { "type": "string" },
+          "organization": { "type": ["string", "null"] },
+          "planning_committee": { "type": ["string", "null"] },
+          "region": { "type": "string" },
+          "religion": { "type": ["string", "null"] },
+          "total_arabs": { "type": "string" },
+          "total_jews": { "type": "string" },
+          "total_jews_and_others": { "type": "string" },
+          "total_population": { "type": "string" }
+        }
+      },
+      "LocalityItems": {
+        "type": "object",
+        "properties": {
+          "localities": { "$ref": "#/components/schemas/LocalityData" },
+          "districts": { "$ref": "#/components/schemas/DictionaryRelated" },
+          "locality_types": { "$ref": "#/components/schemas/DictionaryRelated" },
+          "metropolins": { "$ref": "#/components/schemas/DictionaryRelated" },
+          "municipal_or_council_status": { "$ref": "#/components/schemas/DictionaryRelated" },
+          "natural_areas": { "$ref": "#/components/schemas/DictionaryRelated" },
+          "organizational_affiliations": { "$ref": "#/components/schemas/DictionaryRelated" },
+          "planning_committee": { "$ref": "#/components/schemas/DictionaryRelated" },
+          "regions": { "$ref": "#/components/schemas/DictionaryRelated" },
+          "religions": { "$ref": "#/components/schemas/DictionaryRelated" }
+        }
+      },
+      "DictionaryPaging": {
+        "type": "object",
+        "description": "Dictionary paging uses string values unlike series paging",
+        "properties": {
+          "total_items": { "type": "string" },
+          "total_size": { "type": "string" },
+          "page_items": { "type": "string" },
+          "page_size": { "type": "string" },
+          "current_page": { "type": "string" },
+          "last_page": { "type": "string" },
+          "first_url": { "type": "string" },
+          "previous_url": { "type": ["string", "null"] },
+          "current_url": { "type": "string" },
+          "next_url": { "type": ["string", "null"] },
+          "last_url": { "type": "string" }
+        }
       },
       "DictionaryResponse": {
         "type": "object",
+        "required": ["dictionary"],
         "properties": {
-          "data": {
-            "type": "array",
-            "items": { "$ref": "#/components/schemas/DictionaryItem" }
-          },
-          "total": { "type": "integer" },
-          "page": { "type": "integer" },
-          "pageSize": { "type": "integer" }
+          "dictionary": {
+            "type": "object",
+            "properties": {
+              "status": { "type": "string" },
+              "code": { "type": "string" },
+              "data": {
+                "type": "object",
+                "properties": {
+                  "localities": {
+                    "type": "object",
+                    "properties": {
+                      "data": { "type": "string" },
+                      "items": { "$ref": "#/components/schemas/LocalityItems" }
+                    }
+                  }
+                }
+              },
+              "paging": { "$ref": "#/components/schemas/DictionaryPaging" }
+            }
+          }
         }
       }
     }

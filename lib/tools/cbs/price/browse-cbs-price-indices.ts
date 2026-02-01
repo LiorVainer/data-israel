@@ -30,9 +30,9 @@ export const browseCbsPriceIndicesOutputSchema = z.discriminatedUnion('success',
         items: z.array(
             z.object({
                 id: z.string(),
-                code: z.string().optional(),
                 name: z.string(),
-                base: z.string().optional(),
+                order: z.number().optional(),
+                mainCode: z.number().nullable().optional(),
             }),
         ),
     }),
@@ -56,14 +56,15 @@ export const browseCbsPriceIndices = tool({
     execute: async ({ mode, chapterId, subjectId, language }) => {
         try {
             if (mode === 'chapters') {
-                const chapters = await cbsApi.priceIndex.catalog({ lang: language });
+                const result = await cbsApi.priceIndex.catalog({ lang: language });
                 return {
                     success: true,
                     mode,
-                    items: (Array.isArray(chapters) ? chapters : []).map((ch) => ({
-                        id: ch.id ?? ch.code ?? '',
-                        code: ch.code,
-                        name: ch.name ?? '',
+                    items: result.chapters.map((ch) => ({
+                        id: ch.chapterId,
+                        name: ch.chapterName,
+                        order: ch.chapterOrder,
+                        mainCode: ch.mainCode,
                     })),
                 };
             }
@@ -72,14 +73,13 @@ export const browseCbsPriceIndices = tool({
                 if (!chapterId) {
                     return { success: false, error: 'chapterId is required when mode is "topics"' };
                 }
-                const topics = await cbsApi.priceIndex.chapter(chapterId, { lang: language });
+                const result = await cbsApi.priceIndex.chapter(chapterId, { lang: language });
                 return {
                     success: true,
                     mode,
-                    items: (Array.isArray(topics) ? topics : []).map((t) => ({
-                        id: t.id ?? t.code ?? '',
-                        code: t.code,
-                        name: t.name ?? '',
+                    items: result.subject.map((s) => ({
+                        id: String(s.subjectId),
+                        name: s.subjectName,
                     })),
                 };
             }
@@ -88,15 +88,13 @@ export const browseCbsPriceIndices = tool({
             if (!subjectId) {
                 return { success: false, error: 'subjectId is required when mode is "indices"' };
             }
-            const indices = await cbsApi.priceIndex.subject(subjectId, { lang: language });
+            const result = await cbsApi.priceIndex.subject(subjectId, { lang: language });
             return {
                 success: true,
                 mode,
-                items: (Array.isArray(indices) ? indices : []).map((idx) => ({
-                    id: idx.id ?? idx.code ?? '',
-                    code: idx.code,
-                    name: idx.name ?? '',
-                    base: idx.base,
+                items: result.code.map((c) => ({
+                    id: String(c.codeId),
+                    name: c.codeName,
                 })),
             };
         } catch (error) {

@@ -31,7 +31,9 @@ import type {
     DisplayPieChartOutput,
 } from './client/display-chart';
 import type { BrowseCbsCatalogInput, BrowseCbsCatalogOutput } from './cbs/series/browse-cbs-catalog';
+import type { BrowseCbsCatalogPathInput, BrowseCbsCatalogPathOutput } from './cbs/series/browse-cbs-catalog-path';
 import type { GetCbsSeriesDataInput, GetCbsSeriesDataOutput } from './cbs/series/get-cbs-series-data';
+import type { GetCbsSeriesDataByPathInput, GetCbsSeriesDataByPathOutput } from './cbs/series/get-cbs-series-data-by-path';
 import type { BrowseCbsPriceIndicesInput, BrowseCbsPriceIndicesOutput } from './cbs/price/browse-cbs-price-indices';
 import type { GetCbsPriceDataInput, GetCbsPriceDataOutput } from './cbs/price/get-cbs-price-data';
 import type { CalculateCbsPriceIndexInput, CalculateCbsPriceIndexOutput } from './cbs/price/calculate-cbs-price-index';
@@ -82,7 +84,11 @@ export type {
 // CBS tool types
 export type { BrowseCbsCatalogInput, BrowseCbsCatalogOutput } from './cbs/series/browse-cbs-catalog';
 
+export type { BrowseCbsCatalogPathInput, BrowseCbsCatalogPathOutput } from './cbs/series/browse-cbs-catalog-path';
+
 export type { GetCbsSeriesDataInput, GetCbsSeriesDataOutput } from './cbs/series/get-cbs-series-data';
+
+export type { GetCbsSeriesDataByPathInput, GetCbsSeriesDataByPathOutput } from './cbs/series/get-cbs-series-data-by-path';
 
 export type { BrowseCbsPriceIndicesInput, BrowseCbsPriceIndicesOutput } from './cbs/price/browse-cbs-price-indices';
 
@@ -177,9 +183,17 @@ export interface ToolIOMap {
         input: BrowseCbsCatalogInput;
         output: BrowseCbsCatalogOutput;
     };
+    browseCbsCatalogPath: {
+        input: BrowseCbsCatalogPathInput;
+        output: BrowseCbsCatalogPathOutput;
+    };
     getCbsSeriesData: {
         input: GetCbsSeriesDataInput;
         output: GetCbsSeriesDataOutput;
+    };
+    getCbsSeriesDataByPath: {
+        input: GetCbsSeriesDataByPathInput;
+        output: GetCbsSeriesDataByPathOutput;
     };
     browseCbsPriceIndices: {
         input: BrowseCbsPriceIndicesInput;

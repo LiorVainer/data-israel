@@ -15,15 +15,13 @@ import type {
     CbsDictionaryResponse,
     CbsDictionarySearchParams,
     CbsLang,
-    CbsLocality,
-    CbsPaginationParams,
     CbsPriceCalculatorParams,
     CbsPriceCalculatorResult,
-    CbsPriceChapter,
+    CbsPriceChapterResponse,
+    CbsPriceChaptersResponse,
     CbsPriceDataParams,
     CbsPriceDataResponse,
-    CbsPriceIndexCode,
-    CbsPriceTopic,
+    CbsPriceSubjectResponse,
     CbsSeriesDataParams,
     CbsSeriesDataResponse,
 } from './types';
@@ -134,6 +132,21 @@ export const cbsApi = {
                 pagesize: params.pagesize,
             });
         },
+
+        /**
+         * Get time series data by catalog path (e.g., "2,1,1,2,379")
+         */
+        dataByPath: async (params: CbsSeriesDataParams) => {
+            return cbsGet<CbsSeriesDataResponse>(seriesInstance, '/data/path', {
+                id: params.id,
+                startPeriod: params.startPeriod,
+                endPeriod: params.endPeriod,
+                last: params.last,
+                lang: params.lang,
+                page: params.page,
+                pagesize: params.pagesize,
+            });
+        },
     },
 
     /**
@@ -144,7 +157,7 @@ export const cbsApi = {
          * Get all price index chapters
          */
         catalog: async (params?: { lang?: CbsLang; page?: number; pagesize?: number }) => {
-            return cbsGet<CbsPriceChapter[]>(priceIndexInstance, '/catalog/catalog', {
+            return cbsGet<CbsPriceChaptersResponse>(priceIndexInstance, '/catalog/catalog', {
                 lang: params?.lang,
                 page: params?.page,
                 pagesize: params?.pagesize,
@@ -155,7 +168,7 @@ export const cbsApi = {
          * Get topics within a specific chapter
          */
         chapter: async (id: string, params?: { lang?: CbsLang; page?: number; pagesize?: number }) => {
-            return cbsGet<CbsPriceTopic[]>(priceIndexInstance, '/catalog/chapter', {
+            return cbsGet<CbsPriceChapterResponse>(priceIndexInstance, '/catalog/chapter', {
                 id,
                 lang: params?.lang,
                 page: params?.page,
@@ -167,7 +180,7 @@ export const cbsApi = {
          * Get index codes for a specific subject/topic
          */
         subject: async (id: string, params?: { lang?: CbsLang; page?: number; pagesize?: number }) => {
-            return cbsGet<CbsPriceIndexCode[]>(priceIndexInstance, '/catalog/subject', {
+            return cbsGet<CbsPriceSubjectResponse>(priceIndexInstance, '/catalog/subject', {
                 id,
                 lang: params?.lang,
                 page: params?.page,
@@ -216,8 +229,8 @@ export const cbsApi = {
          * @param resource - Resource name (e.g., "localities", "districts")
          * @param params - Search parameters
          */
-        search: async <T = CbsLocality>(subject: string, resource: string, params?: CbsDictionarySearchParams) => {
-            return cbsGet<CbsDictionaryResponse<T>>(
+        search: async (subject: string, resource: string, params?: CbsDictionarySearchParams) => {
+            return cbsGet<CbsDictionaryResponse>(
                 dictionaryInstance,
                 `/${subject}/${resource}`,
                 params as Record<string, unknown>,
@@ -231,13 +244,13 @@ export const cbsApi = {
          * @param ids - Comma-separated IDs
          * @param params - Additional parameters
          */
-        get: async <T = CbsLocality>(
+        get: async (
             subject: string,
             resource: string,
             ids: string,
             params?: CbsDictionarySearchParams,
         ) => {
-            return cbsGet<CbsDictionaryResponse<T>>(
+            return cbsGet<CbsDictionaryResponse>(
                 dictionaryInstance,
                 `/${subject}/${resource}/${ids}`,
                 params as Record<string, unknown>,

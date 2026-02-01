@@ -10,14 +10,18 @@ import { Memory } from '@mastra/memory';
 import { LibSQLStore } from '@mastra/libsql';
 import { getModelId } from '../model';
 import { ROUTING_CONFIG } from './config';
-import { DataGovTools } from '@/lib/tools/datagov';
-import { CbsTools } from '@/lib/tools/cbs';
 import { ClientTools } from '@/lib/tools/client';
+import { CbsTools } from '@/lib/tools/cbs';
+import { DataGovTools } from '@/lib/tools/datagov';
 
 export const routingAgent = new Agent({
     id: 'routingAgent',
     name: ROUTING_CONFIG.name,
     instructions: ROUTING_CONFIG.instructions,
+    // agents: {
+    //     cbsAgent,
+    //     datagovAgent,
+    // },
     model: getModelId(),
     memory: new Memory({
         storage: new LibSQLStore({

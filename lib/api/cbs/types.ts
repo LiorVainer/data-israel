@@ -26,53 +26,85 @@ export interface CbsPaginationParams {
 
 /** Catalog item in the hierarchical subject tree */
 export interface CbsCatalogItem {
-    id?: string;
-    code?: string;
-    name?: string;
-    nameEng?: string;
-    parentCode?: string;
-    level?: number;
-    path?: string;
-    seriesCount?: number;
-    childCount?: number;
+    path: number[];
+    name: string;
+    pathDesc: string | null;
+}
+
+/** Paging metadata from catalog responses */
+export interface CbsCatalogPaging {
+    total_items: number;
+    page_size: number;
+    current_page: number;
+    last_page: number;
+    first_url: string;
+    previous_url: string | null;
+    current_url: string;
+    next_url: string | null;
+    last_url: string;
+    base_url: string | null;
+}
+
+/** Inner catalogs wrapper */
+export interface CbsCatalogs {
+    catalog: CbsCatalogItem[];
+    level: number;
+    paging: CbsCatalogPaging;
 }
 
 /** Catalog level response */
 export interface CbsCatalogResponse {
-    level?: number;
-    subject?: string;
-    items?: CbsCatalogItem[];
-    totalItems?: number;
-    page?: number;
-    pageSize?: number;
+    catalogs: CbsCatalogs;
 }
 
-/** A single data point in a time series */
-export interface CbsSeriesDataPoint {
-    date?: string;
-    value?: number | string | null;
-    statusCode?: string;
-    statusText?: string;
+/** A labeled value pair (used for time, data, unit, calc, price fields) */
+export interface CbsLabeledValue {
+    value: number;
+    name: string;
 }
 
-/** Series metadata */
-export interface CbsSeriesInfo {
-    id?: string;
-    code?: string;
-    name?: string;
-    nameEng?: string;
-    unit?: string;
-    unitEng?: string;
-    frequency?: string;
-    lastUpdate?: string;
-    subject?: string;
+/** A single observation in a time series */
+export interface CbsSeriesObservation {
+    TimePeriod: string;
+    Value: number;
+}
+
+/** Path level descriptor in series metadata */
+export interface CbsSeriesPathLevel {
+    value: number;
+    name: string;
+}
+
+/** Series path hierarchy */
+export interface CbsSeriesPath {
+    level1: CbsSeriesPathLevel;
+    level2: CbsSeriesPathLevel;
+    level3: CbsSeriesPathLevel;
+    level4: CbsSeriesPathLevel;
+    name_id: CbsSeriesPathLevel;
+}
+
+/** A single series entry in the DataSet response */
+export interface CbsSeriesEntry {
+    id: number;
+    ffu_num: number | null;
+    time: CbsLabeledValue;
+    data: CbsLabeledValue;
+    unit: CbsLabeledValue;
+    calc: CbsLabeledValue;
+    price: CbsLabeledValue;
+    path: CbsSeriesPath;
+    precis: number;
+    update: string;
+    obs: CbsSeriesObservation[];
 }
 
 /** Response for series data requests */
 export interface CbsSeriesDataResponse {
-    series?: CbsSeriesInfo;
-    data?: CbsSeriesDataPoint[];
-    totalItems?: number;
+    DataSet: {
+        Series: CbsSeriesEntry[];
+        paging: CbsCatalogPaging;
+    };
 }
 
 /** Parameters for catalog level browsing */
@@ -105,47 +137,89 @@ export interface CbsSeriesDataParams extends CbsPaginationParams {
 
 /** Price index catalog chapter */
 export interface CbsPriceChapter {
-    id?: string;
-    code?: string;
-    name?: string;
-    nameEng?: string;
+    chapterId: string;
+    chapterName: string;
+    chapterOrder: number;
+    mainCode: number | null;
+    subject: null;
 }
 
-/** Price index topic/subject */
-export interface CbsPriceTopic {
-    id?: string;
-    code?: string;
-    name?: string;
-    nameEng?: string;
-    chapterId?: string;
+/** Response for /catalog/catalog */
+export interface CbsPriceChaptersResponse {
+    chapters: CbsPriceChapter[];
+}
+
+/** Price index subject within a chapter */
+export interface CbsPriceSubject {
+    subjectId: number;
+    subjectName: string;
+    code: null;
+}
+
+/** Response for /catalog/chapter */
+export interface CbsPriceChapterResponse {
+    chapterId: string;
+    chapterName: string | null;
+    chapterOrder: number | null;
+    mainCode: number | null;
+    subject: CbsPriceSubject[];
 }
 
 /** Price index code entry */
 export interface CbsPriceIndexCode {
-    id?: string;
-    code?: string;
-    name?: string;
-    nameEng?: string;
-    subjectId?: string;
-    base?: string;
+    codeId: number;
+    codePrefix: number;
+    codeName: string;
+    codeNote: string;
+    codeLevel: number;
+    codeLine: number;
+    codeType: number;
+    codeFromDate: string;
+    codeToDate: string;
+    codeCalcFromDate: string;
+    codeCalcToDate: string;
+    isMonth: boolean;
 }
 
-/** Price index data point */
-export interface CbsPriceDataPoint {
-    date?: string;
-    value?: number | string | null;
-    change?: number | string | null;
-    base?: string;
+/** Response for /catalog/subject */
+export interface CbsPriceSubjectResponse {
+    subjectId: number;
+    subjectName: string | null;
+    code: CbsPriceIndexCode[];
 }
 
-/** Response for price data */
+/** Base description in price data */
+export interface CbsPriceBase {
+    baseDesc: string;
+    value: number;
+}
+
+/** A single date entry in price data */
+export interface CbsPriceDateEntry {
+    year: number;
+    percent: number;
+    percentYear: number;
+    currBase: CbsPriceBase;
+    prevBase: CbsPriceBase | null;
+    month: number;
+    monthDesc: string;
+}
+
+/** A month series entry in price data */
+export interface CbsPriceMonthEntry {
+    code: number;
+    name: string;
+    date: CbsPriceDateEntry[];
+}
+
+/** Response for /data/price */
 export interface CbsPriceDataResponse {
-    index?: CbsPriceIndexCode;
-    data?: CbsPriceDataPoint[];
-    totalItems?: number;
+    month: CbsPriceMonthEntry[] | null;
+    quarter: unknown;
+    paging: CbsCatalogPaging;
 }
 
-/** Price calculator result */
+/** Price calculator result — endpoint currently unavailable */
 export interface CbsPriceCalculatorResult {
     originalAmount?: number;
     adjustedAmount?: number;
@@ -180,25 +254,81 @@ export interface CbsPriceCalculatorParams {
 // Dictionary API Types
 // ============================================================================
 
-/** Dictionary item (locality, district, region, etc.) */
-export interface CbsDictionaryItem {
-    id?: string | number;
-    name_heb?: string;
-    name_eng?: string;
-    year?: number;
-    [key: string]: unknown;
+/** Dictionary paging (string-valued fields unlike series paging) */
+export interface CbsDictionaryPaging {
+    total_items: string;
+    total_size: string;
+    page_items: string;
+    page_size: string;
+    current_page: string;
+    last_page: string;
+    first_url: string;
+    previous_url: string | null;
+    current_url: string;
+    next_url: string | null;
+    last_url: string;
 }
 
-/** Locality-specific fields */
-export interface CbsLocality extends CbsDictionaryItem {
-    district?: string | CbsDictionaryItem;
-    region?: string | CbsDictionaryItem;
-    natural_area?: string | CbsDictionaryItem;
-    population?: number;
-    population_group?: string | CbsDictionaryItem;
-    municipal_status?: string | CbsDictionaryItem;
-    religion?: string | CbsDictionaryItem;
-    locality_type?: string | CbsDictionaryItem;
+/** Dictionary ID field */
+export interface CbsDictionaryId {
+    id: string | null;
+    year?: string;
+}
+
+/** Dictionary related entity (district, region, etc.) */
+export interface CbsDictionaryRelated {
+    ID: CbsDictionaryId;
+    name_eng: string | null;
+    name_heb: string | null;
+}
+
+/** Locality fields from the API */
+export interface CbsLocalityData {
+    ID: CbsDictionaryId;
+    district: string;
+    locality_type: string;
+    metropolin: string | null;
+    municipal_or_council_status: string | null;
+    name_eng: string | null;
+    name_heb: string;
+    natural_area: string;
+    organization: string | null;
+    planning_committee: string | null;
+    region: string;
+    religion: string | null;
+    total_arabs: string;
+    total_jews: string;
+    total_jews_and_others: string;
+    total_population: string;
+}
+
+/** Expanded locality items including related entities */
+export interface CbsLocalityItems {
+    localities: CbsLocalityData;
+    districts: CbsDictionaryRelated;
+    locality_types: CbsDictionaryRelated;
+    metropolins?: CbsDictionaryRelated;
+    municipal_or_council_status?: CbsDictionaryRelated;
+    natural_areas?: CbsDictionaryRelated;
+    organizational_affiliations?: CbsDictionaryRelated;
+    planning_committee?: CbsDictionaryRelated;
+    regions?: CbsDictionaryRelated;
+    religions?: CbsDictionaryRelated;
+}
+
+/** Dictionary response wrapper */
+export interface CbsDictionaryResponse {
+    dictionary: {
+        status: string;
+        code: string;
+        data: {
+            localities: {
+                data: string;
+                items: CbsLocalityItems;
+            };
+        };
+        paging: CbsDictionaryPaging;
+    };
 }
 
 /** Dictionary search parameters */
@@ -211,12 +341,4 @@ export interface CbsDictionarySearchParams {
     filter?: string;
     page?: number;
     page_size?: number;
-}
-
-/** Dictionary response */
-export interface CbsDictionaryResponse<T = CbsDictionaryItem> {
-    data?: T[];
-    total?: number;
-    page?: number;
-    pageSize?: number;
 }

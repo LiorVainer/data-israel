@@ -1,7 +1,7 @@
 /**
- * Get CBS Series Data Tool
+ * Get CBS Series Data by Path Tool
  *
- * AI SDK tool for retrieving CBS time series data by series ID
+ * AI SDK tool for retrieving CBS time series data by catalog path
  */
 
 import { tool } from 'ai';
@@ -12,15 +12,21 @@ import { cbsApi } from '@/lib/api/cbs/client';
 // Schemas (Single Source of Truth)
 // ============================================================================
 
-export const getCbsSeriesDataInputSchema = z.object({
-    seriesId: z.string().describe('Series code/ID (get from catalog browsing)'),
-    startPeriod: z.string().optional().describe('Start date in mm-yyyy format (e.g., "01-2020")'),
-    endPeriod: z.string().optional().describe('End date in mm-yyyy format (e.g., "12-2024")'),
+export const getCbsSeriesDataByPathInputSchema = z.object({
+    path: z
+        .string()
+        .describe(
+            'Comma-separated catalog path (e.g., "2,1,1,2,379"). Get path values from browse-cbs-catalog or browse-cbs-catalog-path results.',
+        ),
+    startPeriod: z.string().optional().describe('Start date in mm-yyyy format (e.g., "01-2000")'),
+    endPeriod: z.string().optional().describe('End date in mm-yyyy format (e.g., "12-2020")'),
     last: z.number().int().min(1).max(500).optional().describe('Return only the N most recent data points'),
     language: z.enum(['he', 'en']).optional().describe('Response language (default: Hebrew)'),
+    page: z.number().int().min(1).optional().describe('Page number (default 1)'),
+    pageSize: z.number().int().min(1).max(1000).optional().describe('Items per page (default 100, max 1000)'),
 });
 
-export const getCbsSeriesDataOutputSchema = z.discriminatedUnion('success', [
+export const getCbsSeriesDataByPathOutputSchema = z.discriminatedUnion('success', [
     z.object({
         success: z.literal(true),
         series: z.array(
@@ -49,25 +55,27 @@ export const getCbsSeriesDataOutputSchema = z.discriminatedUnion('success', [
     }),
 ]);
 
-export type GetCbsSeriesDataInput = z.infer<typeof getCbsSeriesDataInputSchema>;
-export type GetCbsSeriesDataOutput = z.infer<typeof getCbsSeriesDataOutputSchema>;
+export type GetCbsSeriesDataByPathInput = z.infer<typeof getCbsSeriesDataByPathInputSchema>;
+export type GetCbsSeriesDataByPathOutput = z.infer<typeof getCbsSeriesDataByPathOutputSchema>;
 
 // ============================================================================
 // Tool Definition
 // ============================================================================
 
-export const getCbsSeriesData = tool({
+export const getCbsSeriesDataByPath = tool({
     description:
-        'Get CBS time series data points for a specific series ID. Returns historical values with dates. Use after browsing the catalog to find a series code. Supports date range filtering and fetching latest N entries.',
-    inputSchema: getCbsSeriesDataInputSchema,
-    execute: async ({ seriesId, startPeriod, endPeriod, last, language }) => {
+        'Get CBS time series data for all series under a specific catalog path. Returns multiple series with their observations. Use after browsing the catalog to find a path. Supports date range filtering.',
+    inputSchema: getCbsSeriesDataByPathInputSchema,
+    execute: async ({ path, startPeriod, endPeriod, last, language, page, pageSize }) => {
         try {
-            const result = await cbsApi.series.data({
-                id: seriesId,
+            const result = await cbsApi.series.dataByPath({
+                id: path,
                 startPeriod,
                 endPeriod,
                 last,
                 lang: language,
+                page,
+                pagesize: pageSize,
             });
 
             const { DataSet } = result;

@@ -7,7 +7,6 @@
 import { tool } from 'ai';
 import { z } from 'zod';
 import { cbsApi } from '@/lib/api/cbs/client';
-import type { CbsLocality } from '@/lib/api/cbs/types';
 
 // ============================================================================
 // Schemas (Single Source of Truth)
@@ -52,18 +51,6 @@ export type SearchCbsLocalitiesInput = z.infer<typeof searchCbsLocalitiesInputSc
 export type SearchCbsLocalitiesOutput = z.infer<typeof searchCbsLocalitiesOutputSchema>;
 
 // ============================================================================
-// Helpers
-// ============================================================================
-
-function extractName(value: unknown): string | undefined {
-    if (typeof value === 'string') return value;
-    if (value && typeof value === 'object' && 'name_heb' in value) {
-        return (value as { name_heb?: string }).name_heb;
-    }
-    return undefined;
-}
-
-// ============================================================================
 // Tool Definition
 // ============================================================================
 
@@ -73,7 +60,7 @@ export const searchCbsLocalities = tool({
     inputSchema: searchCbsLocalitiesInputSchema,
     execute: async ({ query, matchType, filter, page, pageSize }) => {
         try {
-            const result = await cbsApi.dictionary.search<CbsLocality>('geo', 'localities', {
+            const result = await cbsApi.dictionary.search('geo', 'localities', {
                 q: query,
                 string_match_type: matchType ?? 'CONTAINS',
                 filter,
@@ -82,22 +69,28 @@ export const searchCbsLocalities = tool({
                 expand: true,
             });
 
-            const localities = (result.data ?? []).map((loc) => ({
-                id: loc.id,
-                nameHebrew: loc.name_heb,
-                nameEnglish: loc.name_eng,
-                district: extractName(loc.district),
-                region: extractName(loc.region),
-                population: loc.population,
-                populationGroup: extractName(loc.population_group),
-                municipalStatus: extractName(loc.municipal_status),
-            }));
+            const { dictionary } = result;
+            const items = dictionary.data.localities.items;
+            const loc = items.localities;
+
+            const localities = [
+                {
+                    id: loc.ID.id,
+                    nameHebrew: loc.name_heb,
+                    nameEnglish: loc.name_eng ?? undefined,
+                    district: items.districts?.name_heb ?? undefined,
+                    region: items.regions?.name_heb ?? undefined,
+                    population: loc.total_population ? Number(loc.total_population) : undefined,
+                    populationGroup: undefined,
+                    municipalStatus: items.municipal_or_council_status?.name_heb ?? undefined,
+                },
+            ];
 
             return {
                 success: true,
                 localities,
-                total: result.total,
-                page: result.page,
+                total: Number(dictionary.paging.total_items),
+                page: Number(dictionary.paging.current_page),
             };
         } catch (error) {
             return {

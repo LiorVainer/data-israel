@@ -8,8 +8,12 @@
 export type {
     BrowseCbsCatalogInput,
     BrowseCbsCatalogOutput,
+    BrowseCbsCatalogPathInput,
+    BrowseCbsCatalogPathOutput,
     GetCbsSeriesDataInput,
     GetCbsSeriesDataOutput,
+    GetCbsSeriesDataByPathInput,
+    GetCbsSeriesDataByPathOutput,
     BrowseCbsPriceIndicesInput,
     BrowseCbsPriceIndicesOutput,
     GetCbsPriceDataInput,
@@ -88,7 +92,9 @@ export { displayBarChart, displayLineChart, displayPieChart } from './client/dis
 
 // CBS Series tools
 export { browseCbsCatalog } from './cbs/series/browse-cbs-catalog';
+export { browseCbsCatalogPath } from './cbs/series/browse-cbs-catalog-path';
 export { getCbsSeriesData } from './cbs/series/get-cbs-series-data';
+export { getCbsSeriesDataByPath } from './cbs/series/get-cbs-series-data-by-path';
 
 // CBS Price Index tools
 export { browseCbsPriceIndices } from './cbs/price/browse-cbs-price-indices';

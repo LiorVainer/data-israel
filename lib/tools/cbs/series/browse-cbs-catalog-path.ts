@@ -1,7 +1,7 @@
 /**
- * Browse CBS Catalog Tool
+ * Browse CBS Catalog by Path Tool
  *
- * AI SDK tool for browsing the CBS statistical catalog hierarchy
+ * AI SDK tool for browsing the CBS statistical catalog using a specific hierarchical path
  */
 
 import { tool } from 'ai';
@@ -12,23 +12,18 @@ import { cbsApi } from '@/lib/api/cbs/client';
 // Schemas (Single Source of Truth)
 // ============================================================================
 
-export const browseCbsCatalogInputSchema = z.object({
-    level: z
-        .number()
-        .int()
-        .min(1)
-        .max(5)
-        .describe('Catalog hierarchy level (1=top categories, 2-5=deeper subcategories)'),
-    subject: z
+export const browseCbsCatalogPathInputSchema = z.object({
+    path: z
         .string()
-        .optional()
-        .describe('First-level category code (required for level 2+). Get from level 1 results.'),
+        .describe(
+            'Comma-separated path codes for the catalog hierarchy (e.g., "2,1,1,2,379"). Get path values from browse-cbs-catalog results.',
+        ),
     language: z.enum(['he', 'en']).optional().describe('Response language (default: Hebrew)'),
     page: z.number().int().min(1).optional().describe('Page number (default 1)'),
     pageSize: z.number().int().min(1).max(1000).optional().describe('Items per page (default 100, max 1000)'),
 });
 
-export const browseCbsCatalogOutputSchema = z.discriminatedUnion('success', [
+export const browseCbsCatalogPathOutputSchema = z.discriminatedUnion('success', [
     z.object({
         success: z.literal(true),
         level: z.number(),
@@ -49,22 +44,21 @@ export const browseCbsCatalogOutputSchema = z.discriminatedUnion('success', [
     }),
 ]);
 
-export type BrowseCbsCatalogInput = z.infer<typeof browseCbsCatalogInputSchema>;
-export type BrowseCbsCatalogOutput = z.infer<typeof browseCbsCatalogOutputSchema>;
+export type BrowseCbsCatalogPathInput = z.infer<typeof browseCbsCatalogPathInputSchema>;
+export type BrowseCbsCatalogPathOutput = z.infer<typeof browseCbsCatalogPathOutputSchema>;
 
 // ============================================================================
 // Tool Definition
 // ============================================================================
 
-export const browseCbsCatalog = tool({
+export const browseCbsCatalogPath = tool({
     description:
-        'Browse the CBS (Central Bureau of Statistics) statistical catalog hierarchy. Start with level 1 to see top-level categories (e.g., population, economy, education), then drill into subcategories with higher levels. Use this to discover what statistical data series are available.',
-    inputSchema: browseCbsCatalogInputSchema,
-    execute: async ({ level, subject, language, page, pageSize }) => {
+        'Browse the CBS catalog by a specific hierarchical path (e.g., "2,1,1,2,379"). Use this after discovering categories with browse-cbs-catalog to navigate directly to a known location in the catalog tree.',
+    inputSchema: browseCbsCatalogPathInputSchema,
+    execute: async ({ path, language, page, pageSize }) => {
         try {
-            const result = await cbsApi.series.catalog({
-                id: level,
-                subject,
+            const result = await cbsApi.series.catalogByPath({
+                id: path,
                 lang: language,
                 page,
                 pagesize: pageSize,

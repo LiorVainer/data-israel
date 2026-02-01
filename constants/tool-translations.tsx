@@ -449,13 +449,35 @@ export const toolTranslations: ToolTranslationsMap = {
             return `נמצאו ${output.items?.length ?? 0} סדרות`;
         },
     },
+    browseCbsCatalogPath: {
+        name: 'עיון בקטלוג הלמ"ס לפי נתיב',
+        icon: <DatabaseIcon className='h-4 w-4' />,
+        formatInput: (input) => {
+            return `מנווט לנתיב: ${input.path}`;
+        },
+        formatOutput: (output) => {
+            if (!output.success) return `שגיאה: ${output.error}`;
+            return `נמצאו ${output.items?.length ?? 0} פריטים`;
+        },
+    },
     getCbsSeriesData: {
         name: 'שליפת נתונים סטטיסטיים',
         icon: <BarChart2Icon className='h-4 w-4' />,
         formatInput: () => 'שולף נתונים סטטיסטיים...',
         formatOutput: (output) => {
             if (!output.success) return `שגיאה: ${output.error}`;
-            return `נשלפו ${output.data?.length ?? 0} רשומות`;
+            const obsCount = output.series.reduce((sum, s) => sum + s.observations.length, 0);
+            return `נשלפו ${obsCount} רשומות`;
+        },
+    },
+    getCbsSeriesDataByPath: {
+        name: 'שליפת נתונים לפי נתיב',
+        icon: <BarChart2Icon className='h-4 w-4' />,
+        formatInput: (input) => `שולף נתונים לנתיב: ${input.path}`,
+        formatOutput: (output) => {
+            if (!output.success) return `שגיאה: ${output.error}`;
+            const obsCount = output.series.reduce((sum, s) => sum + s.observations.length, 0);
+            return `נשלפו ${obsCount} רשומות מ-${output.series.length} סדרות`;
         },
     },
     browseCbsPriceIndices: {
@@ -473,7 +495,8 @@ export const toolTranslations: ToolTranslationsMap = {
         formatInput: () => 'שולף נתוני מחירים...',
         formatOutput: (output) => {
             if (!output.success) return `שגיאה: ${output.error}`;
-            return `נשלפו ${output.data?.length ?? 0} רשומות`;
+            const dataCount = output.indices.reduce((sum, idx) => sum + idx.data.length, 0);
+            return `נשלפו ${dataCount} רשומות`;
         },
     },
     calculateCbsPriceIndex: {

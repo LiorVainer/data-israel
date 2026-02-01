@@ -24,19 +24,26 @@ export const getCbsPriceDataInputSchema = z.object({
 export const getCbsPriceDataOutputSchema = z.discriminatedUnion('success', [
     z.object({
         success: z.literal(true),
-        index: z.object({
-            code: z.string().optional(),
-            name: z.string().optional(),
-            base: z.string().optional(),
-        }),
-        data: z.array(
+        indices: z.array(
             z.object({
-                date: z.string().optional(),
-                value: z.union([z.number(), z.string(), z.null()]).optional(),
-                change: z.union([z.number(), z.string(), z.null()]).optional(),
+                code: z.number(),
+                name: z.string(),
+                data: z.array(
+                    z.object({
+                        year: z.number(),
+                        month: z.number(),
+                        monthDesc: z.string(),
+                        value: z.number(),
+                        baseDesc: z.string(),
+                        percentChange: z.number(),
+                        percentYearChange: z.number(),
+                    }),
+                ),
             }),
         ),
-        totalItems: z.number().optional(),
+        totalItems: z.number(),
+        currentPage: z.number(),
+        lastPage: z.number(),
     }),
     z.object({
         success: z.literal(false),
@@ -68,17 +75,22 @@ export const getCbsPriceData = tool({
 
             return {
                 success: true,
-                index: {
-                    code: result.index?.code,
-                    name: result.index?.name,
-                    base: result.index?.base,
-                },
-                data: (result.data ?? []).map((point) => ({
-                    date: point.date,
-                    value: point.value,
-                    change: point.change,
+                indices: (result.month ?? []).map((entry) => ({
+                    code: entry.code,
+                    name: entry.name,
+                    data: entry.date.map((d) => ({
+                        year: d.year,
+                        month: d.month,
+                        monthDesc: d.monthDesc,
+                        value: d.currBase.value,
+                        baseDesc: d.currBase.baseDesc,
+                        percentChange: d.percent,
+                        percentYearChange: d.percentYear,
+                    })),
                 })),
-                totalItems: result.totalItems,
+                totalItems: result.paging.total_items,
+                currentPage: result.paging.current_page,
+                lastPage: result.paging.last_page,
             };
         } catch (error) {
             return {
