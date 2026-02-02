@@ -7,27 +7,37 @@
 
 import { Agent } from '@mastra/core/agent';
 import { Memory } from '@mastra/memory';
-import { LibSQLStore } from '@mastra/libsql';
+import { ConvexVector } from '@mastra/convex';
 import { getMastraModelId } from '../model';
 import { ROUTING_CONFIG } from './config';
 import { ClientTools } from '@/lib/tools/client';
 import { DataGovTools } from '@/lib/tools/datagov';
 import { CbsTools } from '@/lib/tools/cbs';
 
+const convexUrl = process.env.NEXT_PUBLIC_CONVEX_URL;
+const convexAdminKey = process.env.CONVEX_ADMIN_KEY;
+
+const vector =
+    convexUrl && convexAdminKey
+        ? new ConvexVector({
+              id: 'convex-vector',
+              deploymentUrl: convexUrl,
+              adminAuthToken: convexAdminKey,
+          })
+        : undefined;
+
 export const routingAgent = new Agent({
     id: 'routingAgent',
     name: ROUTING_CONFIG.name,
     instructions: ROUTING_CONFIG.instructions,
-    // agents: {
-    //     cbsAgent,
-    //     datagovAgent,
-    // },
     model: getMastraModelId(),
     memory: new Memory({
-        storage: new LibSQLStore({
-            id: 'mastra-storage',
-            url: ':memory:',
-        }),
+        ...(vector && { vector }),
+        options: {
+            lastMessages: 20,
+            semanticRecall: vector ? { topK: 3, messageRange: 2 } : false,
+            generateTitle: true,
+        },
     }),
     tools: {
         ...ClientTools,

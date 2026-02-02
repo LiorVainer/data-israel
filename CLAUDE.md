@@ -25,14 +25,16 @@ Keep this managed block so 'openspec update' can refresh the instructions.
 
 ## Project Overview
 
-This is an **Israeli Open Data AI Agent** built with Next.js 16 and designed to chat with users about Israeli open data from data.gov.il. The project uses:
+This is an **Israeli Open Data AI Agent** built with Next.js 16 and designed to chat with users about Israeli open data from data.gov.il and the Central Bureau of Statistics (CBS). The project uses:
 - **Next.js 16.1.1** with App Router architecture
 - **React 19.2.3** with Server Components
 - **TypeScript 5** with strict type checking
 - **Tailwind CSS 4** for styling
-- **AI SDK v6** for agent tools (planned - see spec/project.spec.md)
+- **Mastra 1.1** agent framework with AI SDK v6
+- **Convex** for persistent memory storage and RAG search
+- **OpenRouter** as model provider (default: `google/gemini-3-flash-preview`)
 
-The agent architecture is **tool-first**: rather than hallucinating dataset information, it queries the data.gov.il CKAN API through explicit, Zod-validated tools.
+The agent architecture is **tool-first**: rather than hallucinating dataset information, it queries external APIs through explicit, Zod-validated tools. All UI text is in **Hebrew (RTL)**.
 
 ## Development Commands
 
@@ -75,18 +77,102 @@ If any command fails, fix the issues before proceeding.
 
 ### Project Structure
 ```
-app/                    # Next.js App Router
-├── layout.tsx          # Root layout with Geist fonts
-├── page.tsx            # Home page
-└── globals.css         # Tailwind global styles
+app/                          # Next.js App Router
+├── layout.tsx                # Root layout (Hebrew RTL, Geist fonts)
+├── page.tsx                  # Landing page → generates UUID → redirects to /chat/:id
+├── chat/[id]/page.tsx        # Thread-based chat UI (useParams + DefaultChatTransport)
+├── api/chat/route.ts         # Streaming API (handleChatStream → routingAgent)
+└── globals.css               # Tailwind global styles
+
+agents/                       # Mastra agent network
+├── mastra.ts                 # Mastra instance (ConvexStore instance-level storage)
+├── agent.config.ts           # Model config, display limits
+├── types.ts                  # Agent network type definitions
+├── processors/               # Output processing pipeline
+│   ├── tool-result-summarizer.processor.ts
+│   ├── text-output.processor.ts
+│   └── response-length-validator.processor.ts
+└── network/
+    ├── model.ts              # Model ID factory (getMastraModelId, getAiSdkModelId)
+    ├── routing/              # Routing agent (orchestrator, 26 tools)
+    ├── datagov/              # DataGov agent (15 tools, data.gov.il CKAN API)
+    ├── cbs/                  # CBS agent (8 tools, Central Bureau of Statistics)
+    └── visualization/        # Visualization agent (3 tools, deprecated)
+
+lib/
+├── tools/
+│   ├── datagov/              # 15 data.gov.il tools (search, details, schema, etc.)
+│   ├── cbs/                  # 8 CBS tools (catalog, series, prices, localities)
+│   └── client/               # 3 client-side chart tools (bar, line, pie)
+├── api/
+│   ├── data-gov/             # CKAN API client (data.gov.il)
+│   └── cbs/                  # CBS API client
+└── convex/                   # Convex client utilities
+
+convex/                       # Convex backend
+├── convex.config.ts          # RAG component registration
+├── schema.ts                 # Dataset/resource tables + Mastra memory tables
+├── mastra/storage.ts         # Mastra storage handler
+├── datasets.ts               # Dataset CRUD operations
+├── resources.ts              # Resource CRUD operations
+├── search.ts                 # RAG semantic search actions
+└── rag.ts                    # RAG config (OpenRouter embeddings)
 
 spec/
-└── project.spec.md     # Authoritative specification for the AI agent
+└── project.spec.md           # Authoritative specification
 
-openspec/               # OpenSpec workflow (see AGENTS.md)
-├── AGENTS.md           # Instructions for proposal-driven development
-└── specs/              # Capability specifications (to be created)
+openspec/                     # OpenSpec workflow
+├── AGENTS.md                 # Proposal-driven development instructions
+├── project.md                # Project conventions
+├── specs/                    # Current capability specs
+└── changes/                  # Active change proposals
 ```
+
+### Agent Network Flow
+
+```
+User (/) → submit message → crypto.randomUUID() → /chat/:id?q=message
+                                                        ↓
+                                              useChat + DefaultChatTransport
+                                              body: { messages, memory: { thread: id, resource }, model }
+                                                        ↓
+                                              POST /api/chat
+                                              handleChatStream(mastra, 'routingAgent', params)
+                                                        ↓
+                                              ┌─── Routing Agent (סוכן ניתוב) ───┐
+                                              │  26 tools (all combined)          │
+                                              │  Memory: Convex Vector + Storage  │
+                                              │  Decides intent → calls tools     │
+                                              └───────────────────────────────────┘
+                                                        ↓
+                                  ┌─────────────────────┼─────────────────────┐
+                                  ↓                     ↓                     ↓
+                          DataGov Tools (15)      CBS Tools (8)       Client Tools (3)
+                          data.gov.il CKAN        CBS Statistics      Charts (bar/line/pie)
+                          ↓                       ↓
+                          ToolResultSummarizer     ToolResultSummarizer
+                          (Hebrew summary)         (Hebrew summary)
+                                  ↓                     ↓
+                                  └──────── Final Hebrew response ────────→ Stream to UI
+```
+
+### Agents
+
+| Agent | Hebrew Name | Tools | Role |
+|-------|-------------|-------|------|
+| `routingAgent` | סוכן ניתוב | 26 (all) | Orchestrator — routes queries, manages memory |
+| `datagovAgent` | סוכן data.gov.il | 15 | Israeli open data search (CKAN API) |
+| `cbsAgent` | סוכן הלמ"ס | 8 | Central Bureau of Statistics (series, prices, localities) |
+| `visualizationAgent` | סוכן תרשימים | 3 | Chart creation (deprecated) |
+
+### Memory & Storage
+
+- **Instance-level storage**: `ConvexStore` on the Mastra instance (all agents inherit)
+- **Vector search**: `ConvexVector` on routing agent for semantic recall (topK: 3)
+- **Thread management**: UUID-based, passed from frontend via `memory: { thread, resource }`
+- **Convex deployment**: `decisive-alpaca-889.convex.cloud`
+- **Env vars**: `NEXT_PUBLIC_CONVEX_URL`, `CONVEX_ADMIN_KEY`
+- **Graceful fallback**: If Convex env vars are missing, storage/vector are disabled (in-memory only)
 
 ### Path Aliases
 The project uses `@/*` to reference files from the root:
@@ -113,19 +199,21 @@ The project uses Geist font family (Geist Sans + Geist Mono) loaded via `next/fo
 - Use `Readonly<>` for immutable props
 - Leverage TypeScript's utility types (e.g., `Pick`, `Omit`, `Partial`)
 
-## AI Agent Implementation (Planned)
+## AI Agent Implementation
 
-Per `spec/project.spec.md`, the agent will:
-1. Use **AI SDK v6** with Zod-validated tools
-2. Query **data.gov.il CKAN API** (not MCP runtime)
-3. Implement tools for:
-   - Dataset search (`package_search`)
-   - Dataset details (`package_show`)
-   - Group listing (`group_list`)
-   - Tag listing (`tag_list`)
-   - Resource fetching (optional, with safeguards)
+The agent uses **Mastra 1.1** with AI SDK v6 tools. Key implementation details:
 
-The MCP reference files (`mcp-ref/mcp.ts`, `mcp-ref/mcp.py`) are **conceptual references only** and not executed.
+- **Framework**: Mastra agent network with `handleChatStream` for streaming
+- **Model**: OpenRouter provider, default `google/gemini-3-flash-preview`
+- **Tools**: 26 Zod-validated tools across 3 categories (DataGov, CBS, Client)
+- **Processors**: `ToolResultSummarizerProcessor` converts raw API results to Hebrew summaries
+- **Memory**: Persistent threads via `@mastra/convex` (ConvexStore + ConvexVector)
+- **Chat routing**: UUID-based threads at `/chat/:id`, initial message via `?q=` param
+
+### Data Sources
+- **data.gov.il**: CKAN API at `https://data.gov.il/api/3` (datasets, organizations, groups, tags, resources, DataStore)
+- **CBS (הלמ"ס)**: Statistical series, price indices, CPI calculations, locality dictionary
+- **Convex RAG**: Semantic search over synced datasets (OpenRouter embeddings)
 
 ## Code Review Checklist
 

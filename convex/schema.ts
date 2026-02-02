@@ -6,6 +6,16 @@
 
 import { defineSchema, defineTable } from 'convex/server';
 import { v } from 'convex/values';
+import {
+    mastraThreadsTable,
+    mastraMessagesTable,
+    mastraResourcesTable,
+    mastraWorkflowSnapshotsTable,
+    mastraScoresTable,
+    mastraVectorIndexesTable,
+    mastraVectorsTable,
+    mastraDocumentsTable,
+} from '@mastra/convex/schema';
 
 export default defineSchema({
     /**
@@ -47,4 +57,16 @@ export default defineSchema({
         .index('by_dataset', ['datasetId'])
         .index('by_ckan_id', ['ckanId'])
         .index('by_format', ['format']),
+
+    /**
+     * Mastra tables - used by @mastra/convex for agent memory, threads, and storage
+     */
+    mastra_threads: mastraThreadsTable,
+    mastra_messages: mastraMessagesTable,
+    mastra_resources: mastraResourcesTable,
+    mastra_workflow_snapshots: mastraWorkflowSnapshotsTable,
+    mastra_scorers: mastraScoresTable,
+    mastra_vector_indexes: mastraVectorIndexesTable,
+    mastra_vectors: mastraVectorsTable,
+    mastra_documents: mastraDocumentsTable,
 });

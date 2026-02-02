@@ -5,7 +5,7 @@ const nextConfig: NextConfig = {
         '@mastra/core',
         '@mastra/memory',
         '@mastra/ai-sdk',
-        '@mastra/libsql',
+        '@mastra/convex',
     ],
 };
 

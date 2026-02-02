@@ -8,7 +8,6 @@ import { Agent } from '@mastra/core/agent';
 import { getAiSdkModelId, getMastraModelId } from '../model';
 import { DATAGOV_AGENT_CONFIG } from './config';
 import { Memory } from '@mastra/memory';
-import { LibSQLStore } from '@mastra/libsql';
 import { DataGovTools } from '@/lib/tools/datagov';
 import { ToolResultSummarizerProcessor } from '../../processors/tool-result-summarizer.processor';
 import { extractToolDescriptions } from '../../../lib/tools/tools.utils';
@@ -29,9 +28,9 @@ export const datagovAgent = new Agent({
         ),
     ],
     memory: new Memory({
-        storage: new LibSQLStore({
-            id: 'mastra-storage',
-            url: ':memory:',
-        }),
+        options: {
+            lastMessages: 20,
+            generateTitle: true,
+        },
     }),
 });
