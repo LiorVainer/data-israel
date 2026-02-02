@@ -7,8 +7,8 @@
 
 import { Agent } from '@mastra/core/agent';
 import { Memory } from '@mastra/memory';
-import { ModelRouterEmbeddingModel } from '@mastra/core/llm';
 import { ConvexVector } from '@mastra/convex';
+import { openrouter } from '@openrouter/ai-sdk-provider';
 import { getMastraModelId } from '../model';
 import { ROUTING_CONFIG } from './config';
 import { ClientTools } from '@/lib/tools/client';
@@ -34,7 +34,7 @@ export const routingAgent = new Agent({
     model: getMastraModelId(),
     memory: new Memory({
         ...(vector && { vector }),
-        embedder: new ModelRouterEmbeddingModel('openai/text-embedding-3-small'),
+        embedder: openrouter.textEmbeddingModel('openai/text-embedding-3-small'),
         options: {
             lastMessages: 20,
             semanticRecall: vector ? { topK: 3, messageRange: 2 } : false,
