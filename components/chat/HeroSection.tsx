@@ -4,6 +4,7 @@ import Image from 'next/image';
 import { motion } from 'framer-motion';
 import { HeroBadge, HeroSubtitle, HeroTitle } from '@/components/ui/shape-landing-hero';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { DATA_SOURCE_CONFIG } from './tool-data-sources';
 
 const fadeUpVariants = {
     hidden: { opacity: 0, y: 30 },
@@ -44,12 +45,16 @@ export function HeroSection({ onSuggestionClick }: HeroSectionProps) {
                     <HeroSubtitle>ונתוני הלשכה המרכזית לסטסטיקה</HeroSubtitle>
                 </div>
                 <div className='flex items-center gap-2'>
-                    <HeroBadge className='bg-badge-datagov border-badge-datagov text-badge-datagov-foreground'>
-                        data.gov.il
-                    </HeroBadge>
-                    <HeroBadge className='bg-badge-cbs border-badge-cbs text-badge-cbs-foreground'>
-                        cbs.gov.il
-                    </HeroBadge>
+                    <a href={DATA_SOURCE_CONFIG.datagov.url} target='_blank' rel='noopener noreferrer'>
+                        <HeroBadge className='bg-badge-datagov border-badge-datagov text-badge-datagov-foreground hover:opacity-80 transition-opacity cursor-pointer'>
+                            {DATA_SOURCE_CONFIG.datagov.label}
+                        </HeroBadge>
+                    </a>
+                    <a href={DATA_SOURCE_CONFIG.cbs.url} target='_blank' rel='noopener noreferrer'>
+                        <HeroBadge className='bg-badge-cbs border-badge-cbs text-badge-cbs-foreground hover:opacity-80 transition-opacity cursor-pointer'>
+                            {DATA_SOURCE_CONFIG.cbs.label}
+                        </HeroBadge>
+                    </a>
                 </div>
             </div>
         </div>
