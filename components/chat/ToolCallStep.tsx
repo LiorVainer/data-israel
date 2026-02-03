@@ -7,6 +7,7 @@ import {
 } from '@/components/ai-elements/chain-of-thought';
 import { cn } from '@/lib/utils';
 import { DataIsraelLoader } from './DataIsraelLoader';
+import { getToolDataSourceConfig } from './tool-data-sources';
 import type { LucideIcon } from 'lucide-react';
 import type { StepStatus } from './types';
 
@@ -94,30 +95,42 @@ export function ToolCallStep({ step }: ToolCallStepProps) {
     const status = getStepStatus(step);
     const hasAllFailed = step.failedCount > 0 && step.completedCount === 0;
 
+    // Get data source config for badge display
+    const dataSourceConfig = getToolDataSourceConfig(step.toolKey);
+
     // Only show resources that have a searchedResourceName (Hebrew display name)
-    console.log({ resources: step.resources });
     const namedResources = step.resources.filter((r) => r.name);
 
     return (
         <ChainOfThoughtStep
             icon={step.icon}
-            label={<span className={cn(hasAllFailed && 'text-red-500')}>{step.name}</span>}
-            description={getStatusDescription(step)}
+            label={
+                <span className={cn('inline-flex items-center gap-2', hasAllFailed && 'text-red-500')}>
+                    {step.name}
+                    {dataSourceConfig && (
+                        <a
+                            href={dataSourceConfig.url}
+                            target='_blank'
+                            rel='noopener noreferrer'
+                            className={cn(
+                                'rounded-sm px-1.5 py-0.5 text-[10px] font-medium transition-colors',
+                                dataSourceConfig.className,
+                            )}
+                            onClick={(e) => e.stopPropagation()}
+                        >
+                            {dataSourceConfig.label}
+                        </a>
+                    )}
+                </span>
+            }
+            // description={getStatusDescription(step)}
             status={status}
         >
             {namedResources.length > 0 && (
                 <ChainOfThoughtSearchResults>
                     {namedResources.map((resource, i) => (
-                        <ChainOfThoughtSearchResult key={i} asChild>
-                            <a
-                                href={resource.url}
-                                target='_blank'
-                                rel='noopener noreferrer'
-                                title={resource.url}
-                                className='max-w-[200px] truncate'
-                            >
-                                {resource.name}
-                            </a>
+                        <ChainOfThoughtSearchResult key={i}>
+                            <span className='max-w-[200px] truncate'>{resource.name}</span>
                         </ChainOfThoughtSearchResult>
                     ))}
                 </ChainOfThoughtSearchResults>

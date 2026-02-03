@@ -1,16 +1,12 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
-import {
-    ChainOfThought,
-    ChainOfThoughtContent,
-    ChainOfThoughtHeader,
-} from '@/components/ai-elements/chain-of-thought';
+import { ChainOfThought, ChainOfThoughtContent, ChainOfThoughtHeader } from '@/components/ai-elements/chain-of-thought';
 import { Shimmer } from '@/components/ai-elements/shimmer';
 import type { ToolCallPart } from './types';
 import { getToolStatus } from './types';
 import { getToolInfo } from './MessageToolCalls';
-import { type GroupedToolCall, type ToolResource, ToolCallStep } from './ToolCallStep';
+import { type GroupedToolCall, ToolCallStep, type ToolResource } from './ToolCallStep';
 
 /**
  * Type guard to check if an object has apiUrl field
@@ -131,7 +127,7 @@ export interface ToolCallPartsProps {
  */
 export function ToolCallParts({ messageId, toolParts, isProcessing }: ToolCallPartsProps) {
     const [userToggled, setUserToggled] = useState(false);
-    const [userWantsOpen, setUserWantsOpen] = useState(true);
+    const [userWantsOpen, setUserWantsOpen] = useState(false);
     const wasProcessing = useRef(isProcessing);
 
     const processingLabels = useMemo(() => ['מחפש מידע...', 'מעבד נתונים...', 'מנתח תוצאות...'], []);

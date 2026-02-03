@@ -37,6 +37,11 @@
   --color-popover: var(--popover);
   --color-card-foreground: var(--card-foreground);
   --color-card: var(--card);
+  /* Data source badge colors */
+  --color-badge-datagov: var(--badge-datagov);
+  --color-badge-datagov-foreground: var(--badge-datagov-foreground);
+  --color-badge-cbs: var(--badge-cbs);
+  --color-badge-cbs-foreground: var(--badge-cbs-foreground);
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
@@ -56,7 +61,7 @@
   --popover-foreground: oklch(0.145 0.02 250);
   --primary: oklch(0.35 0.15 250);
   --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.92 0.02 250);
+  --secondary: oklch(0.884 0.061 244.764);
   --secondary-foreground: oklch(0.25 0.12 250);
   --muted: oklch(0.94 0.01 250);
   --muted-foreground: oklch(0.5 0.05 250);
@@ -66,11 +71,17 @@
   --border: oklch(0.88 0.01 250);
   --input: oklch(0.88 0.01 250);
   --ring: oklch(0.55 0.18 250);
-  --chart-1: oklch(0.55 0.18 250);
-  --chart-2: oklch(0.6 0.14 220);
-  --chart-3: oklch(0.65 0.16 270);
-  --chart-4: oklch(0.7 0.12 230);
-  --chart-5: oklch(0.6 0.15 260);
+  /* Chart colors - vibrant yellow & orange palette */
+  --chart-1: oklch(0.8 0.18 95);
+  --chart-2: oklch(0.75 0.17 80);
+  --chart-3: oklch(0.7 0.18 55);
+  --chart-4: oklch(0.78 0.15 70);
+  --chart-5: oklch(0.65 0.18 45);
+  /* Data source badge colors */
+  --badge-datagov: oklch(0.895 0.1 87.899);
+  --badge-datagov-foreground: oklch(0.35 0.1 85);
+  --badge-cbs: oklch(0.896 0.059 62.816);
+  --badge-cbs-foreground: oklch(0.35 0.1 55);
   --sidebar: oklch(0.985 0 0);
   --sidebar-foreground: oklch(0.145 0.02 250);
   --sidebar-primary: oklch(0.35 0.15 250);
@@ -100,11 +111,17 @@
   --border: oklch(0.95 0.01 250 / 10%);
   --input: oklch(0.95 0.01 250 / 15%);
   --ring: oklch(0.55 0.15 250);
-  --chart-1: oklch(0.55 0.18 250);
-  --chart-2: oklch(0.6 0.14 220);
-  --chart-3: oklch(0.65 0.16 270);
-  --chart-4: oklch(0.7 0.12 230);
-  --chart-5: oklch(0.6 0.15 260);
+  /* Chart colors - vibrant yellow & orange palette (dark mode) */
+  --chart-1: oklch(0.75 0.16 95);
+  --chart-2: oklch(0.7 0.15 80);
+  --chart-3: oklch(0.65 0.16 55);
+  --chart-4: oklch(0.72 0.14 70);
+  --chart-5: oklch(0.6 0.16 45);
+  /* Data source badge colors (dark mode) */
+  --badge-datagov: oklch(0.45 0.12 85);
+  --badge-datagov-foreground: oklch(0.9 0.08 85);
+  --badge-cbs: oklch(0.45 0.12 55);
+  --badge-cbs-foreground: oklch(0.9 0.08 55);
   --sidebar: oklch(0.18 0.03 250);
   --sidebar-foreground: oklch(0.95 0.01 250);
   --sidebar-primary: oklch(0.55 0.18 250);
