@@ -1,7 +1,6 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { Circle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const fadeUpVariants = {
@@ -164,7 +163,6 @@ function HeroBadge({
                 className,
             )}
         >
-            <Circle className='h-2 w-2 fill-current' />
             <span className='text-sm tracking-wide'>{children}</span>
         </motion.div>
     );

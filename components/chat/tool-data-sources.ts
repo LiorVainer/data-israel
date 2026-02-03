@@ -13,27 +13,29 @@ export type DataSource = 'cbs' | 'datagov';
 
 /** Data source configuration */
 export interface DataSourceConfig {
-    label: string;
+    urlLabel: string;
     url: string;
+    nameLabel: string;
     /** Tailwind classes for badge styling */
     className: string;
 }
 
 /** Configuration for each data source */
-export const DATA_SOURCE_CONFIG: Record<DataSource, DataSourceConfig> = {
+export const DATA_SOURCE_CONFIG = {
     cbs: {
-        label: 'cbs.gov.il',
+        urlLabel: 'cbs.gov.il',
+        nameLabel: 'למ"ס',
         url: 'https://www.cbs.gov.il',
-        className:
-            'bg-[var(--badge-cbs)] text-[var(--badge-cbs-foreground)] hover:bg-[var(--badge-cbs)]/80',
+        className: 'bg-[var(--badge-cbs)] text-[var(--badge-cbs-foreground)] hover:bg-[var(--badge-cbs)]/80',
     },
     datagov: {
-        label: 'data.gov.il',
+        urlLabel: 'data.gov.il',
+        nameLabel: 'מידע ממשלתי',
         url: 'https://data.gov.il',
         className:
             'bg-[var(--badge-datagov)] text-[var(--badge-datagov-foreground)] hover:bg-[var(--badge-datagov)]/80',
     },
-};
+} satisfies Record<DataSource, DataSourceConfig>;
 
 /** Set of CBS tool names */
 const CBS_TOOL_NAMES = new Set(Object.keys(CbsTools));

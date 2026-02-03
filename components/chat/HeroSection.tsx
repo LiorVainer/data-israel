@@ -41,18 +41,17 @@ export function HeroSection({ onSuggestionClick }: HeroSectionProps) {
                 <HeroTitle line1='חפש מידע ציבורי' line2='ממאגרי הממשלה' />
                 <div>
                     <HeroSubtitle>חפש מאגרי מידע ונתונים ציבוריים</HeroSubtitle>
-                    <HeroSubtitle>מהמאגר הרשמי של ממשלת ישראל</HeroSubtitle>
-                    <HeroSubtitle>ונתוני הלשכה המרכזית לסטסטיקה</HeroSubtitle>
+                    <HeroSubtitle>ממאגרי המידע הרשמיים של ממשלת ישראל</HeroSubtitle>
                 </div>
-                <div className='flex items-center gap-2'>
+                <div className='flex items-center gap-2 mt-3'>
                     <a href={DATA_SOURCE_CONFIG.datagov.url} target='_blank' rel='noopener noreferrer'>
-                        <HeroBadge className='bg-badge-datagov border-badge-datagov text-badge-datagov-foreground hover:opacity-80 transition-opacity cursor-pointer'>
-                            {DATA_SOURCE_CONFIG.datagov.label}
+                        <HeroBadge className='bg-badge-datagov/20 border-badge-datagov text-badge-datagov-foreground hover:opacity-80 transition-opacity cursor-pointer'>
+                            {DATA_SOURCE_CONFIG.datagov.urlLabel}
                         </HeroBadge>
                     </a>
                     <a href={DATA_SOURCE_CONFIG.cbs.url} target='_blank' rel='noopener noreferrer'>
-                        <HeroBadge className='bg-badge-cbs border-badge-cbs text-badge-cbs-foreground hover:opacity-80 transition-opacity cursor-pointer'>
-                            {DATA_SOURCE_CONFIG.cbs.label}
+                        <HeroBadge className='bg-badge-cbs/20 border-badge-cbs text-badge-cbs-foreground hover:opacity-80 transition-opacity cursor-pointer'>
+                            {DATA_SOURCE_CONFIG.cbs.urlLabel}
                         </HeroBadge>
                     </a>
                 </div>

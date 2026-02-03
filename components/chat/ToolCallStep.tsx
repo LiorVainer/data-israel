@@ -118,7 +118,7 @@ export function ToolCallStep({ step }: ToolCallStepProps) {
                             )}
                             onClick={(e) => e.stopPropagation()}
                         >
-                            {dataSourceConfig.label}
+                            {dataSourceConfig.urlLabel}
                         </a>
                     )}
                 </span>
