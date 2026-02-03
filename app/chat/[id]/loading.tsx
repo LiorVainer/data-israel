@@ -3,19 +3,25 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupTextarea } from '@/components/ui/input-group';
 import { CornerDownLeftIcon } from 'lucide-react';
 
-function MessageSkeleton({ isUser }: { isUser: boolean }) {
+function UserMessageSkeleton() {
     return (
-        <div className={`flex ${isUser ? 'justify-start' : 'justify-start'} mb-4`}>
-            <div className={`max-w-[80%] ${isUser ? 'mr-auto' : 'mr-auto'}`}>
-                {isUser ? (
-                    <Skeleton className='h-10 w-48 rounded-2xl' />
-                ) : (
-                    <div className='space-y-2'>
-                        <Skeleton className='h-4 w-64' />
-                        <Skeleton className='h-4 w-56' />
-                        <Skeleton className='h-4 w-40' />
-                    </div>
-                )}
+        <div className='flex w-full flex-col gap-2 ms-auto justify-end'>
+            <div className='flex w-fit max-w-full min-w-0 flex-col gap-2 ms-auto rounded-lg bg-secondary px-4 py-3'>
+                <Skeleton className='h-4 w-32 bg-muted-foreground/20' />
+            </div>
+        </div>
+    );
+}
+
+function AssistantMessageSkeleton() {
+    return (
+        <div className='flex w-full flex-col gap-2'>
+            <div className='flex w-fit max-w-full min-w-0 flex-col gap-2'>
+                <div className='space-y-2'>
+                    <Skeleton className='h-4 w-64' />
+                    <Skeleton className='h-4 w-56' />
+                    <Skeleton className='h-4 w-40' />
+                </div>
             </div>
         </div>
     );
@@ -56,8 +62,8 @@ export default function ChatLoading() {
                     {/* Message area skeleton */}
                     <div className='flex-1 w-full md:w-4xl pt-8 md:pt-10 mx-auto overflow-hidden'>
                         <div className='space-y-6 animate-pulse'>
-                            <MessageSkeleton isUser />
-                            <MessageSkeleton isUser={false} />
+                            <UserMessageSkeleton />
+                            <AssistantMessageSkeleton />
                         </div>
                     </div>
 
