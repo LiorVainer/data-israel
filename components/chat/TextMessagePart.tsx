@@ -20,7 +20,7 @@ export interface TextMessagePartProps {
 export function TextMessagePart({ text, role, isLastMessage, onRegenerate }: TextMessagePartProps) {
     return (
         <Message from={role}>
-            <MessageContent className={role === 'user' ? 'group-[.is-user]:bg-background border' : ''}>
+            <MessageContent>
                 <MessageResponse>{text}</MessageResponse>
             </MessageContent>
             {role === 'assistant' && isLastMessage && (
