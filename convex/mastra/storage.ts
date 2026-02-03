@@ -19,9 +19,8 @@ const TABLE_SCORERS = 'mastra_scorers';
 const TABLE_VECTOR_INDEXES = 'mastra_vector_indexes';
 const VECTOR_TABLE_PREFIX = 'mastra_vector_';
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Ctx = any;
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+
 type Request = any;
 
 function resolveTable(tableName: string) {
@@ -58,11 +57,7 @@ function resolveTable(tableName: string) {
     }
 }
 
-async function handleTypedOperation(
-    ctx: Ctx,
-    convexTable: string,
-    request: Request,
-) {
+async function handleTypedOperation(ctx: Ctx, convexTable: string, request: Request) {
     switch (request.op) {
         case 'insert': {
             const record = request.record;
@@ -108,22 +103,17 @@ async function handleTypedOperation(
             }
             const docs = await ctx.db.query(convexTable).take(10_000);
             const match = docs.find((doc: Record<string, unknown>) =>
-                Object.entries(keys).every(
-                    ([key, value]) => doc[key] === value,
-                ),
+                Object.entries(keys).every(([key, value]) => doc[key] === value),
             );
             return { ok: true, result: match || null };
         }
         case 'queryTable': {
-            const maxDocs = request.limit
-                ? Math.min(request.limit * 2, 10_000)
-                : 10_000;
+            const maxDocs = request.limit ? Math.min(request.limit * 2, 10_000) : 10_000;
             let docs = await ctx.db.query(convexTable).take(maxDocs);
             if (request.filters && request.filters.length > 0) {
                 docs = docs.filter((doc: Record<string, unknown>) =>
                     request.filters.every(
-                        (filter: { field: string; value: unknown }) =>
-                            doc[filter.field] === filter.value,
+                        (filter: { field: string; value: unknown }) => doc[filter.field] === filter.value,
                     ),
                 );
             }
@@ -137,9 +127,7 @@ async function handleTypedOperation(
             const BATCH_SIZE = 25;
             const docs = await ctx.db.query(convexTable).take(BATCH_SIZE + 1);
             const hasMore = docs.length > BATCH_SIZE;
-            const docsToDelete = hasMore
-                ? docs.slice(0, BATCH_SIZE)
-                : docs;
+            const docsToDelete = hasMore ? docs.slice(0, BATCH_SIZE) : docs;
             for (const doc of docsToDelete) {
                 await ctx.db.delete(doc._id);
             }
@@ -173,9 +161,7 @@ async function handleVectorOperation(ctx: Ctx, request: Request) {
             if (!id) throw new Error('Vector record is missing an id');
             const existing = await ctx.db
                 .query(convexTable)
-                .withIndex('by_index_id', (q: Ctx) =>
-                    q.eq('indexName', indexName).eq('id', id),
-                )
+                .withIndex('by_index_id', (q: Ctx) => q.eq('indexName', indexName).eq('id', id))
                 .unique();
             if (existing) {
                 await ctx.db.patch(existing._id, {
@@ -198,9 +184,7 @@ async function handleVectorOperation(ctx: Ctx, request: Request) {
                 if (!id) continue;
                 const existing = await ctx.db
                     .query(convexTable)
-                    .withIndex('by_index_id', (q: Ctx) =>
-                        q.eq('indexName', indexName).eq('id', id),
-                    )
+                    .withIndex('by_index_id', (q: Ctx) => q.eq('indexName', indexName).eq('id', id))
                     .unique();
                 if (existing) {
                     await ctx.db.patch(existing._id, {
@@ -223,29 +207,22 @@ async function handleVectorOperation(ctx: Ctx, request: Request) {
             if (keys.id) {
                 const doc = await ctx.db
                     .query(convexTable)
-                    .withIndex('by_index_id', (q: Ctx) =>
-                        q.eq('indexName', indexName).eq('id', keys.id),
-                    )
+                    .withIndex('by_index_id', (q: Ctx) => q.eq('indexName', indexName).eq('id', keys.id))
                     .unique();
                 return { ok: true, result: doc || null };
             }
             return { ok: true, result: null };
         }
         case 'queryTable': {
-            const maxDocs = request.limit
-                ? Math.min(request.limit * 2, 10_000)
-                : 10_000;
+            const maxDocs = request.limit ? Math.min(request.limit * 2, 10_000) : 10_000;
             let docs = await ctx.db
                 .query(convexTable)
-                .withIndex('by_index', (q: Ctx) =>
-                    q.eq('indexName', indexName),
-                )
+                .withIndex('by_index', (q: Ctx) => q.eq('indexName', indexName))
                 .take(maxDocs);
             if (request.filters && request.filters.length > 0) {
                 docs = docs.filter((doc: Record<string, unknown>) =>
                     request.filters.every(
-                        (filter: { field: string; value: unknown }) =>
-                            doc[filter.field] === filter.value,
+                        (filter: { field: string; value: unknown }) => doc[filter.field] === filter.value,
                     ),
                 );
             }
@@ -259,14 +236,10 @@ async function handleVectorOperation(ctx: Ctx, request: Request) {
             const BATCH_SIZE = 25;
             const docs = await ctx.db
                 .query(convexTable)
-                .withIndex('by_index', (q: Ctx) =>
-                    q.eq('indexName', indexName),
-                )
+                .withIndex('by_index', (q: Ctx) => q.eq('indexName', indexName))
                 .take(BATCH_SIZE + 1);
             const hasMore = docs.length > BATCH_SIZE;
-            const docsToDelete = hasMore
-                ? docs.slice(0, BATCH_SIZE)
-                : docs;
+            const docsToDelete = hasMore ? docs.slice(0, BATCH_SIZE) : docs;
             for (const doc of docsToDelete) {
                 await ctx.db.delete(doc._id);
             }
@@ -276,9 +249,7 @@ async function handleVectorOperation(ctx: Ctx, request: Request) {
             for (const id of request.ids) {
                 const doc = await ctx.db
                     .query(convexTable)
-                    .withIndex('by_index_id', (q: Ctx) =>
-                        q.eq('indexName', indexName).eq('id', id),
-                    )
+                    .withIndex('by_index_id', (q: Ctx) => q.eq('indexName', indexName).eq('id', id))
                     .unique();
                 if (doc) {
                     await ctx.db.delete(doc._id);
@@ -295,19 +266,16 @@ async function handleGenericOperation(ctx: Ctx, request: Request) {
     const tableName = request.tableName;
     const convexTable = 'mastra_documents';
 
+    console.log('Handling generic operation', request.op, 'on table', tableName);
+
     switch (request.op) {
         case 'insert': {
             const record = request.record;
-            if (!record.id)
-                throw new Error(
-                    `Record for table ${tableName} is missing an id`,
-                );
+            if (!record.id) throw new Error(`Record for table ${tableName} is missing an id`);
             const primaryKey = String(record.id);
             const existing = await ctx.db
                 .query(convexTable)
-                .withIndex('by_table_primary', (q: Ctx) =>
-                    q.eq('table', tableName).eq('primaryKey', primaryKey),
-                )
+                .withIndex('by_table_primary', (q: Ctx) => q.eq('table', tableName).eq('primaryKey', primaryKey))
                 .unique();
             if (existing) {
                 await ctx.db.patch(existing._id, { record });
@@ -326,9 +294,7 @@ async function handleGenericOperation(ctx: Ctx, request: Request) {
                 const primaryKey = String(record.id);
                 const existing = await ctx.db
                     .query(convexTable)
-                    .withIndex('by_table_primary', (q: Ctx) =>
-                        q.eq('table', tableName).eq('primaryKey', primaryKey),
-                    )
+                    .withIndex('by_table_primary', (q: Ctx) => q.eq('table', tableName).eq('primaryKey', primaryKey))
                     .unique();
                 if (existing) {
                     await ctx.db.patch(existing._id, { record });
@@ -348,9 +314,7 @@ async function handleGenericOperation(ctx: Ctx, request: Request) {
                 const existing = await ctx.db
                     .query(convexTable)
                     .withIndex('by_table_primary', (q: Ctx) =>
-                        q
-                            .eq('table', tableName)
-                            .eq('primaryKey', String(keys.id)),
+                        q.eq('table', tableName).eq('primaryKey', String(keys.id)),
                     )
                     .unique();
                 return { ok: true, result: existing ? existing.record : null };
@@ -360,32 +324,22 @@ async function handleGenericOperation(ctx: Ctx, request: Request) {
                 .withIndex('by_table', (q: Ctx) => q.eq('table', tableName))
                 .take(10_000);
             const match = docs.find((doc: Record<string, unknown>) =>
-                Object.entries(keys).every(
-                    ([key, value]) =>
-                        (doc.record as Record<string, unknown>)?.[key] ===
-                        value,
-                ),
+                Object.entries(keys).every(([key, value]) => (doc.record as Record<string, unknown>)?.[key] === value),
             );
             return { ok: true, result: match ? match.record : null };
         }
         case 'queryTable': {
-            const maxDocs = request.limit
-                ? Math.min(request.limit * 2, 10_000)
-                : 10_000;
+            const maxDocs = request.limit ? Math.min(request.limit * 2, 10_000) : 10_000;
             const docs = await ctx.db
                 .query(convexTable)
                 .withIndex('by_table', (q: Ctx) => q.eq('table', tableName))
                 .take(maxDocs);
-            let records = docs.map(
-                (doc: Record<string, unknown>) => doc.record,
-            );
+            let records = docs.map((doc: Record<string, unknown>) => doc.record);
             if (request.filters && request.filters.length > 0) {
-                records = records.filter(
-                    (record: Record<string, unknown> | undefined) =>
-                        request.filters.every(
-                            (filter: { field: string; value: unknown }) =>
-                                record?.[filter.field] === filter.value,
-                        ),
+                records = records.filter((record: Record<string, unknown> | undefined) =>
+                    request.filters.every(
+                        (filter: { field: string; value: unknown }) => record?.[filter.field] === filter.value,
+                    ),
                 );
             }
             if (request.limit) {
@@ -401,9 +355,7 @@ async function handleGenericOperation(ctx: Ctx, request: Request) {
                 .withIndex('by_table', (q: Ctx) => q.eq('table', tableName))
                 .take(BATCH_SIZE + 1);
             const hasMore = docs.length > BATCH_SIZE;
-            const docsToDelete = hasMore
-                ? docs.slice(0, BATCH_SIZE)
-                : docs;
+            const docsToDelete = hasMore ? docs.slice(0, BATCH_SIZE) : docs;
             for (const doc of docsToDelete) {
                 await ctx.db.delete(doc._id);
             }
@@ -413,11 +365,7 @@ async function handleGenericOperation(ctx: Ctx, request: Request) {
             for (const id of request.ids) {
                 const existing = await ctx.db
                     .query(convexTable)
-                    .withIndex('by_table_primary', (q: Ctx) =>
-                        q
-                            .eq('table', tableName)
-                            .eq('primaryKey', String(id)),
-                    )
+                    .withIndex('by_table_primary', (q: Ctx) => q.eq('table', tableName).eq('primaryKey', String(id)))
                     .unique();
                 if (existing) {
                     await ctx.db.delete(existing._id);
@@ -434,10 +382,7 @@ export const handle = mutationGeneric(async (ctx, request: Request) => {
     try {
         const { convexTable, isTyped } = resolveTable(request.tableName);
 
-        if (
-            request.tableName.startsWith(VECTOR_TABLE_PREFIX) &&
-            request.tableName !== TABLE_VECTOR_INDEXES
-        ) {
+        if (request.tableName.startsWith(VECTOR_TABLE_PREFIX) && request.tableName !== TABLE_VECTOR_INDEXES) {
             return handleVectorOperation(ctx, request);
         }
 

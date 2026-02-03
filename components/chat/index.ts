@@ -18,8 +18,8 @@ export type { ReasoningPartProps } from './ReasoningPart';
 export { SourcesPart } from './SourcesPart';
 export type { SourcesPartProps } from './SourcesPart';
 
-export { LandingPage } from './LandingPage';
-export type { LandingPageProps } from './LandingPage';
+export { HeroSection } from './HeroSection';
+export type { HeroSectionProps } from './HeroSection';
 
 export { MessageItem } from './MessageItem';
 export type { MessageItemProps } from './MessageItem';

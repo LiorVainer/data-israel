@@ -234,5 +234,9 @@ This project uses OpenSpec for specification-driven development. When working on
 2. **Create proposals**: Use OpenSpec workflow for new capabilities
 3. **Reference the spec**: `spec/project.spec.md` is the authoritative source for agent design
 4. **Validate changes**: Run `openspec validate --strict` before implementation
+5. When Implementing, always give each major task (e.g 1.0 - 2.0) to a separate subagent.
+6. When implementing, always follow the tasks in the relevant `tasks.md` file.
+7. When implementing, always mark tasks as done in the relevant `tasks.md` file.
+8. When implementing, always use the advanced typescript-pro subagent.
 
 See `openspec/AGENTS.md` for detailed instructions on creating proposals and managing specifications.

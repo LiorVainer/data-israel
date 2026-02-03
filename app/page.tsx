@@ -2,7 +2,7 @@
 
 import { motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
-import { LandingPage } from '@/components/chat/LandingPage';
+import { HeroSection } from '@/components/chat/HeroSection';
 import { GeometricBackground } from '@/components/ui/shape-landing-hero';
 import { Suggestions } from '@/components/chat/Suggestions';
 import { InputSection } from '@/components/chat/InputSection';
@@ -48,7 +48,7 @@ export default function Home() {
                     className='flex flex-col gap-4 md:gap-6 h-full w-full items-center'
                 >
                     <div className='relative z-20 flex-1 flex flex-col min-h-0 overflow-hidden'>
-                        <LandingPage onSuggestionClick={handleSend} />
+                        <HeroSection onSuggestionClick={handleSend} />
                     </div>
 
                     <div className='relative z-20 w-full md:w-4xl'>

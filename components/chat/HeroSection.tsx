@@ -18,11 +18,11 @@ const fadeUpVariants = {
     },
 };
 
-export interface LandingPageProps {
+export interface HeroSectionProps {
     onSuggestionClick: (prompt: string) => void;
 }
 
-export function LandingPage({ onSuggestionClick }: LandingPageProps) {
+export function HeroSection({ onSuggestionClick }: HeroSectionProps) {
     const isMobile = useIsMobile();
 
     return (

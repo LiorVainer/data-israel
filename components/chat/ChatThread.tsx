@@ -81,7 +81,7 @@ export function ChatThread({ id, initialMessages }: ChatThreadProps) {
 
     return (
         <div className='relative h-dvh w-screen'>
-            <GeometricBackground />
+            <GeometricBackground noShapes />
 
             <div className='mx-auto px-4 md:px-0 pb-4 md:pb-6 relative h-full w'>
                 <div className='flex flex-col gap-4 md:gap-6 h-full w-full items-center'>
@@ -102,11 +102,7 @@ export function ChatThread({ id, initialMessages }: ChatThreadProps) {
                     </Conversation>
 
                     <div className='relative z-20 w-full md:w-4xl'>
-                        <InputSection
-                            onSubmit={(text) => void sendMessage({ text })}
-                            status={status}
-                            onStop={stop}
-                        />
+                        <InputSection onSubmit={(text) => void sendMessage({ text })} status={status} onStop={stop} />
                     </div>
                 </div>
             </div>
