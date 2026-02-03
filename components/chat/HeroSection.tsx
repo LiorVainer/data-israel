@@ -41,8 +41,16 @@ export function HeroSection({ onSuggestionClick }: HeroSectionProps) {
                 <div>
                     <HeroSubtitle>חפש מאגרי מידע ונתונים ציבוריים</HeroSubtitle>
                     <HeroSubtitle>מהמאגר הרשמי של ממשלת ישראל</HeroSubtitle>
+                    <HeroSubtitle>ונתוני הלשכה המרכזית לסטסטיקה</HeroSubtitle>
                 </div>
-                <HeroBadge>data.gov.il</HeroBadge>
+                <div className='flex items-center gap-2'>
+                    <HeroBadge className='bg-badge-datagov border-badge-datagov text-badge-datagov-foreground'>
+                        data.gov.il
+                    </HeroBadge>
+                    <HeroBadge className='bg-badge-cbs border-badge-cbs text-badge-cbs-foreground'>
+                        cbs.gov.il
+                    </HeroBadge>
+                </div>
             </div>
         </div>
     );

@@ -144,17 +144,28 @@ function GeometricBackground({ children, noShapes }: { children?: React.ReactNod
     );
 }
 
-function HeroBadge({ children, delay = 0 }: { children: React.ReactNode; delay?: number }) {
+function HeroBadge({
+    children,
+    delay = 0,
+    className,
+}: {
+    children: React.ReactNode;
+    delay?: number;
+    className?: string;
+}) {
     return (
         <motion.div
             custom={delay}
             variants={fadeUpVariants}
             initial='hidden'
             animate='visible'
-            className='inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/5 border border-primary/10 mb-6'
+            className={cn(
+                'inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/5 border border-primary/10',
+                className,
+            )}
         >
-            <Circle className='h-2 w-2 fill-accent' />
-            <span className='text-sm text-muted-foreground tracking-wide'>{children}</span>
+            <Circle className='h-2 w-2 fill-current' />
+            <span className='text-sm tracking-wide'>{children}</span>
         </motion.div>
     );
 }
