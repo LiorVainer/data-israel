@@ -9,24 +9,38 @@ import {
 } from '@/components/ai-elements/prompt-input';
 
 interface InputSectionProps {
-    onSubmit: (text: string) => void;
+    onSubmit?: (text: string) => void;
     status?: ChatStatus;
     onStop?: () => void;
     placeholder?: string;
+    disabled?: boolean;
 }
 
-export function InputSection({ onSubmit, status, onStop, placeholder = 'שאל על מאגרי מידע' }: InputSectionProps) {
+export function InputSection({
+    onSubmit,
+    status,
+    onStop,
+    placeholder = 'שאל על מאגרי מידע',
+    disabled = false,
+}: InputSectionProps) {
     const handleSubmit = (message: { text: string }) => {
+        if (disabled || !onSubmit) return;
         if (!message.text.trim()) return;
         onSubmit(message.text);
     };
 
     return (
-        <PromptInput onSubmit={handleSubmit}>
-            <PromptInputTextarea placeholder={placeholder} />
-            <PromptInputFooter className='justify-end'>
-                <PromptInputSubmit status={status} onClick={status === 'streaming' ? onStop : undefined} />
-            </PromptInputFooter>
-        </PromptInput>
+        <div className={disabled ? 'opacity-50 pointer-events-none' : undefined}>
+            <PromptInput onSubmit={handleSubmit}>
+                <PromptInputTextarea placeholder={placeholder} disabled={disabled} />
+                <PromptInputFooter className='justify-end'>
+                    <PromptInputSubmit
+                        status={status}
+                        onClick={status === 'streaming' ? onStop : undefined}
+                        disabled={disabled}
+                    />
+                </PromptInputFooter>
+            </PromptInput>
+        </div>
     );
 }
