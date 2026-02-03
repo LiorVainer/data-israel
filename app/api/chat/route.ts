@@ -16,7 +16,16 @@ import { toAISdkV5Messages } from '@mastra/ai-sdk/ui';
  * Handles chat messages and streams agent responses via the routing agent.
  */
 export const maxDuration = 120;
+export const dynamic = 'force-dynamic';
 const MAX_STEPS = 10;
+
+// Log environment variable availability (not values) for debugging
+const envCheck = {
+    hasOpenRouterKey: !!process.env.OPENROUTER_API_KEY,
+    hasConvexUrl: !!process.env.NEXT_PUBLIC_CONVEX_URL,
+    hasConvexAdminKey: !!process.env.CONVEX_ADMIN_KEY,
+};
+console.log('[Chat API] Environment check:', envCheck);
 
 const hasLastPartAsTextPart: StopCondition<any> = ({ steps }) => {
     const stepsAmount = steps.length;
@@ -57,23 +66,43 @@ export async function GET(req: Request) {
 }
 
 export async function POST(req: Request) {
-    const params = await req.json();
+    try {
+        const params = await req.json();
 
-    console.log('[Chat API] Received request with params:', params);
+        console.log('[Chat API] Received request with params:', JSON.stringify(params, null, 2));
 
-    const stream = await handleChatStream({
-        mastra,
-        agentId: 'routingAgent',
-        params,
-        defaultOptions: {
-            toolCallConcurrency: 10,
-            onFinish: async ({ usage }) => {
-                // Limit total execution time to avoid long-running requests
-                console.log({ usage });
+        // Validate required environment variables
+        if (!process.env.OPENROUTER_API_KEY) {
+            console.error('[Chat API] Missing OPENROUTER_API_KEY');
+            return NextResponse.json(
+                { error: 'Server configuration error: Missing API key' },
+                { status: 500 }
+            );
+        }
+
+        const stream = await handleChatStream({
+            mastra,
+            agentId: 'routingAgent',
+            params,
+            defaultOptions: {
+                toolCallConcurrency: 10,
+                onFinish: async ({ usage }) => {
+                    console.log('[Chat API] Finished with usage:', usage);
+                },
+                onStepFinish: async ({ stepType, text, toolCalls }) => {
+                    console.log('[Chat API] Step finished:', { stepType, hasText: !!text, toolCallCount: toolCalls?.length });
+                },
+                stopWhen: hasLastPartAsTextPart,
             },
-            stopWhen: hasLastPartAsTextPart,
-        },
-    });
+        });
 
-    return createUIMessageStreamResponse({ stream });
+        console.log('[Chat API] Stream created successfully');
+        return createUIMessageStreamResponse({ stream });
+    } catch (error) {
+        console.error('[Chat API] Error:', error);
+        return NextResponse.json(
+            { error: error instanceof Error ? error.message : 'Unknown error occurred' },
+            { status: 500 }
+        );
+    }
 }
