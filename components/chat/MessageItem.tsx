@@ -9,10 +9,10 @@ import { getToolStatus, isAgentsNetworkDataPart, isToolPart, SourceUrlUIPart, To
 import type { DisplayChartInput } from '@/lib/tools';
 import { ClientTools } from '@/lib/tools/client';
 import { UIMessage } from 'ai';
+import { AgentsNetworkDataParts } from '@/components/chat/AgentsNetworkDataParts';
 
 /** Tool-prefixed type names for client-side tools (e.g. 'tool-displayBarChart') */
 const CLIENT_TOOL_TYPES = new Set(Object.keys(ClientTools).map((name) => `tool-${name}`));
-import { AgentsNetworkDataParts } from '@/components/chat/AgentsNetworkDataParts';
 
 export interface MessageItemProps {
     message: UIMessage;
@@ -42,6 +42,8 @@ export function MessageItem({ message, isLastMessage, isStreaming, onRegenerate 
 
     // Processing is true only when streaming AND the last part is a server tool
     const isToolsStillRunning = isLastMessage && isStreaming && isLastPartServerTool;
+
+    console.log({ message });
 
     return (
         <div className='animate-in fade-in slide-in-from-bottom-2 flex flex-col gap-6 duration-300'>

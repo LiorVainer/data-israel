@@ -130,7 +130,7 @@ export function ToolCallStep({ step }: ToolCallStepProps) {
                 <ChainOfThoughtSearchResults>
                     {namedResources.map((resource, i) => (
                         <ChainOfThoughtSearchResult key={i}>
-                            <span className='max-w-[200px] truncate'>{resource.name}</span>
+                            <span className='max-w-[200px] truncate text-[10px]'>{resource.name}</span>
                         </ChainOfThoughtSearchResult>
                     ))}
                 </ChainOfThoughtSearchResults>

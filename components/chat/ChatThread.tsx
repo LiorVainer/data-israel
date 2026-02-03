@@ -39,6 +39,8 @@ export function ChatThread({ id, initialMessages }: ChatThreadProps) {
         }),
     });
 
+    console.log({ status });
+
     // Send initial message from session storage
     useEffect(() => {
         if (initialMessageSentRef.current) return;
