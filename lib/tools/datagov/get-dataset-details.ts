@@ -7,6 +7,7 @@
 import { tool } from 'ai';
 import { z } from 'zod';
 import { dataGovApi } from '@/lib/api/data-gov/client';
+import { buildDataGovUrl, DATAGOV_ENDPOINTS } from '@/lib/api/data-gov/endpoints';
 
 // ============================================================================
 // Schemas (Single Source of Truth)
@@ -14,6 +15,10 @@ import { dataGovApi } from '@/lib/api/data-gov/client';
 
 export const getDatasetDetailsInputSchema = z.object({
     id: z.string().describe('Dataset ID or name'),
+    searchedResourceName: z
+        .string()
+        .optional()
+        .describe('Hebrew title of the dataset (from search). Shown in UI as badge label.'),
 });
 
 export const getDatasetDetailsOutputSchema = z.discriminatedUnion('success', [
@@ -44,10 +49,14 @@ export const getDatasetDetailsOutputSchema = z.discriminatedUnion('success', [
                 }),
             ),
         }),
+        apiUrl: z.string().optional(),
+        searchedResourceName: z.string(),
     }),
     z.object({
         success: z.literal(false),
         error: z.string(),
+        apiUrl: z.string().optional(),
+        searchedResourceName: z.string(),
     }),
 ]);
 
@@ -62,7 +71,9 @@ export const getDatasetDetails = tool({
     description:
         'Get full details for a specific dataset by ID. Use when user wants detailed information about a dataset, including resources and metadata.',
     inputSchema: getDatasetDetailsInputSchema,
-    execute: async ({ id }) => {
+    execute: async ({ id, searchedResourceName }) => {
+        const apiUrl = buildDataGovUrl(DATAGOV_ENDPOINTS.dataset.show, { id });
+
         try {
             const dataset = await dataGovApi.dataset.show(id);
 
@@ -91,11 +102,15 @@ export const getDatasetDetails = tool({
                         last_modified: r.last_modified,
                     })),
                 },
+                apiUrl,
+                searchedResourceName,
             };
         } catch (error) {
             return {
                 success: false,
                 error: error instanceof Error ? error.message : String(error),
+                apiUrl,
+                searchedResourceName,
             };
         }
     },

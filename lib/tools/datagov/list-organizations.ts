@@ -7,6 +7,7 @@
 import { tool } from 'ai';
 import { z } from 'zod';
 import { dataGovApi } from '@/lib/api/data-gov/client';
+import { DATAGOV_ENDPOINTS, buildDataGovUrl } from '@/lib/api/data-gov/endpoints';
 
 // ============================================================================
 // Schemas (Single Source of Truth)
@@ -19,10 +20,12 @@ export const listOrganizationsOutputSchema = z.discriminatedUnion('success', [
         success: z.literal(true),
         count: z.number(),
         organizations: z.array(z.string()),
+        apiUrl: z.string().optional().describe('The API URL used to fetch the organizations list'),
     }),
     z.object({
         success: z.literal(false),
         error: z.string(),
+        apiUrl: z.string().optional().describe('The API URL that was attempted'),
     }),
 ]);
 
@@ -38,18 +41,22 @@ export const listOrganizations = tool({
         'Get a list of all organization names on data.gov.il. Use when user asks which government bodies or organizations publish data.',
     inputSchema: listOrganizationsInputSchema,
     execute: async () => {
+        const apiUrl = buildDataGovUrl(DATAGOV_ENDPOINTS.organization.list);
+
         try {
             const organizations = await dataGovApi.organization.list();
 
             return {
-                success: true,
+                success: true as const,
                 count: organizations.length,
                 organizations,
+                apiUrl,
             };
         } catch (error) {
             return {
-                success: false,
+                success: false as const,
                 error: error instanceof Error ? error.message : String(error),
+                apiUrl,
             };
         }
     },

@@ -7,6 +7,7 @@
 import { tool } from 'ai';
 import { z } from 'zod';
 import { dataGovApi } from '@/lib/api/data-gov/client';
+import { DATAGOV_ENDPOINTS, buildDataGovUrl } from '@/lib/api/data-gov/endpoints';
 
 // ============================================================================
 // Schemas (Single Source of Truth)
@@ -45,10 +46,12 @@ export const getDatasetSchemaOutputSchema = z.discriminatedUnion('success', [
                 )
                 .optional(),
         }),
+        apiUrl: z.string().optional(),
     }),
     z.object({
         success: z.literal(false),
         error: z.string(),
+        apiUrl: z.string().optional(),
     }),
 ]);
 
@@ -64,6 +67,8 @@ export const getDatasetSchema = tool({
         'Get the metadata schema for a dataset type. Use when user asks about the structure or fields available in datasets.',
     inputSchema: getDatasetSchemaInputSchema,
     execute: async ({ type = 'dataset' }) => {
+        const apiUrl = buildDataGovUrl(DATAGOV_ENDPOINTS.system.schemingDatasetSchemaShow, { type });
+
         try {
             const schema = await dataGovApi.system.schema(type);
 
@@ -87,11 +92,13 @@ export const getDatasetSchema = tool({
                         helpText: f.help_text,
                     })),
                 },
+                apiUrl,
             };
         } catch (error) {
             return {
                 success: false,
                 error: error instanceof Error ? error.message : String(error),
+                apiUrl,
             };
         }
     },

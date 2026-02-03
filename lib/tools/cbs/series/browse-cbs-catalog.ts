@@ -7,6 +7,7 @@
 import { tool } from 'ai';
 import { z } from 'zod';
 import { cbsApi } from '@/lib/api/cbs/client';
+import { CBS_SERIES_PATHS, buildSeriesUrl } from '@/lib/api/cbs/endpoints';
 
 // ============================================================================
 // Schemas (Single Source of Truth)
@@ -42,10 +43,12 @@ export const browseCbsCatalogOutputSchema = z.discriminatedUnion('success', [
         totalItems: z.number(),
         currentPage: z.number(),
         lastPage: z.number(),
+        apiUrl: z.string().optional(),
     }),
     z.object({
         success: z.literal(false),
         error: z.string(),
+        apiUrl: z.string().optional(),
     }),
 ]);
 
@@ -61,6 +64,15 @@ export const browseCbsCatalog = tool({
         'Browse the CBS (Central Bureau of Statistics) statistical catalog hierarchy. Start with level 1 to see top-level categories (e.g., population, economy, education), then drill into subcategories with higher levels. Use this to discover what statistical data series are available.',
     inputSchema: browseCbsCatalogInputSchema,
     execute: async ({ level, subject, language, page, pageSize }) => {
+        // Construct API URL for reference
+        const apiUrl = buildSeriesUrl(CBS_SERIES_PATHS.CATALOG_LEVEL, {
+            id: level,
+            subject,
+            lang: language,
+            page,
+            pagesize: pageSize,
+        });
+
         try {
             const result = await cbsApi.series.catalog({
                 id: level,
@@ -83,11 +95,13 @@ export const browseCbsCatalog = tool({
                 totalItems: catalogs.paging.total_items,
                 currentPage: catalogs.paging.current_page,
                 lastPage: catalogs.paging.last_page,
+                apiUrl,
             };
         } catch (error) {
             return {
                 success: false,
                 error: error instanceof Error ? error.message : String(error),
+                apiUrl,
             };
         }
     },

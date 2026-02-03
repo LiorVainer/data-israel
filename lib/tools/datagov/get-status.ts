@@ -7,6 +7,7 @@
 import { tool } from 'ai';
 import { z } from 'zod';
 import { dataGovApi } from '@/lib/api/data-gov/client';
+import { DATAGOV_ENDPOINTS, buildDataGovUrl } from '@/lib/api/data-gov/endpoints';
 
 // ============================================================================
 // Schemas (Single Source of Truth)
@@ -24,10 +25,12 @@ export const getStatusOutputSchema = z.discriminatedUnion('success', [
             siteUrl: z.string(),
             extensions: z.array(z.string()),
         }),
+        apiUrl: z.string().optional().describe('The API URL used to fetch the system status'),
     }),
     z.object({
         success: z.literal(false),
         error: z.string(),
+        apiUrl: z.string().optional().describe('The API URL that was attempted'),
     }),
 ]);
 
@@ -43,11 +46,13 @@ export const getStatus = tool({
         'Get the CKAN version and list of installed extensions. Use when user asks about the data portal capabilities or system information.',
     inputSchema: getStatusInputSchema,
     execute: async () => {
+        const apiUrl = buildDataGovUrl(DATAGOV_ENDPOINTS.system.statusShow);
+
         try {
             const status = await dataGovApi.system.status();
 
             return {
-                success: true,
+                success: true as const,
                 status: {
                     ckanVersion: status.ckan_version,
                     siteTitle: status.site_title,
@@ -55,11 +60,13 @@ export const getStatus = tool({
                     siteUrl: status.site_url,
                     extensions: status.extensions,
                 },
+                apiUrl,
             };
         } catch (error) {
             return {
-                success: false,
+                success: false as const,
                 error: error instanceof Error ? error.message : String(error),
+                apiUrl,
             };
         }
     },

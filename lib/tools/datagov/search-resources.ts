@@ -9,6 +9,7 @@ import { tool } from 'ai';
 import { z } from 'zod';
 import { convexClient, api } from '@/lib/convex/client';
 import { dataGovApi } from '@/lib/api/data-gov/client';
+import { DATAGOV_ENDPOINTS, buildDataGovUrl } from '@/lib/api/data-gov/endpoints';
 
 // ============================================================================
 // Schemas (Single Source of Truth)
@@ -38,10 +39,12 @@ export const searchResourcesOutputSchema = z.discriminatedUnion('success', [
                 datasetId: z.string(),
             }),
         ),
+        apiUrl: z.string().optional(),
     }),
     z.object({
         success: z.literal(false),
         error: z.string(),
+        apiUrl: z.string().optional(),
     }),
 ]);
 
@@ -57,6 +60,13 @@ export const searchResources = tool({
         'Search for resources (files) using semantic search. Use when user wants to find specific file types or resources across datasets.',
     inputSchema: searchResourcesInputSchema,
     execute: async ({ query, datasetId, format, limit = 10 }) => {
+        // Build CKAN query format for URL construction
+        const ckanQuery = format ? `format:${format}` : `name:${query}`;
+        const apiUrl = buildDataGovUrl(DATAGOV_ENDPOINTS.resource.search, {
+            query: ckanQuery,
+            limit,
+        });
+
         try {
             // Try Convex RAG semantic search first
             const convexResult = await convexClient.action(api.search.searchResources, {
@@ -67,6 +77,7 @@ export const searchResources = tool({
             });
 
             if (convexResult.success && convexResult.count > 0) {
+                // Convex RAG results don't have an apiUrl since they're from local vector DB
                 return {
                     success: true,
                     count: convexResult.count,
@@ -76,8 +87,6 @@ export const searchResources = tool({
             }
 
             // Fallback to CKAN API if Convex has no results
-            // Build CKAN query format
-            const ckanQuery = format ? `format:${format}` : `name:${query}`;
             const result = await dataGovApi.resource.search({
                 query: ckanQuery,
                 limit,
@@ -95,11 +104,11 @@ export const searchResources = tool({
                     description: r.description,
                     datasetId: r.package_id,
                 })),
+                apiUrl,
             };
         } catch (error) {
             // If Convex fails, try CKAN as fallback
             try {
-                const ckanQuery = format ? `format:${format}` : `name:${query}`;
                 const result = await dataGovApi.resource.search({
                     query: ckanQuery,
                     limit,
@@ -117,11 +126,13 @@ export const searchResources = tool({
                         description: r.description,
                         datasetId: r.package_id,
                     })),
+                    apiUrl,
                 };
             } catch {
                 return {
                     success: false,
                     error: error instanceof Error ? error.message : String(error),
+                    apiUrl,
                 };
             }
         }

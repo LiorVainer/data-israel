@@ -7,6 +7,7 @@
 import { tool } from 'ai';
 import { z } from 'zod';
 import { cbsApi } from '@/lib/api/cbs/client';
+import { CBS_SERIES_PATHS, buildSeriesUrl } from '@/lib/api/cbs/endpoints';
 
 // ============================================================================
 // Schemas (Single Source of Truth)
@@ -37,10 +38,12 @@ export const browseCbsCatalogPathOutputSchema = z.discriminatedUnion('success', 
         totalItems: z.number(),
         currentPage: z.number(),
         lastPage: z.number(),
+        apiUrl: z.string().optional(),
     }),
     z.object({
         success: z.literal(false),
         error: z.string(),
+        apiUrl: z.string().optional(),
     }),
 ]);
 
@@ -56,6 +59,14 @@ export const browseCbsCatalogPath = tool({
         'Browse the CBS catalog by a specific hierarchical path (e.g., "2,1,1,2,379"). Use this after discovering categories with browse-cbs-catalog to navigate directly to a known location in the catalog tree.',
     inputSchema: browseCbsCatalogPathInputSchema,
     execute: async ({ path, language, page, pageSize }) => {
+        // Construct API URL for reference
+        const apiUrl = buildSeriesUrl(CBS_SERIES_PATHS.CATALOG_PATH, {
+            id: path,
+            lang: language,
+            page,
+            pagesize: pageSize,
+        });
+
         try {
             const result = await cbsApi.series.catalogByPath({
                 id: path,
@@ -77,11 +88,13 @@ export const browseCbsCatalogPath = tool({
                 totalItems: catalogs.paging.total_items,
                 currentPage: catalogs.paging.current_page,
                 lastPage: catalogs.paging.last_page,
+                apiUrl,
             };
         } catch (error) {
             return {
                 success: false,
                 error: error instanceof Error ? error.message : String(error),
+                apiUrl,
             };
         }
     },

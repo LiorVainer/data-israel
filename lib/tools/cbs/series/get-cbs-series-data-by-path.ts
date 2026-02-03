@@ -7,6 +7,7 @@
 import { tool } from 'ai';
 import { z } from 'zod';
 import { cbsApi } from '@/lib/api/cbs/client';
+import { buildSeriesUrl, CBS_SERIES_PATHS } from '@/lib/api/cbs/endpoints';
 
 // ============================================================================
 // Schemas (Single Source of Truth)
@@ -24,6 +25,9 @@ export const getCbsSeriesDataByPathInputSchema = z.object({
     language: z.enum(['he', 'en']).optional().describe('Response language (default: Hebrew)'),
     page: z.number().int().min(1).optional().describe('Page number (default 1)'),
     pageSize: z.number().int().min(1).max(1000).optional().describe('Items per page (default 100, max 1000)'),
+    searchedResourceName: z
+        .string()
+        .describe('Hebrew display name of the series (from catalog browsing). Shown in UI as badge label.'),
 });
 
 export const getCbsSeriesDataByPathOutputSchema = z.discriminatedUnion('success', [
@@ -48,10 +52,14 @@ export const getCbsSeriesDataByPathOutputSchema = z.discriminatedUnion('success'
         totalItems: z.number(),
         currentPage: z.number(),
         lastPage: z.number(),
+        apiUrl: z.string().optional(),
+        searchedResourceName: z.string(),
     }),
     z.object({
         success: z.literal(false),
         error: z.string(),
+        apiUrl: z.string().optional(),
+        searchedResourceName: z.string(),
     }),
 ]);
 
@@ -66,7 +74,18 @@ export const getCbsSeriesDataByPath = tool({
     description:
         'Get CBS time series data for all series under a specific catalog path. Returns multiple series with their observations. Use after browsing the catalog to find a path. Supports date range filtering.',
     inputSchema: getCbsSeriesDataByPathInputSchema,
-    execute: async ({ path, startPeriod, endPeriod, last, language, page, pageSize }) => {
+    execute: async ({ path, startPeriod, endPeriod, last, language, page, pageSize, searchedResourceName }) => {
+        // Construct API URL for reference
+        const apiUrl = buildSeriesUrl(CBS_SERIES_PATHS.DATA_PATH, {
+            id: path,
+            startPeriod,
+            endPeriod,
+            last,
+            lang: language,
+            page,
+            pagesize: pageSize,
+        });
+
         try {
             const result = await cbsApi.series.dataByPath({
                 id: path,
@@ -100,11 +119,15 @@ export const getCbsSeriesDataByPath = tool({
                 totalItems: DataSet.paging.total_items,
                 currentPage: DataSet.paging.current_page,
                 lastPage: DataSet.paging.last_page,
+                apiUrl,
+                searchedResourceName,
             };
         } catch (error) {
             return {
                 success: false,
                 error: error instanceof Error ? error.message : String(error),
+                apiUrl,
+                searchedResourceName,
             };
         }
     },

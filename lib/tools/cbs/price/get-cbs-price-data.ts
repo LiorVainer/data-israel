@@ -7,6 +7,7 @@
 import { tool } from 'ai';
 import { z } from 'zod';
 import { cbsApi } from '@/lib/api/cbs/client';
+import { buildPriceIndexUrl, CBS_PRICE_INDEX_PATHS } from '@/lib/api/cbs/endpoints';
 
 // ============================================================================
 // Schemas (Single Source of Truth)
@@ -19,6 +20,10 @@ export const getCbsPriceDataInputSchema = z.object({
     last: z.number().int().min(1).max(500).optional().describe('Return only the N most recent values'),
     includeCoefficients: z.boolean().optional().describe('Include adjustment coefficients in response'),
     language: z.enum(['he', 'en']).optional().describe('Response language (default: Hebrew)'),
+    searchedResourceName: z
+        .string()
+        .optional()
+        .describe('Hebrew name of the price index (from catalog browsing). Shown in UI as badge label.'),
 });
 
 export const getCbsPriceDataOutputSchema = z.discriminatedUnion('success', [
@@ -44,10 +49,14 @@ export const getCbsPriceDataOutputSchema = z.discriminatedUnion('success', [
         totalItems: z.number(),
         currentPage: z.number(),
         lastPage: z.number(),
+        apiUrl: z.string().optional().describe('The CBS API URL that was called'),
+        searchedResourceName: z.string().describe('Hebrew name of the price index'),
     }),
     z.object({
         success: z.literal(false),
         error: z.string(),
+        apiUrl: z.string().optional().describe('The CBS API URL that was attempted'),
+        searchedResourceName: z.string().describe('Hebrew name of the price index'),
     }),
 ]);
 
@@ -62,7 +71,25 @@ export const getCbsPriceData = tool({
     description:
         'Get CBS price index values over time. Returns historical index values with dates and percentage changes. Use after browsing price indices to get an index code.',
     inputSchema: getCbsPriceDataInputSchema,
-    execute: async ({ indexCode, startPeriod, endPeriod, last, includeCoefficients, language }) => {
+    execute: async ({
+        indexCode,
+        startPeriod,
+        endPeriod,
+        last,
+        includeCoefficients,
+        language,
+        searchedResourceName,
+    }) => {
+        // Construct API URL
+        const apiUrl = buildPriceIndexUrl(CBS_PRICE_INDEX_PATHS.PRICE, {
+            id: indexCode,
+            startPeriod,
+            endPeriod,
+            last,
+            coef: includeCoefficients,
+            lang: language,
+        });
+
         try {
             const result = await cbsApi.priceIndex.price({
                 id: indexCode,
@@ -91,11 +118,15 @@ export const getCbsPriceData = tool({
                 totalItems: result.paging.total_items,
                 currentPage: result.paging.current_page,
                 lastPage: result.paging.last_page,
+                apiUrl,
+                searchedResourceName,
             };
         } catch (error) {
             return {
                 success: false,
                 error: error instanceof Error ? error.message : String(error),
+                apiUrl,
+                searchedResourceName,
             };
         }
     },

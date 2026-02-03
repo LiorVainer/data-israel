@@ -33,7 +33,10 @@ import type {
 import type { BrowseCbsCatalogInput, BrowseCbsCatalogOutput } from './cbs/series/browse-cbs-catalog';
 import type { BrowseCbsCatalogPathInput, BrowseCbsCatalogPathOutput } from './cbs/series/browse-cbs-catalog-path';
 import type { GetCbsSeriesDataInput, GetCbsSeriesDataOutput } from './cbs/series/get-cbs-series-data';
-import type { GetCbsSeriesDataByPathInput, GetCbsSeriesDataByPathOutput } from './cbs/series/get-cbs-series-data-by-path';
+import type {
+    GetCbsSeriesDataByPathInput,
+    GetCbsSeriesDataByPathOutput,
+} from './cbs/series/get-cbs-series-data-by-path';
 import type { BrowseCbsPriceIndicesInput, BrowseCbsPriceIndicesOutput } from './cbs/price/browse-cbs-price-indices';
 import type { GetCbsPriceDataInput, GetCbsPriceDataOutput } from './cbs/price/get-cbs-price-data';
 import type { CalculateCbsPriceIndexInput, CalculateCbsPriceIndexOutput } from './cbs/price/calculate-cbs-price-index';
@@ -88,7 +91,10 @@ export type { BrowseCbsCatalogPathInput, BrowseCbsCatalogPathOutput } from './cb
 
 export type { GetCbsSeriesDataInput, GetCbsSeriesDataOutput } from './cbs/series/get-cbs-series-data';
 
-export type { GetCbsSeriesDataByPathInput, GetCbsSeriesDataByPathOutput } from './cbs/series/get-cbs-series-data-by-path';
+export type {
+    GetCbsSeriesDataByPathInput,
+    GetCbsSeriesDataByPathOutput,
+} from './cbs/series/get-cbs-series-data-by-path';
 
 export type { BrowseCbsPriceIndicesInput, BrowseCbsPriceIndicesOutput } from './cbs/price/browse-cbs-price-indices';
 

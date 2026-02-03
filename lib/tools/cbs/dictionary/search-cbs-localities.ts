@@ -7,6 +7,7 @@
 import { tool } from 'ai';
 import { z } from 'zod';
 import { cbsApi } from '@/lib/api/cbs/client';
+import { buildDictionaryUrl } from '@/lib/api/cbs/endpoints';
 
 // ============================================================================
 // Schemas (Single Source of Truth)
@@ -40,10 +41,12 @@ export const searchCbsLocalitiesOutputSchema = z.discriminatedUnion('success', [
         ),
         total: z.number().optional(),
         page: z.number().optional(),
+        apiUrl: z.string().optional(),
     }),
     z.object({
         success: z.literal(false),
         error: z.string(),
+        apiUrl: z.string().optional(),
     }),
 ]);
 
@@ -59,6 +62,19 @@ export const searchCbsLocalities = tool({
         'Search Israeli localities (cities, towns, villages) from the CBS dictionary. Returns name, district, region, population, and other demographic data. Use for questions about Israeli cities and settlements.',
     inputSchema: searchCbsLocalitiesInputSchema,
     execute: async ({ query, matchType, filter, page, pageSize }) => {
+        // Construct API URL for transparency
+        const apiUrl = buildDictionaryUrl(
+            { subject: 'geo', resource: 'localities' },
+            {
+                q: query,
+                string_match_type: matchType ?? 'CONTAINS',
+                filter,
+                page,
+                pagesize: pageSize,
+                expand: true,
+            },
+        );
+
         try {
             const result = await cbsApi.dictionary.search('geo', 'localities', {
                 q: query,
@@ -91,11 +107,13 @@ export const searchCbsLocalities = tool({
                 localities,
                 total: Number(dictionary.paging.total_items),
                 page: Number(dictionary.paging.current_page),
+                apiUrl,
             };
         } catch (error) {
             return {
                 success: false,
                 error: error instanceof Error ? error.message : String(error),
+                apiUrl,
             };
         }
     },

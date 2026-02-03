@@ -9,6 +9,7 @@ import { tool } from 'ai';
 import { z } from 'zod';
 import { convexClient, api } from '@/lib/convex/client';
 import { dataGovApi } from '@/lib/api/data-gov/client';
+import { DATAGOV_ENDPOINTS, buildDataGovUrl } from '@/lib/api/data-gov/endpoints';
 
 // ============================================================================
 // Schemas (Single Source of Truth)
@@ -37,10 +38,12 @@ export const searchDatasetsOutputSchema = z.discriminatedUnion('success', [
                 summary: z.string(),
             }),
         ),
+        apiUrl: z.string().optional(),
     }),
     z.object({
         success: z.literal(false),
         error: z.string(),
+        apiUrl: z.string().optional(),
     }),
 ]);
 
@@ -56,6 +59,13 @@ export const searchDatasets = tool({
         'Search for datasets on data.gov.il using semantic search. Use this when user asks about datasets related to a topic or keyword. Returns matching datasets ranked by relevance.',
     inputSchema: searchDatasetsInputSchema,
     execute: async ({ query, organization, tag, limit = 10 }) => {
+        // Build CKAN API URL for when it's used
+        const ckanApiUrl = buildDataGovUrl(DATAGOV_ENDPOINTS.dataset.search, {
+            q: query,
+            rows: limit,
+            start: 0,
+        });
+
         try {
             // Try Convex RAG semantic search first
             const convexResult = await convexClient.action(api.search.searchDatasets, {
@@ -66,6 +76,7 @@ export const searchDatasets = tool({
             });
 
             if (convexResult.success && convexResult.count > 0) {
+                // Convex RAG source - no apiUrl since it's internal
                 return {
                     success: true,
                     count: convexResult.count,
@@ -92,6 +103,7 @@ export const searchDatasets = tool({
                     tags: d.tags.map((t) => t.name),
                     summary: d.notes?.slice(0, 200) || '',
                 })),
+                apiUrl: ckanApiUrl,
             };
         } catch (error) {
             // If Convex fails, try CKAN as fallback
@@ -113,11 +125,13 @@ export const searchDatasets = tool({
                         tags: d.tags.map((t) => t.name),
                         summary: d.notes?.slice(0, 200) || '',
                     })),
+                    apiUrl: ckanApiUrl,
                 };
             } catch {
                 return {
                     success: false,
                     error: error instanceof Error ? error.message : String(error),
+                    apiUrl: ckanApiUrl,
                 };
             }
         }
