@@ -5,7 +5,7 @@ import { InputSection } from '@/components/chat/InputSection';
 function UserMessageSkeleton() {
     return (
         <div className='flex w-full flex-col gap-2'>
-            <div className='flex w-fit max-w-full min-w-0 flex-col gap-2 rounded-lg bg-secondary px-4 py-3'>
+            <div className='flex w-fit max-w-full min-w-0 flex-col gap-2 rounded-lg bg-background border px-4 py-3'>
                 <Skeleton className='h-4 w-32 bg-muted-foreground/20' />
             </div>
         </div>

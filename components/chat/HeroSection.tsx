@@ -4,7 +4,7 @@ import Image from 'next/image';
 import { motion } from 'framer-motion';
 import { HeroBadge, HeroSubtitle, HeroTitle } from '@/components/ui/shape-landing-hero';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { DATA_SOURCE_CONFIG } from './tool-data-sources';
+import { DATA_SOURCE_CONFIG } from '../../constants/tool-data-sources';
 
 const fadeUpVariants = {
     hidden: { opacity: 0, y: 30 },

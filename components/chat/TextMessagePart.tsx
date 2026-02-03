@@ -3,10 +3,10 @@
 import { CopyIcon, RefreshCcwIcon } from 'lucide-react';
 import {
     Message,
+    MessageAction,
+    MessageActions,
     MessageContent,
     MessageResponse,
-    MessageActions,
-    MessageAction,
 } from '@/components/ai-elements/message';
 
 export interface TextMessagePartProps {
@@ -20,7 +20,7 @@ export interface TextMessagePartProps {
 export function TextMessagePart({ text, role, isLastMessage, onRegenerate }: TextMessagePartProps) {
     return (
         <Message from={role}>
-            <MessageContent>
+            <MessageContent className={role === 'user' ? 'group-[.is-user]:bg-background border' : ''}>
                 <MessageResponse>{text}</MessageResponse>
             </MessageContent>
             {role === 'assistant' && isLastMessage && (

@@ -7,7 +7,7 @@ import {
 } from '@/components/ai-elements/chain-of-thought';
 import { cn } from '@/lib/utils';
 import { DataIsraelLoader } from './DataIsraelLoader';
-import { getToolDataSourceConfig } from './tool-data-sources';
+import { getToolDataSourceConfig } from '../../constants/tool-data-sources';
 import type { LucideIcon } from 'lucide-react';
 import type { StepStatus } from './types';
 
