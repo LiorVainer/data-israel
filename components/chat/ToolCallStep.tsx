@@ -123,7 +123,7 @@ export function ToolCallStep({ step }: ToolCallStepProps) {
                     )}
                 </span>
             }
-            // description={getStatusDescription(step)}
+            description={getStatusDescription(step)}
             status={status}
         >
             {namedResources.length > 0 && (

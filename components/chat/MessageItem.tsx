@@ -9,7 +9,6 @@ import { getToolStatus, isAgentsNetworkDataPart, isToolPart, SourceUrlUIPart, To
 import type { DisplayChartInput } from '@/lib/tools';
 import { ClientTools } from '@/lib/tools/client';
 import { UIMessage } from 'ai';
-import { AgentsNetworkDataParts } from '@/components/chat/AgentsNetworkDataParts';
 
 /** Tool-prefixed type names for client-side tools (e.g. 'tool-displayBarChart') */
 const CLIENT_TOOL_TYPES = new Set(Object.keys(ClientTools).map((name) => `tool-${name}`));
@@ -47,10 +46,10 @@ export function MessageItem({ message, isLastMessage, isStreaming, onRegenerate 
 
     return (
         <div className='animate-in fade-in slide-in-from-bottom-2 flex flex-col gap-6 duration-300'>
-            {/* Render tool calls in a ChainOfThought timeline */}
-            {agentsNetworkDataParts.length > 0 && (
-                <AgentsNetworkDataParts messageId={message.id} parts={agentsNetworkDataParts} />
-            )}
+            {/*/!* Render tool calls in a ChainOfThought timeline *!/*/}
+            {/*{agentsNetworkDataParts.length > 0 && (*/}
+            {/*    <AgentsNetworkDataParts messageId={message.id} parts={agentsNetworkDataParts} />*/}
+            {/*)}*/}
             {toolParts.length > 0 && (
                 <ToolCallParts
                     messageId={message.id}
