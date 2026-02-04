@@ -90,7 +90,7 @@ export const ChainOfThoughtStep = memo(
     }: ChainOfThoughtStepProps) => {
         const statusStyles = {
             complete: 'text-muted-foreground',
-            active: 'text-foreground',
+            active: 'text-foreground font-medium',
             pending: 'text-muted-foreground/50',
         };
 
