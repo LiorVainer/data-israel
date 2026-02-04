@@ -40,8 +40,8 @@ export function HeroSection({ onSuggestionClick }: HeroSectionProps) {
             <div className='flex-shrink-0 flex flex-col items-center gap-4'>
                 <HeroTitle line1='חפש מידע ציבורי' line2='ממאגרי הממשלה' />
                 <div>
-                    <HeroSubtitle>חפש מאגרי מידע ונתונים ציבוריים</HeroSubtitle>
-                    <HeroSubtitle>ממאגרי המידע הרשמיים של ממשלת ישראל</HeroSubtitle>
+                    <HeroSubtitle>חפש נתונים ציבוריים ממאגרי המידע</HeroSubtitle>
+                    <HeroSubtitle>הרשמיים של ממשלת ישראל</HeroSubtitle>
                 </div>
                 <div className='flex items-center gap-2 mt-3'>
                     <a href={DATA_SOURCE_CONFIG.datagov.url} target='_blank' rel='noopener noreferrer'>
