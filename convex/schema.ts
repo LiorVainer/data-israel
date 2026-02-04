@@ -19,6 +19,14 @@ import {
 
 export default defineSchema({
     /**
+     * Guests table - stores guest session information for unauthenticated users
+     */
+    guests: defineTable({
+        sessionId: v.string(),
+        createdAt: v.number(),
+    }).index('by_session_id', ['sessionId']),
+
+    /**
      * Datasets table - stores metadata for all data.gov.il datasets
      */
     datasets: defineTable({

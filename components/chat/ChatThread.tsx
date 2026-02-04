@@ -2,7 +2,7 @@
 
 import { type UIMessage, useChat } from '@ai-sdk/react';
 import { DefaultChatTransport } from 'ai';
-import { useEffect, useRef } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { Conversation, ConversationContent, ConversationScrollButton } from '@/components/ai-elements/conversation';
 import { MessageItem } from '@/components/chat/MessageItem';
 import { InputSection } from '@/components/chat/InputSection';
@@ -10,6 +10,13 @@ import { LoadingShimmer } from '@/components/chat/LoadingShimmer';
 import { GeometricBackground } from '@/components/ui/shape-landing-hero';
 import { useSessionStorage } from '@/hooks/use-session-storage';
 import { INITIAL_MESSAGE_KEY, type InitialMessageData } from '@/constants/chat';
+import { useUser } from '@/context/UserContext';
+
+/** Default resource ID for unauthenticated users */
+const DEFAULT_RESOURCE_ID = 'default-user';
+
+/** Header name for passing user ID to API */
+const USER_ID_HEADER = 'x-user-id';
 
 interface ChatThreadProps {
     id: string;
@@ -18,20 +25,36 @@ interface ChatThreadProps {
 
 export function ChatThread({ id, initialMessages }: ChatThreadProps) {
     const initialMessageSentRef = useRef(false);
+    const { userId, sessionId } = useUser();
 
     const [initialMessageData, , removeInitialMessage] = useSessionStorage<InitialMessageData>(INITIAL_MESSAGE_KEY);
+
+    // Compute the resource ID for memory operations
+    // Use userId if available (authenticated or guest), otherwise fall back to sessionId or default
+    const resourceId = useMemo(() => {
+        if (userId) {
+            return userId;
+        }
+        if (sessionId) {
+            return `session:${sessionId}`;
+        }
+        return DEFAULT_RESOURCE_ID;
+    }, [userId, sessionId]);
 
     const { messages, sendMessage, status, regenerate, stop } = useChat({
         messages: initialMessages,
         transport: new DefaultChatTransport({
             api: '/api/chat',
+            headers: {
+                [USER_ID_HEADER]: resourceId,
+            },
             prepareSendMessagesRequest({ messages }) {
                 return {
                     body: {
                         messages,
                         memory: {
                             thread: id,
-                            resource: 'default-user',
+                            resource: resourceId,
                         },
                     },
                 };
