@@ -116,6 +116,9 @@ importers:
       convex:
         specifier: ^1.31.6
         version: 1.31.6(@clerk/clerk-react@5.60.0(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(react@19.2.3)
+      convex-helpers:
+        specifier: ^0.1.111
+        version: 0.1.111(@standard-schema/spec@1.1.0)(convex@1.31.6(@clerk/clerk-react@5.60.0(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(react@19.2.3))(hono@4.11.5)(react@19.2.3)(typescript@5.9.3)(zod@4.3.6)
       date-fns:
         specifier: ^4.1.0
         version: 4.1.0

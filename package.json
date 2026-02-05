@@ -48,6 +48,7 @@
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",
     "convex": "^1.31.6",
+    "convex-helpers": "^0.1.111",
     "date-fns": "^4.1.0",
     "embla-carousel-react": "^8.6.0",
     "eslint-config-prettier": "^10.1.8",

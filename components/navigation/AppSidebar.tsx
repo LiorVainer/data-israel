@@ -15,8 +15,10 @@ import {
     SidebarTrigger,
 } from '@/components/ui/sidebar';
 import { Separator } from '@/components/ui/separator';
-import { Database, Sparkles } from 'lucide-react';
+import { Sparkles } from 'lucide-react';
+import Image from 'next/image';
 import { NavUser } from '@/components/navigation/NavUser';
+import { SidebarToolbar } from '@/components/navigation/SidebarToolbar';
 import { ThreadsSidebarGroup } from '@/components/threads/ThreadsSidebarGroup';
 import { useRouter } from 'next/navigation';
 
@@ -33,27 +35,23 @@ export function AppSidebar({
     const router = useRouter();
 
     return (
-        <SidebarProvider className='h-full'>
+        <SidebarProvider className='h-dvh'>
             <Sidebar collapsible='icon' side='right' className='h-full'>
                 <SidebarHeader>
                     {/* App Logo / Brand */}
                     <SidebarMenu>
                         <SidebarMenuItem>
-                            <SidebarMenuButton
-                                size='lg'
-                                onClick={() => router.push('/')}
-                                className='cursor-pointer'
-                            >
-                                <div className='bg-primary text-primary-foreground flex aspect-square size-8 items-center justify-center rounded-lg'>
-                                    <Database className='size-4' />
-                                </div>
+                            <SidebarMenuButton size='lg' className='gap-4' onClick={() => router.push('/')}>
+                                <Image
+                                    src='/data-israel.svg'
+                                    alt='לוגו'
+                                    width={24}
+                                    height={24}
+                                    className='size-7 shrink-0'
+                                />
                                 <div className='grid flex-1 text-right text-sm leading-tight'>
-                                    <span className='truncate font-semibold'>
-                                        סוכן המידע הציבורי
-                                    </span>
-                                    <span className='truncate text-xs text-muted-foreground'>
-                                        data.gov.il
-                                    </span>
+                                    <span className='truncate font-semibold'>סוכן המידע הציבורי</span>
+                                    <span className='truncate text-xs text-muted-foreground'>data.gov.il</span>
                                 </div>
                             </SidebarMenuButton>
                         </SidebarMenuItem>
@@ -61,6 +59,7 @@ export function AppSidebar({
                 </SidebarHeader>
 
                 <SidebarContent className='overflow-hidden'>
+                    <SidebarToolbar />
                     <div className='overflow-y-auto h-full'>
                         <ThreadsSidebarGroup />
                     </div>
@@ -80,15 +79,11 @@ export function AppSidebar({
                         <Separator orientation='vertical' className='ml-2 h-4' />
                         <div className='flex items-center gap-2'>
                             <Sparkles className='size-4 text-primary' />
-                            <span className='text-sm font-medium'>
-                                חקור נתונים ציבוריים
-                            </span>
+                            <span className='text-sm font-medium'>חקור נתונים ציבוריים</span>
                         </div>
                     </div>
                 </header>
-                <div className='flex h-full @container/main overflow-hidden flex-col'>
-                    {children}
-                </div>
+                <div className='flex flex-1 min-h-0 @container/main overflow-hidden flex-col'>{children}</div>
             </SidebarInset>
         </SidebarProvider>
     );

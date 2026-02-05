@@ -1,44 +1,54 @@
+import { auth } from '@clerk/nextjs/server';
+import { fetchQuery } from 'convex/nextjs';
 import { mastra } from '@/agents/mastra';
 import { toAISdkV5Messages } from '@mastra/ai-sdk/ui';
 import { ChatThread } from '@/components/chat/ChatThread';
-
-/** Default resource ID for server-side message hydration */
-const DEFAULT_RESOURCE_ID = 'default-user';
+import { api } from '@/convex/_generated/api';
 
 /**
  * Chat page that displays a conversation thread.
  *
- * Server Component that fetches initial messages for hydration.
- * The ChatThread client component handles ongoing chat with proper user context.
+ * Server Component that resolves the authenticated user's resourceId via Convex auth
+ * and fetches initial messages for hydration.
  *
- * Note: Server-side uses DEFAULT_RESOURCE_ID for initial fetch.
- * The client will refetch with the actual userId from UserContext if needed.
+ * For authenticated users: resolves Clerk subject via ctx.auth.getUserIdentity().
+ * For guests: passes empty messages — ChatThread handles client-side hydration.
  */
-export default async function ChatPage({
-    params,
-    searchParams,
-}: {
-    params: Promise<{ id: string }>;
-    searchParams: Promise<{ resourceId?: string }>;
-}) {
+export default async function ChatPage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = await params;
-    const { resourceId: queryResourceId } = await searchParams;
 
-    // Use resourceId from query params if provided, otherwise default
-    const resourceId = queryResourceId || DEFAULT_RESOURCE_ID;
-
-    let initialMessages = toAISdkV5Messages([]);
+    // Resolve resourceId from Convex auth (Clerk JWT)
+    let resourceId: string | null = null;
     try {
-        const memory = await mastra.getAgentById('routingAgent').getMemory();
-        const response = await memory?.recall({
-            threadId: id,
-            resourceId,
-        });
-        if (response?.messages) {
-            initialMessages = toAISdkV5Messages(response.messages);
+        const { getToken } = await auth();
+        const token = await getToken({ template: 'convex' });
+
+        console.log({ token });
+
+        if (token) {
+            resourceId = await fetchQuery(api.threads.getAuthResourceId, {}, { token });
         }
-    } catch {
-        // No previous messages or memory unavailable
+    } catch (e) {
+        console.log(e);
+    }
+    console.log({ resourceId });
+
+    // Hydrate messages for authenticated users only
+    let initialMessages = toAISdkV5Messages([]);
+    if (resourceId) {
+        try {
+            const memory = await mastra.getAgentById('routingAgent').getMemory();
+            const response = await memory?.recall({
+                threadId: id,
+                resourceId,
+            });
+
+            if (response?.messages) {
+                initialMessages = toAISdkV5Messages(response.messages);
+            }
+        } catch {
+            // No previous messages or memory unavailable
+        }
     }
 
     return <ChatThread id={id} initialMessages={initialMessages} />;

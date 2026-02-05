@@ -25,7 +25,6 @@ export const maxDuration = 120;
 export const dynamic = 'force-dynamic';
 const MAX_STEPS = 10;
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const hasLastPartAsTextPart: StopCondition<any> = ({ steps }) => {
     const stepsAmount = steps.length;
     if (stepsAmount > MAX_STEPS) return true;
@@ -59,7 +58,7 @@ export async function GET(req: Request) {
     const threadId = searchParams.get('threadId');
     const resourceId = searchParams.get('resourceId') || getUserIdFromRequest(req);
 
-    if (!threadId) {
+    if (!threadId || !resourceId) {
         return NextResponse.json([]);
     }
 
@@ -71,6 +70,8 @@ export async function GET(req: Request) {
             threadId,
             resourceId,
         });
+
+        console.log({ response });
     } catch {
         // No previous messages found
     }
