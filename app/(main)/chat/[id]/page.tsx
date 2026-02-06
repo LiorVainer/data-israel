@@ -51,5 +51,5 @@ export default async function ChatPage({ params }: { params: Promise<{ id: strin
         }
     }
 
-    return <ChatThread id={id} initialMessages={initialMessages} />;
+    return <ChatThread id={id} initialMessages={initialMessages} resourceId={resourceId} />;
 }

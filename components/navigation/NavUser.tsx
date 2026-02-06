@@ -2,15 +2,7 @@
 
 import { SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 import { SignedIn, SignedOut, useClerk } from '@clerk/nextjs';
-import {
-    BadgeCheck,
-    ChevronsUpDown,
-    LogOut,
-    LucideLogIn,
-    Moon,
-    Sun,
-    User,
-} from 'lucide-react';
+import { BadgeCheck, ChevronsUpDown, LogOut, LucideLogIn, Moon, Sun, User } from 'lucide-react';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -87,18 +79,13 @@ export function NavUser() {
                                     className='data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground'
                                 >
                                     <Avatar className='h-8 w-8 rounded-lg'>
-                                        <AvatarImage
-                                            src={user.imageUrl}
-                                            alt={user.fullName ?? 'תמונת משתמש'}
-                                        />
+                                        <AvatarImage src={user.imageUrl} alt={user.fullName ?? 'תמונת משתמש'} />
                                         <AvatarFallback className='rounded-lg'>
                                             {`${user.firstName?.at(0) ?? ''}${user.lastName?.at(0) ?? ''}`}
                                         </AvatarFallback>
                                     </Avatar>
                                     <div className='grid flex-1 text-right text-sm leading-tight'>
-                                        <span className='truncate font-semibold'>
-                                            {user.fullName}
-                                        </span>
+                                        <span className='truncate font-semibold'>{user.fullName}</span>
                                         <span className='truncate text-xs'>
                                             {user.primaryEmailAddress?.emailAddress}
                                         </span>
@@ -114,23 +101,18 @@ export function NavUser() {
                             >
                                 <DropdownMenuLabel className='p-0 font-normal'>
                                     <div className='flex items-center gap-2 px-1 py-1.5 text-right text-sm'>
-                                        <Avatar className='h-8 w-8 rounded-lg'>
-                                            <AvatarImage
-                                                src={user.imageUrl}
-                                                alt={user.fullName ?? 'תמונת משתמש'}
-                                            />
-                                            <AvatarFallback className='rounded-lg'>
-                                                {`${user.firstName?.at(0) ?? ''}${user.lastName?.at(0) ?? ''}`}
-                                            </AvatarFallback>
-                                        </Avatar>
                                         <div className='grid flex-1 text-right text-sm leading-tight'>
-                                            <span className='truncate font-semibold'>
-                                                {user.fullName}
-                                            </span>
+                                            <span className='truncate font-semibold'>{user.fullName}</span>
                                             <span className='truncate text-xs'>
                                                 {user.primaryEmailAddress?.emailAddress}
                                             </span>
                                         </div>
+                                        <Avatar className='h-8 w-8 rounded-lg'>
+                                            <AvatarFallback className='rounded-lg'>
+                                                {`${user.firstName?.at(0) ?? ''}${user.lastName?.at(0) ?? ''}`}
+                                            </AvatarFallback>
+                                            <AvatarImage src={user.imageUrl} alt={user.fullName ?? 'תמונת משתמש'} />
+                                        </Avatar>
                                     </div>
                                 </DropdownMenuLabel>
                                 <DropdownMenuSeparator />

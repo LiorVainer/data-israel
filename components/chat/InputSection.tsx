@@ -31,7 +31,7 @@ export function InputSection({
 
     return (
         <div className={disabled ? 'opacity-50 pointer-events-none' : undefined}>
-            <PromptInput onSubmit={handleSubmit}>
+            <PromptInput onSubmit={handleSubmit} className='bg-background'>
                 <PromptInputTextarea placeholder={placeholder} disabled={disabled} />
                 <PromptInputFooter className='justify-end'>
                     <PromptInputSubmit

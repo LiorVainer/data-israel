@@ -58,6 +58,8 @@ export async function GET(req: Request) {
     const threadId = searchParams.get('threadId');
     const resourceId = searchParams.get('resourceId') || getUserIdFromRequest(req);
 
+    console.log({ threadId, resourceId });
+
     if (!threadId || !resourceId) {
         return NextResponse.json([]);
     }
