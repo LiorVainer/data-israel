@@ -20,7 +20,7 @@ const USER_ID_HEADER = 'x-user-id';
 interface ChatThreadProps {
     id: string;
     initialMessages: UIMessage[];
-    resourceId?: string;
+    resourceId: string | null;
 }
 
 export function ChatThread({ id, initialMessages, resourceId }: ChatThreadProps) {
@@ -29,11 +29,6 @@ export function ChatThread({ id, initialMessages, resourceId }: ChatThreadProps)
     const userId = resourceId ?? `session:${sessionId}`;
 
     const [initialMessageData, , removeInitialMessage] = useSessionStorage<InitialMessageData>(INITIAL_MESSAGE_KEY);
-
-    // Resolve authenticated user's canonical resourceId from Convex auth (Clerk JWT)
-
-    // Compute the resource ID for memory operations
-    // Priority: Clerk subject (authenticated) > guestId > session fallback > default
 
     const { messages, sendMessage, status, regenerate, stop } = useChat({
         messages: initialMessages,

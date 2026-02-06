@@ -23,15 +23,12 @@ export default async function ChatPage({ params }: { params: Promise<{ id: strin
         const { getToken } = await auth();
         const token = await getToken({ template: 'convex' });
 
-        console.log({ token });
-
         if (token) {
             resourceId = await fetchQuery(api.threads.getAuthResourceId, {}, { token });
         }
-    } catch (e) {
-        console.log(e);
+    } catch {
+        /* empty */
     }
-    console.log({ resourceId });
 
     // Hydrate messages for authenticated users only
     let initialMessages = toAISdkV5Messages([]);

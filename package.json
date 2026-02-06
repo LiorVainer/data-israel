@@ -20,7 +20,7 @@
     "@clerk/nextjs": "^6.37.2",
     "@convex-dev/rag": "^0.7.0",
     "@mastra/ai-sdk": "^1.0.3",
-    "@mastra/convex": "^1.0.1",
+    "@mastra/convex": "^1.0.2",
     "@mastra/core": "^1.1.0",
     "@mastra/deployer-vercel": "^1.0.1",
     "@mastra/memory": "^1.0.0",
