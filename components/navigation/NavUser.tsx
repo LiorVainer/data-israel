@@ -1,6 +1,6 @@
 'use client';
 
-import { SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
+import { SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar } from '@/components/ui/sidebar';
 import { SignedIn, SignedOut, useClerk } from '@clerk/nextjs';
 import { BadgeCheck, ChevronsUpDown, LogOut, LucideLogIn, Moon, Sun, User } from 'lucide-react';
 import {
@@ -27,6 +27,15 @@ export function NavUser() {
     const { user, openUserProfile, signOut } = useClerk();
     const { guestId } = useUser();
     const isMobile = useIsMobile();
+    const { setOpen, setOpenMobile } = useSidebar();
+
+    const closeSidebar = React.useCallback(() => {
+        if (isMobile) {
+            setOpenMobile(false);
+        } else {
+            setOpen(false);
+        }
+    }, [isMobile, setOpen, setOpenMobile]);
     const [isDarkMode, setIsDarkMode] = React.useState(false);
 
     // Check initial dark mode state
@@ -49,24 +58,25 @@ export function NavUser() {
     return (
         <SidebarMenu>
             <SignedOut>
+                {/* Guest indicator when not authenticated */}
+                {guestId && (
+                    <SidebarMenuItem>
+                        <SidebarMenuButton asChild className='hover:bg-sidebar cursor-default' tooltip='אורח'>
+                            <div>
+                                <User className='text-muted-foreground' />
+                                <span className='text-muted-foreground'>אורח</span>
+                            </div>
+                        </SidebarMenuButton>
+                    </SidebarMenuItem>
+                )}
                 <SidebarMenuItem>
-                    <SidebarMenuButton asChild tooltip='התחברות'>
+                    <SidebarMenuButton asChild tooltip='התחברות' onClick={closeSidebar}>
                         <Link href='/sign-in'>
                             <LucideLogIn />
                             <span>התחברות</span>
                         </Link>
                     </SidebarMenuButton>
                 </SidebarMenuItem>
-
-                {/* Guest indicator when not authenticated */}
-                {guestId && (
-                    <SidebarMenuItem>
-                        <SidebarMenuButton tooltip='אורח'>
-                            <User className='text-muted-foreground' />
-                            <span className='text-muted-foreground'>אורח</span>
-                        </SidebarMenuButton>
-                    </SidebarMenuItem>
-                )}
             </SignedOut>
 
             <SignedIn>
