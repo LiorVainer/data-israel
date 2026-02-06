@@ -16,8 +16,8 @@ import {
 } from '@/components/ui/sidebar';
 
 export function ThreadsSidebarGroup() {
-    const { state } = useSidebar();
-    const hideContent = state === 'collapsed';
+    const { state, isMobile } = useSidebar();
+    const hideContent = !isMobile && state === 'collapsed';
 
     const {
         threads,

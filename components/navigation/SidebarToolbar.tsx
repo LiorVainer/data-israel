@@ -1,16 +1,14 @@
 'use client';
 
-import { useIsMobile } from '@/hooks/use-mobile';
 import { SquarePen } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { SidebarGroup, SidebarMenu, SidebarMenuButton, useSidebar } from '@/components/ui/sidebar';
 
 export function SidebarToolbar() {
     const router = useRouter();
-    const { toggleSidebar, state } = useSidebar();
-    const isMobile = useIsMobile();
+    const { toggleSidebar, state, isMobile } = useSidebar();
 
-    const hideContent = state === 'collapsed';
+    const hideContent = !isMobile && state === 'collapsed';
 
     const handleNewChat = () => {
         if (isMobile) {
