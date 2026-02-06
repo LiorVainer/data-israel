@@ -33,7 +33,7 @@ export default function Home() {
     };
 
     return (
-        <div className='relative h-dvh w-screen'>
+        <div className='relative h-full w-full'>
             <GeometricBackground />
 
             <div className='mx-auto px-4 md:px-0 pb-4 md:pb-6 relative h-full w'>

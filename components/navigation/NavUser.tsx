@@ -117,17 +117,17 @@ export function NavUser() {
                                 </DropdownMenuLabel>
                                 <DropdownMenuSeparator />
                                 <DropdownMenuGroup>
-                                    <DropdownMenuItem onClick={() => openUserProfile()}>
+                                    <DropdownMenuItem className='cursor-pointer' onClick={() => openUserProfile()}>
                                         <BadgeCheck />
                                         חשבון
                                     </DropdownMenuItem>
-                                    <DropdownMenuItem onClick={toggleTheme}>
+                                    <DropdownMenuItem className='cursor-pointer' onClick={toggleTheme}>
                                         {isDarkMode ? <Sun /> : <Moon />}
                                         {isDarkMode ? 'מצב בהיר' : 'מצב כהה'}
                                     </DropdownMenuItem>
                                 </DropdownMenuGroup>
                                 <DropdownMenuSeparator />
-                                <DropdownMenuItem onClick={() => signOut()}>
+                                <DropdownMenuItem className='cursor-pointer' onClick={() => signOut()}>
                                     <LogOut />
                                     התנתקות
                                 </DropdownMenuItem>

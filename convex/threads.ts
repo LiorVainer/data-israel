@@ -5,7 +5,7 @@
  * All thread CRUD operations are handled by Mastra's ConvexStore.
  */
 
-import { query } from './_generated/server';
+import { mutation, query } from './_generated/server';
 import { paginationOptsValidator } from 'convex/server';
 import { v } from 'convex/values';
 
@@ -105,5 +105,104 @@ export const listUserThreadsPaginated = query({
             .withIndex('by_resource', (q) => q.eq('resourceId', resourceId))
             .order('desc')
             .paginate(paginationOpts);
+    },
+});
+
+/**
+ * Deletes a thread and all its associated messages.
+ *
+ * Performs authorization check to ensure the caller owns the thread.
+ * Uses the `by_record_id` index on mastra_threads to find the thread by
+ * its Mastra UUID, then the `by_thread` index on mastra_messages to
+ * collect and delete all related messages before removing the thread itself.
+ *
+ * @param threadId - The Mastra UUID of the thread (not the Convex _id)
+ * @param guestId - Optional guest identifier for unauthenticated users
+ */
+export const deleteThread = mutation({
+    args: {
+        threadId: v.string(),
+        guestId: v.optional(v.id('guests')),
+    },
+    handler: async (ctx, { threadId, guestId }) => {
+        const identity = await ctx.auth.getUserIdentity();
+        const resourceId = identity?.subject ?? guestId;
+
+        if (!resourceId) {
+            throw new Error('Not authenticated and no guest ID provided');
+        }
+
+        // Find thread by its Mastra UUID (not Convex _id)
+        const thread = await ctx.db
+            .query('mastra_threads')
+            .withIndex('by_record_id', (q) => q.eq('id', threadId))
+            .unique();
+
+        if (!thread) {
+            throw new Error('Thread not found');
+        }
+
+        // Authorization: verify caller owns this thread
+        if (thread.resourceId !== resourceId) {
+            throw new Error('Not authorized to delete this thread');
+        }
+
+        // Delete all messages belonging to this thread
+        const messages = await ctx.db
+            .query('mastra_messages')
+            .withIndex('by_thread', (q) => q.eq('thread_id', threadId))
+            .collect();
+
+        for (const message of messages) {
+            await ctx.db.delete(message._id);
+        }
+
+        // Delete the thread itself
+        await ctx.db.delete(thread._id);
+    },
+});
+
+/**
+ * Renames a thread by updating its title.
+ *
+ * Performs authorization check to ensure the caller owns the thread.
+ * Uses the `by_record_id` index on mastra_threads to locate the thread,
+ * then patches the title and updatedAt timestamp.
+ *
+ * @param threadId - The Mastra UUID of the thread (not the Convex _id)
+ * @param newTitle - The new title to set on the thread
+ * @param guestId - Optional guest identifier for unauthenticated users
+ */
+export const renameThread = mutation({
+    args: {
+        threadId: v.string(),
+        newTitle: v.string(),
+        guestId: v.optional(v.id('guests')),
+    },
+    handler: async (ctx, { threadId, newTitle, guestId }) => {
+        const identity = await ctx.auth.getUserIdentity();
+        const resourceId = identity?.subject ?? guestId;
+
+        if (!resourceId) {
+            throw new Error('Not authenticated and no guest ID provided');
+        }
+
+        const thread = await ctx.db
+            .query('mastra_threads')
+            .withIndex('by_record_id', (q) => q.eq('id', threadId))
+            .unique();
+
+        if (!thread) {
+            throw new Error('Thread not found');
+        }
+
+        if (thread.resourceId !== resourceId) {
+            throw new Error('Not authorized to rename this thread');
+        }
+
+        await ctx.db.patch(thread._id, {
+            title: newTitle,
+            updatedAt: new Date().toISOString(),
+        });
     },
 });

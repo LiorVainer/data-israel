@@ -3,6 +3,8 @@ import { Geist, Geist_Mono } from 'next/font/google';
 import { ClerkProvider } from '@clerk/nextjs';
 import ConvexClientProvider from '@/context/ConvexClientProvider';
 import { UserProvider } from '@/context/UserContext';
+import { AppSidebar } from '@/components/navigation/AppSidebar';
+import { Toaster } from '@/components/ui/sonner';
 
 import './globals.css';
 
@@ -31,9 +33,12 @@ export default function RootLayout({
             <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
                 <ClerkProvider>
                     <ConvexClientProvider>
-                        <UserProvider>{children}</UserProvider>
+                        <UserProvider>
+                            <AppSidebar>{children}</AppSidebar>
+                        </UserProvider>
                     </ConvexClientProvider>
                 </ClerkProvider>
+                <Toaster />
             </body>
         </html>
     );

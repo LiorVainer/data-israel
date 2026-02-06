@@ -33,7 +33,7 @@ export function AppSidebar({
     const router = useRouter();
 
     return (
-        <SidebarProvider className='h-dvh'>
+        <SidebarProvider defaultOpen={false} className='h-dvh'>
             <Sidebar collapsible='offcanvas' side='right' className='h-full'>
                 <SidebarHeader>
                     {/* App Logo / Brand */}
