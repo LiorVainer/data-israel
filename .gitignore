@@ -43,3 +43,8 @@ next-env.d.ts
 .idea
 
 mcp-ref
+
+# Mastra local database
+mastra.db-shm
+mastra.db
+mastra.db-wal

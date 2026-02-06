@@ -1,0 +1,944 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Israel CBS (Central Bureau of Statistics) API",
+    "description": "Unofficial OpenAPI specification for the Israel CBS APIs, covering Series, Price Indices, and Dictionary endpoints.",
+    "version": "1.0.0",
+    "contact": {
+      "name": "CBS Israel",
+      "url": "https://www.cbs.gov.il"
+    }
+  },
+  "servers": [
+    {
+      "url": "https://apis.cbs.gov.il/series",
+      "description": "Series API - Statistical time series"
+    },
+    {
+      "url": "https://api.cbs.gov.il/index",
+      "description": "Price Index API - CPI and price indices"
+    },
+    {
+      "url": "https://api.cbs.gov.il/dictionary",
+      "description": "Dictionary API - Geographic and classification data"
+    }
+  ],
+  "paths": {
+    "/catalog/level": {
+      "get": {
+        "tags": ["Series"],
+        "summary": "Browse catalog by level",
+        "description": "Get catalog items at a specific hierarchical level (1-5). Level 1 returns top-level categories.",
+        "operationId": "getSeriesCatalogByLevel",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "query",
+            "required": true,
+            "description": "Level number (1-5)",
+            "schema": { "type": "integer", "minimum": 1, "maximum": 5 }
+          },
+          {
+            "name": "subject",
+            "in": "query",
+            "description": "First-level category code (required from level 2+)",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "lang",
+            "in": "query",
+            "schema": { "type": "string", "enum": ["he", "en"], "default": "he" }
+          },
+          {
+            "name": "format",
+            "in": "query",
+            "schema": { "type": "string", "enum": ["json", "xml", "csv", "xls"], "default": "json" }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": { "type": "integer", "default": 1 }
+          },
+          {
+            "name": "pagesize",
+            "in": "query",
+            "schema": { "type": "integer", "default": 100, "maximum": 1000 }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Catalog items",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/CatalogResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/catalog/path": {
+      "get": {
+        "tags": ["Series"],
+        "summary": "Browse catalog by path",
+        "description": "Get catalog items using a specific hierarchical path (L1,L2,L3,L4,L5).",
+        "operationId": "getSeriesCatalogByPath",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "query",
+            "required": true,
+            "description": "Comma-separated path codes (e.g., '2,1,1,2,379')",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "lang",
+            "in": "query",
+            "schema": { "type": "string", "enum": ["he", "en"], "default": "he" }
+          },
+          {
+            "name": "format",
+            "in": "query",
+            "schema": { "type": "string", "enum": ["json", "xml", "csv", "xls"], "default": "json" }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": { "type": "integer", "default": 1 }
+          },
+          {
+            "name": "pagesize",
+            "in": "query",
+            "schema": { "type": "integer", "default": 100, "maximum": 1000 }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Catalog items at specified path",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/CatalogResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/data/list": {
+      "get": {
+        "tags": ["Series"],
+        "summary": "Get series data by ID",
+        "description": "Retrieve time series data points for one or more series codes.",
+        "operationId": "getSeriesData",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "query",
+            "required": true,
+            "description": "Series code(s), comma-separated for multiple",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "startPeriod",
+            "in": "query",
+            "description": "Start date (mm-yyyy format)",
+            "schema": { "type": "string", "pattern": "^\\d{2}-\\d{4}$" }
+          },
+          {
+            "name": "endPeriod",
+            "in": "query",
+            "description": "End date (mm-yyyy format)",
+            "schema": { "type": "string", "pattern": "^\\d{2}-\\d{4}$" }
+          },
+          {
+            "name": "last",
+            "in": "query",
+            "description": "Number of latest entries to return",
+            "schema": { "type": "integer" }
+          },
+          {
+            "name": "addNull",
+            "in": "query",
+            "description": "Include empty values",
+            "schema": { "type": "boolean", "default": true }
+          },
+          {
+            "name": "data_hide",
+            "in": "query",
+            "description": "Return metadata only (no data points)",
+            "schema": { "type": "boolean", "default": false }
+          },
+          {
+            "name": "lang",
+            "in": "query",
+            "schema": { "type": "string", "enum": ["he", "en"], "default": "he" }
+          },
+          {
+            "name": "format",
+            "in": "query",
+            "schema": { "type": "string", "enum": ["json", "xml", "csv", "xls"], "default": "json" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Series data",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/SeriesDataResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/data/path": {
+      "get": {
+        "tags": ["Series"],
+        "summary": "Get series data by catalog path",
+        "description": "Retrieve time series data for all series under a specific catalog path (e.g., '2,1,1,2,379').",
+        "operationId": "getSeriesDataByPath",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "query",
+            "required": true,
+            "description": "Comma-separated catalog path (e.g., '2,1,1,2,379')",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "startperiod",
+            "in": "query",
+            "description": "Start date (mm-yyyy format)",
+            "schema": { "type": "string", "pattern": "^\\d{2}-\\d{4}$" }
+          },
+          {
+            "name": "endperiod",
+            "in": "query",
+            "description": "End date (mm-yyyy format)",
+            "schema": { "type": "string", "pattern": "^\\d{2}-\\d{4}$" }
+          },
+          {
+            "name": "last",
+            "in": "query",
+            "description": "Number of latest entries to return",
+            "schema": { "type": "integer" }
+          },
+          {
+            "name": "lang",
+            "in": "query",
+            "schema": { "type": "string", "enum": ["he", "en"], "default": "he" }
+          },
+          {
+            "name": "format",
+            "in": "query",
+            "schema": { "type": "string", "enum": ["json", "xml", "csv", "xls"], "default": "json" }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": { "type": "integer", "default": 1 }
+          },
+          {
+            "name": "pagesize",
+            "in": "query",
+            "schema": { "type": "integer", "default": 100, "maximum": 1000 }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Series data for all series under the path",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/SeriesDataResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/catalog/catalog": {
+      "get": {
+        "tags": ["Price Index"],
+        "summary": "Get price index chapters",
+        "description": "List all main chapters in the price index catalog.",
+        "operationId": "getPriceIndexChapters",
+        "parameters": [
+          {
+            "name": "lang",
+            "in": "query",
+            "schema": { "type": "string", "enum": ["he", "en"], "default": "he" }
+          },
+          {
+            "name": "format",
+            "in": "query",
+            "schema": { "type": "string", "enum": ["json", "xml"], "default": "json" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of chapters",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/PriceChaptersResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/catalog/chapter": {
+      "get": {
+        "tags": ["Price Index"],
+        "summary": "Get chapter topics",
+        "description": "Get topics within a specific price index chapter.",
+        "operationId": "getPriceIndexChapterTopics",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "query",
+            "required": true,
+            "description": "Chapter ID",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "lang",
+            "in": "query",
+            "schema": { "type": "string", "enum": ["he", "en"], "default": "he" }
+          },
+          {
+            "name": "format",
+            "in": "query",
+            "schema": { "type": "string", "enum": ["json", "xml"], "default": "json" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Chapter with its topics",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/PriceChapterResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/catalog/subject": {
+      "get": {
+        "tags": ["Price Index"],
+        "summary": "Get index codes by subject",
+        "description": "Get price index codes for a specific subject/topic.",
+        "operationId": "getPriceIndexCodesBySubject",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "query",
+            "required": true,
+            "description": "Subject/topic ID",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "lang",
+            "in": "query",
+            "schema": { "type": "string", "enum": ["he", "en"], "default": "he" }
+          },
+          {
+            "name": "format",
+            "in": "query",
+            "schema": { "type": "string", "enum": ["json", "xml"], "default": "json" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Subject with its index codes",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/PriceSubjectResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/data/price": {
+      "get": {
+        "tags": ["Price Index"],
+        "summary": "Get price index values",
+        "description": "Retrieve price index values by index code with optional date range.",
+        "operationId": "getPriceIndexValues",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "query",
+            "required": true,
+            "description": "Index code",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "startPeriod",
+            "in": "query",
+            "description": "Start date (mm-yyyy)",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "endPeriod",
+            "in": "query",
+            "description": "End date (mm-yyyy)",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "last",
+            "in": "query",
+            "description": "Number of latest values",
+            "schema": { "type": "integer" }
+          },
+          {
+            "name": "coef",
+            "in": "query",
+            "description": "Include adjustment coefficients",
+            "schema": { "type": "boolean" }
+          },
+          {
+            "name": "lang",
+            "in": "query",
+            "schema": { "type": "string", "enum": ["he", "en"], "default": "he" }
+          },
+          {
+            "name": "format",
+            "in": "query",
+            "schema": { "type": "string", "enum": ["json", "xml"], "default": "json" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Price index data",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/PriceDataResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/data/calculator/{id}": {
+      "get": {
+        "tags": ["Price Index"],
+        "summary": "Calculate index adjustment",
+        "description": "Compute index-based adjustment between two dates, optionally for a specific amount.",
+        "operationId": "calculatePriceIndex",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "Index code",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "startDate",
+            "in": "query",
+            "required": true,
+            "description": "Start date (mm-dd-yyyy or yyyy-mm-dd)",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "endDate",
+            "in": "query",
+            "required": true,
+            "description": "End date (mm-dd-yyyy or yyyy-mm-dd)",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "sum",
+            "in": "query",
+            "description": "Amount to adjust",
+            "schema": { "type": "number" }
+          },
+          {
+            "name": "lang",
+            "in": "query",
+            "schema": { "type": "string", "enum": ["he", "en"], "default": "he" }
+          },
+          {
+            "name": "format",
+            "in": "query",
+            "schema": { "type": "string", "enum": ["json", "xml"], "default": "json" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Calculator result",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/PriceCalculatorResult" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/{subject}/{resource}": {
+      "get": {
+        "tags": ["Dictionary"],
+        "summary": "Search dictionary resource",
+        "description": "Search within a dictionary resource (e.g., localities, districts).",
+        "operationId": "searchDictionaryResource",
+        "parameters": [
+          {
+            "name": "subject",
+            "in": "path",
+            "required": true,
+            "description": "Dictionary subject (e.g., 'geo')",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "resource",
+            "in": "path",
+            "required": true,
+            "description": "Resource name (e.g., 'localities', 'districts', 'regions')",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "q",
+            "in": "query",
+            "description": "Search text",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "string_match_type",
+            "in": "query",
+            "schema": { "type": "string", "enum": ["BEGINS_WITH", "CONTAINS", "EQUALS"] }
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "description": "Sort field with direction (+field/-field)",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "expand",
+            "in": "query",
+            "description": "Display related dictionaries",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "fields",
+            "in": "query",
+            "description": "Comma-separated field list",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "filter",
+            "in": "query",
+            "description": "Filter expression (f1={xxx}&f2={xxx})",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": { "type": "integer", "default": 1 }
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "schema": { "type": "integer", "default": 100, "maximum": 250 }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Dictionary items",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/DictionaryResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/{subject}/{resource}/{ids}": {
+      "get": {
+        "tags": ["Dictionary"],
+        "summary": "Get dictionary items by ID",
+        "description": "Retrieve specific dictionary items by their IDs.",
+        "operationId": "getDictionaryItemsByIds",
+        "parameters": [
+          {
+            "name": "subject",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "resource",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "ids",
+            "in": "path",
+            "required": true,
+            "description": "Comma-separated IDs",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Dictionary items",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/DictionaryResponse" }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "CatalogItem": {
+        "type": "object",
+        "required": ["path", "name", "pathDesc"],
+        "properties": {
+          "path": {
+            "type": "array",
+            "items": { "type": "integer" }
+          },
+          "name": { "type": "string" },
+          "pathDesc": { "type": ["string", "null"] }
+        }
+      },
+      "CatalogPaging": {
+        "type": "object",
+        "properties": {
+          "total_items": { "type": "integer" },
+          "page_size": { "type": "integer" },
+          "current_page": { "type": "integer" },
+          "last_page": { "type": "integer" },
+          "first_url": { "type": "string" },
+          "previous_url": { "type": ["string", "null"] },
+          "current_url": { "type": "string" },
+          "next_url": { "type": ["string", "null"] },
+          "last_url": { "type": "string" },
+          "base_url": { "type": ["string", "null"] }
+        }
+      },
+      "CatalogResponse": {
+        "type": "object",
+        "required": ["catalogs"],
+        "properties": {
+          "catalogs": {
+            "type": "object",
+            "required": ["catalog", "level", "paging"],
+            "properties": {
+              "catalog": {
+                "type": "array",
+                "items": { "$ref": "#/components/schemas/CatalogItem" }
+              },
+              "level": { "type": "integer" },
+              "paging": { "$ref": "#/components/schemas/CatalogPaging" }
+            }
+          }
+        }
+      },
+      "LabeledValue": {
+        "type": "object",
+        "required": ["value", "name"],
+        "properties": {
+          "value": { "type": "integer" },
+          "name": { "type": "string" }
+        }
+      },
+      "SeriesObservation": {
+        "type": "object",
+        "required": ["TimePeriod", "Value"],
+        "properties": {
+          "TimePeriod": { "type": "string", "description": "Date in yyyy-MM format" },
+          "Value": { "type": "number" }
+        }
+      },
+      "SeriesPathLevel": {
+        "type": "object",
+        "required": ["value", "name"],
+        "properties": {
+          "value": { "type": "integer" },
+          "name": { "type": "string" }
+        }
+      },
+      "SeriesPath": {
+        "type": "object",
+        "properties": {
+          "level1": { "$ref": "#/components/schemas/SeriesPathLevel" },
+          "level2": { "$ref": "#/components/schemas/SeriesPathLevel" },
+          "level3": { "$ref": "#/components/schemas/SeriesPathLevel" },
+          "level4": { "$ref": "#/components/schemas/SeriesPathLevel" },
+          "name_id": { "$ref": "#/components/schemas/SeriesPathLevel" }
+        }
+      },
+      "SeriesEntry": {
+        "type": "object",
+        "required": ["id", "time", "data", "unit", "calc", "price", "path", "precis", "update", "obs"],
+        "properties": {
+          "id": { "type": "integer" },
+          "ffu_num": { "type": ["integer", "null"] },
+          "time": { "$ref": "#/components/schemas/LabeledValue" },
+          "data": { "$ref": "#/components/schemas/LabeledValue" },
+          "unit": { "$ref": "#/components/schemas/LabeledValue" },
+          "calc": { "$ref": "#/components/schemas/LabeledValue" },
+          "price": { "$ref": "#/components/schemas/LabeledValue" },
+          "path": { "$ref": "#/components/schemas/SeriesPath" },
+          "precis": { "type": "integer" },
+          "update": { "type": "string", "description": "Last update date (yyyy-MM-dd)" },
+          "obs": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/SeriesObservation" }
+          }
+        }
+      },
+      "SeriesDataResponse": {
+        "type": "object",
+        "required": ["DataSet"],
+        "properties": {
+          "DataSet": {
+            "type": "object",
+            "required": ["Series", "paging"],
+            "properties": {
+              "Series": {
+                "type": "array",
+                "items": { "$ref": "#/components/schemas/SeriesEntry" }
+              },
+              "paging": { "$ref": "#/components/schemas/CatalogPaging" }
+            }
+          }
+        }
+      },
+      "PriceChapter": {
+        "type": "object",
+        "required": ["chapterId", "chapterName", "chapterOrder"],
+        "properties": {
+          "chapterId": { "type": "string" },
+          "chapterName": { "type": "string" },
+          "chapterOrder": { "type": "integer" },
+          "mainCode": { "type": ["integer", "null"] },
+          "subject": { "type": ["object", "null"] }
+        }
+      },
+      "PriceChaptersResponse": {
+        "type": "object",
+        "required": ["chapters"],
+        "properties": {
+          "chapters": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/PriceChapter" }
+          }
+        }
+      },
+      "PriceSubject": {
+        "type": "object",
+        "required": ["subjectId", "subjectName"],
+        "properties": {
+          "subjectId": { "type": "integer" },
+          "subjectName": { "type": "string" },
+          "code": { "type": ["object", "null"] }
+        }
+      },
+      "PriceChapterResponse": {
+        "type": "object",
+        "properties": {
+          "chapterId": { "type": "string" },
+          "chapterName": { "type": ["string", "null"] },
+          "chapterOrder": { "type": ["integer", "null"] },
+          "mainCode": { "type": ["integer", "null"] },
+          "subject": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/PriceSubject" }
+          }
+        }
+      },
+      "PriceIndexCode": {
+        "type": "object",
+        "required": ["codeId", "codeName"],
+        "properties": {
+          "codeId": { "type": "integer" },
+          "codePrefix": { "type": "integer" },
+          "codeName": { "type": "string" },
+          "codeNote": { "type": "string" },
+          "codeLevel": { "type": "integer" },
+          "codeLine": { "type": "integer" },
+          "codeType": { "type": "integer" },
+          "codeFromDate": { "type": "string" },
+          "codeToDate": { "type": "string" },
+          "codeCalcFromDate": { "type": "string" },
+          "codeCalcToDate": { "type": "string" },
+          "isMonth": { "type": "boolean" }
+        }
+      },
+      "PriceSubjectResponse": {
+        "type": "object",
+        "properties": {
+          "subjectId": { "type": "integer" },
+          "subjectName": { "type": ["string", "null"] },
+          "code": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/PriceIndexCode" }
+          }
+        }
+      },
+      "PriceBase": {
+        "type": "object",
+        "required": ["baseDesc", "value"],
+        "properties": {
+          "baseDesc": { "type": "string" },
+          "value": { "type": "number" }
+        }
+      },
+      "PriceDateEntry": {
+        "type": "object",
+        "required": ["year", "month", "monthDesc", "percent", "percentYear", "currBase"],
+        "properties": {
+          "year": { "type": "integer" },
+          "percent": { "type": "number" },
+          "percentYear": { "type": "number" },
+          "currBase": { "$ref": "#/components/schemas/PriceBase" },
+          "prevBase": { "oneOf": [{ "$ref": "#/components/schemas/PriceBase" }, { "type": "null" }] },
+          "month": { "type": "integer" },
+          "monthDesc": { "type": "string" }
+        }
+      },
+      "PriceMonthEntry": {
+        "type": "object",
+        "required": ["code", "name", "date"],
+        "properties": {
+          "code": { "type": "integer" },
+          "name": { "type": "string" },
+          "date": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/PriceDateEntry" }
+          }
+        }
+      },
+      "PriceDataResponse": {
+        "type": "object",
+        "properties": {
+          "month": {
+            "type": ["array", "null"],
+            "items": { "$ref": "#/components/schemas/PriceMonthEntry" }
+          },
+          "quarter": {},
+          "paging": { "$ref": "#/components/schemas/CatalogPaging" }
+        }
+      },
+      "PriceCalculatorResult": {
+        "description": "Calculator endpoint currently unavailable",
+        "type": "object",
+        "properties": {
+          "originalAmount": { "type": "number" },
+          "adjustedAmount": { "type": "number" },
+          "coefficient": { "type": "number" },
+          "startDate": { "type": "string" },
+          "endDate": { "type": "string" },
+          "indexCode": { "type": "string" },
+          "startValue": { "type": "number" },
+          "endValue": { "type": "number" }
+        }
+      },
+      "DictionaryId": {
+        "type": "object",
+        "properties": {
+          "id": { "type": ["string", "null"] },
+          "year": { "type": "string" }
+        }
+      },
+      "DictionaryRelated": {
+        "type": "object",
+        "properties": {
+          "ID": { "$ref": "#/components/schemas/DictionaryId" },
+          "name_eng": { "type": ["string", "null"] },
+          "name_heb": { "type": ["string", "null"] }
+        }
+      },
+      "LocalityData": {
+        "type": "object",
+        "properties": {
+          "ID": { "$ref": "#/components/schemas/DictionaryId" },
+          "district": { "type": "string" },
+          "locality_type": { "type": "string" },
+          "metropolin": { "type": ["string", "null"] },
+          "municipal_or_council_status": { "type": ["string", "null"] },
+          "name_eng": { "type": ["string", "null"] },
+          "name_heb": { "type": "string" },
+          "natural_area": { "type": "string" },
+          "organization": { "type": ["string", "null"] },
+          "planning_committee": { "type": ["string", "null"] },
+          "region": { "type": "string" },
+          "religion": { "type": ["string", "null"] },
+          "total_arabs": { "type": "string" },
+          "total_jews": { "type": "string" },
+          "total_jews_and_others": { "type": "string" },
+          "total_population": { "type": "string" }
+        }
+      },
+      "LocalityItems": {
+        "type": "object",
+        "properties": {
+          "localities": { "$ref": "#/components/schemas/LocalityData" },
+          "districts": { "$ref": "#/components/schemas/DictionaryRelated" },
+          "locality_types": { "$ref": "#/components/schemas/DictionaryRelated" },
+          "metropolins": { "$ref": "#/components/schemas/DictionaryRelated" },
+          "municipal_or_council_status": { "$ref": "#/components/schemas/DictionaryRelated" },
+          "natural_areas": { "$ref": "#/components/schemas/DictionaryRelated" },
+          "organizational_affiliations": { "$ref": "#/components/schemas/DictionaryRelated" },
+          "planning_committee": { "$ref": "#/components/schemas/DictionaryRelated" },
+          "regions": { "$ref": "#/components/schemas/DictionaryRelated" },
+          "religions": { "$ref": "#/components/schemas/DictionaryRelated" }
+        }
+      },
+      "DictionaryPaging": {
+        "type": "object",
+        "description": "Dictionary paging uses string values unlike series paging",
+        "properties": {
+          "total_items": { "type": "string" },
+          "total_size": { "type": "string" },
+          "page_items": { "type": "string" },
+          "page_size": { "type": "string" },
+          "current_page": { "type": "string" },
+          "last_page": { "type": "string" },
+          "first_url": { "type": "string" },
+          "previous_url": { "type": ["string", "null"] },
+          "current_url": { "type": "string" },
+          "next_url": { "type": ["string", "null"] },
+          "last_url": { "type": "string" }
+        }
+      },
+      "DictionaryResponse": {
+        "type": "object",
+        "required": ["dictionary"],
+        "properties": {
+          "dictionary": {
+            "type": "object",
+            "properties": {
+              "status": { "type": "string" },
+              "code": { "type": "string" },
+              "data": {
+                "type": "object",
+                "properties": {
+                  "localities": {
+                    "type": "object",
+                    "properties": {
+                      "data": { "type": "string" },
+                      "items": { "$ref": "#/components/schemas/LocalityItems" }
+                    }
+                  }
+                }
+              },
+              "paging": { "$ref": "#/components/schemas/DictionaryPaging" }
+            }
+          }
+        }
+      }
+    }
+  }
+}

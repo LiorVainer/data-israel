@@ -7,14 +7,6 @@ export interface AvailableModel {
 }
 
 export const AgentConfig = {
-    /** Tool calls configuration */
-    TOOL_CALLS: {
-        /** Minimum steps before stopping is allowed */
-        MIN_STEPS_BEFORE_STOP: 0,
-        /** Hard limit on maximum steps */
-        MAX_STEPS: 25,
-    },
-
     /** Model configuration */
     MODEL: {
         /** Default OpenRouter model ID */
@@ -43,9 +35,6 @@ export const AgentConfig = {
             providerSlug: 'zhipuai',
         },
     ] satisfies AvailableModel[],
-
-    /** Completion detection markers (Hebrew) */
-    COMPLETION_MARKERS: ['סיכום:', 'מצאתי את כל הנתונים', 'לא מצאתי נתונים', 'סיימתי לחפש', 'סיימתי את החיפוש'],
 
     /** Display limits */
     DISPLAY: {

@@ -1,4 +1,5 @@
 import type { LucideIcon } from 'lucide-react';
+import type { NetworkDataPart } from '@mastra/ai-sdk';
 
 /**
  * Re-export UI-related types from AI SDK
@@ -64,6 +65,13 @@ export type StepStatus = 'complete' | 'active' | 'pending';
  */
 export function isToolPart(part: { type: string }): part is ToolCallPart {
     return part.type.startsWith('tool-');
+}
+
+/**
+ * Check if a part is a tool call
+ */
+export function isAgentsNetworkDataPart(part: { type: string }): part is NetworkDataPart {
+    return part.type === 'data-network';
 }
 
 /**

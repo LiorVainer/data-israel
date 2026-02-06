@@ -3,10 +3,10 @@
 import { CopyIcon, RefreshCcwIcon } from 'lucide-react';
 import {
     Message,
+    MessageAction,
+    MessageActions,
     MessageContent,
     MessageResponse,
-    MessageActions,
-    MessageAction,
 } from '@/components/ai-elements/message';
 
 export interface TextMessagePartProps {

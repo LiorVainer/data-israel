@@ -90,7 +90,7 @@ export const ChainOfThoughtStep = memo(
     }: ChainOfThoughtStepProps) => {
         const statusStyles = {
             complete: 'text-muted-foreground',
-            active: 'text-foreground',
+            active: 'text-foreground font-medium',
             pending: 'text-muted-foreground/50',
         };
 
@@ -110,8 +110,8 @@ export const ChainOfThoughtStep = memo(
                 </div>
                 <div className='flex-1 space-y-2 overflow-hidden'>
                     <div>{label}</div>
-                    {description && <div className='text-muted-foreground text-xs'>{description}</div>}
                     {children}
+                    {description && <div className='text-muted-foreground text-xs'>{description}</div>}
                 </div>
             </div>
         );

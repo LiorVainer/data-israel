@@ -1,48 +1,39 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { useChat } from '@ai-sdk/react';
-import { useEffect, useRef, useState } from 'react';
-import { Conversation, ConversationContent, ConversationScrollButton } from '@/components/ai-elements/conversation';
-import {
-    PromptInput,
-    PromptInputFooter,
-    PromptInputSubmit,
-    PromptInputTextarea,
-    PromptInputTools,
-} from '@/components/ai-elements/prompt-input';
-import { LandingPage } from '@/components/chat/LandingPage';
-import { MessageItem } from '@/components/chat/MessageItem';
-import { ModelSelectorSection } from '@/components/chat/ModelSelectorSection';
-import type { DataAgentUIMessage } from '@/agents/data-agent';
-import { AgentConfig } from '@/agents/agent.config';
-import { LoadingShimmer } from '@/components/chat/LoadingShimmer';
+import { useRouter } from 'next/navigation';
+import { HeroSection } from '@/components/chat/HeroSection';
 import { GeometricBackground } from '@/components/ui/shape-landing-hero';
-import { useIsMobile } from '@/hooks/use-mobile';
-import { MobileSuggestions } from '@/components/chat/MobileSuggestions';
+import { Suggestions } from '@/components/chat/Suggestions';
+import { InputSection } from '@/components/chat/InputSection';
+import { useSessionStorage } from '@/hooks/use-session-storage';
+import { INITIAL_MESSAGE_KEY, type InitialMessageData } from '@/constants/chat';
 
 export default function Home() {
-    const [selectedModel, setSelectedModel] = useState(AgentConfig.AVAILABLE_MODELS[0].id);
-    const [modelSelectorOpen, setModelSelectorOpen] = useState(false);
-    const modelRef = useRef(selectedModel);
+    const router = useRouter();
+    const [, setInitialMessage] = useSessionStorage<InitialMessageData>(INITIAL_MESSAGE_KEY);
 
-    // Keep modelRef in sync with selectedModel for use in callbacks
-    useEffect(() => {
-        modelRef.current = selectedModel;
-    }, [selectedModel]);
+    const handleSend = (text: string) => {
+        if (!text.trim()) return;
 
-    const { messages, sendMessage, status, regenerate, stop } = useChat<DataAgentUIMessage>({});
-    const isMobile = useIsMobile();
+        const chatId = crypto.randomUUID();
 
-    const handleSuggestionClick = (prompt: string) => {
-        void sendMessage({ text: prompt }, { body: { model: modelRef.current } });
+        const messageData = {
+            chatId,
+            text,
+        };
+
+        console.log('[Landing] Saving initial message to session storage:', messageData);
+
+        // Save initial message to session storage
+        setInitialMessage(messageData);
+
+        // Navigate to chat page
+        router.push(`/chat/${chatId}`);
     };
 
-    const isStreaming = status === 'submitted' || status === 'streaming';
-    const hasMessages = messages.length > 0;
-
     return (
-        <div className='relative h-dvh w-screen'>
+        <div className='relative h-full w-full'>
             <GeometricBackground />
 
             <div className='mx-auto px-4 md:px-0 pb-4 md:pb-6 relative h-full w'>
@@ -56,58 +47,15 @@ export default function Home() {
                     }}
                     className='flex flex-col gap-4 md:gap-6 h-full w-full items-center'
                 >
-                    {hasMessages ? (
-                        <Conversation className='w-full children-noscrollbar'>
-                            <ConversationContent className='w-full md:w-4xl pt-8 md:pt-10 mx-auto'>
-                                {messages.map((message, messageIndex) => (
-                                    <MessageItem
-                                        key={message.id}
-                                        message={message}
-                                        isLastMessage={messageIndex === messages.length - 1}
-                                        isStreaming={isStreaming}
-                                        onRegenerate={regenerate}
-                                    />
-                                ))}
-                                {status === 'submitted' && <LoadingShimmer />}
-                            </ConversationContent>
-                            <ConversationScrollButton />
-                        </Conversation>
-                    ) : null}
-
-                    {!hasMessages && (
-                        <div className='relative z-20 flex-1 flex flex-col min-h-0 overflow-hidden'>
-                            <LandingPage onSuggestionClick={handleSuggestionClick} />
-                        </div>
-                    )}
+                    <div className='relative z-20 flex-1 flex flex-col min-h-0 overflow-hidden'>
+                        <HeroSection onSuggestionClick={handleSend} />
+                    </div>
 
                     <div className='relative z-20 w-full md:w-4xl'>
-                        {isMobile && !hasMessages && (
-                            <div className='mb-3'>
-                                <MobileSuggestions onSuggestionClick={handleSuggestionClick} />
-                            </div>
-                        )}
-                        <PromptInput
-                            onSubmit={(message) => {
-                                if (!message.text.trim()) return;
-                                void sendMessage({ text: message.text }, { body: { model: modelRef.current } });
-                            }}
-                        >
-                            <PromptInputTextarea placeholder='שאל על מאגרי מידע' />
-                            <PromptInputFooter>
-                                <PromptInputTools>
-                                    <ModelSelectorSection
-                                        selectedModel={selectedModel}
-                                        open={modelSelectorOpen}
-                                        onOpenChange={setModelSelectorOpen}
-                                        onSelectModel={setSelectedModel}
-                                    />
-                                </PromptInputTools>
-                                <PromptInputSubmit
-                                    status={status}
-                                    onClick={status === 'streaming' ? stop : undefined}
-                                />
-                            </PromptInputFooter>
-                        </PromptInput>
+                        <div className='mb-3'>
+                            <Suggestions onClick={handleSend} />
+                        </div>
+                        <InputSection onSubmit={handleSend} />
                     </div>
                 </motion.div>
             </div>

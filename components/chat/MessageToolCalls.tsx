@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import {useState} from 'react';
 import {
     ActivityIcon,
     BarChart2Icon,
@@ -24,16 +24,16 @@ import {
     ChainOfThoughtHeader,
     ChainOfThoughtStep,
 } from '@/components/ai-elements/chain-of-thought';
-import { Shimmer } from '@/components/ai-elements/shimmer';
-import { toolTranslations } from '@/constants/tool-translations';
-import type { ToolName } from '@/lib/tools/types';
-import type { StepStatus, ToolCallPart, ToolInfo } from './types';
-import { getToolStatus } from './types';
+import {Shimmer} from '@/components/ai-elements/shimmer';
+import {toolTranslations} from '@/constants/tool-translations';
+import type {ToolName} from '@/lib/tools/types';
+import type {StepStatus, ToolCallPart, ToolInfo} from './types';
+import {getToolStatus} from './types';
 
 /**
  * Map tool names to their LucideIcon components for ChainOfThoughtStep
  */
-const toolIconMap: Record<string, LucideIcon> = {
+const toolIconMap: Partial<Record<ToolName, LucideIcon>> = {
     searchDatasets: SearchIcon,
     getDatasetDetails: FileTextIcon,
     listGroups: FolderIcon,
@@ -52,6 +52,12 @@ const toolIconMap: Record<string, LucideIcon> = {
     displayBarChart: BarChart2Icon,
     displayLineChart: LineChartIcon,
     displayPieChart: PieChartIcon,
+    browseCbsCatalog: DatabaseIcon,
+    getCbsSeriesData: BarChart2Icon,
+    browseCbsPriceIndices: LineChartIcon,
+    getCbsPriceData: LineChartIcon,
+    calculateCbsPriceIndex: ActivityIcon,
+    searchCbsLocalities: SearchIcon,
 };
 
 /**
@@ -59,7 +65,7 @@ const toolIconMap: Record<string, LucideIcon> = {
  */
 export function getToolInfo(toolKey: string): ToolInfo {
     const meta = toolKey in toolTranslations ? toolTranslations[toolKey as ToolName] : null;
-    const icon = toolIconMap[toolKey] ?? SearchIcon;
+    const icon = (toolKey in toolIconMap ? toolIconMap[toolKey as ToolName] : undefined) ?? SearchIcon;
     return {
         name: meta?.name ?? toolKey,
         icon,
@@ -71,17 +77,22 @@ export function getToolInfo(toolKey: string): ToolInfo {
  */
 export function getToolDescription(part: ToolCallPart): string | undefined {
     const toolKey = part.type.replace('tool-', '');
-    const meta = toolKey in toolTranslations ? toolTranslations[toolKey as ToolName] : null;
+    const meta =
+        toolKey in toolTranslations
+            ? (toolTranslations[toolKey as ToolName] as
+                  | { formatInput: (input: unknown) => string | undefined; formatOutput: (output: unknown) => string }
+                  | undefined)
+            : null;
 
     if (!meta) return undefined;
 
     try {
         if (part.state === 'output-available' && part.output !== undefined) {
-            return meta.formatOutput(part.output as any);
+            return meta.formatOutput(part.output);
         }
 
         if (part.input !== undefined) {
-            return meta.formatInput(part.input as any);
+            return meta.formatInput(part.input);
         }
     } catch {
         return undefined;
@@ -94,32 +105,36 @@ type ToolIO = { input?: string; output?: string };
 
 export function getToolIO(part: ToolCallPart): ToolIO | undefined {
     const toolKey = part.type.replace('tool-', '');
-    const meta = toolKey in toolTranslations ? toolTranslations[toolKey as ToolName] : null;
+    const meta =
+        toolKey in toolTranslations
+            ? (toolTranslations[toolKey as ToolName] as
+                  | { formatInput: (input: unknown) => string | undefined; formatOutput: (output: unknown) => string }
+                  | undefined)
+            : null;
 
     if (!meta) return undefined;
 
     try {
         const toolIO: ToolIO = {};
         if (part.state === 'output-available' && part.output !== undefined) {
-            toolIO.output = meta.formatOutput(part.output as any);
+            toolIO.output = meta.formatOutput(part.output);
         }
 
         if (part.input !== undefined) {
-            toolIO.input = meta.formatInput(part.input as any);
+            toolIO.input = meta.formatInput(part.input);
         }
 
         return toolIO;
     } catch {
         return undefined;
     }
-
-    return undefined;
 }
 
 export interface MessageToolCallsProps {
     messageId: string;
     toolParts: Array<{ part: ToolCallPart; index: number }>;
     isProcessing: boolean;
+    activeAgentLabel?: string;
 }
 
 /**
@@ -127,16 +142,15 @@ export interface MessageToolCallsProps {
  * Manages its own open state while auto-opening during processing
  * User can click header to toggle open/close
  */
-export function MessageToolCalls({ messageId, toolParts, isProcessing }: MessageToolCallsProps) {
+export function MessageToolCalls({ messageId, toolParts, isProcessing, activeAgentLabel }: MessageToolCallsProps) {
     // User's preferred open state (can be toggled via header click)
-    const [userWantsOpen, setUserWantsOpen] = useState(false);
+    const [userWantsOpen, setUserWantsOpen] = useState(true);
 
     // Check if any tool is currently active
     const hasActiveTools = toolParts.some(({ part }) => getToolStatus(part.state) === 'active');
 
     // Force open when processing or has active tools, otherwise respect user preference
     const shouldForceOpen = isProcessing || hasActiveTools;
-    const isOpen = shouldForceOpen || userWantsOpen;
 
     // Handle user toggling
     const handleOpenChange = (open: boolean) => {
@@ -144,11 +158,11 @@ export function MessageToolCalls({ messageId, toolParts, isProcessing }: Message
     };
 
     return (
-        <ChainOfThought open={isOpen} onOpenChange={handleOpenChange}>
+        <ChainOfThought open={userWantsOpen} onOpenChange={handleOpenChange}>
             <ChainOfThoughtHeader>
                 {hasActiveTools ? (
                     <Shimmer as='span' duration={1.5}>
-                        מעבד...
+                        {activeAgentLabel ?? 'מעבד...'}
                     </Shimmer>
                 ) : (
                     `${toolParts.length} פעולות הושלמו`
@@ -182,7 +196,7 @@ export function MessageToolCalls({ messageId, toolParts, isProcessing }: Message
                                 ) : (
                                     <>
                                         {io?.input && <p className='text-muted-foreground'>{io.input}</p>}
-                                        <p className='text-primary font-semibold'>{io?.output}</p>
+                                        {io?.output && <p className='text-primary font-semibold'>{io?.output}</p>}
                                     </>
                                 )
                             }

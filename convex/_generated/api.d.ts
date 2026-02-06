@@ -9,9 +9,12 @@
  */
 
 import type * as datasets from "../datasets.js";
+import type * as guests from "../guests.js";
+import type * as mastra_storage from "../mastra/storage.js";
 import type * as rag from "../rag.js";
 import type * as resources from "../resources.js";
 import type * as search from "../search.js";
+import type * as threads from "../threads.js";
 
 import type {
   ApiFromModules,
@@ -21,9 +24,12 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   datasets: typeof datasets;
+  guests: typeof guests;
+  "mastra/storage": typeof mastra_storage;
   rag: typeof rag;
   resources: typeof resources;
   search: typeof search;
+  threads: typeof threads;
 }>;
 
 /**

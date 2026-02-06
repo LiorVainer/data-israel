@@ -6,22 +6,22 @@
  */
 
 import {
-    SearchIcon,
+    ActivityIcon,
+    BarChart2Icon,
+    BuildingIcon,
+    DatabaseIcon,
+    FileIcon,
     FileTextIcon,
     FolderIcon,
-    TagIcon,
-    DatabaseIcon,
-    BuildingIcon,
-    ActivityIcon,
-    FileIcon,
-    ServerIcon,
-    ListIcon,
-    ScrollTextIcon,
-    BarChart2Icon,
     LineChartIcon,
+    ListIcon,
     PieChartIcon,
+    ScrollTextIcon,
+    SearchIcon,
+    ServerIcon,
+    TagIcon,
 } from 'lucide-react';
-import type { ToolName, ToolInput, ToolOutput } from '@/lib/tools/types';
+import type { ToolInput, ToolName, ToolOutput } from '@/lib/tools/types';
 
 /**
  * Translate common field names to Hebrew
@@ -88,7 +88,7 @@ export interface ToolTranslation<T extends ToolName> {
     name: string;
     icon: React.ReactNode;
     formatInput: (input: ToolInput<T>) => string | undefined;
-    formatOutput: (output: ToolOutput<T>) => string;
+    formatOutput: (output: ToolOutput<T>) => string | undefined;
 }
 
 export type ToolTranslationsMap = {
@@ -435,6 +435,89 @@ export const toolTranslations: ToolTranslationsMap = {
                 return 'התרשים הוצג בהצלחה';
             }
             return 'שגיאה בהצגת התרשים';
+        },
+    },
+    browseCbsCatalog: {
+        name: 'עיון בקטלוג הלמ"ס',
+        icon: <DatabaseIcon className='h-4 w-4' />,
+        formatInput: (input) => {
+            if (input.subject) return `מחפש: "${input.subject}"`;
+            return 'טוען קטלוג נתונים סטטיסטיים';
+        },
+        formatOutput: (output) => {
+            if (!output.success) return `שגיאה: ${output.error}`;
+            return `נמצאו ${output.items?.length ?? 0} סדרות`;
+        },
+    },
+    browseCbsCatalogPath: {
+        name: 'עיון בקטלוג הלמ"ס לפי נתיב',
+        icon: <DatabaseIcon className='h-4 w-4' />,
+        formatInput: (input) => {
+            return `מנווט לנתיב: ${input.path}`;
+        },
+        formatOutput: (output) => {
+            if (!output.success) return `שגיאה: ${output.error}`;
+            return `נמצאו ${output.items?.length ?? 0} פריטים`;
+        },
+    },
+    getCbsSeriesData: {
+        name: 'שליפת נתונים סטטיסטיים',
+        icon: <BarChart2Icon className='h-4 w-4' />,
+        formatInput: () => 'שולף נתונים סטטיסטיים...',
+        formatOutput: (output) => {
+            if (!output.success) return `שגיאה: ${output.error}`;
+            const obsCount = output.series.reduce((sum, s) => sum + s.observations.length, 0);
+            return `נשלפו ${obsCount} רשומות`;
+        },
+    },
+    getCbsSeriesDataByPath: {
+        name: 'שליפת נתונים לפי נתיב',
+        icon: <BarChart2Icon className='h-4 w-4' />,
+        formatInput: (input) => `שולף נתונים לנתיב: ${input.path}`,
+        formatOutput: (output) => {
+            if (!output.success) return `שגיאה: ${output.error}`;
+            const obsCount = output.series.reduce((sum, s) => sum + s.observations.length, 0);
+            return `נשלפו ${obsCount} רשומות מ-${output.series.length} סדרות`;
+        },
+    },
+    browseCbsPriceIndices: {
+        name: 'עיון במדדי מחירים',
+        icon: <LineChartIcon className='h-4 w-4' />,
+        formatInput: () => 'טוען מדדי מחירים...',
+        formatOutput: (output) => {
+            if (!output.success) return `שגיאה: ${output.error}`;
+            return `נמצאו ${output.items?.length ?? 0} מדדים`;
+        },
+    },
+    getCbsPriceData: {
+        name: 'שליפת נתוני מחירים',
+        icon: <LineChartIcon className='h-4 w-4' />,
+        formatInput: () => 'שולף נתוני מחירים...',
+        formatOutput: (output) => {
+            if (!output.success) return `שגיאה: ${output.error}`;
+            const dataCount = output.indices.reduce((sum, idx) => sum + idx.data.length, 0);
+            return `נשלפו ${dataCount} רשומות`;
+        },
+    },
+    calculateCbsPriceIndex: {
+        name: 'חישוב שינוי מדד',
+        icon: <ActivityIcon className='h-4 w-4' />,
+        formatInput: () => 'מחשב שינוי מדד...',
+        formatOutput: (output) => {
+            if (!output.success) return `שגיאה: ${output.error}`;
+            return 'החישוב הושלם';
+        },
+    },
+    searchCbsLocalities: {
+        name: 'חיפוש יישובים',
+        icon: <SearchIcon className='h-4 w-4' />,
+        formatInput: (input) => {
+            if (input.query) return `מחפש יישוב: "${input.query}"`;
+            return 'מחפש יישובים...';
+        },
+        formatOutput: (output) => {
+            if (!output.success) return `שגיאה: ${output.error}`;
+            return `נמצאו ${output.localities?.length ?? 0} יישובים`;
         },
     },
 };

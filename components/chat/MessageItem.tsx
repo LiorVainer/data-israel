@@ -1,17 +1,20 @@
 'use client';
 
-import type { DataAgentUIMessage } from '@/agents/data-agent';
-import { MessageToolCalls } from './MessageToolCalls';
+import { ToolCallParts } from './ToolCallParts';
 import { TextMessagePart } from './TextMessagePart';
 import { ReasoningPart } from './ReasoningPart';
 import { SourcesPart } from './SourcesPart';
 import { ChartError, ChartLoadingState, ChartRenderer } from './ChartRenderer';
-import type { SourceUrlUIPart, ToolCallPart } from './types';
-import { getToolStatus, isToolPart } from './types';
+import { getToolStatus, isAgentsNetworkDataPart, isToolPart, SourceUrlUIPart, ToolCallPart } from './types';
 import type { DisplayChartInput } from '@/lib/tools';
+import { ClientTools } from '@/lib/tools/client';
+import { UIMessage } from 'ai';
+
+/** Tool-prefixed type names for client-side tools (e.g. 'tool-displayBarChart') */
+const CLIENT_TOOL_TYPES = new Set(Object.keys(ClientTools).map((name) => `tool-${name}`));
 
 export interface MessageItemProps {
-    message: DataAgentUIMessage;
+    message: UIMessage;
     isLastMessage: boolean;
     isStreaming: boolean;
     onRegenerate: () => void;
@@ -21,34 +24,60 @@ export function MessageItem({ message, isLastMessage, isStreaming, onRegenerate 
     // Collect source-url parts for this message
     const sourceParts = message.parts.filter((part): part is SourceUrlUIPart => part.type === 'source-url');
 
-    // Chart tool types that render separately (not in timeline)
-    const chartToolTypes = ['tool-displayBarChart', 'tool-displayLineChart', 'tool-displayPieChart'];
-
-    // Collect tool parts for this message (excluding chart tools which render separately)
+    // Collect tool parts for this message (excluding client tools which render separately)
     const toolParts = message.parts
         .map((part, index) => ({ part: part as ToolCallPart, index }))
-        .filter(({ part }) => isToolPart(part) && !chartToolTypes.includes(part.type));
+        .filter(({ part }) => isToolPart(part) && !CLIENT_TOOL_TYPES.has(part.type));
+
+    const agentsNetworkDataParts = message.parts.filter((part) => isAgentsNetworkDataPart(part));
 
     // Check if any tool is currently active (streaming/processing)
     const hasActiveTools = toolParts.some(({ part }) => isToolPart(part) && getToolStatus(part.state) === 'active');
 
-    // Check if this message is currently being processed
-    const isMessageProcessing = isLastMessage && isStreaming;
+    // Check if the last part is a server-side tool call (not a client tool like charts)
+    const lastPart = message.parts.at(-1);
+    const isLastPartServerTool =
+        lastPart !== undefined && isToolPart(lastPart) && !CLIENT_TOOL_TYPES.has(lastPart.type);
+
+    // Processing is true only when streaming AND the last part is a server tool
+    const isToolsStillRunning = isLastMessage && isStreaming && isLastPartServerTool;
+
+    console.log({ message });
 
     return (
         <div className='animate-in fade-in slide-in-from-bottom-2 flex flex-col gap-6 duration-300'>
-            {/* Render tool calls in a ChainOfThought timeline */}
+            {/*/!* Render tool calls in a ChainOfThought timeline *!/*/}
+            {/*{agentsNetworkDataParts.length > 0 && (*/}
+            {/*    <AgentsNetworkDataParts messageId={message.id} parts={agentsNetworkDataParts} />*/}
+            {/*)}*/}
             {toolParts.length > 0 && (
-                <MessageToolCalls
+                <ToolCallParts
                     messageId={message.id}
                     toolParts={toolParts}
-                    isProcessing={isMessageProcessing || hasActiveTools}
+                    isProcessing={isToolsStillRunning || hasActiveTools}
                 />
             )}
 
             {/* Render non-tool parts and chart tools */}
             {message.parts.map((part, i) => {
                 switch (part.type) {
+                    // TODO: Re-enable network data part rendering when needed
+                    // case 'data-network': {
+                    //     const isLastPart = i === message.parts.length - 1 && isLastMessage;
+                    //     const typedPart = part as NetworkDataPart;
+                    //     const text = (typedPart.data.steps.at(-1)?.output as string) ?? '';
+                    //
+                    //     return (
+                    //         <TextMessagePart
+                    //             key={`${message.id}-${i}`}
+                    //             messageId={message.id}
+                    //             text={text}
+                    //             role={message.role}
+                    //             isLastMessage={isLastPart}
+                    //             onRegenerate={onRegenerate}
+                    //         />
+                    //     );
+                    // }
                     case 'text': {
                         const isLastPart = i === message.parts.length - 1 && isLastMessage;
 

@@ -1,3 +1,4 @@
+/* eslint-disable */
 /**
  * Generated utilities for implementing server-side Convex query and mutation functions.
  *
@@ -8,14 +9,14 @@
  */
 
 import {
-    actionGeneric,
-    httpActionGeneric,
-    queryGeneric,
-    mutationGeneric,
-    internalActionGeneric,
-    internalMutationGeneric,
-    internalQueryGeneric,
-} from 'convex/server';
+  actionGeneric,
+  httpActionGeneric,
+  queryGeneric,
+  mutationGeneric,
+  internalActionGeneric,
+  internalMutationGeneric,
+  internalQueryGeneric,
+} from "convex/server";
 
 /**
  * Define a query in this Convex app's public API.
