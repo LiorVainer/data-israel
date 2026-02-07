@@ -19,10 +19,49 @@ const geistMono = Geist_Mono({
     subsets: ['latin'],
 });
 
-export const metadata: Metadata = {
-    title: 'סוכן המידע הציבורי של ישראל',
-    description: 'חקור מאגרי נתונים ציבוריים מ-data.gov.il באמצעות בינה מלאכותית',
-};
+const VERSION = process.env.VERCEL_GIT_COMMIT_SHA?.slice(0, 8) ?? Date.now().toString();
+
+export async function generateMetadata(): Promise<Metadata> {
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://data-israel.org';
+    const title = 'סוכן המידע הציבורי של ישראל';
+    const description =
+        'שוחח עם סוכן AI חכם שמחובר למאות אלפי מאגרי מידע פתוחים מ-data.gov.il והלמ"ס - חיפוש, ניתוח וויזואליזציה של נתונים ציבוריים בעברית';
+    const ogImage = `/og.png?v=${VERSION}`;
+
+    return {
+        title,
+        description,
+        metadataBase: new URL(siteUrl),
+        openGraph: {
+            type: 'website',
+            url: siteUrl,
+            title,
+            description,
+            siteName: 'סוכן המידע הציבורי',
+            locale: 'he_IL',
+            images: [
+                {
+                    url: ogImage,
+                    width: 1200,
+                    height: 630,
+                    alt: 'סוכן המידע הציבורי - AI למידע הפתוח של ישראל',
+                    type: 'image/png',
+                },
+            ],
+        },
+        twitter: {
+            card: 'summary_large_image',
+            title,
+            description,
+            images: [
+                {
+                    url: ogImage,
+                    alt: 'סוכן המידע הציבורי - AI למידע הפתוח של ישראל',
+                },
+            ],
+        },
+    };
+}
 
 export default function RootLayout({
     children,
