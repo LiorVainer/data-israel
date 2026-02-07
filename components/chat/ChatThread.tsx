@@ -2,65 +2,85 @@
 
 import { useChat } from '@ai-sdk/react';
 import { DefaultChatTransport, UIMessage } from 'ai';
-import { useEffect, useRef } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
+import { useAuth } from '@clerk/nextjs';
+import { useQuery } from '@tanstack/react-query';
+import { threadService } from '@/services/thread.service';
 import { Conversation, ConversationContent, ConversationScrollButton } from '@/components/ai-elements/conversation';
 import { MessageItem } from '@/components/chat/MessageItem';
 import { InputSection } from '@/components/chat/InputSection';
 import { LoadingShimmer } from '@/components/chat/LoadingShimmer';
+import { DataIsraelLoader } from '@/components/chat/DataIsraelLoader';
 import { GeometricBackground } from '@/components/ui/shape-landing-hero';
 import { useSessionStorage } from '@/hooks/use-session-storage';
 import { INITIAL_MESSAGE_KEY, type InitialMessageData } from '@/constants/chat';
 import { useUser } from '@/context/UserContext';
-
-/** Default resource ID for unauthenticated users */
 
 /** Header name for passing user ID to API */
 const USER_ID_HEADER = 'x-user-id';
 
 interface ChatThreadProps {
     id: string;
-    initialMessages: UIMessage[];
-    resourceId: string | null;
 }
 
-export function ChatThread({ id, initialMessages, resourceId }: ChatThreadProps) {
-    const initialMessageSentRef = useRef(false);
-    const { sessionId } = useUser();
-    const userId = resourceId ?? `session:${sessionId}`;
+export function ChatThread({ id }: ChatThreadProps) {
+    const { userId: clerkUserId, isLoaded: isAuthLoaded } = useAuth();
+    const { guestId } = useUser();
+
+    const userId = clerkUserId ?? guestId;
 
     const [initialMessageData, , removeInitialMessage] = useSessionStorage<InitialMessageData>(INITIAL_MESSAGE_KEY);
+    const isNewConversation = initialMessageData?.chatId === id;
 
-    const { messages, sendMessage, status, regenerate, stop } = useChat({
-        messages: initialMessages,
-        transport: new DefaultChatTransport({
-            api: '/api/chat',
-            headers: {
-                [USER_ID_HEADER]: userId,
-            },
-            prepareSendMessagesRequest({ messages }) {
-                return {
-                    body: {
-                        messages,
-                        memory: {
-                            thread: id,
-                            resource: userId,
+    const transport = useMemo(
+        () =>
+            new DefaultChatTransport({
+                api: '/api/chat',
+                headers: {
+                    [USER_ID_HEADER]: userId ?? 'anonymous',
+                },
+                prepareSendMessagesRequest({ messages }) {
+                    console.log(userId);
+                    return {
+                        body: {
+                            messages,
+                            memory: {
+                                thread: id,
+                                resource: userId,
+                            },
                         },
-                    },
-                };
-            },
-        }),
+                    };
+                },
+            }),
+        [id, userId],
+    );
+
+    const { messages, sendMessage, setMessages, status, regenerate, stop } = useChat({
+        messages: [] as UIMessage[],
+        transport,
     });
 
-    // Send initial message from session storage
-    useEffect(() => {
-        if (initialMessageSentRef.current) return;
-        if (!initialMessageData) return;
-        if (initialMessageData.chatId !== id) return;
+    // Hydrate existing messages for returning conversations (not new ones)
+    const { data: hydratedMessages } = useQuery({
+        queryKey: ['threads', id, 'messages', userId],
+        queryFn: () => threadService.getMessages(id, userId!),
+        enabled: !isNewConversation && isAuthLoaded && !!userId,
+    });
 
-        initialMessageSentRef.current = true;
+    const didHydrate = useRef(false);
+
+    useEffect(() => {
+        if (didHydrate.current || !hydratedMessages?.length) return;
+        didHydrate.current = true;
+        setMessages(hydratedMessages);
+    }, [hydratedMessages, setMessages]);
+
+    useEffect(() => {
+        if (!initialMessageData || initialMessageData.chatId !== id || !isAuthLoaded) return;
+
         removeInitialMessage();
         void sendMessage({ text: initialMessageData.text });
-    }, [id, initialMessageData, removeInitialMessage, sendMessage]);
+    }, [id, initialMessageData, removeInitialMessage, sendMessage, isAuthLoaded]);
 
     const isStreaming = status === 'submitted' || status === 'streaming';
 
@@ -81,7 +101,12 @@ export function ChatThread({ id, initialMessages, resourceId }: ChatThreadProps)
                                     onRegenerate={regenerate}
                                 />
                             ))}
-                            {status === 'submitted' && <LoadingShimmer />}
+                            {status === 'submitted' && (
+                                <div className='flex items-center gap-3'>
+                                    <DataIsraelLoader size={18} />
+                                    <LoadingShimmer />
+                                </div>
+                            )}
                         </ConversationContent>
                         <ConversationScrollButton />
                     </Conversation>

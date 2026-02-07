@@ -2,7 +2,8 @@
 
 import { useState, useCallback, useMemo } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
-import { usePaginatedQuery, useMutation } from 'convex/react';
+import { usePaginatedQuery } from 'convex-helpers/react/cache/hooks';
+import { useMutation } from 'convex/react';
 import { api } from '@/convex/_generated/api';
 import { Id } from '@/convex/_generated/dataModel';
 import { useUser } from '@/context/UserContext';

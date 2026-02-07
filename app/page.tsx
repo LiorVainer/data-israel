@@ -23,8 +23,6 @@ export default function Home() {
             text,
         };
 
-        console.log('[Landing] Saving initial message to session storage:', messageData);
-
         // Save initial message to session storage
         setInitialMessage(messageData);
 

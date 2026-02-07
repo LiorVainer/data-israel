@@ -13,13 +13,22 @@ import { z } from 'zod';
 // ============================================================================
 
 export const displayBarChartInputSchema = z.object({
-    title: z.string().optional().describe('Chart title in Hebrew'),
+    title: z
+        .string()
+        .optional()
+        .describe(
+            'Chart title in Hebrew. MUST include measurement units when applicable, e.g. "מחירי דלק (₪ לליטר)" or "אוכלוסייה לפי עיר (אלפים)"',
+        ),
     data: z
         .array(z.record(z.string(), z.union([z.string(), z.number()])))
-        .describe('Array of objects with category field and numeric value fields'),
+        .describe(
+            'Array of objects with category field and numeric value fields. All string values (category names, field keys displayed as labels) MUST be in Hebrew',
+        ),
     config: z.object({
-        indexBy: z.string().describe('Field name to use for category axis (x-axis)'),
-        keys: z.array(z.string()).describe('Field names to use for value bars'),
+        indexBy: z.string().describe('Field name to use for category axis (x-axis). The field name MUST be in Hebrew'),
+        keys: z
+            .array(z.string())
+            .describe('Field names to use for value bars. Each key name MUST be in Hebrew'),
         layout: z.enum(['horizontal', 'vertical']).default('vertical').describe('Bar orientation'),
         groupMode: z.enum(['grouped', 'stacked']).default('grouped').describe('How to display multiple keys'),
     }),
@@ -43,8 +52,10 @@ Use bar charts for:
 - Any categorical comparison
 
 Guidelines:
+- ALL labels, category names, field keys, and data strings MUST be in Hebrew
+- Title MUST be in Hebrew and MUST include measurement units when applicable (e.g. "מחירי דלק (₪ לליטר)", "אוכלוסייה (אלפים)", "שטח (קמ״ר)")
+- indexBy field name and keys field names MUST be in Hebrew — these appear as axis labels
 - Limit data to 20 items max for readability
-- Use meaningful Hebrew labels
 - indexBy should be the category field name
 - keys should be the numeric value field names`,
     inputSchema: displayBarChartInputSchema,
@@ -62,22 +73,29 @@ Guidelines:
 // ============================================================================
 
 export const displayLineChartInputSchema = z.object({
-    title: z.string().optional().describe('Chart title in Hebrew'),
+    title: z
+        .string()
+        .optional()
+        .describe(
+            'Chart title in Hebrew. MUST include measurement units when applicable, e.g. "מגמת מחירי דלק (₪ לליטר)" or "שינוי מדד המחירים (%)"',
+        ),
     data: z
         .array(
             z.object({
-                id: z.string().describe('Series identifier/name'),
+                id: z.string().describe('Series identifier/name in Hebrew, e.g. "בנזין 95" or "סולר"'),
                 data: z
                     .array(
                         z.object({
-                            x: z.union([z.string(), z.number()]).describe('X-axis value (time/sequence)'),
+                            x: z
+                                .union([z.string(), z.number()])
+                                .describe('X-axis value (time/sequence). String values MUST be in Hebrew'),
                             y: z.number().describe('Y-axis value'),
                         }),
                     )
                     .describe('Data points for this series'),
             }),
         )
-        .describe('Array of line series with data points'),
+        .describe('Array of line series with data points. All series ids and string x-values MUST be in Hebrew'),
     config: z.object({
         enableArea: z.boolean().default(false).describe('Fill area under line'),
         curve: z.enum(['linear', 'monotoneX', 'step']).default('monotoneX').describe('Line interpolation'),
@@ -107,8 +125,10 @@ Data format:
 - y must be numeric
 
 Guidelines:
-- Limit to 5 series max for readability
-- Use meaningful Hebrew series names`,
+- ALL labels, series ids, and string x-values MUST be in Hebrew
+- Title MUST be in Hebrew and MUST include measurement units when applicable (e.g. "מגמת מחירי דלק (₪ לליטר)", "שינוי אוכלוסייה (אלפים)")
+- Series id MUST be a descriptive Hebrew name (e.g. "בנזין 95", not "benzin_95")
+- Limit to 5 series max for readability`,
     inputSchema: displayLineChartInputSchema,
     execute: async (input) => {
         return {
@@ -124,16 +144,21 @@ Guidelines:
 // ============================================================================
 
 export const displayPieChartInputSchema = z.object({
-    title: z.string().optional().describe('Chart title in Hebrew'),
+    title: z
+        .string()
+        .optional()
+        .describe(
+            'Chart title in Hebrew. MUST include measurement units when applicable, e.g. "התפלגות הוצאות (₪)" or "נתח שוק (%)"',
+        ),
     data: z
         .array(
             z.object({
-                id: z.string().describe('Slice identifier'),
-                label: z.string().describe('Display label for slice'),
+                id: z.string().describe('Slice identifier in Hebrew'),
+                label: z.string().describe('Display label for slice — MUST be in Hebrew'),
                 value: z.number().describe('Numeric value for slice'),
             }),
         )
-        .describe('Array of pie slices with id, label, and value'),
+        .describe('Array of pie slices with id, label, and value. All ids and labels MUST be in Hebrew'),
     config: z.object({
         innerRadius: z.number().min(0).max(0.9).default(0).describe('Inner radius for donut chart (0 = full pie)'),
     }),
@@ -161,8 +186,9 @@ Data format:
 - Values represent proportions (will be converted to percentages)
 
 Guidelines:
+- ALL slice ids and labels MUST be in Hebrew
+- Title MUST be in Hebrew and MUST include measurement units when applicable (e.g. "התפלגות הוצאות (₪)", "נתח שוק (%)")
 - Limit to 8 slices max for readability
-- Use meaningful Hebrew labels
 - Set innerRadius > 0 for donut style`,
     inputSchema: displayPieChartInputSchema,
     execute: async (input) => {

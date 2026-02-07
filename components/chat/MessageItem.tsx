@@ -42,8 +42,6 @@ export function MessageItem({ message, isLastMessage, isStreaming, onRegenerate 
     // Processing is true only when streaming AND the last part is a server tool
     const isToolsStillRunning = isLastMessage && isStreaming && isLastPartServerTool;
 
-    console.log({ message });
-
     return (
         <div className='animate-in fade-in slide-in-from-bottom-2 flex flex-col gap-6 duration-300'>
             {/*/!* Render tool calls in a ChainOfThought timeline *!/*/}
