@@ -55,6 +55,7 @@ function getUserIdFromRequest(req: Request): string {
  */
 export async function GET(req: Request) {
     const { searchParams } = new URL(req.url);
+    console.log('Got Here');
     const threadId = searchParams.get('threadId');
     const resourceId = searchParams.get('resourceId') || getUserIdFromRequest(req);
 
@@ -72,8 +73,6 @@ export async function GET(req: Request) {
             threadId,
             resourceId,
         });
-
-        console.log({ response });
     } catch {
         // No previous messages found
     }

@@ -2,7 +2,7 @@
 
 import { SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar } from '@/components/ui/sidebar';
 import { SignedIn, SignedOut, useClerk } from '@clerk/nextjs';
-import { BadgeCheck, ChevronsUpDown, LogOut, LucideLogIn, Moon, Sun, User } from 'lucide-react';
+import { ChevronsUpDown, LogOut, LucideLogIn, Moon, Sun, User } from 'lucide-react';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -127,10 +127,10 @@ export function NavUser() {
                                 </DropdownMenuLabel>
                                 <DropdownMenuSeparator />
                                 <DropdownMenuGroup>
-                                    <DropdownMenuItem className='cursor-pointer' onClick={() => openUserProfile()}>
-                                        <BadgeCheck />
-                                        חשבון
-                                    </DropdownMenuItem>
+                                    {/*<DropdownMenuItem className='cursor-pointer' onClick={() => openUserProfile()}>*/}
+                                    {/*    <BadgeCheck />*/}
+                                    {/*    חשבון*/}
+                                    {/*</DropdownMenuItem>*/}
                                     <DropdownMenuItem className='cursor-pointer' onClick={toggleTheme}>
                                         {isDarkMode ? <Sun /> : <Moon />}
                                         {isDarkMode ? 'מצב בהיר' : 'מצב כהה'}

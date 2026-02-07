@@ -31,8 +31,11 @@ export function ThreadsSidebarGroup() {
         loadMoreThreads,
     } = useThreadsData();
 
+    const isLoadingFirstPage = status === 'LoadingFirstPage';
+    const isEmpty = !threads || threads.length === 0;
+
     // Loading state
-    if (status === 'LoadingFirstPage') {
+    if (isLoadingFirstPage && isEmpty) {
         return (
             <SidebarGroup>
                 <SidebarGroupLabel>שיחות</SidebarGroupLabel>

@@ -30,7 +30,7 @@ export function useLocalStorage<T>(key: string, initialValue: T): [T, (value: T 
         }
     }, [key, initialValue]);
 
-    const [storedValue, setStoredValue] = useState<T>(initialValue);
+    const [storedValue, setStoredValue] = useState<T>(readValue);
 
     /**
      * Set value in both state and localStorage.
@@ -54,11 +54,6 @@ export function useLocalStorage<T>(key: string, initialValue: T): [T, (value: T 
         },
         [key, storedValue],
     );
-
-    // Initialize from localStorage on mount (client-side only)
-    useEffect(() => {
-        setStoredValue(readValue());
-    }, [readValue]);
 
     // Listen for storage changes from other tabs/windows
     useEffect(() => {
