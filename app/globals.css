@@ -52,7 +52,7 @@
 }
 
 :root {
-  --radius: 0.625rem;
+  --radius: 1rem;
   --background: oklch(0.98 0.005 250);
   --foreground: oklch(0.145 0.02 250);
   --card: oklch(1 0 0);
@@ -197,6 +197,40 @@
     .children-noscrollbar > *::-webkit-scrollbar {
       display: none !important;                /* Chrome / Safari / iOS */
     }
+  }
+
+  /* Narrow scrollbar – visible only on hover when content overflows */
+  .scrollbar-thin {
+    scrollbar-width: thin;
+    scrollbar-color: transparent transparent;
+    padding-inline-end: 6px;
+  }
+
+  .scrollbar-thin:hover {
+    scrollbar-color: var(--muted-foreground, #888) transparent;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 4px;
+    height: 4px;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    @apply rounded-full;
+    background: transparent;
+    transition: background 0.2s;
+  }
+
+  .scrollbar-thin:hover::-webkit-scrollbar-thumb {
+    @apply bg-muted-foreground/25;
+  }
+
+  .scrollbar-thin:hover::-webkit-scrollbar-thumb:hover {
+    @apply bg-muted-foreground/40;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-track {
+    @apply bg-transparent;
   }
 
   /* LTR direction override for JSON and code blocks */

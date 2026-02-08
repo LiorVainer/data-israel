@@ -8,41 +8,41 @@ import { getToolStatus } from './types';
 import { getToolInfo } from './MessageToolCalls';
 import { type GroupedToolCall, ToolCallStep, type ToolResource } from './ToolCallStep';
 
-/**
- * Type guard to check if an object has apiUrl field
- */
-function hasApiUrl(output: unknown): output is { apiUrl: string } {
-    return (
-        typeof output === 'object' &&
-        output !== null &&
-        'apiUrl' in output &&
-        typeof (output as { apiUrl: unknown }).apiUrl === 'string'
-    );
+function isRecord(value: unknown): value is Record<string, unknown> {
+    return typeof value === 'object' && value !== null;
+}
+
+function getString(obj: unknown, key: string): string | undefined {
+    if (!isRecord(obj)) return undefined;
+    const val = obj[key];
+    return typeof val === 'string' && val.length > 0 ? val : undefined;
 }
 
 /**
- * Type guard to check if an object has searchedResourceName field
+ * Extracts a ToolResource from a tool call's input and output.
+ *
+ * Resolves a display name from (in priority order):
+ *   1. output.searchedResourceName
+ *   2. input.searchedResourceName
+ *   3. input.query / input.q  (search tools)
+ *   4. input.path             (catalog-by-path tools)
+ *   5. output nested titles   (dataset.title, organization.title)
  */
-function hasSearchedResourceName(output: unknown): output is { searchedResourceName: string } {
-    return (
-        typeof output === 'object' &&
-        output !== null &&
-        'searchedResourceName' in output &&
-        typeof (output as { searchedResourceName: unknown }).searchedResourceName === 'string'
-    );
-}
+function extractToolResource(input: unknown, output: unknown): ToolResource | null {
+    const apiUrl = getString(output, 'apiUrl');
 
-/**
- * Extracts a ToolResource from a tool output if apiUrl is present
- */
-function extractToolResource(output: unknown): ToolResource | null {
-    if (!hasApiUrl(output)) {
-        return null;
-    }
-    return {
-        url: output.apiUrl,
-        name: hasSearchedResourceName(output) ? output.searchedResourceName : undefined,
-    };
+    const name =
+        getString(output, 'searchedResourceName') ??
+        getString(input, 'searchedResourceName') ??
+        getString(input, 'query') ??
+        getString(input, 'q') ??
+        getString(input, 'path') ??
+        getString(isRecord(output) ? output.dataset : undefined, 'title') ??
+        getString(isRecord(output) ? output.organization : undefined, 'title');
+
+    if (!apiUrl && !name) return null;
+
+    return { url: apiUrl ?? '', name };
 }
 
 interface ToolCallStats {
@@ -83,8 +83,8 @@ function groupToolCalls(toolParts: ReadonlyArray<{ part: ToolCallPart; index: nu
         const isActive = status === 'active';
         const isCompleted = status === 'complete' && !isFailed;
 
-        // Extract resource from tool output if available
-        const resource = extractToolResource(part.output);
+        // Extract resource from tool input + output
+        const resource = extractToolResource(part.input, part.output);
 
         const existing = groups.get(toolKey);
 
@@ -93,8 +93,8 @@ function groupToolCalls(toolParts: ReadonlyArray<{ part: ToolCallPart; index: nu
             existing.completedCount += isCompleted ? 1 : 0;
             existing.failedCount += isFailed ? 1 : 0;
             existing.isActive = existing.isActive || isActive;
-            // Add resource if present and not already in the list (dedupe by URL)
-            if (resource && !existing.resources.some((r) => r.url === resource.url)) {
+            // Add resource if present and not already in the list (dedupe by name or URL)
+            if (resource && !existing.resources.some((r) => (r.url && r.url === resource.url) || (r.name && r.name === resource.name))) {
                 existing.resources.push(resource);
             }
         } else {

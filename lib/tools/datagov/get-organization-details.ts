@@ -17,7 +17,6 @@ export const getOrganizationDetailsInputSchema = z.object({
     id: z.string().describe('Organization ID or name (short form)'),
     searchedResourceName: z
         .string()
-        .optional()
         .describe('Hebrew name of the organization. Shown in UI as badge label.'),
 });
 

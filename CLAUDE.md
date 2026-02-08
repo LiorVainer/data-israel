@@ -49,6 +49,7 @@ npm start        # Start production server
 ```
 
 ### Code Quality & Verification
+- No `any` or `as` type abuses were introduced
 ```bash
 npm run lint       # Run ESLint
 npm run vibecheck  # Run vibecheck code quality analyzer

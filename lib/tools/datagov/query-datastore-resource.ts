@@ -33,7 +33,6 @@ export const queryDatastoreResourceInputSchema = z.object({
     sort: z.string().optional().describe('Sort order (e.g., "population desc" or "name asc")'),
     searchedResourceName: z
         .string()
-        .optional()
         .describe('Hebrew name of the resource being queried. Shown in UI as badge label.'),
 });
 

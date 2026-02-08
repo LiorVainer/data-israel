@@ -16,7 +16,7 @@ export default function ChatLoading() {
 
                     {/* Disabled input at bottom */}
                     <div className='relative z-20 w-full md:w-4xl'>
-                        <InputSection disabled />
+                        <InputSection status='submitted' />
                     </div>
                 </div>
             </div>

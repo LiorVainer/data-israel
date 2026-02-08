@@ -27,6 +27,9 @@ export const browseCbsCatalogInputSchema = z.object({
     language: z.enum(['he', 'en']).optional().describe('Response language (default: Hebrew)'),
     page: z.number().int().min(1).optional().describe('Page number (default 1)'),
     pageSize: z.number().int().min(1).max(1000).optional().describe('Items per page (default 100, max 1000)'),
+    searchedResourceName: z
+        .string()
+        .describe('Hebrew description of what is being browsed (e.g., "אוכלוסייה", "כלכלה ותעסוקה"). Shown in UI as badge label.'),
 });
 
 export const browseCbsCatalogOutputSchema = z.discriminatedUnion('success', [
@@ -44,11 +47,13 @@ export const browseCbsCatalogOutputSchema = z.discriminatedUnion('success', [
         currentPage: z.number(),
         lastPage: z.number(),
         apiUrl: z.string().optional(),
+        searchedResourceName: z.string(),
     }),
     z.object({
         success: z.literal(false),
         error: z.string(),
         apiUrl: z.string().optional(),
+        searchedResourceName: z.string(),
     }),
 ]);
 
@@ -63,7 +68,7 @@ export const browseCbsCatalog = tool({
     description:
         'Browse the CBS (Central Bureau of Statistics) statistical catalog hierarchy. Start with level 1 to see top-level categories (e.g., population, economy, education), then drill into subcategories with higher levels. Use this to discover what statistical data series are available.',
     inputSchema: browseCbsCatalogInputSchema,
-    execute: async ({ level, subject, language, page, pageSize }) => {
+    execute: async ({ level, subject, language, page, pageSize, searchedResourceName }) => {
         // Construct API URL for reference
         const apiUrl = buildSeriesUrl(CBS_SERIES_PATHS.CATALOG_LEVEL, {
             id: level,
@@ -96,12 +101,14 @@ export const browseCbsCatalog = tool({
                 currentPage: catalogs.paging.current_page,
                 lastPage: catalogs.paging.last_page,
                 apiUrl,
+                searchedResourceName,
             };
         } catch (error) {
             return {
                 success: false,
                 error: error instanceof Error ? error.message : String(error),
                 apiUrl,
+                searchedResourceName,
             };
         }
     },

@@ -19,6 +19,7 @@ export { listTags } from './list-tags';
 export { searchResources } from './search-resources';
 export { getResourceDetails } from './get-resource-details';
 export { queryDatastoreResource } from './query-datastore-resource';
+export { generateDataGovSourceUrl } from './generate-source-url';
 
 import { getStatus } from './get-status';
 import { listLicenses } from './list-licenses';
@@ -35,6 +36,10 @@ import { listTags } from './list-tags';
 import { searchResources } from './search-resources';
 import { getResourceDetails } from './get-resource-details';
 import { queryDatastoreResource } from './query-datastore-resource';
+import { generateDataGovSourceUrl } from './generate-source-url';
+
+/** Union of all DataGov tool names, derived from the DataGovTools object */
+export type DataGovToolName = keyof typeof DataGovTools;
 
 export const DataGovTools = {
     searchDatasets,
@@ -52,4 +57,5 @@ export const DataGovTools = {
     queryDatastoreResource,
     getStatus,
     listLicenses,
+    generateDataGovSourceUrl,
 };

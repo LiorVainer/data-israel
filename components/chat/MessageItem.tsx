@@ -6,12 +6,20 @@ import { ReasoningPart } from './ReasoningPart';
 import { SourcesPart } from './SourcesPart';
 import { ChartError, ChartLoadingState, ChartRenderer } from './ChartRenderer';
 import { getToolStatus, isAgentsNetworkDataPart, isToolPart, SourceUrlUIPart, ToolCallPart } from './types';
+import { resolveToolSourceUrl } from '@/lib/tools/source-url-resolvers';
+import { CLIENT_TOOL_NAMES, SOURCE_URL_TOOL_NAMES, toToolPartTypeSet } from '@/lib/tools/tool-names';
 import type { DisplayChartInput } from '@/lib/tools';
-import { ClientTools } from '@/lib/tools/client';
 import { UIMessage } from 'ai';
 
-/** Tool-prefixed type names for client-side tools (e.g. 'tool-displayBarChart') */
-const CLIENT_TOOL_TYPES = new Set(Object.keys(ClientTools).map((name) => `tool-${name}`));
+/**
+ * Tool-prefixed type names for client-side tools and source URL tools.
+ * These tools are excluded from the server-side tool call timeline
+ * because they render their own UI (charts) or are handled separately (sources).
+ */
+const CLIENT_TOOL_TYPES = toToolPartTypeSet([...CLIENT_TOOL_NAMES, ...SOURCE_URL_TOOL_NAMES]);
+
+/** Tool types that generate source URLs from dedicated tool results */
+const SOURCE_TOOL_TYPES = toToolPartTypeSet(SOURCE_URL_TOOL_NAMES);
 
 export interface MessageItemProps {
     message: UIMessage;
@@ -21,8 +29,53 @@ export interface MessageItemProps {
 }
 
 export function MessageItem({ message, isLastMessage, isStreaming, onRegenerate }: MessageItemProps) {
-    // Collect source-url parts for this message
-    const sourceParts = message.parts.filter((part): part is SourceUrlUIPart => part.type === 'source-url');
+    // Native source-url parts (from AI SDK stream protocol)
+    const nativeSourceParts = message.parts.filter((part): part is SourceUrlUIPart => part.type === 'source-url');
+
+    // Source URLs from dedicated source URL tools (generateDataGovSourceUrl, generateCbsSourceUrl)
+    const dedicatedSourceParts: SourceUrlUIPart[] = [];
+    for (const part of message.parts) {
+        if (!SOURCE_TOOL_TYPES.has(part.type) || !('state' in part)) continue;
+        const toolPart = part as ToolCallPart;
+        if (toolPart.state !== 'output-available') continue;
+        const output = toolPart.output as { success: boolean; url: string; title?: string } | undefined;
+        if (!output?.success) continue;
+        dedicatedSourceParts.push({
+            type: 'source-url' as const,
+            sourceId: toolPart.toolCallId ?? '',
+            url: output.url,
+            title: output.title,
+        });
+    }
+
+    // Auto-resolved source URLs from data tool outputs (searchDatasets, getCbsSeriesData, etc.)
+    const autoSourceParts: SourceUrlUIPart[] = [];
+    for (const part of message.parts) {
+        if (!isToolPart(part)) continue;
+        // Skip tools already handled above
+        if (CLIENT_TOOL_TYPES.has(part.type)) continue;
+        const toolPart = part as ToolCallPart;
+        if (toolPart.state !== 'output-available') continue;
+
+        const resolved = resolveToolSourceUrl(part.type, toolPart.input, toolPart.output);
+        if (!resolved) continue;
+
+        autoSourceParts.push({
+            type: 'source-url' as const,
+            sourceId: toolPart.toolCallId ?? `auto-${part.type}`,
+            url: resolved.url,
+            title: resolved.title,
+        });
+    }
+
+    // Merge all sources and deduplicate by URL
+    const seenUrls = new Set<string>();
+    const allSources: SourceUrlUIPart[] = [];
+    for (const source of [...nativeSourceParts, ...dedicatedSourceParts, ...autoSourceParts]) {
+        if (seenUrls.has(source.url)) continue;
+        seenUrls.add(source.url);
+        allSources.push(source);
+    }
 
     // Collect tool parts for this message (excluding client tools which render separately)
     const toolParts = message.parts
@@ -41,6 +94,8 @@ export function MessageItem({ message, isLastMessage, isStreaming, onRegenerate 
 
     // Processing is true only when streaming AND the last part is a server tool
     const isToolsStillRunning = isLastMessage && isStreaming && isLastPartServerTool;
+
+    console.log({ message });
 
     return (
         <div className='animate-in fade-in slide-in-from-bottom-2 flex flex-col gap-6 duration-300'>
@@ -127,8 +182,8 @@ export function MessageItem({ message, isLastMessage, isStreaming, onRegenerate 
                 }
             })}
 
-            {/* Render collected sources at the end of the message */}
-            <SourcesPart sources={sourceParts} />
+            {/* Render collected sources only after the message is done streaming */}
+            {!(isLastMessage && isStreaming) && <SourcesPart sources={allSources} />}
         </div>
     );
 }

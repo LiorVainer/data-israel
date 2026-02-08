@@ -3,7 +3,7 @@
 import Image from 'next/image';
 import { motion } from 'framer-motion';
 import { HeroBadge, HeroSubtitle, HeroTitle } from '@/components/ui/shape-landing-hero';
-import { useIsMobile } from '@/hooks/use-mobile';
+import { useIsTablet } from '@/hooks/use-mobile';
 import { DATA_SOURCE_CONFIG } from '../../constants/tool-data-sources';
 
 const fadeUpVariants = {
@@ -24,7 +24,7 @@ export interface HeroSectionProps {
 }
 
 export function HeroSection({ onSuggestionClick }: HeroSectionProps) {
-    const isMobile = useIsMobile();
+    const isTablet = useIsTablet();
 
     return (
         <div className='w-full max-w-4xl mx-auto px-4 pt-8 text-center flex flex-col items-center justify-center flex-1 min-h-0 gap-4 md:gap-8'>
@@ -32,13 +32,13 @@ export function HeroSection({ onSuggestionClick }: HeroSectionProps) {
                 <Image
                     src='/data-israel.svg'
                     alt='DataGov Logo'
-                    width={isMobile ? 100 : 150}
-                    height={isMobile ? 33 : 50}
+                    width={isTablet ? 100 : 150}
+                    height={isTablet ? 33 : 50}
                     priority
                 />
             </motion.div>
             <div className='flex-shrink-0 flex flex-col items-center gap-4'>
-                <HeroTitle line1='חפש מידע ציבורי' line2='ממאגרי הממשלה' />
+                <HeroTitle line1='סוכן המידע הציבורי' line2='של ממשלת ישראל' />
                 <div>
                     <HeroSubtitle>חפש נתונים ציבוריים ממאגרי המידע</HeroSubtitle>
                     <HeroSubtitle>הרשמיים של ממשלת ישראל</HeroSubtitle>

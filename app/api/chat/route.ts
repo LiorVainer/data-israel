@@ -9,6 +9,7 @@ import { NextResponse } from 'next/server';
 import { mastra } from '@/agents/mastra';
 import { handleChatStream } from '@mastra/ai-sdk';
 import { toAISdkV5Messages } from '@mastra/ai-sdk/ui';
+import { AppUIMessage } from '@/agents/types';
 
 /** Default resource ID for unauthenticated users */
 const DEFAULT_RESOURCE_ID = 'default-user';
@@ -24,13 +25,35 @@ const USER_ID_HEADER = 'x-user-id';
 export const maxDuration = 120;
 export const dynamic = 'force-dynamic';
 const MAX_STEPS = 10;
+const SUGGEST_TOOL_NAME = 'suggestFollowUps';
 
-const hasLastPartAsTextPart: StopCondition<any> = ({ steps }) => {
-    const stepsAmount = steps.length;
-    if (stepsAmount > MAX_STEPS) return true;
+/**
+ * Stop condition: requires BOTH a text response AND suggestFollowUps to have been called.
+ *
+ * Enforced flow:
+ * 1. Agent calls data tools -> no text yet -> continue
+ * 2. Agent calls source URL tools + suggestFollowUps -> has tool calls -> continue
+ * 3. Agent writes final text -> text + no tool calls + suggestions called -> STOP
+ *
+ * If agent writes text without calling suggestFollowUps, loop continues so agent
+ * can call it (instructions mandate this). MAX_STEPS is the safety fallback.
+ */
+
+const hasCompletedWithSuggestions: StopCondition<any> = ({ steps }) => {
+    if (steps.length > MAX_STEPS) return true;
 
     const lastStep = steps[steps.length - 1];
-    return !!lastStep?.text && !lastStep?.toolCalls?.length;
+
+    // Condition 1: Last step must be a pure text response (no tool calls in this step)
+    const hasTextResponse = !!lastStep?.text && !lastStep?.toolCalls?.length;
+    if (!hasTextResponse) return false;
+
+    // Condition 2: suggestFollowUps must have been called in some step
+    const calledSuggestions = steps.some((step) =>
+        step.toolCalls?.some((tc: { toolName: string }) => tc.toolName === SUGGEST_TOOL_NAME),
+    );
+
+    return calledSuggestions;
 };
 
 /**
@@ -100,13 +123,13 @@ export async function POST(req: Request) {
             memory: memoryConfig.thread ? memoryConfig : undefined,
         };
 
-        const stream = await handleChatStream({
+        const stream = await handleChatStream<AppUIMessage>({
             mastra,
             agentId: 'routingAgent',
             params: enhancedParams,
             defaultOptions: {
                 toolCallConcurrency: 10,
-                stopWhen: hasLastPartAsTextPart,
+                stopWhen: hasCompletedWithSuggestions,
             },
         });
 

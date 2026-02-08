@@ -18,7 +18,6 @@ export const getResourceDetailsInputSchema = z.object({
     includeTracking: z.boolean().optional().describe('Include usage/tracking information'),
     searchedResourceName: z
         .string()
-        .optional()
         .describe('Hebrew name of the resource (from search). Shown in UI as badge label.'),
 });
 

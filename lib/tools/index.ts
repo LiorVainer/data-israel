@@ -68,6 +68,12 @@ export type {
     DisplayPieChartOutput,
     DisplayChartInput,
     ChartType,
+    SuggestFollowUpsInput,
+    SuggestFollowUpsOutput,
+    GenerateDataGovSourceUrlInput,
+    GenerateDataGovSourceUrlOutput,
+    GenerateCbsSourceUrlInput,
+    GenerateCbsSourceUrlOutput,
 } from './types';
 
 // Data.gov.il tools
@@ -89,6 +95,11 @@ export { queryDatastoreResource } from './datagov/query-datastore-resource';
 
 // Client-side display tools
 export { displayBarChart, displayLineChart, displayPieChart } from './client/display-chart';
+export { suggestFollowUps } from './client/suggest-follow-ups';
+
+// Source URL tools
+export { generateDataGovSourceUrl } from './datagov/generate-source-url';
+export { generateCbsSourceUrl } from './cbs/source/generate-source-url';
 
 // CBS Series tools
 export { browseCbsCatalog } from './cbs/series/browse-cbs-catalog';

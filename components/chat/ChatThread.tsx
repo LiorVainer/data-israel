@@ -9,6 +9,7 @@ import { threadService } from '@/services/thread.service';
 import { Conversation, ConversationContent, ConversationScrollButton } from '@/components/ai-elements/conversation';
 import { MessageItem } from '@/components/chat/MessageItem';
 import { InputSection } from '@/components/chat/InputSection';
+import { Suggestions } from './Suggestions';
 import { LoadingShimmer } from '@/components/chat/LoadingShimmer';
 import { DataIsraelLoader } from '@/components/chat/DataIsraelLoader';
 import { GeometricBackground } from '@/components/ui/shape-landing-hero';
@@ -84,6 +85,32 @@ export function ChatThread({ id }: ChatThreadProps) {
 
     const isStreaming = status === 'submitted' || status === 'streaming';
 
+    const lastAssistantMessage = messages.filter((m) => m.role === 'assistant').at(-1);
+    const { suggestions: suggestionsFromTool, loading: suggestionsLoading } = useMemo(() => {
+        if (!lastAssistantMessage) return { suggestions: undefined, loading: false };
+
+        const suggestPart = lastAssistantMessage.parts.find(
+            (p) => p.type === 'tool-suggestFollowUps' && 'state' in p,
+        );
+
+        if (!suggestPart || !('state' in suggestPart)) return { suggestions: undefined, loading: false };
+
+        const state = suggestPart.state as string;
+
+        // Tool is still being called — show skeleton
+        if (state === 'input-streaming' || state === 'input-available') {
+            return { suggestions: undefined, loading: true };
+        }
+
+        // Tool finished — extract suggestions from input
+        if (state === 'output-available' && 'input' in suggestPart) {
+            const input = suggestPart.input as { suggestions: string[] };
+            return { suggestions: input.suggestions, loading: false };
+        }
+
+        return { suggestions: undefined, loading: false };
+    }, [lastAssistantMessage]);
+
     return (
         <div className='relative h-full w-full'>
             <GeometricBackground noShapes />
@@ -110,6 +137,16 @@ export function ChatThread({ id }: ChatThreadProps) {
                         </ConversationContent>
                         <ConversationScrollButton />
                     </Conversation>
+
+                    {!isStreaming && (suggestionsLoading || suggestionsFromTool) && (
+                        <div className='relative z-20 w-full md:w-4xl'>
+                            <Suggestions
+                                suggestions={suggestionsFromTool}
+                                loading={suggestionsLoading}
+                                onClick={(text) => void sendMessage({ text })}
+                            />
+                        </div>
+                    )}
 
                     <div className='relative z-20 w-full md:w-4xl'>
                         <InputSection onSubmit={(text) => void sendMessage({ text })} status={status} onStop={stop} />

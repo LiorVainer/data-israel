@@ -22,6 +22,9 @@ export const searchCbsLocalitiesInputSchema = z.object({
     filter: z.string().optional().describe('Filter expression (e.g., "district=1" for Jerusalem district)'),
     page: z.number().int().min(1).optional().describe('Page number (default 1)'),
     pageSize: z.number().int().min(1).max(250).optional().describe('Items per page (default 100, max 250)'),
+    searchedResourceName: z
+        .string()
+        .describe('Hebrew description of the locality search (e.g., "ערים במחוז המרכז", "תל אביב"). Shown in UI as badge label.'),
 });
 
 export const searchCbsLocalitiesOutputSchema = z.discriminatedUnion('success', [
@@ -42,11 +45,13 @@ export const searchCbsLocalitiesOutputSchema = z.discriminatedUnion('success', [
         total: z.number().optional(),
         page: z.number().optional(),
         apiUrl: z.string().optional(),
+        searchedResourceName: z.string(),
     }),
     z.object({
         success: z.literal(false),
         error: z.string(),
         apiUrl: z.string().optional(),
+        searchedResourceName: z.string(),
     }),
 ]);
 
@@ -61,7 +66,7 @@ export const searchCbsLocalities = tool({
     description:
         'Search Israeli localities (cities, towns, villages) from the CBS dictionary. Returns name, district, region, population, and other demographic data. Use for questions about Israeli cities and settlements.',
     inputSchema: searchCbsLocalitiesInputSchema,
-    execute: async ({ query, matchType, filter, page, pageSize }) => {
+    execute: async ({ query, matchType, filter, page, pageSize, searchedResourceName }) => {
         // Construct API URL for transparency
         const apiUrl = buildDictionaryUrl(
             { subject: 'geo', resource: 'localities' },
@@ -108,12 +113,14 @@ export const searchCbsLocalities = tool({
                 total: Number(dictionary.paging.total_items),
                 page: Number(dictionary.paging.current_page),
                 apiUrl,
+                searchedResourceName,
             };
         } catch (error) {
             return {
                 success: false,
                 error: error instanceof Error ? error.message : String(error),
                 apiUrl,
+                searchedResourceName,
             };
         }
     },

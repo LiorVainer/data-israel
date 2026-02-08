@@ -21,7 +21,6 @@ export const getCbsSeriesDataInputSchema = z.object({
     language: z.enum(['he', 'en']).optional().describe('Response language (default: Hebrew)'),
     searchedResourceName: z
         .string()
-        .optional()
         .describe('Hebrew display name of the series (from catalog browsing). Shown in UI as badge label.'),
 });
 

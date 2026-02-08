@@ -41,6 +41,9 @@ import type { BrowseCbsPriceIndicesInput, BrowseCbsPriceIndicesOutput } from './
 import type { GetCbsPriceDataInput, GetCbsPriceDataOutput } from './cbs/price/get-cbs-price-data';
 import type { CalculateCbsPriceIndexInput, CalculateCbsPriceIndexOutput } from './cbs/price/calculate-cbs-price-index';
 import type { SearchCbsLocalitiesInput, SearchCbsLocalitiesOutput } from './cbs/dictionary/search-cbs-localities';
+import type { SuggestFollowUpsInput, SuggestFollowUpsOutput } from './client/suggest-follow-ups';
+import type { GenerateDataGovSourceUrlInput, GenerateDataGovSourceUrlOutput } from './datagov/generate-source-url';
+import type { GenerateCbsSourceUrlInput, GenerateCbsSourceUrlOutput } from './cbs/source/generate-source-url';
 
 export type { SearchDatasetsInput, SearchDatasetsOutput } from './datagov/search-datasets';
 
@@ -103,6 +106,14 @@ export type { GetCbsPriceDataInput, GetCbsPriceDataOutput } from './cbs/price/ge
 export type { CalculateCbsPriceIndexInput, CalculateCbsPriceIndexOutput } from './cbs/price/calculate-cbs-price-index';
 
 export type { SearchCbsLocalitiesInput, SearchCbsLocalitiesOutput } from './cbs/dictionary/search-cbs-localities';
+
+// Client tool types
+export type { SuggestFollowUpsInput, SuggestFollowUpsOutput } from './client/suggest-follow-ups';
+
+// Source URL tool types
+export type { GenerateDataGovSourceUrlInput, GenerateDataGovSourceUrlOutput } from './datagov/generate-source-url';
+
+export type { GenerateCbsSourceUrlInput, GenerateCbsSourceUrlOutput } from './cbs/source/generate-source-url';
 
 // ============================================================================
 // Tool Map Type
@@ -216,6 +227,18 @@ export interface ToolIOMap {
     searchCbsLocalities: {
         input: SearchCbsLocalitiesInput;
         output: SearchCbsLocalitiesOutput;
+    };
+    suggestFollowUps: {
+        input: SuggestFollowUpsInput;
+        output: SuggestFollowUpsOutput;
+    };
+    generateDataGovSourceUrl: {
+        input: GenerateDataGovSourceUrlInput;
+        output: GenerateDataGovSourceUrlOutput;
+    };
+    generateCbsSourceUrl: {
+        input: GenerateCbsSourceUrlInput;
+        output: GenerateCbsSourceUrlOutput;
     };
     'agent-cbsAgent': {
         input: NetworkAgentInput;

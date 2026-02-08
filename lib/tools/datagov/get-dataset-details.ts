@@ -17,7 +17,6 @@ export const getDatasetDetailsInputSchema = z.object({
     id: z.string().describe('Dataset ID or name'),
     searchedResourceName: z
         .string()
-        .optional()
         .describe('Hebrew title of the dataset (from search). Shown in UI as badge label.'),
 });
 

@@ -19,7 +19,6 @@ export const getOrganizationActivityInputSchema = z.object({
     limit: z.number().int().min(1).max(100).optional().describe('Maximum number of activities to return'),
     searchedResourceName: z
         .string()
-        .optional()
         .describe('Hebrew name of the organization. Shown in UI as badge label.'),
 });
 

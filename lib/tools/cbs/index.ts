@@ -12,6 +12,7 @@ export { browseCbsPriceIndices } from './price/browse-cbs-price-indices';
 export { getCbsPriceData } from './price/get-cbs-price-data';
 export { calculateCbsPriceIndex } from './price/calculate-cbs-price-index';
 export { searchCbsLocalities } from './dictionary/search-cbs-localities';
+export { generateCbsSourceUrl } from './source/generate-source-url';
 
 import { browseCbsCatalog } from './series/browse-cbs-catalog';
 import { browseCbsCatalogPath } from './series/browse-cbs-catalog-path';
@@ -21,6 +22,10 @@ import { browseCbsPriceIndices } from './price/browse-cbs-price-indices';
 import { getCbsPriceData } from './price/get-cbs-price-data';
 import { calculateCbsPriceIndex } from './price/calculate-cbs-price-index';
 import { searchCbsLocalities } from './dictionary/search-cbs-localities';
+import { generateCbsSourceUrl } from './source/generate-source-url';
+
+/** Union of all CBS tool names, derived from the CbsTools object */
+export type CbsToolName = keyof typeof CbsTools;
 
 export const CbsTools = {
     browseCbsCatalog,
@@ -31,4 +36,5 @@ export const CbsTools = {
     getCbsPriceData,
     calculateCbsPriceIndex,
     searchCbsLocalities,
+    generateCbsSourceUrl,
 };

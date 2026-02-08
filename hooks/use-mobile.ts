@@ -20,3 +20,24 @@ export function useIsMobile() {
     // Return false during SSR to prevent hydration mismatch
     return mounted ? isMobile : false;
 }
+
+const TABLET_BREAKPOINT = 1560;
+
+export function useIsTablet() {
+    const [isTablet, setIsTablet] = React.useState<boolean>(false);
+    const [mounted, setMounted] = React.useState(false);
+
+    React.useEffect(() => {
+        setMounted(true);
+        const mql = window.matchMedia(`(max-width: ${TABLET_BREAKPOINT - 1}px)`);
+        const onChange = () => {
+            setIsTablet(window.innerWidth < TABLET_BREAKPOINT);
+        };
+        mql.addEventListener('change', onChange);
+        setIsTablet(window.innerWidth < TABLET_BREAKPOINT);
+        return () => mql.removeEventListener('change', onChange);
+    }, []);
+
+    // Return false during SSR to prevent hydration mismatch
+    return mounted ? isTablet : false;
+}

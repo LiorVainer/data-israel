@@ -7,7 +7,7 @@
 import { tool } from 'ai';
 import { z } from 'zod';
 import { cbsApi } from '@/lib/api/cbs/client';
-import { CBS_PRICE_INDEX_PATHS, buildPriceIndexUrl } from '@/lib/api/cbs/endpoints';
+import { buildPriceIndexUrl, CBS_PRICE_INDEX_PATHS } from '@/lib/api/cbs/endpoints';
 
 // ============================================================================
 // Schemas (Single Source of Truth)
@@ -22,6 +22,9 @@ export const browseCbsPriceIndicesInputSchema = z.object({
     chapterId: z.string().optional().describe('Chapter ID (required when mode is "topics")'),
     subjectId: z.string().optional().describe('Subject/topic ID (required when mode is "indices")'),
     language: z.enum(['he', 'en']).optional().describe('Response language (default: Hebrew)'),
+    searchedResourceName: z
+        .string()
+        .describe('Hebrew description of the price category being browsed (e.g., "מדד המחירים לצרכן", "דיור"). Shown in UI as badge label.'),
 });
 
 export const browseCbsPriceIndicesOutputSchema = z.discriminatedUnion('success', [
@@ -37,11 +40,13 @@ export const browseCbsPriceIndicesOutputSchema = z.discriminatedUnion('success',
             }),
         ),
         apiUrl: z.string().optional().describe('The CBS API URL that was called'),
+        searchedResourceName: z.string(),
     }),
     z.object({
         success: z.literal(false),
         error: z.string(),
         apiUrl: z.string().optional().describe('The CBS API URL that was attempted'),
+        searchedResourceName: z.string(),
     }),
 ]);
 
@@ -56,7 +61,7 @@ export const browseCbsPriceIndices = tool({
     description:
         'Browse CBS price index catalog. Start with mode "chapters" to see main categories (CPI, housing, food, etc.), then "topics" to drill into a chapter, then "indices" to get specific index codes. Use index codes with getCbsPriceData.',
     inputSchema: browseCbsPriceIndicesInputSchema,
-    execute: async ({ mode, chapterId, subjectId, language }) => {
+    execute: async ({ mode, chapterId, subjectId, language, searchedResourceName }) => {
         // Construct API URL based on mode
         let apiUrl: string;
         if (mode === 'chapters') {
@@ -80,12 +85,13 @@ export const browseCbsPriceIndices = tool({
                         mainCode: ch.mainCode,
                     })),
                     apiUrl,
+                    searchedResourceName,
                 };
             }
 
             if (mode === 'topics') {
                 if (!chapterId) {
-                    return { success: false, error: 'chapterId is required when mode is "topics"', apiUrl };
+                    return { success: false, error: 'chapterId is required when mode is "topics"', apiUrl, searchedResourceName };
                 }
                 const result = await cbsApi.priceIndex.chapter(chapterId, { lang: language });
                 return {
@@ -96,12 +102,13 @@ export const browseCbsPriceIndices = tool({
                         name: s.subjectName,
                     })),
                     apiUrl,
+                    searchedResourceName,
                 };
             }
 
             // mode === 'indices'
             if (!subjectId) {
-                return { success: false, error: 'subjectId is required when mode is "indices"', apiUrl };
+                return { success: false, error: 'subjectId is required when mode is "indices"', apiUrl, searchedResourceName };
             }
             const result = await cbsApi.priceIndex.subject(subjectId, { lang: language });
             return {
@@ -112,12 +119,14 @@ export const browseCbsPriceIndices = tool({
                     name: c.codeName,
                 })),
                 apiUrl,
+                searchedResourceName,
             };
         } catch (error) {
             return {
                 success: false,
                 error: error instanceof Error ? error.message : String(error),
                 apiUrl,
+                searchedResourceName,
             };
         }
     },
