@@ -89,9 +89,7 @@ export function ChatThread({ id }: ChatThreadProps) {
     const { suggestions: suggestionsFromTool, loading: suggestionsLoading } = useMemo(() => {
         if (!lastAssistantMessage) return { suggestions: undefined, loading: false };
 
-        const suggestPart = lastAssistantMessage.parts.find(
-            (p) => p.type === 'tool-suggestFollowUps' && 'state' in p,
-        );
+        const suggestPart = lastAssistantMessage.parts.find((p) => p.type === 'tool-suggestFollowUps' && 'state' in p);
 
         if (!suggestPart || !('state' in suggestPart)) return { suggestions: undefined, loading: false };
 
@@ -118,7 +116,7 @@ export function ChatThread({ id }: ChatThreadProps) {
             <div className='mx-auto px-4 md:px-0 pb-4 md:pb-6 relative h-full w-full'>
                 <div className='flex flex-col gap-4 md:gap-6 h-full w-full items-center'>
                     <Conversation className='w-full children-noscrollbar'>
-                        <ConversationContent className='w-full md:w-4xl pt-12 mx-auto'>
+                        <ConversationContent className='w-full md:w-4xl pt-14 md:pt-0 mx-auto'>
                             {messages.map((message, messageIndex) => (
                                 <MessageItem
                                     key={message.id}

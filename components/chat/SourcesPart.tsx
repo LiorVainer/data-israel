@@ -1,7 +1,7 @@
 'use client';
 
 import { Sources, SourcesContent, SourcesTrigger } from '@/components/ai-elements/sources';
-import { ExternalLinkIcon } from 'lucide-react';
+import { ChevronDownIcon, ExternalLinkIcon } from 'lucide-react';
 import type { SourceUrlUIPart } from './types';
 
 export interface SourcesPartProps {
@@ -15,6 +15,7 @@ export function SourcesPart({ sources }: SourcesPartProps) {
         <Sources>
             <SourcesTrigger count={sources.length}>
                 <span className='font-medium'>המידע הגיע מ-{sources.length} מקורות</span>
+                <ChevronDownIcon className='h-4 w-4' />
             </SourcesTrigger>
             <SourcesContent className='w-full flex-row flex-wrap'>
                 {sources.map((source) => (
