@@ -12,7 +12,7 @@ export function SourcesPart({ sources }: SourcesPartProps) {
     if (sources.length === 0) return null;
 
     return (
-        <Sources>
+        <Sources className='mb-0'>
             <SourcesTrigger count={sources.length}>
                 <span className='font-medium'>המידע הגיע מ-{sources.length} מקורות</span>
                 <ChevronDownIcon className='h-4 w-4' />
