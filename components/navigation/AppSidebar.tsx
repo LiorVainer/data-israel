@@ -45,7 +45,7 @@ function SidebarLogo() {
                     <Image src='/data-israel.svg' alt='לוגו' width={24} height={24} className='size-7 shrink-0' />
                     <div className='grid flex-1 text-right text-sm leading-tight'>
                         <span className='truncate font-semibold'>סוכן המידע הציבורי</span>
-                        <span className='truncate text-xs text-muted-foreground'>data.gov.il</span>
+                        <span className='truncate text-xs text-muted-foreground'>data-israel.org</span>
                     </div>
                 </SidebarMenuButton>
             </SidebarMenuItem>
