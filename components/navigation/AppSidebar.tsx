@@ -42,13 +42,7 @@ function SidebarLogo() {
         <SidebarMenu>
             <SidebarMenuItem>
                 <SidebarMenuButton size='lg' className='gap-4' onClick={handleClick}>
-                    <Image
-                        src='/data-israel.svg'
-                        alt='לוגו'
-                        width={24}
-                        height={24}
-                        className='size-7 shrink-0'
-                    />
+                    <Image src='/data-israel.svg' alt='לוגו' width={24} height={24} className='size-7 shrink-0' />
                     <div className='grid flex-1 text-right text-sm leading-tight'>
                         <span className='truncate font-semibold'>סוכן המידע הציבורי</span>
                         <span className='truncate text-xs text-muted-foreground'>data.gov.il</span>
@@ -91,7 +85,7 @@ export function AppSidebar({
             </Sidebar>
 
             <SidebarInset className='overflow-hidden min-h-0 h-full relative'>
-                <SidebarTrigger className='absolute top-3 right-3 z-30' />
+                <SidebarTrigger className='absolute top-3 right-4 md:top-4 md:right-5 z-30' />
                 <div className='flex flex-1 min-h-0 @container/main overflow-hidden flex-col'>{children}</div>
             </SidebarInset>
         </SidebarProvider>

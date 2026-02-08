@@ -108,6 +108,7 @@ export function MessageItem({ message, isLastMessage, isStreaming, onRegenerate 
                     messageId={message.id}
                     toolParts={toolParts}
                     isProcessing={isToolsStillRunning || hasActiveTools}
+                    isLastMessage={isLastMessage}
                 />
             )}
 

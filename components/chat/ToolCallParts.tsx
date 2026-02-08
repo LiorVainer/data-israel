@@ -119,13 +119,14 @@ export interface ToolCallPartsProps {
     messageId: string;
     toolParts: Array<{ part: ToolCallPart; index: number }>;
     isProcessing: boolean;
+    isLastMessage: boolean;
 }
 
 /**
  * Container component for rendering tool calls in a ChainOfThought timeline.
  * Tool calls are grouped by tool name with progress tracking.
  */
-export function ToolCallParts({ messageId, toolParts, isProcessing }: ToolCallPartsProps) {
+export function ToolCallParts({ messageId, toolParts, isProcessing, isLastMessage }: ToolCallPartsProps) {
     const [userToggled, setUserToggled] = useState(false);
     const [userWantsOpen, setUserWantsOpen] = useState(false);
     const wasProcessing = useRef(isProcessing);
@@ -144,21 +145,21 @@ export function ToolCallParts({ messageId, toolParts, isProcessing }: ToolCallPa
     const stats = useMemo(() => calculateStats(toolParts), [toolParts]);
     const groupedTools = useMemo(() => groupToolCalls(toolParts), [toolParts]);
 
-    // Auto-close when processing finishes, unless user has manually toggled
+    // Auto-close non-last messages when processing finishes, unless user has manually toggled
     useEffect(() => {
-        if (wasProcessing.current && !isProcessing && !userToggled) {
+        if (wasProcessing.current && !isProcessing && !userToggled && !isLastMessage) {
             setUserWantsOpen(false);
         }
         wasProcessing.current = isProcessing;
-    }, [isProcessing, userToggled]);
+    }, [isProcessing, userToggled, isLastMessage]);
 
     const handleOpenChange = (open: boolean) => {
         setUserToggled(true);
         setUserWantsOpen(open);
     };
 
-    // Force open while processing, otherwise respect user preference
-    const isOpen = isProcessing ? true : userWantsOpen;
+    // User toggled: respect their choice. Otherwise: open during processing or on last message.
+    const isOpen = userToggled ? userWantsOpen : isProcessing || isLastMessage;
 
     // Build header text - show only succeeded count
     const getHeaderContent = () => {

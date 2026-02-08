@@ -32,6 +32,11 @@ function getString(obj: unknown, key: string): string | undefined {
     return typeof val === 'string' ? val : undefined;
 }
 
+/** Resolve searchedResourceName from output (priority) or input */
+function getResourceName(input: unknown, output: unknown): string | undefined {
+    return getString(output, 'searchedResourceName') ?? getString(input, 'searchedResourceName');
+}
+
 /**
  * Resolves a source URL from a data tool's part type, input, and output.
  *
@@ -51,9 +56,10 @@ export function resolveToolSourceUrl(toolType: string, input: unknown, output: u
         case 'searchDatasets': {
             const query = getString(input, 'query');
             if (!query) return null;
+            const resourceName = getResourceName(input, output);
             return {
                 url: `${DATAGOV_PORTAL}?q=${encodeURIComponent(query)}`,
-                title: `חיפוש מאגרים: ${query}`,
+                title: resourceName ?? `חיפוש מאגרים: ${query}`,
             };
         }
 
@@ -61,9 +67,10 @@ export function resolveToolSourceUrl(toolType: string, input: unknown, output: u
             const query = getString(input, 'query');
             const apiUrl = getString(output, 'apiUrl');
             if (!apiUrl) return null;
+            const resourceName = getResourceName(input, output);
             return {
                 url: apiUrl,
-                title: query ? `חיפוש משאבים: ${query}` : 'חיפוש משאבים - data.gov.il',
+                title: resourceName ?? (query ? `חיפוש משאבים: ${query}` : 'חיפוש משאבים - data.gov.il'),
             };
         }
 
@@ -71,7 +78,7 @@ export function resolveToolSourceUrl(toolType: string, input: unknown, output: u
         case 'getDatasetDetails': {
             const dataset = isRecord(output) ? output.dataset : undefined;
             const name = getString(dataset, 'name');
-            const title = getString(dataset, 'title') ?? getString(output, 'searchedResourceName');
+            const title = getString(dataset, 'title') ?? getResourceName(input, output);
             if (!name) return null;
             return {
                 url: `${DATAGOV_PORTAL}/${encodeURIComponent(name)}`,
@@ -82,7 +89,7 @@ export function resolveToolSourceUrl(toolType: string, input: unknown, output: u
         case 'getOrganizationDetails': {
             const org = isRecord(output) ? output.organization : undefined;
             const name = getString(org, 'name');
-            const title = getString(org, 'title') ?? getString(output, 'searchedResourceName');
+            const title = getString(org, 'title') ?? getResourceName(input, output);
             if (!name) return null;
             return {
                 url: `${DATAGOV_ORG_PORTAL}/${encodeURIComponent(name)}`,
@@ -93,7 +100,7 @@ export function resolveToolSourceUrl(toolType: string, input: unknown, output: u
         case 'queryDatastoreResource': {
             const apiUrl = getString(output, 'apiUrl');
             if (!apiUrl) return null;
-            const resourceName = getString(output, 'searchedResourceName');
+            const resourceName = getResourceName(input, output);
             const query = getString(input, 'q');
             let title = resourceName ?? 'שאילתת נתונים';
             if (query) title += ` (${query})`;
@@ -103,7 +110,7 @@ export function resolveToolSourceUrl(toolType: string, input: unknown, output: u
         case 'getResourceDetails': {
             const apiUrl = getString(output, 'apiUrl');
             if (!apiUrl) return null;
-            const resourceName = getString(output, 'searchedResourceName');
+            const resourceName = getResourceName(input, output);
             const resource = isRecord(output) ? output.resource : undefined;
             const name = getString(resource, 'name');
             return {
@@ -117,7 +124,7 @@ export function resolveToolSourceUrl(toolType: string, input: unknown, output: u
         case 'getCbsSeriesDataByPath': {
             const apiUrl = getString(output, 'apiUrl');
             if (!apiUrl) return null;
-            const resourceName = getString(output, 'searchedResourceName');
+            const resourceName = getResourceName(input, output);
             return {
                 url: apiUrl,
                 title: resourceName ?? 'סדרה סטטיסטית - הלמ"ס',
@@ -128,7 +135,7 @@ export function resolveToolSourceUrl(toolType: string, input: unknown, output: u
         case 'getCbsPriceData': {
             const apiUrl = getString(output, 'apiUrl');
             if (!apiUrl) return null;
-            const resourceName = getString(output, 'searchedResourceName');
+            const resourceName = getResourceName(input, output);
             return {
                 url: apiUrl,
                 title: resourceName ?? 'נתוני מחירים - הלמ"ס',
@@ -138,7 +145,7 @@ export function resolveToolSourceUrl(toolType: string, input: unknown, output: u
         case 'calculateCbsPriceIndex': {
             const apiUrl = getString(output, 'apiUrl');
             if (!apiUrl) return null;
-            const resourceName = getString(output, 'searchedResourceName');
+            const resourceName = getResourceName(input, output);
             return {
                 url: apiUrl,
                 title: resourceName ? `מחשבון הצמדה: ${resourceName}` : 'מחשבון הצמדה - הלמ"ס',
@@ -149,10 +156,11 @@ export function resolveToolSourceUrl(toolType: string, input: unknown, output: u
         case 'searchCbsLocalities': {
             const apiUrl = getString(output, 'apiUrl');
             if (!apiUrl) return null;
+            const resourceName = getResourceName(input, output);
             const query = getString(input, 'query');
             return {
                 url: apiUrl,
-                title: query ? `חיפוש יישובים: ${query}` : 'מילון יישובים - הלמ"ס',
+                title: resourceName ?? (query ? `חיפוש יישובים: ${query}` : 'מילון יישובים - הלמ"ס'),
             };
         }
 
@@ -161,12 +169,14 @@ export function resolveToolSourceUrl(toolType: string, input: unknown, output: u
         case 'browseCbsCatalogPath': {
             const apiUrl = getString(output, 'apiUrl');
             if (!apiUrl) return null;
-            return { url: apiUrl, title: 'קטלוג הלמ"ס' };
+            const resourceName = getResourceName(input, output);
+            return { url: apiUrl, title: resourceName ?? 'קטלוג הלמ"ס' };
         }
 
         case 'browseCbsPriceIndices': {
             const apiUrl = getString(output, 'apiUrl');
             if (!apiUrl) return null;
+            const resourceName = getResourceName(input, output);
             const mode = getString(input, 'mode');
             const modeLabels: Record<string, string> = {
                 chapters: 'פרקי מדדים',
@@ -175,7 +185,7 @@ export function resolveToolSourceUrl(toolType: string, input: unknown, output: u
             };
             return {
                 url: apiUrl,
-                title: (mode && modeLabels[mode]) ?? 'מדדי מחירים - הלמ"ס',
+                title: resourceName ?? (mode && modeLabels[mode]) ?? 'מדדי מחירים - הלמ"ס',
             };
         }
 
