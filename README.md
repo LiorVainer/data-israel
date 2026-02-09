@@ -1,36 +1,175 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+<div align="center">
+
+<img src="public/data-israel-readme.svg" alt="Data Israel" width="200" />
+
+# Data Israel - Israeli Public Data AI Agent
+
+### Ask questions in Hebrew. Get answers backed by real data.
+
+[data-israel.org](https://data-israel.org)
+
+</div>
+
+---
+
+Israel has a massive amount of open data: CBS statistics, price indices, population, housing, transportation, education, budgets, and more. The problem? The data exists, but it's not truly accessible.
+
+**Data Israel** is an AI agent that connects in real-time to [data.gov.il](https://data.gov.il) and the Central Bureau of Statistics (CBS), letting anyone ask questions in Hebrew and receive answers grounded in official data -- with context, tables, and charts.
+
+No manual searching, no CSVs, and no need to know what a DataStore API is.
+
+## Why Use It
+
+This is not "just another AI chat". The agent:
+
+- **Connects live** to data.gov.il and CBS APIs -- every answer comes from real API calls, not hallucination
+- **Cross-references sources** to produce insights, not just raw numbers
+- **Preserves conversation history** so you can compare, revisit, and go deeper
+- **Supports Google sign-in** for a continuous personal experience
+- **Speaks Hebrew natively** with full RTL interface
+
+## Who Is It For
+
+- Curious citizens who want to understand what the data says
+- Journalists investigating public data
+- Entrepreneurs exploring market opportunities
+- Researchers working with Israeli datasets
+- Anyone who prefers facts over gut feelings
+
+## Example Questions
+
+> How has the cost of living in my city changed over time?
+
+> Where is there a gap between population growth and infrastructure?
+
+> How do housing prices compare to salaries across different regions?
+
+## Tool-First Architecture
+
+The core principle: **if there's no real data, there's no answer.**
+
+The agent uses **29 Zod-validated tools** across three categories to ensure every response is grounded in verifiable data:
+
+### data.gov.il Tools (16)
+
+| Tool | Purpose |
+|------|---------|
+| `searchDatasets` | Keyword search across all datasets |
+| `listAllDatasets` | Browse the full dataset catalog |
+| `getDatasetDetails` | Inspect a specific dataset's metadata |
+| `getDatasetActivity` | View recent changes to a dataset |
+| `getDatasetSchema` | Get field-level schema of a dataset |
+| `listOrganizations` | Browse publishing organizations |
+| `getOrganizationDetails` | Details of a specific organization |
+| `getOrganizationActivity` | Recent activity of an organization |
+| `listGroups` | Explore dataset categories |
+| `listTags` | Browse dataset taxonomy |
+| `searchResources` | Find specific data resources |
+| `getResourceDetails` | Inspect a resource's metadata |
+| `queryDatastoreResource` | Query data with filters, sorting, pagination |
+| `getStatus` | Check API health |
+| `listLicenses` | Available data licenses |
+| `generateDataGovSourceUrl` | Generate source attribution links |
+
+### CBS Tools (9)
+
+| Tool | Purpose |
+|------|---------|
+| `browseCbsCatalog` | Navigate the CBS statistical catalog |
+| `browseCbsCatalogPath` | Drill into a specific catalog path |
+| `getCbsSeriesData` | Fetch statistical time series |
+| `getCbsSeriesDataByPath` | Fetch series by catalog path |
+| `browseCbsPriceIndices` | Browse CPI and price index categories |
+| `getCbsPriceData` | Fetch price index data |
+| `calculateCbsPriceIndex` | Calculate CPI-based cost changes |
+| `searchCbsLocalities` | Search the CBS locality dictionary |
+| `generateCbsSourceUrl` | Generate CBS source attribution links |
+
+### Client Tools (4)
+
+| Tool | Purpose |
+|------|---------|
+| `displayBarChart` | Render bar charts from data |
+| `displayLineChart` | Render line charts from data |
+| `displayPieChart` | Render pie charts from data |
+| `suggestFollowUps` | Suggest follow-up questions |
+
+## Agent Network
+
+The system uses a multi-agent network with a routing orchestrator:
+
+```
+User Question (Hebrew)
+        |
+   Routing Agent (orchestrator)
+   29 tools, Convex memory + vector search
+        |
+   +---------+---------+
+   |         |         |
+DataGov   CBS     Client
+ Agent    Agent    Tools
+   |         |
+ CKAN API  CBS API
+```
+
+| Agent | Role |
+|-------|------|
+| **Routing Agent** | Orchestrator -- routes queries, manages memory, calls tools |
+| **DataGov Agent** | Israeli open data via CKAN API (data.gov.il) |
+| **CBS Agent** | Central Bureau of Statistics (series, prices, localities) |
+
+## Tech Stack
+
+| Layer | Technology |
+|-------|-----------|
+| Framework | **Next.js 16** (App Router + React Server Components) |
+| UI | **React 19**, Tailwind CSS 4, Radix UI, Framer Motion |
+| Agent Framework | **Mastra 1.1** with AI SDK v6 |
+| Model Provider | **OpenRouter** (Google Gemini 3 Flash) |
+| Validation | **Zod** (all tool inputs and outputs) |
+| Memory & RAG | **Convex** (threads, vector search, dataset sync) |
+| Charts | **Nivo** (bar, line, pie) |
+| Auth | **Clerk** (Google sign-in) |
+| Language | **TypeScript 5** (strict mode) |
+| Full Hebrew RTL interface |
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
+
+- Node.js 18+
+- pnpm
+
+### Installation
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+pnpm install
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### Environment Variables
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Create a `.env.local` file with:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```env
+OPENROUTER_API_KEY=          # OpenRouter API key
+NEXT_PUBLIC_CONVEX_URL=      # Convex deployment URL
+CONVEX_ADMIN_KEY=            # Convex admin key
+NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=  # Clerk publishable key
+CLERK_SECRET_KEY=            # Clerk secret key
+```
 
-## Learn More
+### Development
 
-To learn more about Next.js, take a look at the following resources:
+```bash
+npm run dev      # Start dev server at localhost:3000
+npm run build    # Production build
+npm run lint     # ESLint
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Contributing
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+This project is in its early stages. If you find a bug, an inaccurate answer, or have an idea for a feature or additional data source -- contributions and feedback are welcome.
 
-## Deploy on Vercel
+## License
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+This project is private. All rights reserved.
