@@ -2,7 +2,7 @@
 
 import Image from 'next/image';
 import { motion } from 'framer-motion';
-import { HeroBadge, HeroSubtitle, HeroTitle } from '@/components/ui/shape-landing-hero';
+import { HeroSubtitle, HeroTitle } from '@/components/ui/shape-landing-hero';
 import { useIsTablet } from '@/hooks/use-mobile';
 import { DATA_SOURCE_CONFIG } from '../../constants/tool-data-sources';
 
@@ -19,11 +19,9 @@ const fadeUpVariants = {
     },
 };
 
-export interface HeroSectionProps {
-    onSuggestionClick: (prompt: string) => void;
-}
+export interface HeroSectionProps {}
 
-export function HeroSection({ onSuggestionClick }: HeroSectionProps) {
+export function HeroSection({}: HeroSectionProps) {
     const isTablet = useIsTablet();
 
     return (
@@ -32,27 +30,45 @@ export function HeroSection({ onSuggestionClick }: HeroSectionProps) {
                 <Image
                     src='/data-israel.svg'
                     alt='DataGov Logo'
-                    width={isTablet ? 100 : 150}
+                    width={isTablet ? 95 : 150}
                     height={isTablet ? 33 : 50}
                     priority
                 />
             </motion.div>
-            <div className='flex-shrink-0 flex flex-col items-center gap-4'>
-                <HeroTitle line1='סוכן המידע הציבורי' line2='של ממשלת ישראל' />
-                <div>
-                    <HeroSubtitle>חפש נתונים ציבוריים ממאגרי המידע</HeroSubtitle>
-                    <HeroSubtitle>הרשמיים של ממשלת ישראל</HeroSubtitle>
+            <div className='flex-shrink-0 flex flex-col items-center gap-4 2xl:gap-8 4xl:gap-12'>
+                <div className='gap-4'>
+                    <HeroTitle line1='סוכן המידע הציבורי' line2='של ממשלת ישראל' />
+                    <div>
+                        <HeroSubtitle>חפש נתונים ציבוריים ממאגרי המידע</HeroSubtitle>
+                        <HeroSubtitle>הרשמיים של ממשלת ישראל</HeroSubtitle>
+                    </div>
                 </div>
-                <div className='flex items-center gap-2 mt-3'>
-                    <a href={DATA_SOURCE_CONFIG.datagov.url} target='_blank' rel='noopener noreferrer'>
-                        <HeroBadge className='bg-badge-datagov/20 border-badge-datagov text-badge-datagov-foreground hover:opacity-80 transition-opacity cursor-pointer'>
-                            {DATA_SOURCE_CONFIG.datagov.urlLabel}
-                        </HeroBadge>
+                <div className='flex items-center gap-8 md:gap-16 mt-3'>
+                    <a
+                        href={DATA_SOURCE_CONFIG.datagov.url}
+                        target='_blank'
+                        rel='noopener noreferrer'
+                        className='hover:opacity-70 transition-opacity'
+                    >
+                        <Image
+                            src='/datagov-logo.svg'
+                            alt='data.gov.il'
+                            width={isTablet ? 100 : 130}
+                            height={isTablet ? 45 : 60}
+                        />
                     </a>
-                    <a href={DATA_SOURCE_CONFIG.cbs.url} target='_blank' rel='noopener noreferrer'>
-                        <HeroBadge className='bg-badge-cbs/20 border-badge-cbs text-badge-cbs-foreground hover:opacity-80 transition-opacity cursor-pointer'>
-                            {DATA_SOURCE_CONFIG.cbs.urlLabel}
-                        </HeroBadge>
+                    <a
+                        href={DATA_SOURCE_CONFIG.cbs.url}
+                        target='_blank'
+                        rel='noopener noreferrer'
+                        className='hover:opacity-70 transition-opacity'
+                    >
+                        <Image
+                            src='/cbs-logo.svg'
+                            alt='הלמ"ס'
+                            width={isTablet ? 105 : 130}
+                            height={isTablet ? 50 : 70}
+                        />
                     </a>
                 </div>
             </div>

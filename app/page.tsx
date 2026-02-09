@@ -46,7 +46,7 @@ export default function Home() {
                     className='flex flex-col gap-4 md:gap-6 h-full w-full items-center'
                 >
                     <div className='relative z-20 flex-1 flex flex-col min-h-0 overflow-hidden'>
-                        <HeroSection onSuggestionClick={handleSend} />
+                        <HeroSection />
                     </div>
 
                     <div className='relative z-20 w-full md:w-4xl'>
