@@ -36,7 +36,7 @@ export function HeroSection({}: HeroSectionProps) {
                 />
             </motion.div>
             <div className='flex-shrink-0 flex flex-col items-center gap-8 2xl:gap-16 4xl:gap-20'>
-                <div className='flex flex-col gap-4'>
+                <div className='flex flex-col gap-2'>
                     <HeroTitle line1='סוכן המידע הציבורי' line2='של ממשלת ישראל' />
                     <div>
                         <HeroSubtitle>חפש נתונים ציבוריים ממאגרי המידע</HeroSubtitle>
