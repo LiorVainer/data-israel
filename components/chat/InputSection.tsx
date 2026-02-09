@@ -11,7 +11,7 @@ interface InputSectionProps {
     placeholder?: string;
 }
 
-export function InputSection({ onSubmit, status, onStop, placeholder = 'שאל על מאגרי מידע' }: InputSectionProps) {
+export function InputSection({ onSubmit, status, onStop, placeholder = 'מה תרצה לדעת?' }: InputSectionProps) {
     const isBusy = status === 'streaming' || status === 'submitted';
     const isReady = status === 'ready' || status === undefined;
 
@@ -28,9 +28,13 @@ export function InputSection({ onSubmit, status, onStop, placeholder = 'שאל �
 
     return (
         <PromptInput onSubmit={handleSubmit} className='bg-background flex'>
-            <PromptInputTextarea className='h-fit min-h-0 p-0 px-2' placeholder={placeholder} disabled={isBusy} />
+            <PromptInputTextarea
+                className='h-fit min-h-0 p-0 ps-1 md:ps-2 text-sm md:text-base'
+                placeholder={placeholder}
+                disabled={isBusy}
+            />
             <PromptInputSubmit
-                className='self-end'
+                className='self-end rounded-2xl'
                 status={status}
                 onClick={isBusy ? handleStopClick : undefined}
                 disabled={!isReady && !isBusy}

@@ -94,7 +94,12 @@ function groupToolCalls(toolParts: ReadonlyArray<{ part: ToolCallPart; index: nu
             existing.failedCount += isFailed ? 1 : 0;
             existing.isActive = existing.isActive || isActive;
             // Add resource if present and not already in the list (dedupe by name or URL)
-            if (resource && !existing.resources.some((r) => (r.url && r.url === resource.url) || (r.name && r.name === resource.name))) {
+            if (
+                resource &&
+                !existing.resources.some(
+                    (r) => (r.url && r.url === resource.url) || (r.name && r.name === resource.name),
+                )
+            ) {
                 existing.resources.push(resource);
             }
         } else {
@@ -164,7 +169,7 @@ export function ToolCallParts({ messageId, toolParts, isProcessing, isLastMessag
     // Build header text - show only succeeded count
     const getHeaderContent = () => {
         // Still processing
-        if (isProcessing || stats.active > 0) {
+        if (isProcessing && stats.active > 0) {
             return (
                 <Shimmer as='span' duration={1.5}>
                     {processingLabels[labelIndex]}

@@ -95,6 +95,8 @@ export function MessageItem({ message, isLastMessage, isStreaming, onRegenerate 
     // Processing is true only when streaming AND the last part is a server tool
     const isToolsStillRunning = isLastMessage && isStreaming && isLastPartServerTool;
 
+    console.log();
+
     console.log({ message });
 
     return (
@@ -107,7 +109,7 @@ export function MessageItem({ message, isLastMessage, isStreaming, onRegenerate 
                 <ToolCallParts
                     messageId={message.id}
                     toolParts={toolParts}
-                    isProcessing={isToolsStillRunning || hasActiveTools}
+                    isProcessing={isToolsStillRunning && hasActiveTools}
                     isLastMessage={isLastMessage}
                 />
             )}

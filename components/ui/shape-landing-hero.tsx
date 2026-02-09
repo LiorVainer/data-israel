@@ -1,7 +1,8 @@
 'use client';
 
-import {motion} from 'framer-motion';
-import {cn} from '@/lib/utils';
+import { motion } from 'framer-motion';
+import { cn } from '@/lib/utils';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 const fadeUpVariants = {
     hidden: { opacity: 0, y: 30 },
@@ -83,6 +84,7 @@ function ElegantShape({
 }
 
 function GeometricBackground({ children, noShapes }: { children?: React.ReactNode; noShapes?: boolean }) {
+    const isMobile = useIsMobile();
     return (
         <div className='absolute inset-0 overflow-hidden bg-background'>
             <div className='absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/5 blur-3xl' />
@@ -91,7 +93,7 @@ function GeometricBackground({ children, noShapes }: { children?: React.ReactNod
                 <div className='absolute inset-0 overflow-hidden'>
                     <ElegantShape
                         delay={0.3}
-                        width={600}
+                        width={isMobile ? 140 : 600}
                         height={140}
                         rotate={12}
                         gradient='from-primary/15'
@@ -100,8 +102,8 @@ function GeometricBackground({ children, noShapes }: { children?: React.ReactNod
 
                     <ElegantShape
                         delay={0.5}
-                        width={500}
-                        height={120}
+                        width={isMobile ? 120 : 500}
+                        height={isMobile ? 120 : 120}
                         rotate={-15}
                         gradient='from-accent/15'
                         className='right-[-5%] md:right-[0%] top-[70%] md:top-[75%]'
@@ -109,7 +111,7 @@ function GeometricBackground({ children, noShapes }: { children?: React.ReactNod
 
                     <ElegantShape
                         delay={0.4}
-                        width={300}
+                        width={isMobile ? 80 : 300}
                         height={80}
                         rotate={-8}
                         gradient='from-primary/20'
@@ -118,8 +120,8 @@ function GeometricBackground({ children, noShapes }: { children?: React.ReactNod
 
                     <ElegantShape
                         delay={0.6}
-                        width={200}
-                        height={60}
+                        width={isMobile ? 80 : 200}
+                        height={isMobile ? 80 : 60}
                         rotate={20}
                         gradient='from-accent/20'
                         className='right-[15%] md:right-[20%] top-[10%] md:top-[15%]'
@@ -127,7 +129,7 @@ function GeometricBackground({ children, noShapes }: { children?: React.ReactNod
 
                     <ElegantShape
                         delay={0.7}
-                        width={150}
+                        width={isMobile ? 40 : 150}
                         height={40}
                         rotate={-25}
                         gradient='from-primary/10'

@@ -85,7 +85,7 @@ export function AppSidebar({
             </Sidebar>
 
             <SidebarInset className='overflow-hidden min-h-0 h-full relative'>
-                <SidebarTrigger className='absolute top-3 right-4 md:top-4 md:right-5 z-30' />
+                <SidebarTrigger className='absolute top-3 right-4 md:top-4 md:right-5 z-30 rounded-2xl' />
                 <div className='flex flex-1 min-h-0 @container/main overflow-hidden flex-col'>{children}</div>
             </SidebarInset>
         </SidebarProvider>
