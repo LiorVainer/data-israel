@@ -25,7 +25,7 @@ export function HeroSection({}: HeroSectionProps) {
     const isTablet = useIsTablet();
 
     return (
-        <div className='w-full max-w-4xl mx-auto px-4 pt-8 text-center flex flex-col items-center justify-center flex-1 min-h-0 gap-12 md:gap-20'>
+        <div className='w-full max-w-4xl mx-auto px-4 pt-8 text-center flex flex-col items-center justify-center flex-1 min-h-0 gap-10 md:gap-20'>
             <motion.div variants={fadeUpVariants} initial='hidden' animate='visible'>
                 <Image
                     src='/data-israel.svg'
@@ -36,7 +36,7 @@ export function HeroSection({}: HeroSectionProps) {
                 />
             </motion.div>
             <div className='flex-shrink-0 flex flex-col items-center gap-8 2xl:gap-16 4xl:gap-20'>
-                <div className='gap-4'>
+                <div className='flex flex-col gap-4'>
                     <HeroTitle line1='סוכן המידע הציבורי' line2='של ממשלת ישראל' />
                     <div>
                         <HeroSubtitle>חפש נתונים ציבוריים ממאגרי המידע</HeroSubtitle>
