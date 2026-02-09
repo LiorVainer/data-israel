@@ -34,7 +34,7 @@ export function InputSection({ onSubmit, status, onStop, placeholder = 'מה ת�
                 disabled={isBusy}
             />
             <PromptInputSubmit
-                className='self-end rounded-2xl'
+                className='self-end rounded-2xl bg-action'
                 status={status}
                 onClick={isBusy ? handleStopClick : undefined}
                 disabled={!isReady && !isBusy}

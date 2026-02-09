@@ -30,7 +30,7 @@ export function HeroSection({}: HeroSectionProps) {
                 <Image
                     src='/data-israel.svg'
                     alt='DataGov Logo'
-                    width={isTablet ? 95 : 150}
+                    width={isTablet ? 80 : 150}
                     height={isTablet ? 33 : 50}
                     priority
                 />
@@ -53,7 +53,7 @@ export function HeroSection({}: HeroSectionProps) {
                         <Image
                             src='/datagov-logo.svg'
                             alt='data.gov.il'
-                            width={isTablet ? 100 : 130}
+                            width={isTablet ? 85 : 130}
                             height={isTablet ? 45 : 60}
                         />
                     </a>
@@ -66,7 +66,7 @@ export function HeroSection({}: HeroSectionProps) {
                         <Image
                             src='/cbs-logo.svg'
                             alt='הלמ"ס'
-                            width={isTablet ? 105 : 130}
+                            width={isTablet ? 90 : 130}
                             height={isTablet ? 50 : 70}
                         />
                     </a>
