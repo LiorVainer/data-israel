@@ -43,6 +43,10 @@
   --color-badge-datagov-foreground: var(--badge-datagov-foreground);
   --color-badge-cbs: var(--badge-cbs);
   --color-badge-cbs-foreground: var(--badge-cbs-foreground);
+  /* Logo colors */
+  --color-logo-blue-light: var(--logo-blue-light);
+  --color-logo-blue-mid: var(--logo-blue-mid);
+  --color-logo-blue-dark: var(--logo-blue-dark);
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
@@ -55,7 +59,7 @@
 :root {
   --radius: 0.8rem;
   --background: oklch(0.98 0.005 250);
-  --action: oklch(0.726 0.16 64.119);
+  --action: oklch(0.685 0.172 51.34);
   --foreground: oklch(0.145 0.02 250);
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.145 0.02 250);
@@ -83,6 +87,10 @@
   --badge-datagov-foreground: oklch(0.35 0.1 85);
   --badge-cbs: oklch(0.896 0.059 62.816);
   --badge-cbs-foreground: oklch(0.35 0.1 55);
+  /* Logo colors */
+  --logo-blue-light: #0170d0;
+  --logo-blue-mid: #085697;
+  --logo-blue-dark: #102a46;
   --sidebar: oklch(0.985 0 0);
   --sidebar-foreground: oklch(0.145 0.02 250);
   --sidebar-primary: oklch(0.35 0.15 250);
@@ -123,6 +131,11 @@
   --badge-datagov-foreground: oklch(0.9 0.08 85);
   --badge-cbs: oklch(0.45 0.12 55);
   --badge-cbs-foreground: oklch(0.9 0.08 55);
+  --action: oklch(0.78 0.14 64.119);
+  /* Logo colors */
+  --logo-blue-light: oklch(0.75 0.16 250);
+  --logo-blue-mid: oklch(0.65 0.14 250);
+  --logo-blue-dark: oklch(0.55 0.12 250);
   --sidebar: oklch(0.18 0.03 250);
   --sidebar-foreground: oklch(0.95 0.01 250);
   --sidebar-primary: oklch(0.55 0.18 250);

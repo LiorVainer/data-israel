@@ -2,7 +2,7 @@
 
 import { SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar } from '@/components/ui/sidebar';
 import { SignedIn, SignedOut, useClerk } from '@clerk/nextjs';
-import { ChevronsUpDown, LogOut, LucideLogIn, Moon, Sun, User } from 'lucide-react';
+import { ChevronsUpDown, LogOut, LucideLogIn, Moon, Sun } from 'lucide-react';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -16,7 +16,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import * as React from 'react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import Link from 'next/link';
-import { useUser } from '@/context/UserContext';
+
 
 /**
  * NavUser component for the sidebar footer.
@@ -25,7 +25,6 @@ import { useUser } from '@/context/UserContext';
  */
 export function NavUser() {
     const { user, openUserProfile, signOut } = useClerk();
-    const { guestId } = useUser();
     const isMobile = useIsMobile();
     const { setOpen, setOpenMobile } = useSidebar();
 
@@ -58,17 +57,12 @@ export function NavUser() {
     return (
         <SidebarMenu>
             <SignedOut>
-                {/* Guest indicator when not authenticated */}
-                {guestId && (
-                    <SidebarMenuItem>
-                        <SidebarMenuButton asChild className='hover:bg-sidebar cursor-default' tooltip='אורח'>
-                            <div>
-                                <User className='text-muted-foreground' />
-                                <span className='text-muted-foreground'>אורח</span>
-                            </div>
-                        </SidebarMenuButton>
-                    </SidebarMenuItem>
-                )}
+                <SidebarMenuItem>
+                    <SidebarMenuButton tooltip={isDarkMode ? 'מצב בהיר' : 'מצב כהה'} onClick={toggleTheme}>
+                        {isDarkMode ? <Sun /> : <Moon />}
+                        <span>{isDarkMode ? 'מצב בהיר' : 'מצב כהה'}</span>
+                    </SidebarMenuButton>
+                </SidebarMenuItem>
                 <SidebarMenuItem>
                     <SidebarMenuButton asChild tooltip='התחברות' onClick={closeSidebar}>
                         <Link href='/sign-in'>

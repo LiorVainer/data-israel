@@ -4,7 +4,8 @@ import Image from 'next/image';
 import { motion } from 'framer-motion';
 import { HeroSubtitle, HeroTitle } from '@/components/ui/shape-landing-hero';
 import { useIsTablet } from '@/hooks/use-mobile';
-import { DATA_SOURCE_CONFIG } from '../../constants/tool-data-sources';
+import { DATA_SOURCE_CONFIG } from '@/constants/tool-data-sources';
+import { Logo } from '@/components/ui/logo';
 
 const fadeUpVariants = {
     hidden: { opacity: 0, y: 30 },
@@ -27,13 +28,7 @@ export function HeroSection({}: HeroSectionProps) {
     return (
         <div className='w-full max-w-4xl mx-auto px-4 pt-8 text-center flex flex-col items-center justify-center flex-1 min-h-0 gap-10 md:gap-20'>
             <motion.div variants={fadeUpVariants} initial='hidden' animate='visible'>
-                <Image
-                    src='/data-israel.svg'
-                    alt='DataGov Logo'
-                    width={isTablet ? 80 : 150}
-                    height={isTablet ? 33 : 50}
-                    priority
-                />
+                <Logo width={isTablet ? 80 : 150} aria-label='DataGov Logo' />
             </motion.div>
             <div className='flex-shrink-0 flex flex-col items-center gap-8 2xl:gap-16 4xl:gap-20'>
                 <div className='flex flex-col gap-2'>

@@ -18,7 +18,7 @@ import { useEffect, useState, useCallback, useRef } from 'react';
  * across browser sessions.
  */
 export const useGuestSession = () => {
-    const { isAuthenticated } = useConvexAuth();
+    const { isAuthenticated, isLoading: isAuthLoading } = useConvexAuth();
     const [sessionId, setSessionId] = useLocalStorage('guest-session-id', '');
     const [guestId, setGuestId] = useLocalStorage<Id<'guests'> | null>('guest-id', null);
     const [isCreatingGuest, setIsCreatingGuest] = useState(false);
@@ -58,11 +58,19 @@ export const useGuestSession = () => {
     }, [sessionId, createNewGuest, setGuestId]);
 
     // Auto-create guest when unauthenticated and no guest exists
+    // Skip during auth loading to prevent race conditions on signout
     useEffect(() => {
-        if (!isAuthenticated && !guestId && sessionId && !isCreatingGuest && !isCreatingRef.current) {
+        if (
+            !isAuthLoading &&
+            !isAuthenticated &&
+            !guestId &&
+            sessionId &&
+            !isCreatingGuest &&
+            !isCreatingRef.current
+        ) {
             createGuest();
         }
-    }, [isAuthenticated, guestId, sessionId, isCreatingGuest, createGuest]);
+    }, [isAuthLoading, isAuthenticated, guestId, sessionId, isCreatingGuest, createGuest]);
 
     /**
      * Ensure a guest exists before performing an operation.

@@ -15,7 +15,7 @@ import {
     SidebarTrigger,
     useSidebar,
 } from '@/components/ui/sidebar';
-import Image from 'next/image';
+import { Logo } from '@/components/ui/logo';
 import { NavUser } from '@/components/navigation/NavUser';
 import { SidebarToolbar } from '@/components/navigation/SidebarToolbar';
 import { ThreadsSidebarGroup } from '@/components/threads/ThreadsSidebarGroup';
@@ -42,7 +42,7 @@ function SidebarLogo() {
         <SidebarMenu>
             <SidebarMenuItem>
                 <SidebarMenuButton size='lg' className='gap-4' onClick={handleClick}>
-                    <Image src='/data-israel.svg' alt='לוגו' width={24} height={24} className='size-7 shrink-0' />
+                    <Logo className='size-7 shrink-0' aria-label='לוגו' />
                     <div className='grid flex-1 text-right text-sm leading-tight'>
                         <span className='truncate font-semibold'>סוכן המידע הציבורי</span>
                         <span className='truncate text-xs text-muted-foreground'>data-israel.org</span>
