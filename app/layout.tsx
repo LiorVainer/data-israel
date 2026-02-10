@@ -4,6 +4,7 @@ import { ClerkProvider } from '@clerk/nextjs';
 import ConvexClientProvider from '@/context/ConvexClientProvider';
 import QueryClientProvider from '@/context/QueryClientProvider';
 import { UserProvider } from '@/context/UserContext';
+import { ThemeProvider } from '@/context/ThemeProvider';
 import { AppSidebar } from '@/components/navigation/AppSidebar';
 import { Toaster } from '@/components/ui/sonner';
 
@@ -69,18 +70,20 @@ export default function RootLayout({
     children: React.ReactNode;
 }>) {
     return (
-        <html lang='he' dir='rtl'>
+        <html lang='he' dir='rtl' suppressHydrationWarning>
             <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
                 <ClerkProvider>
-                    <QueryClientProvider>
-                        <ConvexClientProvider>
-                            <UserProvider>
-                                <AppSidebar>{children}</AppSidebar>
-                            </UserProvider>
-                        </ConvexClientProvider>
-                    </QueryClientProvider>
+                    <ThemeProvider>
+                        <QueryClientProvider>
+                            <ConvexClientProvider>
+                                <UserProvider>
+                                    <AppSidebar>{children}</AppSidebar>
+                                </UserProvider>
+                            </ConvexClientProvider>
+                        </QueryClientProvider>
+                        <Toaster />
+                    </ThemeProvider>
                 </ClerkProvider>
-                <Toaster />
             </body>
         </html>
     );

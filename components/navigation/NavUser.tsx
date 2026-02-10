@@ -14,6 +14,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import * as React from 'react';
+import { useThemeSync } from '@/hooks/use-theme-sync';
 import { useIsMobile } from '@/hooks/use-mobile';
 import Link from 'next/link';
 
@@ -35,24 +36,11 @@ export function NavUser() {
             setOpen(false);
         }
     }, [isMobile, setOpen, setOpenMobile]);
-    const [isDarkMode, setIsDarkMode] = React.useState(false);
 
-    // Check initial dark mode state
-    React.useEffect(() => {
-        setIsDarkMode(document.documentElement.classList.contains('dark'));
-    }, []);
-
+    const { setTheme, isDarkMode } = useThemeSync();
     const toggleTheme = React.useCallback(() => {
-        const newMode = !isDarkMode;
-        setIsDarkMode(newMode);
-        if (newMode) {
-            document.documentElement.classList.add('dark');
-            localStorage.setItem('theme', 'dark');
-        } else {
-            document.documentElement.classList.remove('dark');
-            localStorage.setItem('theme', 'light');
-        }
-    }, [isDarkMode]);
+        setTheme(isDarkMode ? 'light' : 'dark');
+    }, [isDarkMode, setTheme]);
 
     return (
         <SidebarMenu>

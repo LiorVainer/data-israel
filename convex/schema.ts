@@ -67,6 +67,20 @@ export default defineSchema({
         .index('by_format', ['format']),
 
     /**
+     * Users table - stores Clerk user information and preferences
+     */
+    users: defineTable({
+        clerkId: v.string(),
+        email: v.string(),
+        firstName: v.optional(v.string()),
+        lastName: v.optional(v.string()),
+        imageUrl: v.optional(v.string()),
+        themePreference: v.optional(v.union(v.literal('light'), v.literal('dark'))),
+        createdAt: v.number(),
+        updatedAt: v.number(),
+    }).index('by_clerk_id', ['clerkId']),
+
+    /**
      * Mastra tables - used by @mastra/convex for agent memory, threads, and storage
      */
     mastra_threads: mastraThreadsTable,
