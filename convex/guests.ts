@@ -45,3 +45,17 @@ export const getGuestBySessionId = query({
         return guest;
     },
 });
+
+/**
+ * Check if a guest record exists by its ID.
+ * Uses normalizeId for safe ID validation without throwing on invalid formats.
+ */
+export const guestExists = query({
+    args: { guestId: v.string() },
+    handler: async (ctx, { guestId }) => {
+        const normalizedId = ctx.db.normalizeId('guests', guestId);
+        if (!normalizedId) return false;
+        const guest = await ctx.db.get(normalizedId);
+        return guest !== null;
+    },
+});

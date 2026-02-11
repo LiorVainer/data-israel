@@ -1,7 +1,7 @@
 'use client';
 
 import { useLocalStorage } from '@/hooks/use-local-storage';
-import { useConvexAuth, useMutation } from 'convex/react';
+import { useConvexAuth, useMutation, useQuery } from 'convex/react';
 import { api } from '@/convex/_generated/api';
 import { Id } from '@/convex/_generated/dataModel';
 import { useEffect, useState, useCallback, useRef } from 'react';
@@ -27,6 +27,22 @@ export const useGuestSession = () => {
     const isCreatingRef = useRef(false);
 
     const createNewGuest = useMutation(api.guests.createNewGuest);
+
+    // Validate that stored guestId still exists in Convex DB.
+    // Prevents stale localStorage IDs from causing query errors.
+    const guestExistsResult = useQuery(
+        api.guests.guestExists,
+        !isAuthenticated && guestId ? { guestId: String(guestId) } : 'skip',
+    );
+
+    const isValidatingGuest = !isAuthenticated && guestId !== null && guestExistsResult === undefined;
+
+    // Clear stale guestId if it no longer exists in Convex
+    useEffect(() => {
+        if (guestExistsResult === false) {
+            setGuestId(null);
+        }
+    }, [guestExistsResult, setGuestId]);
 
     // Generate session ID if none exists
     useEffect(() => {
@@ -136,6 +152,7 @@ export const useGuestSession = () => {
         sessionId,
         ensureGuestExists,
         isCreatingGuest,
+        isValidatingGuest,
         isAuthenticated,
     };
 };

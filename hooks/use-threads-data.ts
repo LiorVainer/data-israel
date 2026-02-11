@@ -26,7 +26,7 @@ export interface ThreadData {
  * delete confirmation state, and load-more functionality.
  */
 export function useThreadsData() {
-    const { guestId, isAuthenticated, isCreatingGuest } = useUser();
+    const { guestId, isAuthenticated, isCreatingGuest, isValidatingGuest } = useUser();
     const { isMobile, setOpenMobile } = useSidebar();
     const router = useRouter();
     const pathname = usePathname();
@@ -37,8 +37,8 @@ export function useThreadsData() {
     // Convex mutations
     const deleteThreadMutation = useMutation(api.threads.deleteThread);
 
-    // Skip query while guest session is being created
-    const shouldSkipQuery = !isAuthenticated && isCreatingGuest;
+    // Skip query while guest session is being created or validated
+    const shouldSkipQuery = !isAuthenticated && (isCreatingGuest || isValidatingGuest);
 
     const {
         results: rawThreads,

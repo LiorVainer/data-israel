@@ -21,6 +21,8 @@ interface UserContextType {
     sessionId: string;
     /** Whether a guest record is currently being created */
     isCreatingGuest: boolean;
+    /** Whether a stored guestId is being validated against Convex */
+    isValidatingGuest: boolean;
     /** Ensure a guest exists and return its ID */
     ensureGuestExists: () => Promise<Id<'guests'>>;
 
@@ -65,7 +67,8 @@ interface UserProviderProps {
  */
 export const UserProvider = ({ children }: UserProviderProps) => {
     const { isAuthenticated, isLoading: isAuthLoading } = useConvexAuth();
-    const { guestId, sessionId, isCreatingGuest, ensureGuestExists } = useGuestSession();
+    const { guestId, sessionId, isCreatingGuest, isValidatingGuest, ensureGuestExists } =
+        useGuestSession();
 
     // Compute the user identifier for Convex queries
     // For authenticated users, Convex uses identity.subject internally
@@ -80,14 +83,24 @@ export const UserProvider = ({ children }: UserProviderProps) => {
     const contextValue = useMemo<UserContextType>(
         () => ({
             isAuthenticated,
-            isLoading: isAuthLoading || isCreatingGuest,
+            isLoading: isAuthLoading || isCreatingGuest || isValidatingGuest,
             guestId,
             sessionId,
             isCreatingGuest,
+            isValidatingGuest,
             ensureGuestExists,
             userId,
         }),
-        [isAuthenticated, isAuthLoading, isCreatingGuest, guestId, sessionId, ensureGuestExists, userId],
+        [
+            isAuthenticated,
+            isAuthLoading,
+            isCreatingGuest,
+            isValidatingGuest,
+            guestId,
+            sessionId,
+            ensureGuestExists,
+            userId,
+        ],
     );
 
     return <UserContext.Provider value={contextValue}>{children}</UserContext.Provider>;
