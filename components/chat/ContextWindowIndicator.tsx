@@ -41,8 +41,8 @@ export function ContextWindowIndicator({ usedTokens, maxTokens }: ContextWindowI
     const isMobile = useIsMobile();
 
     return (
-        <div className={cn('flex gap-1.5 flex-col justify-end items-end px-1')}>
-            <div className='flex gap-1 md:gap-4 items-end md:items-center flex-col md:flex-row justify-end'>
+        <div className={cn('flex gap-1.5 flex-col w-full sm:justify-end items-end px-1')}>
+            <div className='flex gap-1 md:gap-4 items-end md:items-center flex-col md:flex-row sm:justify-end'>
                 <div className='flex text-xs text-muted-foreground sm:justify-end' dir='rtl'>
                     <span className='whitespace-nowrap'>{percentage}% מכמות המילים המקסימלית לשיחה נוצלו</span>
                 </div>

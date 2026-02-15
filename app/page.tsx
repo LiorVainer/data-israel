@@ -34,7 +34,7 @@ export default function Home() {
         <div className='relative h-full w-full'>
             <GeometricBackground />
 
-            <div className='mx-auto px-4 md:px-0 pb-4 md:pb-6 relative h-full w'>
+            <div className='mx-auto px-4 md:px-0 pb-4 md:pb-6 relative h-full'>
                 <motion.div
                     initial={{ opacity: 0.0, y: 40 }}
                     whileInView={{ opacity: 1, y: 0 }}

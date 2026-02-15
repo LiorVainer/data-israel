@@ -147,7 +147,7 @@ export function ChatThread({ id }: ChatThreadProps) {
                         </div>
                     )}
 
-                    <div className='w-full md:w-4xl flex gap-1 flex-col'>
+                    <div className='w-full md:w-4xl flex gap-1  flex-col'>
                         <InputSection onSubmit={(text) => void sendMessage({ text })} status={status} onStop={stop} />
                         {!!totalTokens && totalTokens > 0 && (
                             <ContextWindowIndicator
