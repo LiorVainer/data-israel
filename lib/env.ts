@@ -29,12 +29,21 @@ export const EnvSchema = z.object({
 
 export type Env = z.infer<typeof EnvSchema>;
 
-const { data: parsedEnv, error } = EnvSchema.safeParse(process.env);
+function parseEnv(): Env {
+    // Skip validation on the client — server-only secrets like
+    // OPENROUTER_API_KEY are not available in the browser bundle.
+    if (typeof window !== 'undefined') {
+        return process.env as unknown as Env;
+    }
 
-if (error) {
-    console.error('Environment validation failed:', error.issues);
-    console.log('Received environment variables:', process.env);
-    throw new Error(error.issues[0].message);
+    const { data, error } = EnvSchema.safeParse(process.env);
+
+    if (error) {
+        console.error('Environment validation failed:', error.issues);
+        throw new Error(error.issues[0].message);
+    }
+
+    return data;
 }
 
-export const ENV = parsedEnv;
+export const ENV = parseEnv();

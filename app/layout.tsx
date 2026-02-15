@@ -8,7 +8,6 @@ import { ThemeProvider } from '@/context/ThemeProvider';
 import { AppSidebar } from '@/components/navigation/AppSidebar';
 import { Toaster } from '@/components/ui/sonner';
 
-import { ENV } from '@/lib/env';
 import './globals.css';
 
 const geistSans = Geist({
@@ -21,10 +20,10 @@ const geistMono = Geist_Mono({
     subsets: ['latin'],
 });
 
-const VERSION = ENV.VERCEL_GIT_COMMIT_SHA?.slice(0, 8) ?? Date.now().toString();
+const VERSION = process.env.VERCEL_GIT_COMMIT_SHA?.slice(0, 8) ?? Date.now().toString();
 
 export async function generateMetadata(): Promise<Metadata> {
-    const siteUrl = ENV.NEXT_PUBLIC_SITE_URL;
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://data-israel.org';
     const title = 'סוכן המידע הציבורי של ישראל';
     const description =
         'שוחח עם סוכן AI חכם שמחובר למאות אלפי מאגרי מידע פתוחים מ-data.gov.il והלמ"ס - חיפוש, ניתוח וויזואליזציה של נתונים ציבוריים בעברית';
