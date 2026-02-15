@@ -15,11 +15,12 @@ import { AgentConfig } from '../../agent.config';
 import { ClientTools } from '@/lib/tools/client';
 import { DataGovTools } from '@/lib/tools/datagov';
 import { CbsTools } from '@/lib/tools/cbs';
+import { ENV } from '@/lib/env';
 
 const { MEMORY } = AgentConfig;
 
-const convexUrl = process.env.NEXT_PUBLIC_CONVEX_URL;
-const convexAdminKey = process.env.CONVEX_ADMIN_KEY;
+const convexUrl = ENV.NEXT_PUBLIC_CONVEX_URL;
+const convexAdminKey = ENV.CONVEX_ADMIN_KEY;
 
 const vector =
     convexUrl && convexAdminKey

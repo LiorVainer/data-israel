@@ -2,6 +2,7 @@ import type { Processor } from '@mastra/core/processors';
 import { generateText } from 'ai';
 import { createOpenRouter } from '@openrouter/ai-sdk-provider';
 import { MastraDBMessage } from '@mastra/core/agent/message-list';
+import { ENV } from '@/lib/env';
 
 export class ToolResultSummarizerProcessor implements Processor {
     id = 'tool-result-summarizer';
@@ -14,7 +15,7 @@ export class ToolResultSummarizerProcessor implements Processor {
     ) {
         // אתחול OpenRouter עם API key מ-environment
         this.openrouter = createOpenRouter({
-            apiKey: process.env.OPENROUTER_API_KEY,
+            apiKey: ENV.OPENROUTER_API_KEY,
         });
     }
 

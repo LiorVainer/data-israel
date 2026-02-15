@@ -6,11 +6,13 @@ export interface AvailableModel {
     providerSlug: string;
 }
 
+import { ENV } from '@/lib/env';
+
 export const AgentConfig = {
     /** Model configuration */
     MODEL: {
         /** Default OpenRouter model ID (configurable via DEFAULT_MODEL_ID env var) */
-        DEFAULT_ID: process.env.DEFAULT_MODEL_ID ?? 'google/gemini-3-flash-preview',
+        DEFAULT_ID: ENV.DEFAULT_MODEL_ID,
     },
 
     /** Memory configuration for all agents */
@@ -33,11 +35,11 @@ export const AgentConfig = {
     /** Chat API route configuration */
     CHAT: {
         /** Max agent loop steps before forced stop */
-        MAX_STEPS: 10,
+        MAX_STEPS: ENV.AI_MAX_STEPS,
         /** Max request duration in seconds */
         MAX_DURATION: 120,
         /** Number of tool calls to run in parallel */
-        TOOL_CALL_CONCURRENCY: 10,
+        TOOL_CALL_CONCURRENCY: ENV.AI_TOOL_CALL_CONCURRENCY,
         /** Tool name that must be called before the agent stops */
         SUGGEST_TOOL_NAME: 'suggestFollowUps',
         /** Default resource ID for unauthenticated users */

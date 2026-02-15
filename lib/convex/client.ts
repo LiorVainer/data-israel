@@ -6,9 +6,10 @@
 
 import { ConvexHttpClient } from 'convex/browser';
 import { api } from '../../convex/_generated/api';
+import { ENV } from '@/lib/env';
 
 // Convex deployment URL
-const CONVEX_URL = process.env.NEXT_PUBLIC_CONVEX_URL || 'https://decisive-alpaca-889.convex.cloud';
+const CONVEX_URL = ENV.NEXT_PUBLIC_CONVEX_URL ?? 'https://decisive-alpaca-889.convex.cloud';
 
 /**
  * HTTP client for server-side Convex queries

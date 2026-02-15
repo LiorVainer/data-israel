@@ -8,9 +8,10 @@
 import { Mastra } from '@mastra/core';
 import { ConvexStore } from '@mastra/convex';
 import { routingAgent } from './network';
+import { ENV } from '@/lib/env';
 
-const convexUrl = process.env.NEXT_PUBLIC_CONVEX_URL;
-const convexAdminKey = process.env.CONVEX_ADMIN_KEY;
+const convexUrl = ENV.NEXT_PUBLIC_CONVEX_URL;
+const convexAdminKey = ENV.CONVEX_ADMIN_KEY;
 
 const storage =
     convexUrl && convexAdminKey
