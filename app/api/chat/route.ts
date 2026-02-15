@@ -11,6 +11,7 @@ import { handleChatStream } from '@mastra/ai-sdk';
 import { toAISdkV5Messages } from '@mastra/ai-sdk/ui';
 import { AppUIMessage } from '@/agents/types';
 import { AgentConfig } from '@/agents/agent.config';
+import { convexMutation, api } from '@/lib/convex/client';
 
 const { CHAT } = AgentConfig;
 
@@ -114,6 +115,8 @@ export async function POST(req: Request) {
             memoryConfig.resource = memoryConfig.resource || userId;
         }
 
+        const threadId: string | undefined = memoryConfig.thread;
+
         const enhancedParams = {
             ...params,
             memory: memoryConfig.thread ? memoryConfig : undefined,
@@ -128,6 +131,26 @@ export async function POST(req: Request) {
             defaultOptions: {
                 toolCallConcurrency: CHAT.TOOL_CALL_CONCURRENCY,
                 stopWhen: hasCompletedWithSuggestions,
+                onFinish: ({ totalUsage, model }) => {
+                    if (!threadId) return;
+                    const promptTokens = totalUsage.inputTokens ?? 0;
+                    const completionTokens = totalUsage.outputTokens ?? 0;
+                    const totalTokens = totalUsage.totalTokens ?? promptTokens + completionTokens;
+                    void convexMutation(api.threads.insertThreadUsage, {
+                        threadId,
+                        userId,
+                        agentName: 'routingAgent',
+                        model: model?.modelId ?? AgentConfig.MODEL.DEFAULT_ID,
+                        provider: model?.provider ?? 'openrouter',
+                        usage: {
+                            promptTokens,
+                            completionTokens,
+                            totalTokens,
+                            reasoningTokens: totalUsage.reasoningTokens,
+                            cachedInputTokens: totalUsage.cachedInputTokens,
+                        },
+                    });
+                },
             },
             sendReasoning: true,
             sendSources: true,

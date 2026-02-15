@@ -8,6 +8,7 @@
 import { mutation, query } from './_generated/server';
 import { paginationOptsValidator } from 'convex/server';
 import { v } from 'convex/values';
+import { vUsage, vProviderMetadata } from '@convex-dev/agent';
 
 /**
  * Thread data returned by listUserThreads query.
@@ -204,5 +205,68 @@ export const renameThread = mutation({
             title: newTitle,
             updatedAt: new Date().toISOString(),
         });
+    },
+});
+
+/**
+ * Records token usage for a thread interaction.
+ *
+ * Called from the API route's onFinish callback to persist usage data
+ * (prompt tokens, completion tokens, provider metadata) for each response.
+ *
+ * @param threadId - The thread UUID this usage belongs to
+ * @param userId - The user or guest identifier
+ * @param agentName - Optional name of the agent that generated the response
+ * @param model - The model identifier used (e.g., 'google/gemini-3-flash-preview')
+ * @param provider - The provider name (e.g., 'openrouter')
+ * @param usage - Token usage object (promptTokens, completionTokens, totalTokens)
+ * @param providerMetadata - Optional provider-specific metadata
+ */
+export const insertThreadUsage = mutation({
+    args: {
+        threadId: v.string(),
+        userId: v.string(),
+        agentName: v.optional(v.string()),
+        model: v.string(),
+        provider: v.string(),
+        usage: vUsage,
+        providerMetadata: v.optional(vProviderMetadata),
+    },
+    handler: async (ctx, args) => {
+        return ctx.db.insert('thread_usage', {
+            ...args,
+            createdAt: Date.now(),
+        });
+    },
+});
+
+/**
+ * Returns cumulative token usage for a thread (sum of all interactions).
+ *
+ * Used by the ContextWindowIndicator to display total token consumption
+ * relative to the model's context window limit.
+ *
+ * @param threadId - The thread UUID to look up usage for
+ * @returns Cumulative totals: promptTokens, completionTokens, totalTokens
+ */
+export const getThreadCumulativeUsage = query({
+    args: { threadId: v.string() },
+    handler: async (ctx, { threadId }) => {
+        const records = await ctx.db
+            .query('thread_usage')
+            .withIndex('by_thread_created', (q) => q.eq('threadId', threadId))
+            .collect();
+
+        let promptTokens = 0;
+        let completionTokens = 0;
+        let totalTokens = 0;
+
+        for (const record of records) {
+            promptTokens += record.usage.promptTokens ?? 0;
+            completionTokens += record.usage.completionTokens ?? 0;
+            totalTokens += record.usage.totalTokens ?? 0;
+        }
+
+        return { promptTokens, completionTokens, totalTokens };
     },
 });

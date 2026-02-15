@@ -5,12 +5,16 @@ import { DefaultChatTransport, UIMessage } from 'ai';
 import { useEffect, useMemo, useRef } from 'react';
 import { useAuth } from '@clerk/nextjs';
 import { useQuery } from '@tanstack/react-query';
+import { useQuery as useConvexQuery } from 'convex/react';
+import { api } from '@/convex/_generated/api';
+import { AgentConfig } from '@/agents/agent.config';
 import { threadService } from '@/services/thread.service';
 import { Conversation, ConversationContent, ConversationScrollButton } from '@/components/ai-elements/conversation';
 import { MessageItem } from '@/components/chat/MessageItem';
 import { InputSection } from '@/components/chat/InputSection';
 import { Suggestions } from './Suggestions';
 import { LoadingShimmer } from '@/components/chat/LoadingShimmer';
+import { ContextWindowIndicator } from '@/components/chat/ContextWindowIndicator';
 import { GeometricBackground } from '@/components/ui/shape-landing-hero';
 import { useSessionStorage } from '@/hooks/use-session-storage';
 import { INITIAL_MESSAGE_KEY, type InitialMessageData } from '@/constants/chat';
@@ -28,6 +32,9 @@ export function ChatThread({ id }: ChatThreadProps) {
     const { guestId } = useUser();
 
     const userId = clerkUserId ?? guestId;
+
+    const cumulativeUsage = useConvexQuery(api.threads.getThreadCumulativeUsage, { threadId: id });
+    const totalTokens = cumulativeUsage?.totalTokens ?? 0;
 
     const [initialMessageData, , removeInitialMessage] = useSessionStorage<InitialMessageData>(INITIAL_MESSAGE_KEY);
     const isNewConversation = initialMessageData?.chatId === id;
@@ -140,8 +147,14 @@ export function ChatThread({ id }: ChatThreadProps) {
                         </div>
                     )}
 
-                    <div className='relative z-20 w-full md:w-4xl'>
+                    <div className='w-full md:w-4xl flex gap-1 flex-col'>
                         <InputSection onSubmit={(text) => void sendMessage({ text })} status={status} onStop={stop} />
+                        {!!totalTokens && totalTokens > 0 && (
+                            <ContextWindowIndicator
+                                usedTokens={totalTokens}
+                                maxTokens={AgentConfig.CHAT.MAX_CONTEXT_TOKENS}
+                            />
+                        )}
                     </div>
                 </div>
             </div>

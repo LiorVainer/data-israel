@@ -46,6 +46,8 @@ export const AgentConfig = {
         DEFAULT_RESOURCE_ID: 'default-user',
         /** Header name for passing user ID from client */
         USER_ID_HEADER: 'x-user-id',
+        /** Maximum context window tokens for the model */
+        MAX_CONTEXT_TOKENS: 200_000,
     },
 
     /** Available models for selection */
