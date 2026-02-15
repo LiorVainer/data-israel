@@ -5,7 +5,7 @@
  */
 
 import { ConvexHttpClient } from 'convex/browser';
-import { api } from '../../convex/_generated/api';
+import { api } from '@/convex/_generated/api';
 import { ENV } from '@/lib/env';
 
 // Convex deployment URL

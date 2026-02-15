@@ -12,7 +12,7 @@ export const AgentConfig = {
     /** Model configuration */
     MODEL: {
         /** Default OpenRouter model ID (configurable via DEFAULT_MODEL_ID env var) */
-        DEFAULT_ID: ENV.DEFAULT_MODEL_ID,
+        DEFAULT_ID: ENV.AI_DEFAULT_MODEL_ID,
     },
 
     /** Memory configuration for all agents */
