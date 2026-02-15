@@ -33,6 +33,7 @@ const { data: parsedEnv, error } = EnvSchema.safeParse(process.env);
 
 if (error) {
     console.error('Environment validation failed:', error.issues);
+    console.log('Received environment variables:', process.env);
     throw new Error(error.issues[0].message);
 }
 
