@@ -15,7 +15,7 @@ interface SuggestionsProps {
 export function Suggestions({ onClick, suggestions, loading }: SuggestionsProps) {
     if (loading) {
         return (
-            <div className='flex w-full gap-2' dir='ltr'>
+            <div className='flex w-full gap-2' dir='rtl'>
                 {SKELETON_WIDTHS.map((w, i) => (
                     <Skeleton key={i} className={`${w} h-8 shrink-0 rounded-full`} />
                 ))}
@@ -32,7 +32,7 @@ export function Suggestions({ onClick, suggestions, loading }: SuggestionsProps)
         >
             <div
                 className='flex w-max flex-nowrap gap-2 pb-2 md:grid md:w-full md:grid-cols-1 md:gap-2 max-h-24 md:overflow-y-auto md:snap-y md:snap-mandatory'
-                dir={'ltr'}
+                dir='rtl'
             >
                 {items.map(([key, prompt]) => (
                     <Button

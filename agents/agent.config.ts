@@ -9,8 +9,8 @@ export interface AvailableModel {
 export const AgentConfig = {
     /** Model configuration */
     MODEL: {
-        /** Default OpenRouter model ID */
-        DEFAULT_ID: 'google/gemini-3-flash-preview',
+        /** Default OpenRouter model ID (configurable via DEFAULT_MODEL_ID env var) */
+        DEFAULT_ID: process.env.DEFAULT_MODEL_ID ?? 'google/gemini-3-flash-preview',
         /** Tool choice strategy */
     },
 

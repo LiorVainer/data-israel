@@ -40,6 +40,7 @@ const SUGGEST_TOOL_NAME = 'suggestFollowUps';
  */
 
 const hasCompletedWithSuggestions: StopCondition<any> = ({ steps }) => {
+    console.log({ steps: steps.length });
     if (steps.length > MAX_STEPS) return true;
 
     const lastStep = steps[steps.length - 1];
@@ -78,7 +79,6 @@ function getUserIdFromRequest(req: Request): string {
  */
 export async function GET(req: Request) {
     const { searchParams } = new URL(req.url);
-    console.log('Got Here');
     const threadId = searchParams.get('threadId');
     const resourceId = searchParams.get('resourceId') || getUserIdFromRequest(req);
 
@@ -131,6 +131,8 @@ export async function POST(req: Request) {
                 toolCallConcurrency: 10,
                 stopWhen: hasCompletedWithSuggestions,
             },
+            sendReasoning: true,
+            sendSources: true,
         });
 
         return createUIMessageStreamResponse({ stream });

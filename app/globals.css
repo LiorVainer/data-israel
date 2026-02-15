@@ -120,12 +120,12 @@
   --border: oklch(0.95 0.01 250 / 10%);
   --input: oklch(0.95 0.01 250 / 15%);
   --ring: oklch(0.55 0.15 250);
-  /* Chart colors - vibrant yellow & orange palette (dark mode) */
-  --chart-1: oklch(0.75 0.16 95);
-  --chart-2: oklch(0.7 0.15 80);
-  --chart-3: oklch(0.65 0.16 55);
-  --chart-4: oklch(0.72 0.14 70);
-  --chart-5: oklch(0.6 0.16 45);
+  /* Chart colors - cool blue/cyan palette (dark mode) */
+  --chart-1: oklch(0.72 0.14 230);
+  --chart-2: oklch(0.68 0.12 200);
+  --chart-3: oklch(0.65 0.15 260);
+  --chart-4: oklch(0.7 0.1 180);
+  --chart-5: oklch(0.6 0.13 245);
   /* Data source badge colors (dark mode) */
   --badge-datagov: oklch(0.45 0.12 85);
   --badge-datagov-foreground: oklch(0.9 0.08 85);

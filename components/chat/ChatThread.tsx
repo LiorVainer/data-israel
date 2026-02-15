@@ -11,7 +11,6 @@ import { MessageItem } from '@/components/chat/MessageItem';
 import { InputSection } from '@/components/chat/InputSection';
 import { Suggestions } from './Suggestions';
 import { LoadingShimmer } from '@/components/chat/LoadingShimmer';
-import { DataIsraelLoader } from '@/components/chat/DataIsraelLoader';
 import { GeometricBackground } from '@/components/ui/shape-landing-hero';
 import { useSessionStorage } from '@/hooks/use-session-storage';
 import { INITIAL_MESSAGE_KEY, type InitialMessageData } from '@/constants/chat';
@@ -126,12 +125,7 @@ export function ChatThread({ id }: ChatThreadProps) {
                                     onRegenerate={regenerate}
                                 />
                             ))}
-                            {status === 'submitted' && (
-                                <div className='flex items-center gap-3'>
-                                    <DataIsraelLoader size={18} />
-                                    <LoadingShimmer />
-                                </div>
-                            )}
+                            {status === 'submitted' && <LoadingShimmer />}
                         </ConversationContent>
                         <ConversationScrollButton />
                     </Conversation>

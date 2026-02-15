@@ -3,11 +3,68 @@
 import { ResponsiveBar } from '@nivo/bar';
 import { ResponsiveLine } from '@nivo/line';
 import { ResponsivePie } from '@nivo/pie';
-import type { DisplayChartInput, DisplayBarChartInput, DisplayLineChartInput, DisplayPieChartInput } from '@/lib/tools';
+import type { DisplayBarChartInput, DisplayChartInput, DisplayLineChartInput, DisplayPieChartInput } from '@/lib/tools';
 import { Shimmer } from '@/components/ai-elements/shimmer';
+import { useTheme } from 'next-themes';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 // Theme colors matching globals.css chart colors
 const CHART_COLORS = ['var(--chart-1)', 'var(--chart-2)', 'var(--chart-3)', 'var(--chart-4)', 'var(--chart-5)'];
+
+/** Responsive chart margins — tighter on mobile to maximize chart area */
+const CHART_MARGINS = {
+    mobile: { top: 10, right: 0, bottom: 50, left: 20 },
+    desktop: { top: 20, right: 20, bottom: 60, left: 80 },
+} as const;
+
+const PIE_MARGINS = {
+    mobile: { top: 20, right: 40, bottom: 20, left: 40 },
+    desktop: { top: 40, right: 80, bottom: 40, left: 80 },
+} as const;
+
+/**
+ * Nivo theme that adapts to the app's light/dark mode using CSS variables from globals.css.
+ * Tooltip container uses CSS var() directly (it's a DOM element).
+ * SVG elements (axis, grid) need resolved values, so we read computed styles.
+ */
+function useNivoTheme() {
+    const { resolvedTheme } = useTheme();
+    // Dependency on resolvedTheme ensures re-render on theme change.
+    // We still use CSS vars so colors stay in sync with globals.css.
+    void resolvedTheme;
+
+    return {
+        text: {
+            fill: 'var(--muted-foreground)',
+            fontSize: 11,
+        },
+        axis: {
+            ticks: {
+                text: { fill: 'var(--muted-foreground)' },
+                line: { stroke: 'var(--border)' },
+            },
+            legend: {
+                text: { fill: 'var(--foreground)' },
+            },
+        },
+        grid: {
+            line: { stroke: 'var(--border)' },
+        },
+        crosshair: {
+            line: { stroke: 'var(--muted-foreground)', strokeWidth: 1 },
+        },
+        tooltip: {
+            container: {
+                background: 'var(--popover)',
+                color: 'var(--popover-foreground)',
+                fontSize: 12,
+                borderRadius: '8px',
+                border: '1px solid var(--border)',
+                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+            },
+        },
+    };
+}
 
 // ============================================================================
 // Chart Loading State
@@ -51,6 +108,9 @@ interface BarChartRendererProps {
 
 function BarChartRenderer({ data, config, title }: BarChartRendererProps) {
     const { indexBy, keys, layout = 'vertical', groupMode = 'grouped' } = config;
+    const nivoTheme = useNivoTheme();
+    const isMobile = useIsMobile();
+    const margin = isMobile ? CHART_MARGINS.mobile : CHART_MARGINS.desktop;
 
     return (
         <div className='w-full' dir='rtl'>
@@ -62,11 +122,12 @@ function BarChartRenderer({ data, config, title }: BarChartRendererProps) {
                     indexBy={indexBy}
                     layout={layout}
                     groupMode={groupMode}
-                    margin={{ top: 20, right: 20, bottom: 60, left: 80 }}
+                    margin={margin}
                     padding={0.3}
                     valueScale={{ type: 'linear' }}
                     indexScale={{ type: 'band', round: true }}
                     colors={CHART_COLORS}
+                    theme={nivoTheme}
                     borderRadius={4}
                     borderWidth={1}
                     borderColor={{ from: 'color', modifiers: [['darker', 0.2]] }}
@@ -105,6 +166,9 @@ interface LineChartRendererProps {
 
 function LineChartRenderer({ data, config, title }: LineChartRendererProps) {
     const { enableArea = false, curve = 'monotoneX' } = config;
+    const nivoTheme = useNivoTheme();
+    const isMobile = useIsMobile();
+    const margin = isMobile ? CHART_MARGINS.mobile : CHART_MARGINS.desktop;
 
     return (
         <div className='w-full' dir='rtl'>
@@ -112,11 +176,12 @@ function LineChartRenderer({ data, config, title }: LineChartRendererProps) {
             <div className='h-[400px]'>
                 <ResponsiveLine
                     data={data}
-                    margin={{ top: 20, right: 20, bottom: 60, left: 80 }}
+                    margin={margin}
                     xScale={{ type: 'point' }}
                     yScale={{ type: 'linear', min: 'auto', max: 'auto', stacked: false }}
                     curve={curve}
                     colors={CHART_COLORS}
+                    theme={nivoTheme}
                     axisBottom={{
                         tickSize: 5,
                         tickPadding: 5,
@@ -157,6 +222,9 @@ interface PieChartRendererProps {
 
 function PieChartRenderer({ data, config, title }: PieChartRendererProps) {
     const { innerRadius = 0 } = config;
+    const nivoTheme = useNivoTheme();
+    const isMobile = useIsMobile();
+    const margin = isMobile ? PIE_MARGINS.mobile : PIE_MARGINS.desktop;
 
     return (
         <div className='w-full' dir='rtl'>
@@ -164,12 +232,13 @@ function PieChartRenderer({ data, config, title }: PieChartRendererProps) {
             <div className='h-[400px]'>
                 <ResponsivePie
                     data={data}
-                    margin={{ top: 40, right: 80, bottom: 40, left: 80 }}
+                    margin={margin}
                     innerRadius={innerRadius}
                     padAngle={0.7}
                     cornerRadius={3}
                     activeOuterRadiusOffset={8}
                     colors={CHART_COLORS}
+                    theme={nivoTheme}
                     borderWidth={1}
                     borderColor={{ from: 'color', modifiers: [['darker', 0.2]] }}
                     arcLinkLabelsSkipAngle={10}

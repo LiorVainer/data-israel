@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { ChainOfThought, ChainOfThoughtContent, ChainOfThoughtHeader } from '@/components/ai-elements/chain-of-thought';
 import { Shimmer } from '@/components/ai-elements/shimmer';
 import type { ToolCallPart } from './types';
@@ -124,17 +124,17 @@ export interface ToolCallPartsProps {
     messageId: string;
     toolParts: Array<{ part: ToolCallPart; index: number }>;
     isProcessing: boolean;
-    isLastMessage: boolean;
+    /** Whether this group should default to open (e.g. last meaningful segment in message) */
+    defaultOpen?: boolean;
 }
 
 /**
  * Container component for rendering tool calls in a ChainOfThought timeline.
  * Tool calls are grouped by tool name with progress tracking.
  */
-export function ToolCallParts({ messageId, toolParts, isProcessing, isLastMessage }: ToolCallPartsProps) {
+export function ToolCallParts({ messageId, toolParts, isProcessing, defaultOpen = false }: ToolCallPartsProps) {
     const [userToggled, setUserToggled] = useState(false);
     const [userWantsOpen, setUserWantsOpen] = useState(false);
-    const wasProcessing = useRef(isProcessing);
 
     const processingLabels = useMemo(() => ['מחפש מידע...', 'מעבד נתונים...', 'מנתח תוצאות...'], []);
     const [labelIndex, setLabelIndex] = useState(0);
@@ -150,21 +150,13 @@ export function ToolCallParts({ messageId, toolParts, isProcessing, isLastMessag
     const stats = useMemo(() => calculateStats(toolParts), [toolParts]);
     const groupedTools = useMemo(() => groupToolCalls(toolParts), [toolParts]);
 
-    // Auto-close non-last messages when processing finishes, unless user has manually toggled
-    useEffect(() => {
-        if (wasProcessing.current && !isProcessing && !userToggled && !isLastMessage) {
-            setUserWantsOpen(false);
-        }
-        wasProcessing.current = isProcessing;
-    }, [isProcessing, userToggled, isLastMessage]);
-
     const handleOpenChange = (open: boolean) => {
         setUserToggled(true);
         setUserWantsOpen(open);
     };
 
-    // User toggled: respect their choice. Otherwise: open during processing or on last message.
-    const isOpen = userToggled ? userWantsOpen : isProcessing || isLastMessage;
+    // User toggled: respect their choice. Otherwise: open while processing or if defaultOpen.
+    const isOpen = userToggled ? userWantsOpen : isProcessing || defaultOpen;
 
     // Build header text - show only succeeded count
     const getHeaderContent = () => {
