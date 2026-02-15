@@ -18,6 +18,7 @@ export interface TextMessagePartProps {
 }
 
 export function TextMessagePart({ text, role, isLastMessage, onRegenerate }: TextMessagePartProps) {
+    console.log({ text });
     return (
         <Message from={role}>
             <MessageContent>

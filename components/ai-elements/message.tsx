@@ -248,9 +248,30 @@ export const MessageBranchPage = ({ className, ...props }: MessageBranchPageProp
 
 export type MessageResponseProps = ComponentProps<typeof Streamdown>;
 
+type StreamdownComponents = NonNullable<ComponentProps<typeof Streamdown>['components']>;
+
+const tableCellClassName = 'px-4 py-2 text-start';
+
+const rtlTableComponents: StreamdownComponents = {
+    th: ({ children, className: _cn, style: _style, ...props }: React.JSX.IntrinsicElements['th']) => (
+        <th className={tableCellClassName} {...props}>
+            {children}
+        </th>
+    ),
+    td: ({ children, className: _cn, style: _style, ...props }: React.JSX.IntrinsicElements['td']) => (
+        <td className={tableCellClassName} {...props}>
+            {children}
+        </td>
+    ),
+};
+
 export const MessageResponse = memo(
-    ({ className, ...props }: MessageResponseProps) => (
-        <Streamdown className={cn('size-full [&>*:first-child]:mt-0 [&>*:last-child]:mb-0 ', className)} {...props} />
+    ({ className, components, ...props }: MessageResponseProps) => (
+        <Streamdown
+            className={cn('size-full [&>*:first-child]:mt-0 [&>*:last-child]:mb-0 ', className)}
+            components={{ ...rtlTableComponents, ...components }}
+            {...props}
+        />
     ),
     (prevProps, nextProps) => prevProps.children === nextProps.children,
 );

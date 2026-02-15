@@ -11,9 +11,12 @@ import { ConvexVector } from '@mastra/convex';
 import { openrouter } from '@openrouter/ai-sdk-provider';
 import { getMastraModelId } from '../model';
 import { ROUTING_CONFIG } from './config';
+import { AgentConfig } from '../../agent.config';
 import { ClientTools } from '@/lib/tools/client';
 import { DataGovTools } from '@/lib/tools/datagov';
 import { CbsTools } from '@/lib/tools/cbs';
+
+const { MEMORY } = AgentConfig;
 
 const convexUrl = process.env.NEXT_PUBLIC_CONVEX_URL;
 const convexAdminKey = process.env.CONVEX_ADMIN_KEY;
@@ -34,11 +37,17 @@ export const routingAgent = new Agent({
     model: getMastraModelId(),
     memory: new Memory({
         ...(vector && { vector }),
-        embedder: openrouter.textEmbeddingModel('openai/text-embedding-3-small'),
+        embedder: openrouter.textEmbeddingModel(MEMORY.EMBEDDER_MODEL),
         options: {
-            lastMessages: 20,
-            semanticRecall: vector ? { topK: 3, messageRange: 2 } : false,
-            generateTitle: true,
+            lastMessages: MEMORY.LAST_MESSAGES,
+            semanticRecall: vector
+                ? {
+                      topK: MEMORY.SEMANTIC_RECALL.TOP_K,
+                      messageRange: MEMORY.SEMANTIC_RECALL.MESSAGE_RANGE,
+                      scope: 'resource',
+                  }
+                : false,
+            generateTitle: MEMORY.GENERATE_TITLE,
         },
     }),
     tools: {

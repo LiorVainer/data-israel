@@ -182,9 +182,9 @@ export function MessageItem({ message, isLastMessage, isStreaming, onRegenerate 
                     const isProcessing = isLastToolGroup && isLastMessage && isStreaming && hasActiveTools;
 
                     // Default open if nothing meaningful follows (only reasoning or nothing after this group)
-                    const isLastMeaningful = segments.slice(segIdx + 1).every(
-                        (s) => s.kind === 'part' && s.part.type === 'reasoning',
-                    );
+                    const isLastMeaningful = segments
+                        .slice(segIdx + 1)
+                        .every((s) => s.kind === 'part' && s.part.type === 'reasoning');
 
                     return (
                         <ToolCallParts
@@ -252,7 +252,7 @@ export function MessageItem({ message, isLastMessage, isStreaming, onRegenerate 
                 }
             })}
 
-            {showLoadingShimmer && <LoadingShimmer />}
+            {showLoadingShimmer && <LoadingShimmer text={'טוען...'} />}
 
             {/* Render collected sources only after the message is done streaming */}
             {!(isLastMessage && isStreaming) && <SourcesPart sources={allSources} />}

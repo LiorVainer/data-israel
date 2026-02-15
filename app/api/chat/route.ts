@@ -10,12 +10,9 @@ import { mastra } from '@/agents/mastra';
 import { handleChatStream } from '@mastra/ai-sdk';
 import { toAISdkV5Messages } from '@mastra/ai-sdk/ui';
 import { AppUIMessage } from '@/agents/types';
+import { AgentConfig } from '@/agents/agent.config';
 
-/** Default resource ID for unauthenticated users */
-const DEFAULT_RESOURCE_ID = 'default-user';
-
-/** Header name for passing user ID from client */
-const USER_ID_HEADER = 'x-user-id';
+const { CHAT } = AgentConfig;
 
 /**
  * POST /api/chat
@@ -24,8 +21,6 @@ const USER_ID_HEADER = 'x-user-id';
  */
 export const maxDuration = 120;
 export const dynamic = 'force-dynamic';
-const MAX_STEPS = 10;
-const SUGGEST_TOOL_NAME = 'suggestFollowUps';
 
 /**
  * Stop condition: requires BOTH a text response AND suggestFollowUps to have been called.
@@ -41,7 +36,7 @@ const SUGGEST_TOOL_NAME = 'suggestFollowUps';
 
 const hasCompletedWithSuggestions: StopCondition<any> = ({ steps }) => {
     console.log({ steps: steps.length });
-    if (steps.length > MAX_STEPS) return true;
+    if (steps.length > CHAT.MAX_STEPS) return true;
 
     const lastStep = steps[steps.length - 1];
 
@@ -51,7 +46,7 @@ const hasCompletedWithSuggestions: StopCondition<any> = ({ steps }) => {
 
     // Condition 2: suggestFollowUps must have been called in some step
     const calledSuggestions = steps.some((step) =>
-        step.toolCalls?.some((tc: { toolName: string }) => tc.toolName === SUGGEST_TOOL_NAME),
+        step.toolCalls?.some((tc: { toolName: string }) => tc.toolName === CHAT.SUGGEST_TOOL_NAME),
     );
 
     return calledSuggestions;
@@ -65,11 +60,12 @@ const hasCompletedWithSuggestions: StopCondition<any> = ({ steps }) => {
  * 2. Default fallback for unauthenticated users
  */
 function getUserIdFromRequest(req: Request): string {
-    const headerUserId = req.headers.get(USER_ID_HEADER);
+    const headerUserId = req.headers.get(CHAT.USER_ID_HEADER);
     if (headerUserId) {
         return headerUserId;
     }
-    return DEFAULT_RESOURCE_ID;
+
+    return CHAT.DEFAULT_RESOURCE_ID;
 }
 
 /**
@@ -81,8 +77,6 @@ export async function GET(req: Request) {
     const { searchParams } = new URL(req.url);
     const threadId = searchParams.get('threadId');
     const resourceId = searchParams.get('resourceId') || getUserIdFromRequest(req);
-
-    console.log({ threadId, resourceId });
 
     if (!threadId || !resourceId) {
         return NextResponse.json([]);
@@ -111,6 +105,8 @@ export async function POST(req: Request) {
         // Get user ID from header or use the one provided in the body
         const userId = getUserIdFromRequest(req);
 
+        console.log('Received chat request with params:', userId);
+
         // Ensure memory config includes proper resourceId
         // The memory.thread is required by Mastra, ensure it's passed through
         const memoryConfig = params.memory ?? {};
@@ -123,12 +119,14 @@ export async function POST(req: Request) {
             memory: memoryConfig.thread ? memoryConfig : undefined,
         };
 
+        console.log(params);
+
         const stream = await handleChatStream<AppUIMessage>({
             mastra,
             agentId: 'routingAgent',
             params: enhancedParams,
             defaultOptions: {
-                toolCallConcurrency: 10,
+                toolCallConcurrency: CHAT.TOOL_CALL_CONCURRENCY,
                 stopWhen: hasCompletedWithSuggestions,
             },
             sendReasoning: true,
