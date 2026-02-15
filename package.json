@@ -19,6 +19,7 @@
     "@ai-sdk/react": "^3.0.32",
     "@clerk/elements": "^0.24.7",
     "@clerk/nextjs": "^6.37.2",
+    "@convex-dev/agent": "^0.3.2",
     "@convex-dev/rag": "^0.7.0",
     "@mastra/ai-sdk": "^1.0.3",
     "@mastra/convex": "^1.0.2",

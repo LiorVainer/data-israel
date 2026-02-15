@@ -6,6 +6,7 @@
 
 import { defineSchema, defineTable } from 'convex/server';
 import { v } from 'convex/values';
+import { vUsage, vProviderMetadata } from '@convex-dev/agent';
 import {
     mastraThreadsTable,
     mastraMessagesTable,
@@ -79,6 +80,23 @@ export default defineSchema({
         createdAt: v.number(),
         updatedAt: v.number(),
     }).index('by_clerk_id', ['clerkId']),
+
+    /**
+     * Thread usage table - tracks token usage per thread interaction
+     */
+    thread_usage: defineTable({
+        threadId: v.string(),
+        userId: v.string(),
+        agentName: v.optional(v.string()),
+        model: v.string(),
+        provider: v.string(),
+        usage: vUsage,
+        providerMetadata: v.optional(vProviderMetadata),
+        createdAt: v.number(),
+    })
+        .index('by_thread', ['threadId'])
+        .index('by_thread_created', ['threadId', 'createdAt'])
+        .index('by_user', ['userId']),
 
     /**
      * Mastra tables - used by @mastra/convex for agent memory, threads, and storage
