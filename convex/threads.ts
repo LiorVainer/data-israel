@@ -211,13 +211,15 @@ export const renameThread = mutation({
 /**
  * Upserts the context window record for a thread.
  *
- * One record per thread — each turn adds to the running total.
+ * One record per thread — each turn overwrites with the latest snapshot.
+ * The API route passes the last step's usage.totalTokens, which represents
+ * the full current context window size (not incremental values).
  *
  * @param threadId - The thread UUID
  * @param userId - The user or guest identifier
  * @param model - The model identifier used
  * @param provider - The provider name
- * @param usage - Context window usage from this turn to add to the running total
+ * @param usage - Context window usage snapshot (overwrites existing values)
  */
 export const upsertThreadContext = mutation({
     args: {
@@ -239,17 +241,7 @@ export const upsertThreadContext = mutation({
                 model: args.model,
                 provider: args.provider,
                 agentName: args.agentName,
-                usage: {
-                    promptTokens: (existing.usage.promptTokens ?? 0) + (args.usage.promptTokens ?? 0),
-                    completionTokens:
-                        (existing.usage.completionTokens ?? 0) + (args.usage.completionTokens ?? 0),
-                    totalTokens: (existing.usage.totalTokens ?? 0) + (args.usage.totalTokens ?? 0),
-                    reasoningTokens:
-                        (existing.usage.reasoningTokens ?? 0) + (args.usage.reasoningTokens ?? 0) || undefined,
-                    cachedInputTokens:
-                        (existing.usage.cachedInputTokens ?? 0) + (args.usage.cachedInputTokens ?? 0) ||
-                        undefined,
-                },
+                usage: args.usage,
                 createdAt: Date.now(),
             });
             return existing._id;
