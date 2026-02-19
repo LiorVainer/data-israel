@@ -82,7 +82,8 @@ export default defineSchema({
     }).index('by_clerk_id', ['clerkId']),
 
     /**
-     * Thread usage table - tracks token usage per thread interaction
+     * Thread context table - tracks context window consumption per thread interaction.
+     * Each record is a snapshot of the context window size at the end of a turn.
      */
     thread_usage: defineTable({
         threadId: v.string(),
@@ -92,6 +93,24 @@ export default defineSchema({
         provider: v.string(),
         usage: vUsage,
         providerMetadata: v.optional(vProviderMetadata),
+        createdAt: v.number(),
+    })
+        .index('by_thread', ['threadId'])
+        .index('by_thread_created', ['threadId', 'createdAt'])
+        .index('by_user', ['userId']),
+
+    /**
+     * Thread billing table - tracks accumulated token usage (actual API cost) per turn.
+     * Unlike thread_usage (context window snapshot), this records the sum of all
+     * step tokens consumed in a single turn — the real billing cost.
+     */
+    thread_billing: defineTable({
+        threadId: v.string(),
+        userId: v.string(),
+        agentName: v.optional(v.string()),
+        model: v.string(),
+        provider: v.string(),
+        usage: vUsage,
         createdAt: v.number(),
     })
         .index('by_thread', ['threadId'])

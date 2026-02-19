@@ -11,13 +11,13 @@ import { handleChatStream } from '@mastra/ai-sdk';
 import { toAISdkV5Messages } from '@mastra/ai-sdk/ui';
 import { AppUIMessage } from '@/agents/types';
 import { AgentConfig } from '@/agents/agent.config';
-import { convexMutation, api } from '@/lib/convex/client';
+import { api, convexMutation } from '@/lib/convex/client';
 import type { MastraMemory } from '@mastra/core/memory';
 import {
-    isToolPart,
     type AgentDataPart,
     type AgentDataToolCall,
     type AgentDataToolResult,
+    isToolPart,
     type ToolCallPart,
 } from '@/components/chat/types';
 
@@ -82,10 +82,7 @@ function getUserIdFromRequest(req: Request): string {
  * These are streaming-only artifacts not stored in memory. On recall, we reconstruct them
  * by fetching the sub-agent's separate memory thread using subAgentThreadId.
  */
-async function enrichWithSubAgentData(
-    uiMessages: UIMessage[],
-    memory: MastraMemory,
-): Promise<void> {
+async function enrichWithSubAgentData(uiMessages: UIMessage[], memory: MastraMemory): Promise<void> {
     // Collect all sub-agent thread references from tool-agent-* parts
     const subAgentRefs: Array<{
         messageIndex: number;
@@ -237,7 +234,6 @@ export async function POST(req: Request) {
         // Get user ID from header or use the one provided in the body
         const userId = getUserIdFromRequest(req);
 
-
         // Ensure memory config includes proper resourceId
         // The memory.thread is required by Mastra, ensure it's passed through
         const memoryConfig = params.memory ?? {};
@@ -252,6 +248,24 @@ export async function POST(req: Request) {
             memory: memoryConfig.thread ? memoryConfig : undefined,
         };
 
+        // Context snapshot: overridden each step (last step = actual context window size).
+        const contextSnapshot = {
+            inputTokens: 0,
+            outputTokens: 0,
+            totalTokens: 0,
+            reasoningTokens: 0,
+            cachedInputTokens: 0,
+        };
+
+        // Billing accumulator: summed across all steps (real API cost per turn).
+        const billingUsage = {
+            inputTokens: 0,
+            outputTokens: 0,
+            totalTokens: 0,
+            reasoningTokens: 0,
+            cachedInputTokens: 0,
+        };
+
         const stream = await handleChatStream<AppUIMessage>({
             mastra,
             agentId: 'routingAgent',
@@ -259,23 +273,55 @@ export async function POST(req: Request) {
             defaultOptions: {
                 toolCallConcurrency: CHAT.TOOL_CALL_CONCURRENCY,
                 stopWhen: hasCompletedWithSuggestions,
-                onFinish: ({ totalUsage, model }) => {
+                onStepFinish: ({ usage, toolCalls, text, stepType }) => {
+                    console.log({ usage, toolCalls: toolCalls.length, text: text.length, stepType });
+                    // Context snapshot: override (last step = context window size)
+                    contextSnapshot.inputTokens = usage.inputTokens ?? 0;
+                    contextSnapshot.outputTokens = usage.outputTokens ?? 0;
+                    contextSnapshot.totalTokens = usage.totalTokens ?? 0;
+                    contextSnapshot.reasoningTokens = usage.reasoningTokens ?? 0;
+                    contextSnapshot.cachedInputTokens = usage.cachedInputTokens ?? 0;
+                    // Billing: accumulate (sum of all steps = real API cost)
+                    billingUsage.inputTokens += usage.inputTokens ?? 0;
+                    billingUsage.outputTokens += usage.outputTokens ?? 0;
+                    billingUsage.totalTokens += usage.totalTokens ?? 0;
+                    billingUsage.reasoningTokens += usage.reasoningTokens ?? 0;
+                    billingUsage.cachedInputTokens += usage.cachedInputTokens ?? 0;
+                },
+                onFinish: ({ model }) => {
                     if (!threadId) return;
-                    const promptTokens = totalUsage.inputTokens ?? 0;
-                    const completionTokens = totalUsage.outputTokens ?? 0;
-                    const totalTokens = totalUsage.totalTokens ?? promptTokens + completionTokens;
-                    void convexMutation(api.threads.insertThreadUsage, {
+                    const modelId = model?.modelId ?? AgentConfig.MODEL.DEFAULT_ID;
+                    const provider = model?.provider ?? 'openrouter';
+
+                    // Context window snapshot (for UI indicator)
+                    void convexMutation(api.threads.upsertThreadContext, {
                         threadId,
                         userId,
                         agentName: 'routingAgent',
-                        model: model?.modelId ?? AgentConfig.MODEL.DEFAULT_ID,
-                        provider: model?.provider ?? 'openrouter',
+                        model: modelId,
+                        provider,
                         usage: {
-                            promptTokens,
-                            completionTokens,
-                            totalTokens,
-                            reasoningTokens: totalUsage.reasoningTokens,
-                            cachedInputTokens: totalUsage.cachedInputTokens,
+                            promptTokens: contextSnapshot.inputTokens,
+                            completionTokens: contextSnapshot.outputTokens,
+                            totalTokens: contextSnapshot.totalTokens,
+                            reasoningTokens: contextSnapshot.reasoningTokens || undefined,
+                            cachedInputTokens: contextSnapshot.cachedInputTokens || undefined,
+                        },
+                    });
+
+                    // Billing record (accumulated real API cost, not shown in UI)
+                    void convexMutation(api.threads.upsertThreadBilling, {
+                        threadId,
+                        userId,
+                        agentName: 'routingAgent',
+                        model: modelId,
+                        provider,
+                        usage: {
+                            promptTokens: billingUsage.inputTokens,
+                            completionTokens: billingUsage.outputTokens,
+                            totalTokens: billingUsage.totalTokens,
+                            reasoningTokens: billingUsage.reasoningTokens || undefined,
+                            cachedInputTokens: billingUsage.cachedInputTokens || undefined,
                         },
                     });
                 },
