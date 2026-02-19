@@ -1,12 +1,8 @@
-import type { NetworkDataPart } from '@mastra/ai-sdk';
 import type { InferUITools, UIMessage } from 'ai';
 import { agents } from './mastra';
 import type { ClientTools } from '@/lib/tools/client';
 import type { DataGovTools } from '@/lib/tools/datagov';
 import type { CbsTools } from '@/lib/tools/cbs';
-
-export type AgentsNetworkToolNames = `agent-${Extract<keyof typeof agents, string>}`;
-export type AgentsNetworkData = NetworkDataPart['data'];
 
 export type AgentName = keyof typeof agents;
 

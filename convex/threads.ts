@@ -209,20 +209,19 @@ export const renameThread = mutation({
 });
 
 /**
- * Records token usage for a thread interaction.
+ * Upserts the context window record for a thread.
  *
- * Called from the API route's onFinish callback to persist usage data
- * (prompt tokens, completion tokens, provider metadata) for each response.
+ * One record per thread — each turn overwrites with the latest snapshot.
+ * The API route passes the last step's usage.totalTokens, which represents
+ * the full current context window size (not incremental values).
  *
- * @param threadId - The thread UUID this usage belongs to
+ * @param threadId - The thread UUID
  * @param userId - The user or guest identifier
- * @param agentName - Optional name of the agent that generated the response
- * @param model - The model identifier used (e.g., 'google/gemini-3-flash-preview')
- * @param provider - The provider name (e.g., 'openrouter')
- * @param usage - Token usage object (promptTokens, completionTokens, totalTokens)
- * @param providerMetadata - Optional provider-specific metadata
+ * @param model - The model identifier used
+ * @param provider - The provider name
+ * @param usage - Context window usage snapshot (overwrites existing values)
  */
-export const insertThreadUsage = mutation({
+export const upsertThreadContext = mutation({
     args: {
         threadId: v.string(),
         userId: v.string(),
@@ -230,9 +229,24 @@ export const insertThreadUsage = mutation({
         model: v.string(),
         provider: v.string(),
         usage: vUsage,
-        providerMetadata: v.optional(vProviderMetadata),
     },
     handler: async (ctx, args) => {
+        const existing = await ctx.db
+            .query('thread_usage')
+            .withIndex('by_thread', (q) => q.eq('threadId', args.threadId))
+            .first();
+
+        if (existing) {
+            await ctx.db.patch(existing._id, {
+                model: args.model,
+                provider: args.provider,
+                agentName: args.agentName,
+                usage: args.usage,
+                createdAt: Date.now(),
+            });
+            return existing._id;
+        }
+
         return ctx.db.insert('thread_usage', {
             ...args,
             createdAt: Date.now(),
@@ -241,32 +255,86 @@ export const insertThreadUsage = mutation({
 });
 
 /**
- * Returns cumulative token usage for a thread (sum of all interactions).
+ * Returns the context window snapshot for a thread.
  *
- * Used by the ContextWindowIndicator to display total token consumption
- * relative to the model's context window limit.
+ * Single record per thread representing the current context window size.
+ * Used by the ContextWindowIndicator to display usage relative to the model's limit.
  *
- * @param threadId - The thread UUID to look up usage for
- * @returns Cumulative totals: promptTokens, completionTokens, totalTokens
+ * @param threadId - The thread UUID to look up
+ * @returns Snapshot: promptTokens, completionTokens, totalTokens
  */
-export const getThreadCumulativeUsage = query({
+export const getThreadContextWindow = query({
     args: { threadId: v.string() },
     handler: async (ctx, { threadId }) => {
-        const records = await ctx.db
+        const record = await ctx.db
             .query('thread_usage')
-            .withIndex('by_thread_created', (q) => q.eq('threadId', threadId))
-            .collect();
+            .withIndex('by_thread', (q) => q.eq('threadId', threadId))
+            .first();
 
-        let promptTokens = 0;
-        let completionTokens = 0;
-        let totalTokens = 0;
-
-        for (const record of records) {
-            promptTokens += record.usage.promptTokens ?? 0;
-            completionTokens += record.usage.completionTokens ?? 0;
-            totalTokens += record.usage.totalTokens ?? 0;
+        if (!record) {
+            return { promptTokens: 0, completionTokens: 0, totalTokens: 0 };
         }
 
-        return { promptTokens, completionTokens, totalTokens };
+        return {
+            promptTokens: record.usage.promptTokens ?? 0,
+            completionTokens: record.usage.completionTokens ?? 0,
+            totalTokens: record.usage.totalTokens ?? 0,
+        };
+    },
+});
+
+/**
+ * Upserts accumulated token billing for a thread.
+ *
+ * One record per thread — each turn adds to the running total.
+ * Tracks the real API cost (sum of all steps across all turns).
+ * Not displayed in the UI; used for cost tracking and analytics only.
+ *
+ * @param threadId - The thread UUID
+ * @param userId - The user or guest identifier
+ * @param model - The model identifier used
+ * @param provider - The provider name
+ * @param usage - This turn's accumulated token usage to add to the running total
+ */
+export const upsertThreadBilling = mutation({
+    args: {
+        threadId: v.string(),
+        userId: v.string(),
+        agentName: v.optional(v.string()),
+        model: v.string(),
+        provider: v.string(),
+        usage: vUsage,
+    },
+    handler: async (ctx, args) => {
+        const existing = await ctx.db
+            .query('thread_billing')
+            .withIndex('by_thread', (q) => q.eq('threadId', args.threadId))
+            .first();
+
+        if (existing) {
+            await ctx.db.patch(existing._id, {
+                model: args.model,
+                provider: args.provider,
+                agentName: args.agentName,
+                usage: {
+                    promptTokens: (existing.usage.promptTokens ?? 0) + (args.usage.promptTokens ?? 0),
+                    completionTokens:
+                        (existing.usage.completionTokens ?? 0) + (args.usage.completionTokens ?? 0),
+                    totalTokens: (existing.usage.totalTokens ?? 0) + (args.usage.totalTokens ?? 0),
+                    reasoningTokens:
+                        (existing.usage.reasoningTokens ?? 0) + (args.usage.reasoningTokens ?? 0) || undefined,
+                    cachedInputTokens:
+                        (existing.usage.cachedInputTokens ?? 0) + (args.usage.cachedInputTokens ?? 0) ||
+                        undefined,
+                },
+                createdAt: Date.now(),
+            });
+            return existing._id;
+        }
+
+        return ctx.db.insert('thread_billing', {
+            ...args,
+            createdAt: Date.now(),
+        });
     },
 });

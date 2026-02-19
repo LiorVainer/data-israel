@@ -24,7 +24,7 @@ export const searchCbsLocalitiesInputSchema = z.object({
     pageSize: z.number().int().min(1).max(250).optional().describe('Items per page (default 100, max 250)'),
     searchedResourceName: z
         .string()
-        .describe('Hebrew description of the locality search (e.g., "ערים במחוז המרכז", "תל אביב"). Shown in UI as badge label.'),
+        .describe('Hebrew label describing the locality search (e.g., "ערים במחוז המרכז", "תל אביב"). Shown in UI as chip label.'),
 });
 
 export const searchCbsLocalitiesOutputSchema = z.discriminatedUnion('success', [

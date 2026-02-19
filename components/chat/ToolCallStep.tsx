@@ -7,7 +7,10 @@ import {
 } from '@/components/ai-elements/chain-of-thought';
 import { cn } from '@/lib/utils';
 import { DataIsraelLoader } from './DataIsraelLoader';
+import { AgentInternalCallsChain } from './AgentInternalCallsChain';
 import { getToolDataSourceConfig } from '../../constants/tool-data-sources';
+import { getToolInfo } from './MessageToolCalls';
+import type { AgentInternalToolCall } from './ToolCallParts';
 import type { LucideIcon } from 'lucide-react';
 import type { StepStatus } from './types';
 
@@ -36,6 +39,8 @@ export interface GroupedToolCall {
     isActive: boolean;
     /** External resources (API URLs) accessed by this tool group - only those with searchedResourceName */
     resources: ToolResource[];
+    /** For agent-* tools: internal tool calls made by the sub-agent */
+    internalCalls?: AgentInternalToolCall[];
 }
 
 export interface ToolCallStepProps {
@@ -69,7 +74,7 @@ function getStatusDescription(step: GroupedToolCall) {
 
     // All failed
     if (failedCount > 0 && completedCount === 0) {
-        return <span className='text-red-500'>שגיאה</span>;
+        return <span className='text-error'>שגיאה</span>;
     }
 
     // Some failed, some succeeded
@@ -78,7 +83,7 @@ function getStatusDescription(step: GroupedToolCall) {
             <span>
                 <span className='text-muted-foreground'>{completedCount} הושלמו</span>
                 {' • '}
-                <span className='text-red-500'>{failedCount} נכשלו</span>
+                <span className='text-error'>{failedCount} נכשלו</span>
             </span>
         );
     }
@@ -101,11 +106,14 @@ export function ToolCallStep({ step }: ToolCallStepProps) {
     // Only show resources that have a searchedResourceName (Hebrew display name)
     const namedResources = step.resources.filter((r) => r.name);
 
+    // Agent tool with internal calls — render nested chain of thought
+    const hasInternalCalls = !!step.internalCalls && step.internalCalls.length > 0;
+
     return (
         <ChainOfThoughtStep
             icon={step.icon}
             label={
-                <span className={cn('inline-flex items-center gap-2', hasAllFailed && 'text-red-500')}>
+                <span className={cn('inline-flex items-center gap-2', hasAllFailed && 'text-error')}>
                     {step.name}
                     {dataSourceConfig && (
                         <a
@@ -123,7 +131,7 @@ export function ToolCallStep({ step }: ToolCallStepProps) {
                     )}
                 </span>
             }
-            description={getStatusDescription(step)}
+            description={!hasInternalCalls ? getStatusDescription(step) : undefined}
             status={status}
         >
             {namedResources.length > 0 && (
@@ -135,6 +143,7 @@ export function ToolCallStep({ step }: ToolCallStepProps) {
                     ))}
                 </ChainOfThoughtSearchResults>
             )}
+            {hasInternalCalls && <AgentInternalCallsChain calls={step.internalCalls!} isAgentActive={step.isActive} />}
         </ChainOfThoughtStep>
     );
 }

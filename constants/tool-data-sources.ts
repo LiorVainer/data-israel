@@ -7,6 +7,7 @@
 
 import { CbsTools } from '@/lib/tools/cbs';
 import { DataGovTools } from '@/lib/tools/datagov';
+import { AgentsDisplayMap } from './agents-display';
 
 /** Data source types */
 export type DataSource = 'cbs' | 'datagov';
@@ -55,6 +56,14 @@ export function getToolDataSource(toolKey: string): DataSource | undefined {
     if (DATAGOV_TOOL_NAMES.has(toolKey)) {
         return 'datagov';
     }
+
+    // Agent-as-tool: extract agent name and look up dataSource from AgentsDisplayMap
+    if (toolKey.startsWith('agent-')) {
+        const agentName = toolKey.slice('agent-'.length);
+        const agentInfo = AgentsDisplayMap[agentName as keyof typeof AgentsDisplayMap];
+        return agentInfo?.dataSource;
+    }
+
     return undefined;
 }
 

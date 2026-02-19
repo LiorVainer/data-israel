@@ -24,7 +24,9 @@ export const browseCbsPriceIndicesInputSchema = z.object({
     language: z.enum(['he', 'en']).optional().describe('Response language (default: Hebrew)'),
     searchedResourceName: z
         .string()
-        .describe('Hebrew description of the price category being browsed (e.g., "מדד המחירים לצרכן", "דיור"). Shown in UI as badge label.'),
+        .describe(
+            'Hebrew label describing the price category being browsed (e.g., "מדד המחירים לצרכן", "מדדי דיור"). Shown in UI as chip label.',
+        ),
 });
 
 export const browseCbsPriceIndicesOutputSchema = z.discriminatedUnion('success', [
@@ -91,7 +93,12 @@ export const browseCbsPriceIndices = tool({
 
             if (mode === 'topics') {
                 if (!chapterId) {
-                    return { success: false, error: 'chapterId is required when mode is "topics"', apiUrl, searchedResourceName };
+                    return {
+                        success: false,
+                        error: 'chapterId is required when mode is "topics"',
+                        apiUrl,
+                        searchedResourceName,
+                    };
                 }
                 const result = await cbsApi.priceIndex.chapter(chapterId, { lang: language });
                 return {
@@ -108,7 +115,12 @@ export const browseCbsPriceIndices = tool({
 
             // mode === 'indices'
             if (!subjectId) {
-                return { success: false, error: 'subjectId is required when mode is "indices"', apiUrl, searchedResourceName };
+                return {
+                    success: false,
+                    error: 'subjectId is required when mode is "indices"',
+                    apiUrl,
+                    searchedResourceName,
+                };
             }
             const result = await cbsApi.priceIndex.subject(subjectId, { lang: language });
             return {

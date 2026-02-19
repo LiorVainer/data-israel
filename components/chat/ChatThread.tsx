@@ -33,8 +33,8 @@ export function ChatThread({ id }: ChatThreadProps) {
 
     const userId = clerkUserId ?? guestId;
 
-    const cumulativeUsage = useConvexQuery(api.threads.getThreadCumulativeUsage, { threadId: id });
-    const totalTokens = cumulativeUsage?.totalTokens ?? 0;
+    const contextWindow = useConvexQuery(api.threads.getThreadContextWindow, { threadId: id });
+    const totalTokens = contextWindow?.totalTokens ?? 0;
 
     const [initialMessageData, , removeInitialMessage] = useSessionStorage<InitialMessageData>(INITIAL_MESSAGE_KEY);
     const isNewConversation = initialMessageData?.chatId === id;

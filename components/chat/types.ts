@@ -1,5 +1,4 @@
 import type { LucideIcon } from 'lucide-react';
-import type { NetworkDataPart } from '@mastra/ai-sdk';
 
 /**
  * Re-export UI-related types from AI SDK
@@ -68,13 +67,6 @@ export function isToolPart(part: { type: string }): part is ToolCallPart {
 }
 
 /**
- * Check if a part is a tool call
- */
-export function isAgentsNetworkDataPart(part: { type: string }): part is NetworkDataPart {
-    return part.type === 'data-network';
-}
-
-/**
  * Map tool state to ChainOfThoughtStep status
  */
 export function getToolStatus(state: ToolState): StepStatus {
@@ -92,3 +84,58 @@ export function getToolStatus(state: ToolState): StepStatus {
             return 'pending';
     }
 }
+
+// ============================================================================
+// Agent Data Part Types (for data-tool-agent streaming parts)
+// ============================================================================
+
+/** A tool call made internally by a sub-agent */
+export interface AgentDataToolCall {
+    toolCallId: string;
+    toolName: string;
+    args: Record<string, unknown>;
+}
+
+/** A tool result from a sub-agent's internal execution */
+export interface AgentDataToolResult {
+    toolCallId: string;
+    toolName: string;
+    args: Record<string, unknown>;
+    result: Record<string, unknown>;
+}
+
+/**
+ * Data payload of a `data-tool-agent` part emitted by Mastra's handleChatStream.
+ * Contains the sub-agent's aggregated tool calls, results, and execution metadata.
+ */
+export interface AgentDataPartData {
+    /** Agent name (e.g., 'datagovAgent') */
+    id: string;
+    /** Execution status */
+    status: 'running' | 'finished';
+    /** Final text output from the sub-agent */
+    text: string;
+    /** All tool calls the sub-agent initiated */
+    toolCalls: AgentDataToolCall[];
+    /** All tool results the sub-agent received */
+    toolResults: AgentDataToolResult[];
+    /** Raw step data */
+    steps: unknown[];
+    /** Why the sub-agent stopped */
+    finishReason: string;
+    /** Token usage */
+    usage: { inputTokens: number; outputTokens: number; totalTokens: number };
+}
+
+/** The full shape of a data-tool-agent part in the UIMessage parts array */
+export interface AgentDataPart {
+    type: 'data-tool-agent';
+    id: string;
+    data: AgentDataPartData;
+}
+
+/** Type guard for data-tool-agent parts */
+export function isAgentDataPart(part: { type: string }): part is AgentDataPart {
+    return part.type === 'data-tool-agent';
+}
+

@@ -16,6 +16,9 @@ import { DATAGOV_ENDPOINTS, buildDataGovUrl } from '@/lib/api/data-gov/endpoints
 export const listTagsInputSchema = z.object({
     query: z.string().optional().describe('Search query for tags (e.g., "health", "environment")'),
     allFields: z.boolean().optional().describe('Include full metadata for each tag'),
+    searchedResourceName: z
+        .string()
+        .describe('Hebrew label describing the list operation (e.g., "תגיות בריאות"). Shown in UI as chip label.'),
 });
 
 export const listTagsOutputSchema = z.discriminatedUnion('success', [
@@ -23,11 +26,13 @@ export const listTagsOutputSchema = z.discriminatedUnion('success', [
         success: z.literal(true),
         tags: z.array(z.unknown()),
         apiUrl: z.string().optional().describe('The API URL used to fetch the tags list'),
+        searchedResourceName: z.string(),
     }),
     z.object({
         success: z.literal(false),
         error: z.string(),
         apiUrl: z.string().optional().describe('The API URL that was attempted'),
+        searchedResourceName: z.string(),
     }),
 ]);
 
@@ -42,7 +47,7 @@ export const listTags = tool({
     description:
         'List all tags (keywords) used in datasets. Use when user wants to explore available topics or search for tags.',
     inputSchema: listTagsInputSchema,
-    execute: async ({ query, allFields }) => {
+    execute: async ({ query, allFields, searchedResourceName }) => {
         const apiUrl = buildDataGovUrl(DATAGOV_ENDPOINTS.tag.list, {
             query,
             all_fields: allFields,
@@ -58,12 +63,14 @@ export const listTags = tool({
                 success: true as const,
                 tags,
                 apiUrl,
+                searchedResourceName,
             };
         } catch (error) {
             return {
                 success: false as const,
                 error: error instanceof Error ? error.message : String(error),
                 apiUrl,
+                searchedResourceName,
             };
         }
     },

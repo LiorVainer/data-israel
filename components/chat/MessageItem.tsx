@@ -7,7 +7,7 @@ import { ReasoningPart } from './ReasoningPart';
 import { SourcesPart } from './SourcesPart';
 import { LoadingShimmer } from './LoadingShimmer';
 import { ChartError, ChartLoadingState, ChartRenderer } from './ChartRenderer';
-import { getToolStatus, isToolPart, SourceUrlUIPart, ToolCallPart } from './types';
+import { getToolStatus, isToolPart, isAgentDataPart, SourceUrlUIPart, ToolCallPart } from './types';
 import { resolveToolSourceUrl } from '@/lib/tools/source-url-resolvers';
 import { CLIENT_TOOL_NAMES, SOURCE_URL_TOOL_NAMES, toToolPartTypeSet } from '@/lib/tools/tool-names';
 import type { DisplayChartInput } from '@/lib/tools';
@@ -23,7 +23,7 @@ const CLIENT_TOOL_TYPES = toToolPartTypeSet([...CLIENT_TOOL_NAMES, ...SOURCE_URL
 /** Tool types that generate source URLs from dedicated tool results */
 const SOURCE_TOOL_TYPES = toToolPartTypeSet(SOURCE_URL_TOOL_NAMES);
 
-/** A segment is either a group of consecutive server-side tool parts, or a single non-tool part */
+/** A segment is either a group of consecutive server-side tool parts or a single non-tool part */
 type RenderSegment =
     | { kind: 'tool-group'; toolParts: Array<{ part: ToolCallPart; index: number }> }
     | { kind: 'part'; part: UIMessage['parts'][number]; index: number };
@@ -47,7 +47,6 @@ function segmentMessageParts(parts: UIMessage['parts']): RenderSegment[] {
 
     for (let i = 0; i < parts.length; i++) {
         const part = parts[i];
-
         // Server-side tool: group with adjacent server tools
         if (isToolPart(part) && !CLIENT_TOOL_TYPES.has(part.type)) {
             // Discard buffered step-boundary parts (they were between tools)
@@ -64,6 +63,10 @@ function segmentMessageParts(parts: UIMessage['parts']): RenderSegment[] {
         } else if (isStepBoundaryPart(part) && segments.at(-1)?.kind === 'tool-group') {
             // Buffer reasoning/step-start when inside a tool group — might be discarded if more tools follow
             pendingParts.push({ part, index: i });
+        } else if (part.type === 'data-tool-agent' && segments.at(-1)?.kind === 'tool-group') {
+            // data-tool-agent: companion data for agent tools — absorb into preceding tool-group
+            // (consumed by buildAgentInternalCallsMap via allParts, not rendered directly)
+            pendingParts = [];
         } else {
             // Flush any buffered parts (tool group ended, followed by non-tool content)
             for (const pending of pendingParts) {
@@ -111,23 +114,41 @@ export function MessageItem({ message, isLastMessage, isStreaming, onRegenerate 
     }
 
     // Auto-resolved source URLs from data tool outputs (searchDatasets, getCbsSeriesData, etc.)
+    // Scans both direct tool parts AND sub-agent tool results inside data-tool-agent parts.
     const autoSourceParts: SourceUrlUIPart[] = [];
     for (const part of message.parts) {
-        if (!isToolPart(part)) continue;
-        // Skip tools already handled above
-        if (CLIENT_TOOL_TYPES.has(part.type)) continue;
-        const toolPart = part as ToolCallPart;
-        if (toolPart.state !== 'output-available') continue;
+        // Direct tool parts (pre-delegation path)
+        if (isToolPart(part) && !CLIENT_TOOL_TYPES.has(part.type)) {
+            const toolPart = part as ToolCallPart;
+            if (toolPart.state !== 'output-available') continue;
 
-        const resolved = resolveToolSourceUrl(part.type, toolPart.input, toolPart.output);
-        if (!resolved) continue;
+            const resolved = resolveToolSourceUrl(part.type, toolPart.input, toolPart.output);
+            if (!resolved) continue;
 
-        autoSourceParts.push({
-            type: 'source-url' as const,
-            sourceId: toolPart.toolCallId ?? `auto-${part.type}`,
-            url: resolved.url,
-            title: resolved.title,
-        });
+            autoSourceParts.push({
+                type: 'source-url' as const,
+                sourceId: toolPart.toolCallId ?? `auto-${part.type}`,
+                url: resolved.url,
+                title: resolved.title,
+            });
+            continue;
+        }
+
+        // Sub-agent tool results inside data-tool-agent parts
+        if (isAgentDataPart(part)) {
+            for (const toolResult of part.data.toolResults) {
+                const toolType = `tool-${toolResult.toolName}`;
+                const resolved = resolveToolSourceUrl(toolType, toolResult.args, toolResult.result);
+                if (!resolved) continue;
+
+                autoSourceParts.push({
+                    type: 'source-url' as const,
+                    sourceId: toolResult.toolCallId ?? `auto-${toolType}`,
+                    url: resolved.url,
+                    title: resolved.title,
+                });
+            }
+        }
     }
 
     // Merge all sources and deduplicate by URL
@@ -151,8 +172,8 @@ export function MessageItem({ message, isLastMessage, isStreaming, onRegenerate 
     }, [segments]);
 
     // Show loading shimmer when streaming but no visible content is actively being produced.
-    // Text and reasoning parts stream visibly; active tools show their own indicator.
-    // The gap (e.g. after tool completion, before model produces text) needs a shimmer.
+    // Text and reasoning parts stream visibly; tool groups show their own ChainOfThought indicator.
+    // The shimmer is only needed when there are no tools at all and the model is thinking.
     const showLoadingShimmer = useMemo(() => {
         if (!isLastMessage || !isStreaming) return false;
 
@@ -167,8 +188,13 @@ export function MessageItem({ message, isLastMessage, isStreaming, onRegenerate 
             if (getToolStatus((lastPart as ToolCallPart).state) === 'active') return false;
         }
 
+        // ChainOfThought already provides loading feedback for tool groups
+        if (segments.some((s) => s.kind === 'tool-group')) return false;
+
         return true;
-    }, [isLastMessage, isStreaming, message.parts]);
+    }, [isLastMessage, isStreaming, message.parts, segments]);
+
+    console.log({ allSources });
 
     return (
         <div className='animate-in fade-in slide-in-from-bottom-2 flex flex-col gap-6 duration-300'>
@@ -191,6 +217,7 @@ export function MessageItem({ message, isLastMessage, isStreaming, onRegenerate 
                             key={`${message.id}-tools-${segIdx}`}
                             messageId={message.id}
                             toolParts={segment.toolParts}
+                            allParts={message.parts}
                             isProcessing={isProcessing}
                             defaultOpen={isLastMessage && isLastMeaningful}
                         />

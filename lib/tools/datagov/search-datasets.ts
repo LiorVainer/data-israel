@@ -22,6 +22,9 @@ export const searchDatasetsInputSchema = z.object({
     organization: z.string().optional().describe('Filter by organization ID'),
     tag: z.string().optional().describe('Filter by tag name'),
     limit: z.number().int().min(1).max(100).optional().describe('Number of results to return (default 10)'),
+    searchedResourceName: z
+        .string()
+        .describe('Hebrew label describing what is being searched (e.g., "מאגרי תחבורה", "נתוני בריאות"). Shown in UI as chip label.'),
 });
 
 export const searchDatasetsOutputSchema = z.discriminatedUnion('success', [
@@ -39,11 +42,13 @@ export const searchDatasetsOutputSchema = z.discriminatedUnion('success', [
             }),
         ),
         apiUrl: z.string().optional(),
+        searchedResourceName: z.string(),
     }),
     z.object({
         success: z.literal(false),
         error: z.string(),
         apiUrl: z.string().optional(),
+        searchedResourceName: z.string(),
     }),
 ]);
 
@@ -58,7 +63,7 @@ export const searchDatasets = tool({
     description:
         'Search for datasets on data.gov.il using semantic search. Use this when user asks about datasets related to a topic or keyword. Returns matching datasets ranked by relevance.',
     inputSchema: searchDatasetsInputSchema,
-    execute: async ({ query, organization, tag, limit = 10 }) => {
+    execute: async ({ query, organization, tag, limit = 10, searchedResourceName }) => {
         // Build CKAN API URL for when it's used
         const ckanApiUrl = buildDataGovUrl(DATAGOV_ENDPOINTS.dataset.search, {
             q: query,
@@ -82,6 +87,7 @@ export const searchDatasets = tool({
                     count: convexResult.count,
                     source: 'convex-rag',
                     datasets: convexResult.datasets,
+                    searchedResourceName,
                 };
             }
 
@@ -104,6 +110,7 @@ export const searchDatasets = tool({
                     summary: d.notes?.slice(0, 200) || '',
                 })),
                 apiUrl: ckanApiUrl,
+                searchedResourceName,
             };
         } catch (error) {
             // If Convex fails, try CKAN as fallback
@@ -126,12 +133,14 @@ export const searchDatasets = tool({
                         summary: d.notes?.slice(0, 200) || '',
                     })),
                     apiUrl: ckanApiUrl,
+                    searchedResourceName,
                 };
             } catch {
                 return {
                     success: false,
                     error: error instanceof Error ? error.message : String(error),
                     apiUrl: ckanApiUrl,
+                    searchedResourceName,
                 };
             }
         }

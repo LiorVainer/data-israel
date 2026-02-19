@@ -73,6 +73,7 @@ export const ChainOfThoughtHeader = memo(({ className, children, ...props }: Cha
 
 export type ChainOfThoughtStepProps = ComponentProps<'div'> & {
     icon?: LucideIcon;
+    iconClassName?: string;
     label: ReactNode;
     description?: ReactNode;
     status?: 'complete' | 'active' | 'pending';
@@ -82,6 +83,7 @@ export const ChainOfThoughtStep = memo(
     ({
         className,
         icon: Icon = DotIcon,
+        iconClassName,
         label,
         description,
         status = 'complete',
@@ -104,7 +106,7 @@ export const ChainOfThoughtStep = memo(
                 )}
                 {...props}
             >
-                <div className='relative mt-0.5'>
+                <div className={cn('relative mt-0.5', iconClassName)}>
                     <Icon className='size-4' />
                     <div className='-mx-px absolute top-7 bottom-0 left-1/2 w-px bg-border' />
                 </div>

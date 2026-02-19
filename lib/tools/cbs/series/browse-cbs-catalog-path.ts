@@ -22,9 +22,6 @@ export const browseCbsCatalogPathInputSchema = z.object({
     language: z.enum(['he', 'en']).optional().describe('Response language (default: Hebrew)'),
     page: z.number().int().min(1).optional().describe('Page number (default 1)'),
     pageSize: z.number().int().min(1).max(1000).optional().describe('Items per page (default 100, max 1000)'),
-    searchedResourceName: z
-        .string()
-        .describe('Hebrew description of the catalog path being browsed (e.g., "שכר ממוצע למשרת שכיר"). Shown in UI as badge label.'),
 });
 
 export const browseCbsCatalogPathOutputSchema = z.discriminatedUnion('success', [
@@ -42,13 +39,11 @@ export const browseCbsCatalogPathOutputSchema = z.discriminatedUnion('success', 
         currentPage: z.number(),
         lastPage: z.number(),
         apiUrl: z.string().optional(),
-        searchedResourceName: z.string(),
     }),
     z.object({
         success: z.literal(false),
         error: z.string(),
         apiUrl: z.string().optional(),
-        searchedResourceName: z.string(),
     }),
 ]);
 
@@ -63,7 +58,7 @@ export const browseCbsCatalogPath = tool({
     description:
         'Browse the CBS catalog by a specific hierarchical path (e.g., "2,1,1,2,379"). Use this after discovering categories with browse-cbs-catalog to navigate directly to a known location in the catalog tree.',
     inputSchema: browseCbsCatalogPathInputSchema,
-    execute: async ({ path, language, page, pageSize, searchedResourceName }) => {
+    execute: async ({ path, language, page, pageSize }) => {
         // Construct API URL for reference
         const apiUrl = buildSeriesUrl(CBS_SERIES_PATHS.CATALOG_PATH, {
             id: path,
@@ -94,14 +89,12 @@ export const browseCbsCatalogPath = tool({
                 currentPage: catalogs.paging.current_page,
                 lastPage: catalogs.paging.last_page,
                 apiUrl,
-                searchedResourceName,
             };
         } catch (error) {
             return {
                 success: false,
                 error: error instanceof Error ? error.message : String(error),
                 apiUrl,
-                searchedResourceName,
             };
         }
     },
