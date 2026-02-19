@@ -10,6 +10,7 @@ import {
     FileTextIcon,
     FolderIcon,
     LineChartIcon,
+    LinkIcon,
     ListIcon,
     type LucideIcon,
     PieChartIcon,
@@ -26,6 +27,7 @@ import {
 } from '@/components/ai-elements/chain-of-thought';
 import {Shimmer} from '@/components/ai-elements/shimmer';
 import {toolTranslations} from '@/constants/tool-translations';
+import {AgentsDisplayMap} from '@/constants/agents-display';
 import type {ToolName} from '@/lib/tools/types';
 import type {StepStatus, ToolCallPart, ToolInfo} from './types';
 import {getToolStatus} from './types';
@@ -58,6 +60,10 @@ const toolIconMap: Partial<Record<ToolName, LucideIcon>> = {
     getCbsPriceData: LineChartIcon,
     calculateCbsPriceIndex: ActivityIcon,
     searchCbsLocalities: SearchIcon,
+    generateDataGovSourceUrl: LinkIcon,
+    generateCbsSourceUrl: LinkIcon,
+    'agent-datagovAgent': AgentsDisplayMap.datagovAgent.icon,
+    'agent-cbsAgent': AgentsDisplayMap.cbsAgent.icon,
 };
 
 /**
@@ -130,6 +136,19 @@ export function getToolIO(part: ToolCallPart): ToolIO | undefined {
     }
 }
 
+/**
+ * Check if a tool call has an error — either AI SDK-level (state === 'output-error')
+ * or business-level (output.success === false, e.g. API timeout).
+ */
+function isToolError(part: ToolCallPart): boolean {
+    if (part.state === 'output-error') return true;
+    if (part.state === 'output-available' && part.output != null) {
+        const output = part.output as Record<string, unknown>;
+        return output.success === false;
+    }
+    return false;
+}
+
 export interface MessageToolCallsProps {
     messageId: string;
     toolParts: Array<{ part: ToolCallPart; index: number }>;
@@ -149,32 +168,50 @@ export function MessageToolCalls({ messageId, toolParts, isProcessing, activeAge
     // Check if any tool is currently active
     const hasActiveTools = toolParts.some(({ part }) => getToolStatus(part.state) === 'active');
 
-    // Force open when processing or has active tools, otherwise respect user preference
-    const shouldForceOpen = isProcessing || hasActiveTools;
-
     // Handle user toggling
     const handleOpenChange = (open: boolean) => {
         setUserWantsOpen(open);
     };
 
+    // Count errors (both SDK-level and business-level)
+    const errorCount = toolParts.filter(({ part }) => isToolError(part)).length;
+    const completedCount = toolParts.length - errorCount;
+
+    const getHeaderContent = () => {
+        if (hasActiveTools) {
+            return (
+                <Shimmer as='span' duration={1.5}>
+                    {activeAgentLabel ?? 'מעבד...'}
+                </Shimmer>
+            );
+        }
+
+        if (errorCount > 0 && completedCount === 0) {
+            return <span className='text-red-500'>{errorCount} פעולות נכשלו</span>;
+        }
+
+        if (errorCount > 0) {
+            return (
+                <span>
+                    {completedCount} פעולות הושלמו
+                    <span className='text-red-500 mr-1'> ({errorCount} שגיאות)</span>
+                </span>
+            );
+        }
+
+        return `${toolParts.length} פעולות הושלמו`;
+    };
+
     return (
         <ChainOfThought open={userWantsOpen} onOpenChange={handleOpenChange}>
-            <ChainOfThoughtHeader>
-                {hasActiveTools ? (
-                    <Shimmer as='span' duration={1.5}>
-                        {activeAgentLabel ?? 'מעבד...'}
-                    </Shimmer>
-                ) : (
-                    `${toolParts.length} פעולות הושלמו`
-                )}
-            </ChainOfThoughtHeader>
+            <ChainOfThoughtHeader>{getHeaderContent()}</ChainOfThoughtHeader>
             <ChainOfThoughtContent>
                 {toolParts.map(({ part, index }) => {
                     const toolKey = part.type.replace('tool-', '');
                     const { name, icon } = getToolInfo(toolKey);
                     const io = getToolIO(part);
                     const toolStatus: StepStatus = getToolStatus(part.state);
-                    const hasError = part.state === 'output-error';
+                    const hasError = isToolError(part);
 
                     return (
                         <ChainOfThoughtStep
@@ -192,7 +229,9 @@ export function MessageToolCalls({ messageId, toolParts, isProcessing, activeAge
                             }
                             description={
                                 hasError ? (
-                                    <span className='text-red-500'>{part.errorText}</span>
+                                    <span className='text-red-500'>
+                                        {part.state === 'output-error' ? part.errorText : io?.output}
+                                    </span>
                                 ) : (
                                     <>
                                         {io?.input && <p className='text-muted-foreground'>{io.input}</p>}

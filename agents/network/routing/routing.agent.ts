@@ -13,8 +13,8 @@ import { getMastraModelId } from '../model';
 import { ROUTING_CONFIG } from './config';
 import { AgentConfig } from '../../agent.config';
 import { ClientTools } from '@/lib/tools/client';
-import { DataGovTools } from '@/lib/tools/datagov';
-import { CbsTools } from '@/lib/tools/cbs';
+import { cbsAgent } from '../cbs';
+import { datagovAgent } from '../datagov';
 import { ENV } from '@/lib/env';
 
 const { MEMORY } = AgentConfig;
@@ -51,9 +51,8 @@ export const routingAgent = new Agent({
             generateTitle: MEMORY.GENERATE_TITLE,
         },
     }),
+    agents: { datagovAgent, cbsAgent },
     tools: {
         ...ClientTools,
-        ...CbsTools,
-        ...DataGovTools,
     },
 });

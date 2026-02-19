@@ -1,13 +1,19 @@
 'use client';
 
 import {
+    ChainOfThought,
+    ChainOfThoughtContent,
+    ChainOfThoughtHeader,
     ChainOfThoughtSearchResult,
     ChainOfThoughtSearchResults,
     ChainOfThoughtStep,
 } from '@/components/ai-elements/chain-of-thought';
 import { cn } from '@/lib/utils';
 import { DataIsraelLoader } from './DataIsraelLoader';
+import { LoadingShimmer } from './LoadingShimmer';
 import { getToolDataSourceConfig } from '../../constants/tool-data-sources';
+import { getToolInfo } from './MessageToolCalls';
+import type { AgentInternalToolCall } from './ToolCallParts';
 import type { LucideIcon } from 'lucide-react';
 import type { StepStatus } from './types';
 
@@ -36,6 +42,8 @@ export interface GroupedToolCall {
     isActive: boolean;
     /** External resources (API URLs) accessed by this tool group - only those with searchedResourceName */
     resources: ToolResource[];
+    /** For agent-* tools: internal tool calls made by the sub-agent */
+    internalCalls?: AgentInternalToolCall[];
 }
 
 export interface ToolCallStepProps {
@@ -101,6 +109,9 @@ export function ToolCallStep({ step }: ToolCallStepProps) {
     // Only show resources that have a searchedResourceName (Hebrew display name)
     const namedResources = step.resources.filter((r) => r.name);
 
+    // Agent tool with internal calls — render nested chain of thought
+    const hasInternalCalls = !!step.internalCalls && step.internalCalls.length > 0;
+
     return (
         <ChainOfThoughtStep
             icon={step.icon}
@@ -123,7 +134,7 @@ export function ToolCallStep({ step }: ToolCallStepProps) {
                     )}
                 </span>
             }
-            description={getStatusDescription(step)}
+            description={!hasInternalCalls ? getStatusDescription(step) : undefined}
             status={status}
         >
             {namedResources.length > 0 && (
@@ -135,6 +146,141 @@ export function ToolCallStep({ step }: ToolCallStepProps) {
                     ))}
                 </ChainOfThoughtSearchResults>
             )}
+            {hasInternalCalls && <AgentInternalCallsChain calls={step.internalCalls!} isAgentActive={step.isActive} />}
         </ChainOfThoughtStep>
+    );
+}
+
+/** A group of internal tool calls with the same tool name. */
+interface InternalCallGroup {
+    toolName: string;
+    name: string;
+    icon: LucideIcon;
+    calls: AgentInternalToolCall[];
+    completedCount: number;
+    failedCount: number;
+    activeCount: number;
+}
+
+/** Group internal calls by toolName, preserving first-seen order. */
+function groupInternalCalls(calls: AgentInternalToolCall[], isAgentActive: boolean): InternalCallGroup[] {
+    const map = new Map<string, InternalCallGroup>();
+
+    for (const call of calls) {
+        let group = map.get(call.toolName);
+        if (!group) {
+            const { name, icon } = getToolInfo(call.toolName);
+            group = {
+                toolName: call.toolName,
+                name,
+                icon,
+                calls: [],
+                completedCount: 0,
+                failedCount: 0,
+                activeCount: 0,
+            };
+            map.set(call.toolName, group);
+        }
+        group.calls.push(call);
+        if (call.success === false) group.failedCount++;
+        else if (call.isComplete) group.completedCount++;
+        else if (isAgentActive) group.activeCount++;
+    }
+
+    return Array.from(map.values());
+}
+
+function getGroupStatus(group: InternalCallGroup): StepStatus {
+    if (group.activeCount > 0) return 'active';
+    return 'complete';
+}
+
+/**
+ * Nested ChainOfThought showing a sub-agent's internal tool calls.
+ * Calls are grouped by tool name — each group renders one step with colored result chips.
+ */
+function AgentInternalCallsChain({ calls, isAgentActive }: { calls: AgentInternalToolCall[]; isAgentActive: boolean }) {
+    const completedCount = calls.filter((c) => c.isComplete).length;
+    const failedCount = calls.filter((c) => c.success === false).length;
+    const activeCount = calls.filter((c) => !c.isComplete && isAgentActive).length;
+
+    const groups = groupInternalCalls(calls, isAgentActive);
+
+    const getInternalHeaderContent = () => {
+        if (activeCount > 0) {
+            return (
+                <span className='inline-flex items-center gap-1.5'>
+                    <DataIsraelLoader size={12} />
+                    <span>{completedCount > 0 ? `${completedCount} פעולות הושלמו` : 'בפעולה...'}</span>
+                </span>
+            );
+        }
+        if (failedCount > 0 && completedCount === 0) {
+            return <span className='text-red-500'>{failedCount} פעולות נכשלו</span>;
+        }
+        if (failedCount > 0) {
+            return (
+                <span>
+                    {completedCount} פעולות הושלמו
+                    <span className='text-red-500 mr-1'> ({failedCount} שגיאות)</span>
+                </span>
+            );
+        }
+        return `${calls.length} פעולות הושלמו`;
+    };
+
+    return (
+        <ChainOfThought defaultOpen>
+            <ChainOfThoughtHeader>{getInternalHeaderContent()}</ChainOfThoughtHeader>
+            <ChainOfThoughtContent>
+                {groups.map((group) => {
+                    const status = getGroupStatus(group);
+                    const hasAllFailed = group.failedCount > 0 && group.completedCount === 0;
+
+                    // Collect chips: named results with per-call color
+                    const chips = group.calls
+                        .filter((c) => c.searchedResourceName)
+                        .map((c) => ({
+                            key: c.toolCallId,
+                            label: c.searchedResourceName!,
+                            className:
+                                c.success === false
+                                    ? 'border-red-500 text-red-500'
+                                    : c.isComplete
+                                      ? 'border-emerald-500 text-emerald-500'
+                                      : undefined,
+                        }));
+
+                    return (
+                        <ChainOfThoughtStep
+                            key={group.toolName}
+                            icon={group.icon}
+                            label={<span className={hasAllFailed ? 'text-red-500' : undefined}>{group.name}</span>}
+                            description={
+                                hasAllFailed ? (
+                                    <span className='text-red-500'>שגיאה</span>
+                                ) : status === 'active' ? undefined : group.completedCount > 1 ? (
+                                    <span className='text-muted-foreground'>{group.completedCount} הושלמו</span>
+                                ) : (
+                                    <span className='text-muted-foreground'>הושלם</span>
+                                )
+                            }
+                            status={status}
+                        >
+                            {status === 'active' && <LoadingShimmer showIcon={false} text='מעבד...' />}
+                            {chips.length > 0 && (
+                                <ChainOfThoughtSearchResults>
+                                    {chips.map((chip) => (
+                                        <ChainOfThoughtSearchResult key={chip.key} className={chip.className}>
+                                            <span className='max-w-[200px] truncate text-[10px]'>{chip.label}</span>
+                                        </ChainOfThoughtSearchResult>
+                                    ))}
+                                </ChainOfThoughtSearchResults>
+                            )}
+                        </ChainOfThoughtStep>
+                    );
+                })}
+            </ChainOfThoughtContent>
+        </ChainOfThought>
     );
 }

@@ -14,6 +14,7 @@ import {
     FileTextIcon,
     FolderIcon,
     LineChartIcon,
+    LinkIcon,
     ListIcon,
     PieChartIcon,
     ScrollTextIcon,
@@ -22,6 +23,7 @@ import {
     TagIcon,
 } from 'lucide-react';
 import type { ToolInput, ToolName, ToolOutput } from '@/lib/tools/types';
+import { AgentsDisplayMap } from './agents-display';
 
 /**
  * Translate common field names to Hebrew
@@ -137,8 +139,8 @@ export const toolTranslations: ToolTranslationsMap = {
             if (!output.success) {
                 return `שגיאה: ${output.error}`;
             }
-            const resourceCount = output.dataset.resources?.length || 0;
-            const title = output.dataset.title || 'מאגר';
+            const resourceCount = output.dataset?.resources?.length || 0;
+            const title = output.dataset?.title || 'מאגר';
             return `${title} • ${resourceCount} קבצים`;
         },
     },
@@ -258,7 +260,7 @@ export const toolTranslations: ToolTranslationsMap = {
             if (!output.success) {
                 return `שגיאה: ${output.error}`;
             }
-            const fieldCount = output.schema.datasetFields?.length || 0;
+            const fieldCount = output.schema?.datasetFields?.length || 0;
             return `נטענה סכמה עם ${fieldCount} שדות`;
         },
     },
@@ -305,8 +307,8 @@ export const toolTranslations: ToolTranslationsMap = {
             if (!output.success) {
                 return `שגיאה: ${output.error}`;
             }
-            const name = output.resource.name;
-            const format = output.resource.format;
+            const name = output.resource?.name;
+            const format = output.resource?.format;
             return `${name} (${format})`;
         },
     },
@@ -466,7 +468,7 @@ export const toolTranslations: ToolTranslationsMap = {
         formatInput: () => 'שולף נתונים סטטיסטיים...',
         formatOutput: (output) => {
             if (!output.success) return `שגיאה: ${output.error}`;
-            const obsCount = output.series.reduce((sum, s) => sum + s.observations.length, 0);
+            const obsCount = output.series?.reduce((sum, s) => sum + s.observations.length, 0) ?? 0;
             return `נשלפו ${obsCount} רשומות`;
         },
     },
@@ -476,8 +478,8 @@ export const toolTranslations: ToolTranslationsMap = {
         formatInput: (input) => `שולף נתונים לנתיב: ${input.path}`,
         formatOutput: (output) => {
             if (!output.success) return `שגיאה: ${output.error}`;
-            const obsCount = output.series.reduce((sum, s) => sum + s.observations.length, 0);
-            return `נשלפו ${obsCount} רשומות מ-${output.series.length} סדרות`;
+            const obsCount = output.series?.reduce((sum, s) => sum + s.observations.length, 0) ?? 0;
+            return `נשלפו ${obsCount} רשומות מ-${output.series?.length ?? 0} סדרות`;
         },
     },
     browseCbsPriceIndices: {
@@ -495,7 +497,7 @@ export const toolTranslations: ToolTranslationsMap = {
         formatInput: () => 'שולף נתוני מחירים...',
         formatOutput: (output) => {
             if (!output.success) return `שגיאה: ${output.error}`;
-            const dataCount = output.indices.reduce((sum, idx) => sum + idx.data.length, 0);
+            const dataCount = output.indices?.reduce((sum, idx) => sum + idx.data.length, 0) ?? 0;
             return `נשלפו ${dataCount} רשומות`;
         },
     },
@@ -518,6 +520,52 @@ export const toolTranslations: ToolTranslationsMap = {
         formatOutput: (output) => {
             if (!output.success) return `שגיאה: ${output.error}`;
             return `נמצאו ${output.localities?.length ?? 0} יישובים`;
+        },
+    },
+    generateDataGovSourceUrl: {
+        name: 'יצירת קישור למקור ממשלתי',
+        icon: <LinkIcon className='h-4 w-4' />,
+        formatInput: (input) => {
+            if (input.title) return `יוצר קישור: "${input.title}"`;
+            return 'יוצר קישור למקור...';
+        },
+        formatOutput: (output) => {
+            return output.success ? output.title : undefined;
+        },
+    },
+    generateCbsSourceUrl: {
+        name: 'יצירת קישור למקור למ"ס',
+        icon: <LinkIcon className='h-4 w-4' />,
+        formatInput: (input) => {
+            if (input.title) return `יוצר קישור: "${input.title}"`;
+            return 'יוצר קישור למקור...';
+        },
+        formatOutput: (output) => {
+            return output.success ? output.title : undefined;
+        },
+    },
+    'agent-datagovAgent': {
+        name: AgentsDisplayMap.datagovAgent.label,
+        icon: <AgentsDisplayMap.datagovAgent.icon className='h-4 w-4' />,
+        formatInput: (input) => {
+            if (input.prompt) return input.prompt;
+            return undefined;
+        },
+        formatOutput: (output) => {
+            if (output.text) return output.text;
+            return 'הושלם';
+        },
+    },
+    'agent-cbsAgent': {
+        name: AgentsDisplayMap.cbsAgent.label,
+        icon: <AgentsDisplayMap.cbsAgent.icon className='h-4 w-4' />,
+        formatInput: (input) => {
+            if (input.prompt) return input.prompt;
+            return undefined;
+        },
+        formatOutput: (output) => {
+            if (output.text) return output.text;
+            return 'הושלם';
         },
     },
 };

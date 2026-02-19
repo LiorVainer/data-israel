@@ -5,13 +5,11 @@
  */
 
 import { Agent } from '@mastra/core/agent';
-import { getAiSdkModelId, getMastraModelId } from '../model';
-import { DATAGOV_AGENT_CONFIG } from './config';
 import { Memory } from '@mastra/memory';
+import { getMastraModelId } from '../model';
+import { DATAGOV_AGENT_CONFIG } from './config';
 import { AgentConfig } from '../../agent.config';
 import { DataGovTools } from '@/lib/tools/datagov';
-import { ToolResultSummarizerProcessor } from '../../processors/tool-result-summarizer.processor';
-import { extractToolDescriptions } from '../../../lib/tools/tools.utils';
 
 const { MEMORY } = AgentConfig;
 
@@ -23,17 +21,9 @@ export const datagovAgent = new Agent({
     instructions: DATAGOV_AGENT_CONFIG.instructions,
     model: getMastraModelId(),
     tools: DataGovTools,
-    outputProcessors: [
-        new ToolResultSummarizerProcessor(
-            getAiSdkModelId(),
-            DATAGOV_AGENT_CONFIG.instructions,
-            extractToolDescriptions(DataGovTools),
-        ),
-    ],
     memory: new Memory({
         options: {
             lastMessages: MEMORY.LAST_MESSAGES,
-            generateTitle: MEMORY.GENERATE_TITLE,
         },
     }),
 });

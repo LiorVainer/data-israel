@@ -7,7 +7,7 @@
 
 import { Mastra } from '@mastra/core';
 import { ConvexStore } from '@mastra/convex';
-import { routingAgent } from './network';
+import { routingAgent, cbsAgent, datagovAgent } from './network';
 import { ENV } from '@/lib/env';
 
 const convexUrl = ENV.NEXT_PUBLIC_CONVEX_URL;
@@ -22,7 +22,7 @@ const storage =
           })
         : undefined;
 
-export const agents = { routingAgent };
+export const agents = { routingAgent, cbsAgent, datagovAgent };
 
 export const mastra = new Mastra({
     agents,

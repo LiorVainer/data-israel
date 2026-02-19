@@ -23,7 +23,7 @@ const CLIENT_TOOL_TYPES = toToolPartTypeSet([...CLIENT_TOOL_NAMES, ...SOURCE_URL
 /** Tool types that generate source URLs from dedicated tool results */
 const SOURCE_TOOL_TYPES = toToolPartTypeSet(SOURCE_URL_TOOL_NAMES);
 
-/** A segment is either a group of consecutive server-side tool parts, or a single non-tool part */
+/** A segment is either a group of consecutive server-side tool parts or a single non-tool part */
 type RenderSegment =
     | { kind: 'tool-group'; toolParts: Array<{ part: ToolCallPart; index: number }> }
     | { kind: 'part'; part: UIMessage['parts'][number]; index: number };
@@ -47,7 +47,6 @@ function segmentMessageParts(parts: UIMessage['parts']): RenderSegment[] {
 
     for (let i = 0; i < parts.length; i++) {
         const part = parts[i];
-
         // Server-side tool: group with adjacent server tools
         if (isToolPart(part) && !CLIENT_TOOL_TYPES.has(part.type)) {
             // Discard buffered step-boundary parts (they were between tools)
@@ -64,6 +63,10 @@ function segmentMessageParts(parts: UIMessage['parts']): RenderSegment[] {
         } else if (isStepBoundaryPart(part) && segments.at(-1)?.kind === 'tool-group') {
             // Buffer reasoning/step-start when inside a tool group — might be discarded if more tools follow
             pendingParts.push({ part, index: i });
+        } else if (part.type === 'data-tool-agent' && segments.at(-1)?.kind === 'tool-group') {
+            // data-tool-agent: companion data for agent tools — absorb into preceding tool-group
+            // (consumed by buildAgentInternalCallsMap via allParts, not rendered directly)
+            pendingParts = [];
         } else {
             // Flush any buffered parts (tool group ended, followed by non-tool content)
             for (const pending of pendingParts) {
@@ -191,6 +194,7 @@ export function MessageItem({ message, isLastMessage, isStreaming, onRegenerate 
                             key={`${message.id}-tools-${segIdx}`}
                             messageId={message.id}
                             toolParts={segment.toolParts}
+                            allParts={message.parts}
                             isProcessing={isProcessing}
                             defaultOpen={isLastMessage && isLastMeaningful}
                         />
