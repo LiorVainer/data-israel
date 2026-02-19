@@ -91,7 +91,7 @@ export interface ChartErrorProps {
 export function ChartError({ error }: ChartErrorProps) {
     return (
         <div className='w-full h-[200px] flex items-center justify-center bg-red-50 dark:bg-red-950/20 rounded-lg border border-red-200 dark:border-red-800'>
-            <p className='text-red-600 dark:text-red-400 text-sm'>{error || 'שגיאה בהצגת התרשים'}</p>
+            <p className='text-error text-sm'>{error || 'שגיאה בהצגת התרשים'}</p>
         </div>
     );
 }

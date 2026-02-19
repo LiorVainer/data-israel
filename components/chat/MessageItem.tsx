@@ -7,7 +7,7 @@ import { ReasoningPart } from './ReasoningPart';
 import { SourcesPart } from './SourcesPart';
 import { LoadingShimmer } from './LoadingShimmer';
 import { ChartError, ChartLoadingState, ChartRenderer } from './ChartRenderer';
-import { getToolStatus, isToolPart, SourceUrlUIPart, ToolCallPart } from './types';
+import { getToolStatus, isToolPart, isAgentDataPart, SourceUrlUIPart, ToolCallPart } from './types';
 import { resolveToolSourceUrl } from '@/lib/tools/source-url-resolvers';
 import { CLIENT_TOOL_NAMES, SOURCE_URL_TOOL_NAMES, toToolPartTypeSet } from '@/lib/tools/tool-names';
 import type { DisplayChartInput } from '@/lib/tools';
@@ -114,23 +114,41 @@ export function MessageItem({ message, isLastMessage, isStreaming, onRegenerate 
     }
 
     // Auto-resolved source URLs from data tool outputs (searchDatasets, getCbsSeriesData, etc.)
+    // Scans both direct tool parts AND sub-agent tool results inside data-tool-agent parts.
     const autoSourceParts: SourceUrlUIPart[] = [];
     for (const part of message.parts) {
-        if (!isToolPart(part)) continue;
-        // Skip tools already handled above
-        if (CLIENT_TOOL_TYPES.has(part.type)) continue;
-        const toolPart = part as ToolCallPart;
-        if (toolPart.state !== 'output-available') continue;
+        // Direct tool parts (pre-delegation path)
+        if (isToolPart(part) && !CLIENT_TOOL_TYPES.has(part.type)) {
+            const toolPart = part as ToolCallPart;
+            if (toolPart.state !== 'output-available') continue;
 
-        const resolved = resolveToolSourceUrl(part.type, toolPart.input, toolPart.output);
-        if (!resolved) continue;
+            const resolved = resolveToolSourceUrl(part.type, toolPart.input, toolPart.output);
+            if (!resolved) continue;
 
-        autoSourceParts.push({
-            type: 'source-url' as const,
-            sourceId: toolPart.toolCallId ?? `auto-${part.type}`,
-            url: resolved.url,
-            title: resolved.title,
-        });
+            autoSourceParts.push({
+                type: 'source-url' as const,
+                sourceId: toolPart.toolCallId ?? `auto-${part.type}`,
+                url: resolved.url,
+                title: resolved.title,
+            });
+            continue;
+        }
+
+        // Sub-agent tool results inside data-tool-agent parts
+        if (isAgentDataPart(part)) {
+            for (const toolResult of part.data.toolResults) {
+                const toolType = `tool-${toolResult.toolName}`;
+                const resolved = resolveToolSourceUrl(toolType, toolResult.args, toolResult.result);
+                if (!resolved) continue;
+
+                autoSourceParts.push({
+                    type: 'source-url' as const,
+                    sourceId: toolResult.toolCallId ?? `auto-${toolType}`,
+                    url: resolved.url,
+                    title: resolved.title,
+                });
+            }
+        }
     }
 
     // Merge all sources and deduplicate by URL
@@ -175,6 +193,8 @@ export function MessageItem({ message, isLastMessage, isStreaming, onRegenerate 
 
         return true;
     }, [isLastMessage, isStreaming, message.parts, segments]);
+
+    console.log({ allSources });
 
     return (
         <div className='animate-in fade-in slide-in-from-bottom-2 flex flex-col gap-6 duration-300'>

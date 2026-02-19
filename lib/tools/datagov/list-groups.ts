@@ -18,6 +18,9 @@ export const listGroupsInputSchema = z.object({
     limit: z.number().int().min(1).max(100).optional().describe('Maximum number of results'),
     offset: z.number().int().min(0).optional().describe('Pagination offset'),
     allFields: z.boolean().optional().describe('Include full details for each group'),
+    searchedResourceName: z
+        .string()
+        .describe('Hebrew label describing the list operation (e.g., "קבוצות נושאים"). Shown in UI as chip label.'),
 });
 
 export const listGroupsOutputSchema = z.discriminatedUnion('success', [
@@ -25,11 +28,13 @@ export const listGroupsOutputSchema = z.discriminatedUnion('success', [
         success: z.literal(true),
         groups: z.array(z.unknown()),
         apiUrl: z.string().optional().describe('The API URL used to fetch the groups list'),
+        searchedResourceName: z.string(),
     }),
     z.object({
         success: z.literal(false),
         error: z.string(),
         apiUrl: z.string().optional().describe('The API URL that was attempted'),
+        searchedResourceName: z.string(),
     }),
 ]);
 
@@ -44,7 +49,7 @@ export const listGroups = tool({
     description:
         'List dataset publishers and categories (groups). Use when user asks which organizations publish data or what categories are available.',
     inputSchema: listGroupsInputSchema,
-    execute: async ({ orderBy, limit, offset, allFields }) => {
+    execute: async ({ orderBy, limit, offset, allFields, searchedResourceName }) => {
         const apiUrl = buildDataGovUrl(DATAGOV_ENDPOINTS.group.list, {
             order_by: orderBy,
             limit,
@@ -64,12 +69,14 @@ export const listGroups = tool({
                 success: true as const,
                 groups,
                 apiUrl,
+                searchedResourceName,
             };
         } catch (error) {
             return {
                 success: false as const,
                 error: error instanceof Error ? error.message : String(error),
                 apiUrl,
+                searchedResourceName,
             };
         }
     },

@@ -33,10 +33,10 @@ function getStateIcon(state: ToolCallCardProps['part']['state']) {
             return <Loader2Icon className='h-4 w-4 animate-spin text-blue-500' />;
         case 'output-available':
         case 'approval-responded':
-            return <CheckCircle2Icon className='h-4 w-4 text-green-500' />;
+            return <CheckCircle2Icon className='h-4 w-4 text-success' />;
         case 'output-error':
         case 'output-denied':
-            return <XCircleIcon className='h-4 w-4 text-red-500' />;
+            return <XCircleIcon className='h-4 w-4 text-error' />;
         default:
             return null;
     }
@@ -135,14 +135,14 @@ export function ToolCallCard({ part }: ToolCallCardProps) {
 
                 {/* Output description */}
                 {outputDescription && (
-                    <div className='text-sm text-green-600 dark:text-green-400 font-medium'>{outputDescription}</div>
+                    <div className='text-sm text-success font-medium'>{outputDescription}</div>
                 )}
 
                 {/* Loading state */}
                 {isLoading && !inputDescription && <div className='text-sm text-muted-foreground'>מעבד...</div>}
 
                 {/* Error message */}
-                {hasError && <div className='text-sm text-red-600 dark:text-red-400'>{part.errorText}</div>}
+                {hasError && <div className='text-sm text-error'>{part.errorText}</div>}
             </CardContent>
         </Card>
     );

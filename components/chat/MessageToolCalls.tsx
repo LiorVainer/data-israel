@@ -1,6 +1,6 @@
 'use client';
 
-import {useState} from 'react';
+import { useState } from 'react';
 import {
     ActivityIcon,
     BarChart2Icon,
@@ -25,12 +25,12 @@ import {
     ChainOfThoughtHeader,
     ChainOfThoughtStep,
 } from '@/components/ai-elements/chain-of-thought';
-import {Shimmer} from '@/components/ai-elements/shimmer';
-import {toolTranslations} from '@/constants/tool-translations';
-import {AgentsDisplayMap} from '@/constants/agents-display';
-import type {ToolName} from '@/lib/tools/types';
-import type {StepStatus, ToolCallPart, ToolInfo} from './types';
-import {getToolStatus} from './types';
+import { Shimmer } from '@/components/ai-elements/shimmer';
+import { toolTranslations } from '@/constants/tool-translations';
+import { AgentsDisplayMap } from '@/constants/agents-display';
+import type { ToolName } from '@/lib/tools/types';
+import type { StepStatus, ToolCallPart, ToolInfo } from './types';
+import { getToolStatus } from './types';
 
 /**
  * Map tool names to their LucideIcon components for ChainOfThoughtStep
@@ -187,14 +187,14 @@ export function MessageToolCalls({ messageId, toolParts, isProcessing, activeAge
         }
 
         if (errorCount > 0 && completedCount === 0) {
-            return <span className='text-red-500'>{errorCount} פעולות נכשלו</span>;
+            return <span className='text-error'>{errorCount} פעולות נכשלו</span>;
         }
 
         if (errorCount > 0) {
             return (
                 <span>
                     {completedCount} פעולות הושלמו
-                    <span className='text-red-500 mr-1'> ({errorCount} שגיאות)</span>
+                    <span className='text-red-700 dark:text-error mr-1'> ({errorCount} שגיאות)</span>
                 </span>
             );
         }
@@ -218,7 +218,7 @@ export function MessageToolCalls({ messageId, toolParts, isProcessing, activeAge
                             key={`${messageId}-${index}`}
                             icon={icon}
                             label={
-                                <span className={hasError ? 'text-red-500' : undefined}>
+                                <span className={hasError ? 'text-error' : undefined}>
                                     {name}
                                     {toolStatus === 'active' && (
                                         <Shimmer as='span' className='mr-2 text-muted-foreground' duration={1.5}>
@@ -229,7 +229,7 @@ export function MessageToolCalls({ messageId, toolParts, isProcessing, activeAge
                             }
                             description={
                                 hasError ? (
-                                    <span className='text-red-500'>
+                                    <span className='text-error'>
                                         {part.state === 'output-error' ? part.errorText : io?.output}
                                     </span>
                                 ) : (

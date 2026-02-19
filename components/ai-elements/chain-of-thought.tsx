@@ -129,7 +129,7 @@ export const ChainOfThoughtSearchResults = memo(({ className, ...props }: ChainO
 export type ChainOfThoughtSearchResultProps = ComponentProps<typeof Badge>;
 
 export const ChainOfThoughtSearchResult = memo(({ className, children, ...props }: ChainOfThoughtSearchResultProps) => (
-    <Badge className={cn('gap-1 px-2 py-0.5 font-normal text-xs', className)} variant='outline' {...props}>
+    <Badge className={cn('gap-1 px-2 py-0.5 font-normal text-xs', className)} variant='secondary' {...props}>
         {children}
     </Badge>
 ));

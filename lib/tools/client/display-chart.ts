@@ -22,13 +22,19 @@ export const displayBarChartInputSchema = z.object({
     data: z
         .array(z.record(z.string(), z.union([z.string(), z.number()])))
         .describe(
-            'Array of objects with category field and numeric value fields. All string values (category names, field keys displayed as labels) MUST be in Hebrew',
+            'Array of objects with a category field and numeric value fields. Category VALUES (the labels shown on the axis) MUST be in Hebrew. Field NAMES (keys) MUST be simple English identifiers like "category", "value", "count" — NEVER Hebrew or special characters. NEVER include an "index" property (reserved by the chart library).',
         ),
     config: z.object({
-        indexBy: z.string().describe('Field name to use for category axis (x-axis). The field name MUST be in Hebrew'),
+        indexBy: z
+            .string()
+            .describe(
+                'Field name for the category axis. MUST be a simple English key matching a property in data, e.g. "category", "sector", "city". NEVER use Hebrew for field names.',
+            ),
         keys: z
             .array(z.string())
-            .describe('Field names to use for value bars. Each key name MUST be in Hebrew'),
+            .describe(
+                'Field names for value bars. MUST be simple English keys matching numeric properties in data, e.g. ["value"], ["count", "total"]. NEVER use Hebrew for field names.',
+            ),
         layout: z.enum(['horizontal', 'vertical']).default('vertical').describe('Bar orientation'),
         groupMode: z.enum(['grouped', 'stacked']).default('grouped').describe('How to display multiple keys'),
     }),
@@ -52,12 +58,15 @@ Use bar charts for:
 - Any categorical comparison
 
 Guidelines:
-- ALL labels, category names, field keys, and data strings MUST be in Hebrew
-- Title MUST be in Hebrew and MUST include measurement units when applicable (e.g. "מחירי דלק (₪ לליטר)", "אוכלוסייה (אלפים)", "שטח (קמ״ר)")
-- indexBy field name and keys field names MUST be in Hebrew — these appear as axis labels
+- Title MUST be in Hebrew and MUST include measurement units when applicable (e.g. "מחירי דלק (₪ לליטר)", "אוכלוסייה (אלפים)")
+- Category VALUES (the labels on the axis) MUST be in Hebrew
+- Field NAMES (indexBy, keys) MUST be simple English identifiers (e.g. "category", "value", "growth_rate") — NEVER Hebrew
+- NEVER include an "index" property in data objects (reserved by chart library)
 - Limit data to 20 items max for readability
-- indexBy should be the category field name
-- keys should be the numeric value field names`,
+
+Example data format:
+  data: [{ category: "תל אביב", value: 120 }, { category: "חיפה", value: 85 }]
+  config: { indexBy: "category", keys: ["value"] }`,
     inputSchema: displayBarChartInputSchema,
     execute: async (input) => {
         return {

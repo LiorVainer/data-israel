@@ -102,6 +102,7 @@ export const toolTranslations: ToolTranslationsMap = {
         name: 'חיפוש מאגרי מידע',
         icon: <SearchIcon className='h-4 w-4' />,
         formatInput: (input) => {
+            if (input.searchedResourceName) return input.searchedResourceName;
             const parts: string[] = [];
             if (input.query) {
                 parts.push(`מחפש: "${input.query}"`);
@@ -148,6 +149,7 @@ export const toolTranslations: ToolTranslationsMap = {
         name: 'רשימת קבוצות',
         icon: <FolderIcon className='h-4 w-4' />,
         formatInput: (input) => {
+            if (input.searchedResourceName) return input.searchedResourceName;
             const parts: string[] = ['מציג קבוצות נושאים'];
             if (input.limit) {
                 parts.push(`עד ${input.limit} תוצאות`);
@@ -169,6 +171,7 @@ export const toolTranslations: ToolTranslationsMap = {
         name: 'רשימת תגיות',
         icon: <TagIcon className='h-4 w-4' />,
         formatInput: (input) => {
+            if (input.searchedResourceName) return input.searchedResourceName;
             if (input.query) {
                 return `מחפש תגיות: "${input.query}"`;
             }
@@ -328,7 +331,8 @@ export const toolTranslations: ToolTranslationsMap = {
     listAllDatasets: {
         name: 'רשימת כל המאגרים',
         icon: <ListIcon className='h-4 w-4' />,
-        formatInput: () => {
+        formatInput: (input) => {
+            if (input.searchedResourceName) return input.searchedResourceName;
             return 'טוען רשימת כל המאגרים...';
         },
         formatOutput: (output) => {
@@ -355,7 +359,8 @@ export const toolTranslations: ToolTranslationsMap = {
     listOrganizations: {
         name: 'רשימת ארגונים',
         icon: <BuildingIcon className='h-4 w-4' />,
-        formatInput: () => {
+        formatInput: (input) => {
+            if (input.searchedResourceName) return input.searchedResourceName;
             return 'טוען רשימת ארגונים...';
         },
         formatOutput: (output) => {
@@ -369,6 +374,7 @@ export const toolTranslations: ToolTranslationsMap = {
         name: 'חיפוש קבצים',
         icon: <SearchIcon className='h-4 w-4' />,
         formatInput: (input) => {
+            if (input.searchedResourceName) return input.searchedResourceName;
             const parts: string[] = [];
             if (input.query) {
                 parts.push(`מחפש: "${input.query}"`);
@@ -440,32 +446,31 @@ export const toolTranslations: ToolTranslationsMap = {
         },
     },
     browseCbsCatalog: {
-        name: 'עיון בקטלוג הלמ"ס',
+        name: 'חיפוש בנושאי הלמ"ס',
         icon: <DatabaseIcon className='h-4 w-4' />,
         formatInput: (input) => {
+            if (input.searchedResourceName) return input.searchedResourceName;
             if (input.subject) return `מחפש: "${input.subject}"`;
-            return 'טוען קטלוג נתונים סטטיסטיים';
+            return 'סורק נושאים בלמ"ס...';
         },
         formatOutput: (output) => {
             if (!output.success) return `שגיאה: ${output.error}`;
-            return `נמצאו ${output.items?.length ?? 0} סדרות`;
+            return `נמצאו ${output.items?.length ?? 0} תוצאות`;
         },
     },
     browseCbsCatalogPath: {
-        name: 'עיון בקטלוג הלמ"ס לפי נתיב',
+        name: 'בחירת נושא בלמ"ס',
         icon: <DatabaseIcon className='h-4 w-4' />,
-        formatInput: (input) => {
-            return `מנווט לנתיב: ${input.path}`;
-        },
+        formatInput: () => 'בוחר נושא בלמ"ס...',
         formatOutput: (output) => {
             if (!output.success) return `שגיאה: ${output.error}`;
             return `נמצאו ${output.items?.length ?? 0} פריטים`;
         },
     },
     getCbsSeriesData: {
-        name: 'שליפת נתונים סטטיסטיים',
+        name: 'שליפת נתונים מהלמ"ס',
         icon: <BarChart2Icon className='h-4 w-4' />,
-        formatInput: () => 'שולף נתונים סטטיסטיים...',
+        formatInput: () => 'שולף נתונים מהלמ"ס...',
         formatOutput: (output) => {
             if (!output.success) return `שגיאה: ${output.error}`;
             const obsCount = output.series?.reduce((sum, s) => sum + s.observations.length, 0) ?? 0;
@@ -473,19 +478,22 @@ export const toolTranslations: ToolTranslationsMap = {
         },
     },
     getCbsSeriesDataByPath: {
-        name: 'שליפת נתונים לפי נתיב',
+        name: 'שליפת נתונים לפי נושא',
         icon: <BarChart2Icon className='h-4 w-4' />,
-        formatInput: (input) => `שולף נתונים לנתיב: ${input.path}`,
+        formatInput: () => 'שולף נתונים לפי נושא...',
         formatOutput: (output) => {
             if (!output.success) return `שגיאה: ${output.error}`;
             const obsCount = output.series?.reduce((sum, s) => sum + s.observations.length, 0) ?? 0;
-            return `נשלפו ${obsCount} רשומות מ-${output.series?.length ?? 0} סדרות`;
+            return `נשלפו ${obsCount} רשומות`;
         },
     },
     browseCbsPriceIndices: {
-        name: 'עיון במדדי מחירים',
+        name: 'חיפוש מדדי מחירים',
         icon: <LineChartIcon className='h-4 w-4' />,
-        formatInput: () => 'טוען מדדי מחירים...',
+        formatInput: (input) => {
+            if (input.searchedResourceName) return input.searchedResourceName;
+            return 'טוען מדדי מחירים...';
+        },
         formatOutput: (output) => {
             if (!output.success) return `שגיאה: ${output.error}`;
             return `נמצאו ${output.items?.length ?? 0} מדדים`;
@@ -514,6 +522,7 @@ export const toolTranslations: ToolTranslationsMap = {
         name: 'חיפוש יישובים',
         icon: <SearchIcon className='h-4 w-4' />,
         formatInput: (input) => {
+            if (input.searchedResourceName) return input.searchedResourceName;
             if (input.query) return `מחפש יישוב: "${input.query}"`;
             return 'מחפש יישובים...';
         },

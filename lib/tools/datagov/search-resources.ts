@@ -22,6 +22,9 @@ export const searchResourcesInputSchema = z.object({
     datasetId: z.string().optional().describe('Filter by dataset CKAN ID to search within a specific dataset'),
     format: z.string().optional().describe('Filter by file format (e.g., "csv", "json", "xlsx")'),
     limit: z.number().int().min(1).max(100).optional().describe('Maximum number of resources to return (default 10)'),
+    searchedResourceName: z
+        .string()
+        .describe('Hebrew label describing what is being searched (e.g., "קבצי CSV", "נתוני חינוך"). Shown in UI as chip label.'),
 });
 
 export const searchResourcesOutputSchema = z.discriminatedUnion('success', [
@@ -40,11 +43,13 @@ export const searchResourcesOutputSchema = z.discriminatedUnion('success', [
             }),
         ),
         apiUrl: z.string().optional(),
+        searchedResourceName: z.string(),
     }),
     z.object({
         success: z.literal(false),
         error: z.string(),
         apiUrl: z.string().optional(),
+        searchedResourceName: z.string(),
     }),
 ]);
 
@@ -59,7 +64,7 @@ export const searchResources = tool({
     description:
         'Search for resources (files) using semantic search. Use when user wants to find specific file types or resources across datasets.',
     inputSchema: searchResourcesInputSchema,
-    execute: async ({ query, datasetId, format, limit = 10 }) => {
+    execute: async ({ query, datasetId, format, limit = 10, searchedResourceName }) => {
         // Build CKAN query format for URL construction
         const ckanQuery = format ? `format:${format}` : `name:${query}`;
         const apiUrl = buildDataGovUrl(DATAGOV_ENDPOINTS.resource.search, {
@@ -83,6 +88,7 @@ export const searchResources = tool({
                     count: convexResult.count,
                     source: 'convex-rag',
                     resources: convexResult.resources,
+                    searchedResourceName,
                 };
             }
 
@@ -105,6 +111,7 @@ export const searchResources = tool({
                     datasetId: r.package_id,
                 })),
                 apiUrl,
+                searchedResourceName,
             };
         } catch (error) {
             // If Convex fails, try CKAN as fallback
@@ -127,12 +134,14 @@ export const searchResources = tool({
                         datasetId: r.package_id,
                     })),
                     apiUrl,
+                    searchedResourceName,
                 };
             } catch {
                 return {
                     success: false,
                     error: error instanceof Error ? error.message : String(error),
                     apiUrl,
+                    searchedResourceName,
                 };
             }
         }

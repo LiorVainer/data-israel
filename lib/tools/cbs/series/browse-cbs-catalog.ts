@@ -29,7 +29,7 @@ export const browseCbsCatalogInputSchema = z.object({
     pageSize: z.number().int().min(1).max(1000).optional().describe('Items per page (default 100, max 1000)'),
     searchedResourceName: z
         .string()
-        .describe('Hebrew description of what is being browsed (e.g., "אוכלוסייה", "כלכלה ותעסוקה"). Shown in UI as badge label.'),
+        .describe('Hebrew label describing the browse target (e.g., "אוכלוסייה", "כלכלה ותעסוקה"). Shown in UI as chip label.'),
 });
 
 export const browseCbsCatalogOutputSchema = z.discriminatedUnion('success', [

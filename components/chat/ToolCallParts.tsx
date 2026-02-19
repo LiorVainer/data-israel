@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { ChainOfThought, ChainOfThoughtContent, ChainOfThoughtHeader } from '@/components/ai-elements/chain-of-thought';
 import { Shimmer } from '@/components/ai-elements/shimmer';
+import { useAutoOpen } from './use-auto-open';
 import type { UIMessage } from 'ai';
 import type { ToolCallPart } from './types';
 import { getToolStatus, isAgentDataPart } from './types';
@@ -231,8 +232,7 @@ export function ToolCallParts({
     isProcessing,
     defaultOpen = false,
 }: ToolCallPartsProps) {
-    const [userToggled, setUserToggled] = useState(false);
-    const [userWantsOpen, setUserWantsOpen] = useState(false);
+    const { isOpen, handleOpenChange } = useAutoOpen(isProcessing || defaultOpen);
 
     const processingLabels = useMemo(() => ['מחפש מידע...', 'מעבד נתונים...', 'מנתח תוצאות...'], []);
     const [labelIndex, setLabelIndex] = useState(0);
@@ -250,14 +250,6 @@ export function ToolCallParts({
     const stats = useMemo(() => calculateStats(toolParts), [toolParts]);
     const groupedTools = useMemo(() => groupToolCalls(toolParts, agentCallsMap), [toolParts, agentCallsMap]);
 
-    const handleOpenChange = (open: boolean) => {
-        setUserToggled(true);
-        setUserWantsOpen(open);
-    };
-
-    // User toggled: respect their choice. Otherwise: open while processing or if defaultOpen.
-    const isOpen = userToggled ? userWantsOpen : isProcessing || defaultOpen;
-
     // Build header text - show only succeeded count
     const getHeaderContent = () => {
         // Still processing
@@ -274,7 +266,7 @@ export function ToolCallParts({
             return (
                 <span>
                     {stats.completed} פעולות הושלמו
-                    <span className='text-red-500 mr-1'> ({stats.failed} שגיאות)</span>
+                    <span className='text-error mr-1'> ({stats.failed} שגיאות)</span>
                 </span>
             );
         }
