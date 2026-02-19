@@ -154,8 +154,8 @@ export function MessageItem({ message, isLastMessage, isStreaming, onRegenerate 
     }, [segments]);
 
     // Show loading shimmer when streaming but no visible content is actively being produced.
-    // Text and reasoning parts stream visibly; active tools show their own indicator.
-    // The gap (e.g. after tool completion, before model produces text) needs a shimmer.
+    // Text and reasoning parts stream visibly; tool groups show their own ChainOfThought indicator.
+    // The shimmer is only needed when there are no tools at all and the model is thinking.
     const showLoadingShimmer = useMemo(() => {
         if (!isLastMessage || !isStreaming) return false;
 
@@ -170,8 +170,11 @@ export function MessageItem({ message, isLastMessage, isStreaming, onRegenerate 
             if (getToolStatus((lastPart as ToolCallPart).state) === 'active') return false;
         }
 
+        // ChainOfThought already provides loading feedback for tool groups
+        if (segments.some((s) => s.kind === 'tool-group')) return false;
+
         return true;
-    }, [isLastMessage, isStreaming, message.parts]);
+    }, [isLastMessage, isStreaming, message.parts, segments]);
 
     return (
         <div className='animate-in fade-in slide-in-from-bottom-2 flex flex-col gap-6 duration-300'>

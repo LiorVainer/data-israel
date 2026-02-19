@@ -247,7 +247,7 @@ function AgentInternalCallsChain({ calls, isAgentActive }: { calls: AgentInterna
                                 c.success === false
                                     ? 'border-red-500 text-red-500'
                                     : c.isComplete
-                                      ? 'border-emerald-500 text-emerald-500'
+                                      ? 'border-green-500 text-green-500'
                                       : undefined,
                         }));
 

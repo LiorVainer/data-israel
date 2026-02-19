@@ -23,7 +23,9 @@ No manual searching, no CSVs, and no need to know what a DataStore API is.
 This is not "just another AI chat". The agent:
 
 - **Connects live** to data.gov.il and CBS APIs -- every answer comes from real API calls, not hallucination
-- **Cross-references sources** to produce insights, not just raw numbers
+- **Multi-agent network** with specialized sub-agents that autonomously search, cross-reference, and summarize data
+- **Transparent reasoning** -- see exactly which tools each agent calls, with live progress and colored status chips
+- **Context window tracking** -- a usage bar per thread shows how much context has been consumed
 - **Preserves conversation history** so you can compare, revisit, and go deeper
 - **Supports Google sign-in** for a continuous personal experience
 - **Speaks Hebrew natively** with full RTL interface
@@ -48,9 +50,9 @@ This is not "just another AI chat". The agent:
 
 The core principle: **if there's no real data, there's no answer.**
 
-The agent uses **29 Zod-validated tools** across three categories to ensure every response is grounded in verifiable data:
+The routing agent delegates to specialized sub-agents, each with their own Zod-validated tools. **29 tools** across three categories ensure every response is grounded in verifiable data:
 
-### data.gov.il Tools (16)
+### data.gov.il Tools (16) — `datagovAgent`
 
 | Tool | Purpose |
 |------|---------|
@@ -71,7 +73,7 @@ The agent uses **29 Zod-validated tools** across three categories to ensure ever
 | `listLicenses` | Available data licenses |
 | `generateDataGovSourceUrl` | Generate source attribution links |
 
-### CBS Tools (9)
+### CBS Tools (9) — `cbsAgent`
 
 | Tool | Purpose |
 |------|---------|
@@ -85,7 +87,7 @@ The agent uses **29 Zod-validated tools** across three categories to ensure ever
 | `searchCbsLocalities` | Search the CBS locality dictionary |
 | `generateCbsSourceUrl` | Generate CBS source attribution links |
 
-### Client Tools (4)
+### Client Tools (4) — `routingAgent` (direct)
 
 | Tool | Purpose |
 |------|---------|
@@ -96,27 +98,34 @@ The agent uses **29 Zod-validated tools** across three categories to ensure ever
 
 ## Agent Network
 
-The system uses a multi-agent network with a routing orchestrator:
+The system uses a **multi-agent network** where the routing agent delegates to specialized sub-agents. Each sub-agent runs autonomously with its own tools and memory thread, while the routing agent orchestrates the overall flow.
 
 ```
 User Question (Hebrew)
         |
    Routing Agent (orchestrator)
-   29 tools, Convex memory + vector search
+   4 direct tools + 2 sub-agents
+   Convex memory + vector search
         |
-   +---------+---------+
-   |         |         |
-DataGov   CBS     Client
- Agent    Agent    Tools
-   |         |
- CKAN API  CBS API
+   +-----------+-----------+
+   |           |           |
+datagovAgent  cbsAgent   Client Tools
+ (sub-agent)  (sub-agent)  (direct)
+ 16 tools     9 tools     charts + suggestions
+   |           |
+ CKAN API   CBS API
+   |           |
+ Own memory  Own memory
+ thread      thread
 ```
 
 | Agent | Role |
 |-------|------|
-| **Routing Agent** | Orchestrator -- routes queries, manages memory, calls tools |
-| **DataGov Agent** | Israeli open data via CKAN API (data.gov.il) |
-| **CBS Agent** | Central Bureau of Statistics (series, prices, localities) |
+| **Routing Agent** | Orchestrator -- delegates to sub-agents, manages memory, creates charts |
+| **DataGov Agent** | Sub-agent for Israeli open data via CKAN API (data.gov.il) |
+| **CBS Agent** | Sub-agent for Central Bureau of Statistics (series, prices, localities) |
+
+Sub-agents store their tool call results in **separate Convex memory threads**, linked back to the routing agent via `subAgentThreadId`. On page reload, the API reconstructs sub-agent tool call data through a two-pass recall strategy, so the full chain-of-thought UI is preserved.
 
 ## Tech Stack
 
