@@ -11,7 +11,7 @@
 
 import { SOURCE_GENERATING_TOOL_NAMES, toToolPartTypeSet } from './tool-names';
 
-const DATAGOV_PORTAL = 'https://data.gov.il/dataset';
+const DATAGOV_PORTAL = 'https://data.gov.il/datasets';
 const DATAGOV_ORG_PORTAL = 'https://data.gov.il/organization';
 
 /** Set of tool-prefixed types for source-generating tools (e.g. 'tool-searchDatasets') */
@@ -54,12 +54,9 @@ export function resolveToolSourceUrl(toolType: string, input: unknown, output: u
     switch (toolName) {
         // ── DataGov: search-based tools ──────────────────────────────────
         case 'searchDatasets': {
-            const query = getString(input, 'query');
-            if (!query) return null;
-            const resourceName = getResourceName(input, output);
             return {
-                url: `${DATAGOV_PORTAL}?q=${encodeURIComponent(query)}`,
-                title: resourceName ?? `חיפוש מאגרים: ${query}`,
+                url: DATAGOV_PORTAL,
+                title: 'חיפוש מאגרים - data.gov',
             };
         }
 

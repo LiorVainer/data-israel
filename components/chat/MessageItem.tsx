@@ -154,12 +154,15 @@ export function MessageItem({ message, isLastMessage, isStreaming, onRegenerate 
         }
     }
 
-    // Merge all sources and deduplicate by URL
+    // Merge all sources and deduplicate by URL or title
     const seenUrls = new Set<string>();
+    const seenTitles = new Set<string>();
     const allSources: SourceUrlUIPart[] = [];
     for (const source of [...nativeSourceParts, ...dedicatedSourceParts, ...autoSourceParts]) {
         if (seenUrls.has(source.url)) continue;
+        if (source.title && seenTitles.has(source.title)) continue;
         seenUrls.add(source.url);
+        if (source.title) seenTitles.add(source.title);
         allSources.push(source);
     }
 
