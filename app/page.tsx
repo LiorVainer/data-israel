@@ -24,8 +24,8 @@ export default function Home() {
         <div ref={scrollRef} className='relative h-full w-full overflow-y-auto'>
             <GeometricBackground />
 
-            {/* Hero Section */}
-            <div className='relative z-10 mx-auto px-4 md:px-0 pt-8 md:pt-12 pb-16 md:pb-24'>
+            {/* Hero Section — centered within first viewport */}
+            <div className='relative z-10 flex min-h-dvh flex-col items-center justify-center px-4 md:px-0'>
                 <motion.div
                     initial={{ opacity: 0, y: 40 }}
                     animate={{ opacity: 1, y: 0 }}

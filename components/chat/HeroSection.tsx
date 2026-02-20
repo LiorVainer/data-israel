@@ -2,7 +2,7 @@
 
 import Image from 'next/image';
 import { motion } from 'framer-motion';
-import { MessageSquareText } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import { HeroSubtitle, HeroTitle } from '@/components/ui/shape-landing-hero';
 import { useIsTablet } from '@/hooks/use-mobile';
 import { DATA_SOURCE_CONFIG } from '@/constants/tool-data-sources';
@@ -30,7 +30,7 @@ export function HeroSection({ onStartConversation }: HeroSectionProps) {
     const isTablet = useIsTablet();
 
     return (
-        <div className='w-full max-w-4xl mx-auto pt-8 text-center flex flex-col items-center justify-center gap-10 md:gap-20'>
+        <div className='w-full max-w-4xl mx-auto text-center flex flex-col items-center justify-center gap-10 md:gap-20'>
             <motion.div variants={fadeUpVariants} initial='hidden' animate='visible'>
                 <Logo width={isTablet ? 80 : 150} aria-label='DataGov Logo' />
             </motion.div>
@@ -79,9 +79,9 @@ export function HeroSection({ onStartConversation }: HeroSectionProps) {
                             transition={{ delay: 0.8, duration: 0.5 }}
                             whileHover={{ scale: 1.04 }}
                             whileTap={{ scale: 0.97 }}
-                            className='inline-flex items-center gap-2.5 rounded-full bg-action px-8 py-3.5 text-base font-semibold text-background transition-colors hover:bg-action/90 cursor-pointer'
+                            className='inline-flex items-center gap-2.5 rounded-full bg-action px-8 py-3.5 text-base font-semibold text-background transition-colors hover:bg-action/90'
                         >
-                            <MessageSquareText className='w-5 h-5' />
+                            <Plus className='w-5 h-5' />
                             התחל שיחה חדשה
                         </motion.button>
                         <AiDisclaimer />
