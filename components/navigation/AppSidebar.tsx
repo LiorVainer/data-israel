@@ -19,7 +19,9 @@ import { Logo } from '@/components/ui/logo';
 import { NavUser } from '@/components/navigation/NavUser';
 import { SidebarToolbar } from '@/components/navigation/SidebarToolbar';
 import { ThreadsSidebarGroup } from '@/components/threads/ThreadsSidebarGroup';
-import { useRouter } from 'next/navigation';
+import { Button } from '@/components/ui/button';
+import { SquarePen } from 'lucide-react';
+import { usePathname, useRouter } from 'next/navigation';
 
 /**
  * Logo button that navigates home and closes the sidebar.
@@ -44,12 +46,72 @@ function SidebarLogo() {
                 <SidebarMenuButton size='lg' className='gap-4' onClick={handleClick}>
                     <Logo className='size-7 shrink-0' aria-label='לוגו' />
                     <div className='grid flex-1 text-right text-sm leading-tight'>
-                        <span className='truncate font-semibold'>סוכן המידע הציבורי</span>
+                        <span className='truncate font-semibold'>סוכני המידע הציבורי</span>
                         <span className='truncate text-xs text-muted-foreground'>data-israel.org</span>
                     </div>
                 </SidebarMenuButton>
             </SidebarMenuItem>
         </SidebarMenu>
+    );
+}
+
+/**
+ * Floating logo button visible only when the sidebar is closed.
+ * Navigates to the landing page on click.
+ * Must be rendered inside SidebarProvider.
+ */
+function HomeLogoButton() {
+    const router = useRouter();
+    const pathname = usePathname();
+    const { open, isMobile, openMobile } = useSidebar();
+
+    const isOpen = isMobile ? openMobile : open;
+    const isLanding = pathname === '/';
+
+    if (isOpen || isLanding) return null;
+
+    return (
+        <Button
+            variant='outline'
+            size='icon'
+            className='rounded-2xl size-8 md:size-10 bg-background'
+            onClick={() => router.push('/')}
+            aria-label='חזרה לדף הבית'
+        >
+            <Logo className='size-5' />
+        </Button>
+    );
+}
+
+/**
+ * Floating new-thread button visible only when sidebar is closed and not on landing page.
+ * Must be rendered inside SidebarProvider.
+ */
+function NewThreadButton() {
+    const router = useRouter();
+    const pathname = usePathname();
+    const { open, isMobile, openMobile } = useSidebar();
+
+    const isOpen = isMobile ? openMobile : open;
+    const isLanding = pathname === '/';
+
+    if (isOpen || isLanding) return null;
+
+    const handleClick = () => {
+        const newId = crypto.randomUUID();
+        router.push(`/chat/${newId}?new`);
+    };
+
+    return (
+        <Button
+            variant='outline'
+            size='icon'
+            className='rounded-2xl size-8 md:size-10 bg-background'
+            onClick={handleClick}
+            aria-label='שיחה חדשה'
+        >
+            <SquarePen className='size-4 md:size-5' />
+        </Button>
     );
 }
 
@@ -85,7 +147,11 @@ export function AppSidebar({
             </Sidebar>
 
             <SidebarInset className='overflow-hidden min-h-0 h-full relative'>
-                <SidebarTrigger className='absolute top-3 right-4 md:top-4 md:right-5 z-30 rounded-2xl' />
+                <div className='absolute top-3 right-4 md:top-4 md:right-5 z-30 flex items-center gap-2 md:gap-4 [&>button]:shadow-md'>
+                    <HomeLogoButton />
+                    <NewThreadButton />
+                    <SidebarTrigger className='rounded-2xl' />
+                </div>
                 <div className='flex flex-1 min-h-0 @container/main overflow-hidden flex-col'>{children}</div>
             </SidebarInset>
         </SidebarProvider>
