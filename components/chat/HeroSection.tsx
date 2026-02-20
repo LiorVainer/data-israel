@@ -77,7 +77,7 @@ export function HeroSection({ onStartConversation }: HeroSectionProps) {
                         transition={{ delay: 0.8, duration: 0.5 }}
                         whileHover={{ scale: 1.04 }}
                         whileTap={{ scale: 0.97 }}
-                        className='mt-2 inline-flex items-center gap-2.5 rounded-full bg-action px-8 py-3.5 text-base font-semibold text-white shadow-lg shadow-action/25 transition-colors hover:bg-action/90 cursor-pointer'
+                        className='mt-2 inline-flex items-center gap-2.5 rounded-full bg-action px-8 py-3.5 text-base font-semibold text-foreground shadow-lg shadow-action/25 transition-colors hover:bg-action/90 cursor-pointer'
                     >
                         <MessageSquareText className='w-5 h-5' />
                         התחל שיחה חדשה
