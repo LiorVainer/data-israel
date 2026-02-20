@@ -124,7 +124,7 @@ export function ChatThread({ id }: ChatThreadProps) {
             <div className='mx-auto px-4 md:px-0 pb-4 md:pb-6 relative h-full w-full'>
                 <div className='flex flex-col gap-4 md:gap-6 h-full w-full items-center'>
                     {!hasMessages && !isStreaming ? (
-                        <div className='flex-1 overflow-y-auto w-full md:w-4xl'>
+                        <div className='flex-1 min-h-0 w-full md:w-4xl'>
                             <EmptyConversation onClick={(text) => void sendMessage({ text })} />
                         </div>
                     ) : (

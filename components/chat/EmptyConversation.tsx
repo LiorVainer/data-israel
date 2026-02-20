@@ -39,40 +39,46 @@ interface EmptyConversationProps {
 
 export function EmptyConversation({ onClick }: EmptyConversationProps) {
     return (
-        <div className='flex flex-col items-center justify-center gap-6 h-full px-2' dir='rtl'>
-            <div className='text-center space-y-2'>
-                <h2 className='text-xl md:text-2xl font-semibold text-foreground/90'>
-                    במה אוכל לעזור?
-                </h2>
-                <p className='text-sm text-muted-foreground'>
-                    בחרו נושא או הקלידו שאלה חופשית
-                </p>
-            </div>
-
-            <div className='grid grid-cols-1 sm:grid-cols-2 gap-3 w-full max-w-2xl'>
-                {PROMPT_CARDS.map((card) => (
-                    <button
-                        key={card.label}
-                        type='button'
-                        onClick={() => onClick(card.prompt)}
-                        className='group flex flex-col gap-3 rounded-xl border border-border/60 bg-card/50 p-4 text-right transition-all hover:border-border hover:bg-card/80 hover:shadow-sm cursor-pointer'
-                    >
-                        <div className='flex items-center gap-2'>
-                            <div className='flex size-8 shrink-0 items-center justify-center rounded-lg bg-muted/60'>
-                                <card.icon className='size-4 text-muted-foreground' />
-                            </div>
-                            <span className='text-sm font-medium text-foreground/80'>
-                                {card.label}
-                            </span>
-                        </div>
-                        <p className='text-[13px] leading-relaxed text-muted-foreground line-clamp-3'>
-                            {card.prompt}
+        <div className='flex flex-col h-full w-full' dir='rtl'>
+            <div className='flex-1 min-h-0 flex items-center justify-center overflow-y-auto px-2'>
+                <div className='flex flex-col items-center gap-6 py-8 w-full'>
+                    <div className='text-center space-y-2'>
+                        <h2 className='text-xl md:text-2xl font-semibold text-foreground/90'>
+                            במה אוכל לעזור?
+                        </h2>
+                        <p className='text-sm text-muted-foreground'>
+                            בחרו נושא או הקלידו שאלה חופשית
                         </p>
-                    </button>
-                ))}
+                    </div>
+
+                    <div className='grid grid-cols-1 sm:grid-cols-2 gap-3 w-full max-w-2xl'>
+                        {PROMPT_CARDS.map((card) => (
+                            <button
+                                key={card.label}
+                                type='button'
+                                onClick={() => onClick(card.prompt)}
+                                className='group flex flex-col gap-3 rounded-xl border border-border/60 bg-card/50 p-4 text-right transition-all hover:border-border hover:bg-card/80 hover:shadow-sm cursor-pointer'
+                            >
+                                <div className='flex items-center gap-2'>
+                                    <div className='flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary/10'>
+                                        <card.icon className='size-4 text-primary' />
+                                    </div>
+                                    <span className='text-sm font-medium text-foreground/80'>
+                                        {card.label}
+                                    </span>
+                                </div>
+                                <p className='text-[13px] leading-relaxed text-muted-foreground line-clamp-3'>
+                                    {card.prompt}
+                                </p>
+                            </button>
+                        ))}
+                    </div>
+                </div>
             </div>
 
-            <AiDisclaimer />
+            <div className='shrink-0 pb-2 pt-1'>
+                <AiDisclaimer />
+            </div>
         </div>
     );
 }

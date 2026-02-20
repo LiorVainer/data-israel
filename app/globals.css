@@ -182,18 +182,36 @@
     padding: 0;
   }
 
-  /* RTL-aware scrollbar styling */
-  [dir="rtl"] *::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
+  /* Global scrollbar: narrow on desktop, hidden on mobile */
+  *::-webkit-scrollbar {
+    width: 4px;
+    height: 4px;
   }
 
-  [dir="rtl"] *::-webkit-scrollbar-thumb {
-    @apply bg-muted-foreground/20 rounded;
+  *::-webkit-scrollbar-thumb {
+    @apply bg-muted-foreground/20 rounded-full;
   }
 
-  [dir="rtl"] ::-webkit-scrollbar-thumb:hover {
-    @apply bg-muted-foreground/30;
+  *::-webkit-scrollbar-thumb:hover {
+    @apply bg-muted-foreground/35;
+  }
+
+  *::-webkit-scrollbar-track {
+    @apply bg-transparent;
+  }
+
+  * {
+    scrollbar-width: thin;
+  }
+
+  @media (max-width: 768px) {
+    * {
+      scrollbar-width: none;
+    }
+
+    *::-webkit-scrollbar {
+      display: none;
+    }
   }
 }
 
