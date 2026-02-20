@@ -2,6 +2,7 @@
 
 import Image from 'next/image';
 import { motion } from 'framer-motion';
+import { MessageSquareText } from 'lucide-react';
 import { HeroSubtitle, HeroTitle } from '@/components/ui/shape-landing-hero';
 import { useIsTablet } from '@/hooks/use-mobile';
 import { DATA_SOURCE_CONFIG } from '@/constants/tool-data-sources';
@@ -20,9 +21,11 @@ const fadeUpVariants = {
     },
 };
 
-export interface HeroSectionProps {}
+export interface HeroSectionProps {
+    onStartConversation?: () => void;
+}
 
-export function HeroSection({}: HeroSectionProps) {
+export function HeroSection({ onStartConversation }: HeroSectionProps) {
     const isTablet = useIsTablet();
 
     return (
@@ -66,6 +69,20 @@ export function HeroSection({}: HeroSectionProps) {
                         />
                     </a>
                 </div>
+                {onStartConversation && (
+                    <motion.button
+                        onClick={onStartConversation}
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ delay: 0.8, duration: 0.5 }}
+                        whileHover={{ scale: 1.04 }}
+                        whileTap={{ scale: 0.97 }}
+                        className='mt-2 inline-flex items-center gap-2.5 rounded-full bg-action px-8 py-3.5 text-base font-semibold text-white shadow-lg shadow-action/25 transition-colors hover:bg-action/90 cursor-pointer'
+                    >
+                        <MessageSquareText className='w-5 h-5' />
+                        התחל שיחה חדשה
+                    </motion.button>
+                )}
             </div>
         </div>
     );

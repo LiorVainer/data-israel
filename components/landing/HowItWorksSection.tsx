@@ -25,7 +25,7 @@ function Step({ icon, title, description, stepNumber, delay }: StepProps) {
                 <div className='flex items-center justify-center w-14 h-14 rounded-2xl bg-primary/10 text-primary'>
                     {icon}
                 </div>
-                <span className='absolute -top-2 -right-2 flex items-center justify-center w-6 h-6 rounded-full bg-primary text-primary-foreground text-xs font-bold'>
+                <span className='absolute -top-2 -right-2 flex items-center justify-center w-6 h-6 rounded-full bg-action text-white text-xs font-bold'>
                     {stepNumber}
                 </span>
             </div>

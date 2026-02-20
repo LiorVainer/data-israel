@@ -90,6 +90,7 @@ export function ChatThread({ id }: ChatThreadProps) {
     }, [id, initialMessageData, removeInitialMessage, sendMessage, isAuthLoaded]);
 
     const isStreaming = status === 'submitted' || status === 'streaming';
+    const hasMessages = messages.length > 0;
 
     const lastAssistantMessage = messages.filter((m) => m.role === 'assistant').at(-1);
     const { suggestions: suggestionsFromTool, loading: suggestionsLoading } = useMemo(() => {
@@ -137,7 +138,7 @@ export function ChatThread({ id }: ChatThreadProps) {
                         <ConversationScrollButton />
                     </Conversation>
 
-                    {!isStreaming && (suggestionsLoading || suggestionsFromTool) && (
+                    {!isStreaming && (!hasMessages || suggestionsLoading || suggestionsFromTool) && (
                         <div className='relative z-20 w-full md:w-4xl'>
                             <Suggestions
                                 suggestions={suggestionsFromTool}
