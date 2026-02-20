@@ -26,7 +26,7 @@ export function SourcesPart({ sources }: SourcesPartProps) {
                         rel='noreferrer'
                         className='inline-flex items-center gap-1.5 rounded-full border border-border/60 bg-muted/50 px-3 py-1 text-xs text-muted-foreground transition-colors hover:bg-muted hover:text-foreground'
                     >
-                        <span className='max-w-48 truncate'>{source.title ?? new URL(source.url).hostname}</span>
+                        <span className='truncate'>{source.title ?? new URL(source.url).hostname}</span>
                         <ExternalLinkIcon className='h-3 w-3 shrink-0' />
                     </a>
                 ))}
