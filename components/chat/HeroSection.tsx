@@ -26,7 +26,7 @@ export function HeroSection({}: HeroSectionProps) {
     const isTablet = useIsTablet();
 
     return (
-        <div className='w-full max-w-4xl mx-auto px-4 pt-8 text-center flex flex-col items-center justify-center flex-1 min-h-0 gap-10 md:gap-20'>
+        <div className='w-full max-w-4xl mx-auto px-4 pt-8 text-center flex flex-col items-center justify-center gap-10 md:gap-20'>
             <motion.div variants={fadeUpVariants} initial='hidden' animate='visible'>
                 <Logo width={isTablet ? 80 : 150} aria-label='DataGov Logo' />
             </motion.div>
