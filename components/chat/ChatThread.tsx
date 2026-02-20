@@ -13,6 +13,7 @@ import { Conversation, ConversationContent, ConversationScrollButton } from '@/c
 import { MessageItem } from '@/components/chat/MessageItem';
 import { InputSection } from '@/components/chat/InputSection';
 import { Suggestions } from './Suggestions';
+import { EmptyConversation } from './EmptyConversation';
 import { LoadingShimmer } from '@/components/chat/LoadingShimmer';
 import { ContextWindowIndicator } from '@/components/chat/ContextWindowIndicator';
 import { GeometricBackground } from '@/components/ui/shape-landing-hero';
@@ -125,11 +126,7 @@ export function ChatThread({ id }: ChatThreadProps) {
                     <Conversation className='w-full children-noscrollbar'>
                         <ConversationContent className='w-full md:w-4xl pt-14 md:pt-5 mx-auto'>
                             {!hasMessages && !isStreaming && (
-                                <div className='flex items-center justify-center py-12 md:py-20'>
-                                    <div className='w-full md:w-4xl'>
-                                        <Suggestions onClick={(text) => void sendMessage({ text })} />
-                                    </div>
-                                </div>
+                                <EmptyConversation onClick={(text) => void sendMessage({ text })} />
                             )}
                             {messages.map((message, messageIndex) => (
                                 <MessageItem
