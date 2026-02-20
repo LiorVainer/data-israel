@@ -80,10 +80,12 @@ If any command fails, fix the issues before proceeding.
 ```
 app/                          # Next.js App Router
 ├── layout.tsx                # Root layout (Hebrew RTL, Geist fonts)
-├── page.tsx                  # Landing page → generates UUID → redirects to /chat/:id
-├── chat/[id]/page.tsx        # Thread-based chat UI (useParams + DefaultChatTransport)
+├── page.tsx                  # Landing page (hero, about, sources, how-it-works, footer)
+├── (main)/chat/[id]/
+│   ├── page.tsx              # Client component — useParams + ChatThread (no Suspense flash)
+│   └── loading.tsx           # Skeleton fallback (only for server-side navigation)
 ├── api/chat/route.ts         # Streaming API (handleChatStream → routingAgent)
-└── globals.css               # Tailwind global styles
+└── globals.css               # Tailwind global styles + global scrollbar styling
 
 agents/                       # Mastra agent network
 ├── mastra.ts                 # Mastra instance (ConvexStore instance-level storage)
@@ -118,6 +120,25 @@ convex/                       # Convex backend
 ├── search.ts                 # RAG semantic search actions
 └── rag.ts                    # RAG config (OpenRouter embeddings)
 
+components/
+├── navigation/
+│   ├── AppSidebar.tsx        # Sidebar layout wrapper (HomeLogoButton, NewThreadButton, SidebarTrigger)
+│   ├── NavUser.tsx           # User profile in sidebar footer
+│   └── SidebarToolbar.tsx    # "New chat" button inside sidebar
+├── chat/
+│   ├── ChatThread.tsx        # Main chat client component (useChat, message hydration, ?new param handling)
+│   ├── EmptyConversation.tsx # Empty state with prompt cards (fixed header, scrollable suggestions)
+│   ├── HeroSection.tsx       # Landing hero with CTA buttons
+│   ├── MessageItem.tsx       # Message renderer (source URL dedup by URL + title)
+│   └── Suggestions.tsx       # Follow-up suggestion chips (horizontal scroll mobile, vertical desktop)
+├── landing/
+│   ├── AboutSection.tsx      # About section
+│   ├── SourcesSection.tsx    # Data sources section (replaced StatsSection)
+│   ├── HowItWorksSection.tsx # How-it-works steps
+│   ├── ExampleOutputsSection.tsx
+│   └── Footer.tsx            # Footer with copyright
+└── ui/                       # shadcn/ui primitives (DO NOT modify unless instructed)
+
 spec/
 └── project.spec.md           # Authoritative specification
 
@@ -133,7 +154,7 @@ openspec/                     # OpenSpec workflow
 The routing agent **delegates** to specialized sub-agents via Mastra's agent network (`agents: { datagovAgent, cbsAgent }`). Sub-agents run as tool calls (`tool-agent-datagovAgent`, `tool-agent-cbsAgent`) with their own memory threads.
 
 ```
-User (/) → submit message → crypto.randomUUID() → /chat/:id?q=message
+User (/) → submit message → crypto.randomUUID() → /chat/:id?new
                                                         ↓
                                               useChat + DefaultChatTransport
                                               body: { messages, memory: { thread: id, resource }, model }
@@ -204,6 +225,15 @@ Key types in `components/chat/types.ts`:
 - `isAgentDataPart()` — type guard (replaces unsafe `as` casts)
 - `AgentInternalToolCall` — enriched with `toolCallId`, `isComplete`, `searchedResourceName`
 
+### Navigation & Chat Loading
+
+- **Branding**: Site is named "סוכני המידע הציבורי" (used in layout metadata, sidebar, hero)
+- **New conversations**: Created via `crypto.randomUUID()` + `router.push(/chat/${id}?new)`. The `?new` query param tells ChatThread to skip message fetching (no loading skeleton flash). On first message send, `?new` is removed from URL via `replaceState`.
+- **Existing conversations**: ChatThread fetches saved messages via `useQuery` → shows `MessageListSkeleton` while loading → then renders messages. `EmptyConversation` only shows when query is not fetching and messages are empty.
+- **Chat page**: Client component (`'use client'`) using `useParams()` to avoid Suspense boundary flash from async server components.
+- **Sidebar inset buttons**: `HomeLogoButton` (logo → landing page) and `NewThreadButton` (new chat) sit next to `SidebarTrigger`. All hidden when sidebar is open; `HomeLogoButton` also hidden on landing page. Buttons have shadow on mobile for visibility.
+- **Source URL deduplication**: `MessageItem` deduplicates sources by both URL and title to prevent duplicate chips.
+
 ### Memory & Storage
 
 - **Instance-level storage**: `ConvexStore` on the Mastra instance (all agents inherit)
@@ -250,7 +280,7 @@ The agent uses **Mastra 1.1** with AI SDK v6 tools. Key implementation details:
 - **Processors**: `ToolResultSummarizerProcessor` converts raw API results to Hebrew summaries
 - **Memory**: Persistent threads via `@mastra/convex` (ConvexStore + ConvexVector). Sub-agents store results in separate threads linked via `subAgentThreadId`
 - **Two-pass recall**: `GET /api/chat` fetches routing agent thread, then sub-agent threads to reconstruct internal tool call data for UI
-- **Chat routing**: UUID-based threads at `/chat/:id`, initial message via `?q=` param
+- **Chat routing**: UUID-based threads at `/chat/:id`, new conversations use `?new` query param to skip message loading
 
 ### Data Sources
 - **data.gov.il**: CKAN API at `https://data.gov.il/api/3` (datasets, organizations, groups, tags, resources, DataStore)
