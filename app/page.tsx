@@ -1,5 +1,6 @@
 'use client';
 
+import { useRef } from 'react';
 import { motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import { HeroSection } from '@/components/chat/HeroSection';
@@ -8,9 +9,11 @@ import { StatsSection } from '@/components/landing/StatsSection';
 import { HowItWorksSection } from '@/components/landing/HowItWorksSection';
 import { ExampleOutputsSection } from '@/components/landing/ExampleOutputsSection';
 import { Footer } from '@/components/landing/Footer';
+import { ScrollToTop } from '@/components/ui/ScrollToTop';
 
 export default function Home() {
     const router = useRouter();
+    const scrollRef = useRef<HTMLDivElement>(null);
 
     const handleStartConversation = () => {
         const chatId = crypto.randomUUID();
@@ -18,7 +21,7 @@ export default function Home() {
     };
 
     return (
-        <div className='relative h-full w-full overflow-y-auto'>
+        <div ref={scrollRef} className='relative h-full w-full overflow-y-auto'>
             <GeometricBackground />
 
             {/* Hero Section */}
@@ -47,6 +50,8 @@ export default function Home() {
             <div className='relative z-10'>
                 <Footer />
             </div>
+
+            <ScrollToTop containerRef={scrollRef} />
         </div>
     );
 }

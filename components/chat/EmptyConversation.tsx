@@ -2,6 +2,7 @@
 
 import { TrendingUpIcon, Building2Icon, CarIcon, HomeIcon } from 'lucide-react';
 import type { ComponentType, SVGProps } from 'react';
+import { AiDisclaimer } from '@/components/ui/AiDisclaimer';
 
 interface PromptCard {
     label: string;
@@ -38,7 +39,7 @@ interface EmptyConversationProps {
 
 export function EmptyConversation({ onClick }: EmptyConversationProps) {
     return (
-        <div className='flex flex-col items-center gap-6 py-16 md:py-24 px-2' dir='rtl'>
+        <div className='flex flex-col items-center justify-center gap-6 h-full px-2' dir='rtl'>
             <div className='text-center space-y-2'>
                 <h2 className='text-xl md:text-2xl font-semibold text-foreground/90'>
                     במה אוכל לעזור?
@@ -48,7 +49,7 @@ export function EmptyConversation({ onClick }: EmptyConversationProps) {
                 </p>
             </div>
 
-            <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 w-full max-w-3xl'>
+            <div className='grid grid-cols-1 sm:grid-cols-2 gap-3 w-full max-w-2xl'>
                 {PROMPT_CARDS.map((card) => (
                     <button
                         key={card.label}
@@ -70,6 +71,8 @@ export function EmptyConversation({ onClick }: EmptyConversationProps) {
                     </button>
                 ))}
             </div>
+
+            <AiDisclaimer />
         </div>
     );
 }
