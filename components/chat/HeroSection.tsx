@@ -42,7 +42,7 @@ export function HeroSection({ onStartConversation }: HeroSectionProps) {
                         <HeroSubtitle>הרשמיים של ממשלת ישראל</HeroSubtitle>
                     </div>
                 </div>
-                <div className='flex items-center gap-8 md:gap-16 mt-3'>
+                <div className='flex items-center gap-8 md:gap-16'>
                     <a
                         href={DATA_SOURCE_CONFIG.datagov.url}
                         target='_blank'
@@ -71,7 +71,7 @@ export function HeroSection({ onStartConversation }: HeroSectionProps) {
                     </a>
                 </div>
                 {onStartConversation && (
-                    <div className='flex flex-col items-center gap-3'>
+                    <div className='flex flex-col items-center gap-3 mt-6'>
                         <motion.button
                             onClick={onStartConversation}
                             initial={{ opacity: 0, scale: 0.95 }}
@@ -79,7 +79,7 @@ export function HeroSection({ onStartConversation }: HeroSectionProps) {
                             transition={{ delay: 0.8, duration: 0.5 }}
                             whileHover={{ scale: 1.04 }}
                             whileTap={{ scale: 0.97 }}
-                            className='mt-2 inline-flex items-center gap-2.5 rounded-full bg-action px-8 py-3.5 text-base font-semibold text-background shadow-lg shadow-action/25 transition-colors hover:bg-action/90 cursor-pointer'
+                            className='inline-flex items-center gap-2.5 rounded-full bg-action px-8 py-3.5 text-base font-semibold text-background transition-colors hover:bg-action/90 cursor-pointer'
                         >
                             <MessageSquareText className='w-5 h-5' />
                             התחל שיחה חדשה
