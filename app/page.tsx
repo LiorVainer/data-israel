@@ -1,62 +1,65 @@
 'use client';
 
+import { useCallback, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import { HeroSection } from '@/components/chat/HeroSection';
 import { GeometricBackground } from '@/components/ui/shape-landing-hero';
-import { Suggestions } from '@/components/chat/Suggestions';
-import { InputSection } from '@/components/chat/InputSection';
-import { useSessionStorage } from '@/hooks/use-session-storage';
-import { INITIAL_MESSAGE_KEY, type InitialMessageData } from '@/constants/chat';
+import { SourcesSection } from '@/components/landing/SourcesSection';
+import { HowItWorksSection } from '@/components/landing/HowItWorksSection';
+import { AboutSection } from '@/components/landing/AboutSection';
+import { Footer } from '@/components/landing/Footer';
+import { ScrollToTop } from '@/components/ui/ScrollToTop';
 
 export default function Home() {
     const router = useRouter();
-    const [, setInitialMessage] = useSessionStorage<InitialMessageData>(INITIAL_MESSAGE_KEY);
+    const scrollRef = useRef<HTMLDivElement>(null);
 
-    const handleSend = (text: string) => {
-        if (!text.trim()) return;
-
+    const handleStartConversation = () => {
         const chatId = crypto.randomUUID();
-
-        const messageData = {
-            chatId,
-            text,
-        };
-
-        // Save initial message to session storage
-        setInitialMessage(messageData);
-
-        // Navigate to chat page
-        router.push(`/chat/${chatId}`);
+        router.push(`/chat/${chatId}?new`);
     };
 
+    const handleScrollToAbout = useCallback(() => {
+        const aboutEl = document.getElementById('about');
+        aboutEl?.scrollIntoView({ behavior: 'smooth' });
+    }, []);
+
     return (
-        <div className='relative h-full w-full'>
+        <div ref={scrollRef} className='relative h-full w-full overflow-y-auto'>
             <GeometricBackground />
 
-            <div className='mx-auto px-4 md:px-0 pb-4 md:pb-6 relative h-full'>
+            {/* Hero Section — centered within first viewport */}
+            <div className='relative z-10 flex min-h-dvh flex-col items-center justify-center px-4 md:px-0'>
                 <motion.div
-                    initial={{ opacity: 0.0, y: 40 }}
-                    whileInView={{ opacity: 1, y: 0 }}
+                    initial={{ opacity: 0, y: 40 }}
+                    animate={{ opacity: 1, y: 0 }}
                     transition={{
                         delay: 0.3,
                         duration: 0.8,
                         ease: 'easeInOut',
                     }}
-                    className='flex flex-col gap-4 md:gap-6 h-full w-full items-center'
+                    className='flex flex-col gap-4 md:gap-6 w-full items-center justify-center'
                 >
-                    <div className='relative z-20 flex-1 flex flex-col min-h-0 overflow-hidden'>
-                        <HeroSection />
-                    </div>
-
-                    <div className='relative z-20 w-full md:w-4xl'>
-                        <div className='mb-3'>
-                            <Suggestions onClick={handleSend} />
-                        </div>
-                        <InputSection onSubmit={handleSend} />
-                    </div>
+                    <HeroSection
+                        onStartConversation={handleStartConversation}
+                        onScrollToAbout={handleScrollToAbout}
+                    />
                 </motion.div>
             </div>
+
+            {/* Below-the-fold sections */}
+            <div className='relative z-10 flex flex-col gap-16 md:gap-48 py-12 md:py-36'>
+                <AboutSection />
+                <SourcesSection />
+                <HowItWorksSection />
+            </div>
+
+            <div className='relative z-10'>
+                <Footer />
+            </div>
+
+            <ScrollToTop containerRef={scrollRef} />
         </div>
     );
 }

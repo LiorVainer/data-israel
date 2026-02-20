@@ -28,17 +28,20 @@ type RenderSegment =
     | { kind: 'tool-group'; toolParts: Array<{ part: ToolCallPart; index: number }> }
     | { kind: 'part'; part: UIMessage['parts'][number]; index: number };
 
-/** Parts that AI SDK emits as step boundaries between multi-step tool calls */
-function isStepBoundaryPart(part: { type: string }): boolean {
-    return part.type === 'reasoning' || part.type === 'step-start';
+/** Parts that AI SDK emits as step boundaries between multi-step tool calls.
+ *  Includes empty text parts which the SDK inserts between steps but carry no content. */
+function isStepBoundaryPart(part: UIMessage['parts'][number]): boolean {
+    if (part.type === 'reasoning' || part.type === 'step-start') return true;
+    if (part.type === 'text' && !part.text.trim()) return true;
+    return false;
 }
 
 /**
  * Segments message parts into chronological render groups.
  * Consecutive server-side tool parts are combined into a single 'tool-group'.
- * Reasoning and step-start parts between tools are absorbed into the group
+ * Reasoning, step-start, and empty text parts between tools are absorbed into the group
  * (AI SDK emits these as step boundaries during multi-step tool calls).
- * Only text parts and client tools break tool grouping.
+ * Only non-empty text parts and client tools break tool grouping.
  */
 function segmentMessageParts(parts: UIMessage['parts']): RenderSegment[] {
     const segments: RenderSegment[] = [];
@@ -151,12 +154,15 @@ export function MessageItem({ message, isLastMessage, isStreaming, onRegenerate 
         }
     }
 
-    // Merge all sources and deduplicate by URL
+    // Merge all sources and deduplicate by URL or title
     const seenUrls = new Set<string>();
+    const seenTitles = new Set<string>();
     const allSources: SourceUrlUIPart[] = [];
     for (const source of [...nativeSourceParts, ...dedicatedSourceParts, ...autoSourceParts]) {
         if (seenUrls.has(source.url)) continue;
+        if (source.title && seenTitles.has(source.title)) continue;
         seenUrls.add(source.url);
+        if (source.title) seenTitles.add(source.title);
         allSources.push(source);
     }
 
@@ -193,8 +199,6 @@ export function MessageItem({ message, isLastMessage, isStreaming, onRegenerate 
 
         return true;
     }, [isLastMessage, isStreaming, message.parts, segments]);
-
-    console.log({ allSources });
 
     return (
         <div className='animate-in fade-in slide-in-from-bottom-2 flex flex-col gap-6 duration-300'>

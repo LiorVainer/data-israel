@@ -2,7 +2,7 @@
 
 import { useChat } from '@ai-sdk/react';
 import { DefaultChatTransport, UIMessage } from 'ai';
-import { useEffect, useMemo, useRef } from 'react';
+import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { useAuth } from '@clerk/nextjs';
 import { useQuery } from '@tanstack/react-query';
 import { useQuery as useConvexQuery } from 'convex/react';
@@ -13,12 +13,15 @@ import { Conversation, ConversationContent, ConversationScrollButton } from '@/c
 import { MessageItem } from '@/components/chat/MessageItem';
 import { InputSection } from '@/components/chat/InputSection';
 import { Suggestions } from './Suggestions';
+import { EmptyConversation } from './EmptyConversation';
+import { MessageListSkeleton } from '@/components/chat/MessageListSkeleton';
 import { LoadingShimmer } from '@/components/chat/LoadingShimmer';
 import { ContextWindowIndicator } from '@/components/chat/ContextWindowIndicator';
 import { GeometricBackground } from '@/components/ui/shape-landing-hero';
 import { useSessionStorage } from '@/hooks/use-session-storage';
 import { INITIAL_MESSAGE_KEY, type InitialMessageData } from '@/constants/chat';
 import { useUser } from '@/context/UserContext';
+import { useSearchParams } from 'next/navigation';
 
 /** Header name for passing user ID to API */
 const USER_ID_HEADER = 'x-user-id';
@@ -36,8 +39,9 @@ export function ChatThread({ id }: ChatThreadProps) {
     const contextWindow = useConvexQuery(api.threads.getThreadContextWindow, { threadId: id });
     const totalTokens = contextWindow?.totalTokens ?? 0;
 
+    const searchParams = useSearchParams();
     const [initialMessageData, , removeInitialMessage] = useSessionStorage<InitialMessageData>(INITIAL_MESSAGE_KEY);
-    const isNewConversation = initialMessageData?.chatId === id;
+    const isNewConversation = initialMessageData?.chatId === id || searchParams.has('new');
 
     const transport = useMemo(
         () =>
@@ -67,20 +71,19 @@ export function ChatThread({ id }: ChatThreadProps) {
         transport,
     });
 
-    // Hydrate existing messages for returning conversations (not new ones)
-    const { data: hydratedMessages } = useQuery({
+    const { data: savedMessages, isFetching: isLoadingMessages } = useQuery({
         queryKey: ['threads', id, 'messages', userId],
         queryFn: () => threadService.getMessages(id, userId!),
         enabled: !isNewConversation && isAuthLoaded && !!userId,
     });
 
-    const didHydrate = useRef(false);
+    const didLoad = useRef(false);
 
     useEffect(() => {
-        if (didHydrate.current || !hydratedMessages?.length) return;
-        didHydrate.current = true;
-        setMessages(hydratedMessages);
-    }, [hydratedMessages, setMessages]);
+        if (didLoad.current || !savedMessages?.length) return;
+        didLoad.current = true;
+        setMessages(savedMessages);
+    }, [savedMessages, setMessages]);
 
     useEffect(() => {
         if (!initialMessageData || initialMessageData.chatId !== id || !isAuthLoaded) return;
@@ -89,7 +92,19 @@ export function ChatThread({ id }: ChatThreadProps) {
         void sendMessage({ text: initialMessageData.text });
     }, [id, initialMessageData, removeInitialMessage, sendMessage, isAuthLoaded]);
 
+    const handleSend = useCallback(
+        (text: string) => {
+            if (!messages.length && searchParams.has('new')) {
+                window.history.replaceState(null, '', `/chat/${id}`);
+            }
+            void sendMessage({ text });
+        },
+        [messages.length, searchParams, id, sendMessage],
+    );
+
     const isStreaming = status === 'submitted' || status === 'streaming';
+    const hasMessages = messages.length > 0;
+    const isLoading = isLoadingMessages && !didLoad.current;
 
     const lastAssistantMessage = messages.filter((m) => m.role === 'assistant').at(-1);
     const { suggestions: suggestionsFromTool, loading: suggestionsLoading } = useMemo(() => {
@@ -119,36 +134,45 @@ export function ChatThread({ id }: ChatThreadProps) {
         <div className='relative h-full w-full'>
             <GeometricBackground noShapes />
 
-            <div className='mx-auto px-4 md:px-0 pb-4 md:pb-6 relative h-full w-full'>
+            <div className='mx-auto px-4 md:px-0 pb-4 md:pb-6 relative h-full w-full pt-4'>
                 <div className='flex flex-col gap-4 md:gap-6 h-full w-full items-center'>
-                    <Conversation className='w-full children-noscrollbar'>
-                        <ConversationContent className='w-full md:w-4xl pt-14 md:pt-5 mx-auto'>
-                            {messages.map((message, messageIndex) => (
-                                <MessageItem
-                                    key={message.id}
-                                    message={message}
-                                    isLastMessage={messageIndex === messages.length - 1}
-                                    isStreaming={isStreaming}
-                                    onRegenerate={regenerate}
-                                />
-                            ))}
-                            {status === 'submitted' && <LoadingShimmer />}
-                        </ConversationContent>
-                        <ConversationScrollButton />
-                    </Conversation>
-
-                    {!isStreaming && (suggestionsLoading || suggestionsFromTool) && (
-                        <div className='relative z-20 w-full md:w-4xl'>
-                            <Suggestions
-                                suggestions={suggestionsFromTool}
-                                loading={suggestionsLoading}
-                                onClick={(text) => void sendMessage({ text })}
-                            />
+                    {isLoading ? (
+                        <div className='flex-1 w-full md:w-4xl md:pt-10 mx-auto overflow-hidden'>
+                            <MessageListSkeleton />
                         </div>
+                    ) : !hasMessages && !isStreaming ? (
+                        <div className='flex-1 min-h-0 w-full md:w-4xl flex items-center justify-center'>
+                            <EmptyConversation onClick={handleSend} />
+                        </div>
+                    ) : (
+                        <Conversation className='w-full children-noscrollbar'>
+                            <ConversationContent className='w-full md:w-4xl mx-auto'>
+                                {messages.map((message, messageIndex) => (
+                                    <MessageItem
+                                        key={message.id}
+                                        message={message}
+                                        isLastMessage={messageIndex === messages.length - 1}
+                                        isStreaming={isStreaming}
+                                        onRegenerate={regenerate}
+                                    />
+                                ))}
+                                {status === 'submitted' && <LoadingShimmer />}
+                            </ConversationContent>
+                            <ConversationScrollButton />
+                        </Conversation>
                     )}
 
                     <div className='w-full md:w-4xl flex gap-1  flex-col'>
-                        <InputSection onSubmit={(text) => void sendMessage({ text })} status={status} onStop={stop} />
+                        {!isStreaming && hasMessages && (suggestionsLoading || suggestionsFromTool) && (
+                            <div className='relative z-20 w-full md:w-4xl'>
+                                <Suggestions
+                                    suggestions={suggestionsFromTool}
+                                    loading={suggestionsLoading}
+                                    onClick={handleSend}
+                                />
+                            </div>
+                        )}
+                        <InputSection onSubmit={handleSend} status={status} onStop={stop} />
                         {!!totalTokens && totalTokens > 0 && (
                             <ContextWindowIndicator
                                 usedTokens={totalTokens}

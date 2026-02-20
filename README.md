@@ -2,7 +2,7 @@
 
 <img src="public/data-israel-readme.svg" alt="Data Israel" width="200" />
 
-# Data Israel - Israeli Public Data AI Agent
+# Data Israel - Israeli Public Data AI Agents
 
 ### Ask questions in Hebrew. Get answers backed by real data.
 
@@ -14,7 +14,7 @@
 
 Israel has a massive amount of open data: CBS statistics, price indices, population, housing, transportation, education, budgets, and more. The problem? The data exists, but it's not truly accessible.
 
-**Data Israel** is an AI agent that connects in real-time to [data.gov.il](https://data.gov.il) and the Central Bureau of Statistics (CBS), letting anyone ask questions in Hebrew and receive answers grounded in official data -- with context, tables, and charts.
+**Data Israel** is a network of AI agents that connects in real-time to [data.gov.il](https://data.gov.il) and the Central Bureau of Statistics (CBS), letting anyone ask questions in Hebrew and receive answers grounded in official data -- with context, tables, and charts. A routing agent orchestrates specialized sub-agents, each with its own tools and memory, to search, cross-reference, and summarize data autonomously.
 
 No manual searching, no CSVs, and no need to know what a DataStore API is.
 

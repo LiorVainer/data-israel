@@ -15,7 +15,7 @@ export function SidebarToolbar() {
             toggleSidebar();
         }
         const newId = crypto.randomUUID();
-        router.push(`/chat/${newId}`);
+        router.push(`/chat/${newId}?new`);
     };
 
     if (hideContent) return null;
