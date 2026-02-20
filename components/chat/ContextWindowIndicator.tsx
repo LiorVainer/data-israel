@@ -42,11 +42,11 @@ export function ContextWindowIndicator({ usedTokens, maxTokens }: ContextWindowI
 
     return (
         <div className={cn('flex gap-1.5 flex-col w-full sm:justify-end sm:items-end px-1')}>
-            <div className='flex gap-1 md:gap-4 sm:items-end md:items-center flex-col md:flex-row sm:justify-end'>
-                <div className='flex text-xs text-muted-foreground sm:justify-end' dir='rtl'>
+            <div className='flex gap-1 md:gap-4 md:items-center flex-col md:flex-row w-full'>
+                <div className='flex text-xs text-muted-foreground shrink-0' dir='rtl'>
                     <span className='whitespace-nowrap'>{percentage}% מכמות המילים המקסימלית לשיחה נוצלו</span>
                 </div>
-                <Progress value={percentage} style={indicatorStyle} />
+                <Progress className='min-w-24' value={percentage} style={indicatorStyle} />
             </div>
             {isWarning && (
                 <p className='text-xs text-amber-600 dark:text-amber-400 sm:text-left' dir='rtl'>
