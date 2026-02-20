@@ -98,13 +98,13 @@ agents/                       # Mastra agent network
 └── network/
     ├── model.ts              # Model ID factory (getMastraModelId, getAiSdkModelId)
     ├── routing/              # Routing agent (orchestrator, delegates to sub-agents)
-    ├── datagov/              # DataGov sub-agent (15 tools, data.gov.il CKAN API)
+    ├── datagov/              # DataGov sub-agent (16 tools, data.gov.il CKAN API)
     └── cbs/                  # CBS sub-agent (9 tools, Central Bureau of Statistics)
 
 lib/
 ├── tools/
-│   ├── datagov/              # 15 data.gov.il tools (search, details, schema, etc.)
-│   ├── cbs/                  # 8 CBS tools (catalog, series, prices, localities)
+│   ├── datagov/              # 16 data.gov.il tools (search, details, schema, etc.)
+│   ├── cbs/                  # 9 CBS tools (catalog, series, prices, localities)
 │   └── client/               # 3 client-side chart tools (bar, line, pie)
 ├── api/
 │   ├── data-gov/             # CKAN API client (data.gov.il)
@@ -171,7 +171,7 @@ User (/) → submit message → crypto.randomUUID() → /chat/:id?new
                               ┌──────────────────────────┼──────────────────────┐
                               ↓                          ↓                      ↓
                     datagovAgent (sub-agent)     cbsAgent (sub-agent)    Client Tools (direct)
-                    15 tools + own memory        9 tools + own memory    Charts + suggestFollowUps
+                    16 tools + own memory        9 tools + own memory    Charts + suggestFollowUps
                     data.gov.il CKAN             CBS Statistics
                     ↓                            ↓
                     Stores results in            Stores results in
@@ -185,7 +185,7 @@ User (/) → submit message → crypto.randomUUID() → /chat/:id?new
 | Agent | Hebrew Name | Tools | Role |
 |-------|-------------|-------|------|
 | `routingAgent` | סוכן ניתוב | 4 direct + 2 sub-agents | Orchestrator — delegates to sub-agents, manages memory, creates charts |
-| `datagovAgent` | סוכן data.gov.il | 15 | Israeli open data search (CKAN API) — runs as sub-agent |
+| `datagovAgent` | סוכן data.gov.il | 16 | Israeli open data search (CKAN API) — runs as sub-agent |
 | `cbsAgent` | סוכן הלמ"ס | 9 | Central Bureau of Statistics (series, prices, localities) — runs as sub-agent |
 
 ### Streaming Architecture (handleChatStream)
@@ -201,29 +201,27 @@ The `data-tool-agent` parts are **not stored in memory** — they are streaming 
 2. Fetch each sub-agent's separate memory thread via `memory.recall()`
 3. Extract tool invocations and reconstruct `data-tool-agent` parts
 
-### UI Rendering Pipeline for Sub-Agent Tool Calls
+### UI Rendering Pipeline (MessageItem)
 
-```
-Message parts → segmentMessageParts() → tool-group segments
-                                              ↓
-                                    ToolCallParts component
-                                    buildAgentInternalCallsMap(allParts)
-                                    → scans data-tool-agent parts
-                                    → builds Map<agentName, AgentInternalToolCall[]>
-                                              ↓
-                                    groupToolCalls() merges agent-* parts
-                                    with their internal calls
-                                              ↓
-                                    ToolCallStep → AgentInternalCallsChain
-                                    → Groups internal calls by toolName
-                                    → Renders ChainOfThought with colored chips
-                                    → Green chips (success) / Red chips (error)
-```
+`MessageItem` orchestrates all message rendering via `segmentMessageParts()`, which groups consecutive server-side tool parts into `tool-group` segments (absorbing step-boundary parts like reasoning and empty text between tools). Client tools (charts, source URLs) are excluded from tool groups and rendered separately.
+
+**Render branches by segment type:**
+- **tool-group** → `ToolCallParts` → `ChainOfThought` timeline with grouped steps and progress stats
+- **text** → `TextMessagePart` (markdown with regenerate action on last message)
+- **reasoning** → `ReasoningPart` (thinking indicator)
+- **chart tools** (displayBarChart/Line/Pie) → `ChartRenderer` / `ChartLoadingState` / `ChartError`
+
+**Sub-agent tool calls** (`ToolCallParts`): `buildAgentInternalCallsMap()` scans `data-tool-agent` parts to extract internal tool calls, then `groupToolCalls()` merges them with agent-level parts for the timeline UI.
+
+**Source URL collection** (3 sources, deduplicated by URL + title):
+1. Native `source-url` parts from AI SDK stream
+2. Dedicated source URL tools (`generateDataGovSourceUrl`, `generateCbsSourceUrl`)
+3. Auto-resolved from data tool outputs via `resolveToolSourceUrl()` (scans both direct tools and sub-agent results inside `data-tool-agent` parts)
 
 Key types in `components/chat/types.ts`:
-- `AgentDataPart` / `AgentDataPartData` — typed shape of `data-tool-agent` parts
-- `isAgentDataPart()` — type guard (replaces unsafe `as` casts)
-- `AgentInternalToolCall` — enriched with `toolCallId`, `isComplete`, `searchedResourceName`
+- `AgentDataPart` / `isAgentDataPart()` — typed shape and guard for `data-tool-agent` parts
+- `ToolCallPart` / `getToolStatus()` — tool state handling (active/complete)
+- `SourceUrlUIPart` — unified source URL shape
 
 ### Navigation & Chat Loading
 
@@ -276,7 +274,7 @@ The agent uses **Mastra 1.1** with AI SDK v6 tools. Key implementation details:
 - **Model**: OpenRouter provider, default `google/gemini-3-flash-preview`
 - **Architecture**: Routing agent delegates to sub-agents (`datagovAgent`, `cbsAgent`) via `agents: {}` — not direct tool registration
 - **Routing agent tools**: 4 direct (displayBarChart, displayLineChart, displayPieChart, suggestFollowUps) + 2 sub-agents
-- **Sub-agent tools**: DataGov (15 tools), CBS (9 tools) — each with own memory thread
+- **Sub-agent tools**: DataGov (16 tools), CBS (9 tools) — each with own memory thread
 - **Processors**: `ToolResultSummarizerProcessor` converts raw API results to Hebrew summaries
 - **Memory**: Persistent threads via `@mastra/convex` (ConvexStore + ConvexVector). Sub-agents store results in separate threads linked via `subAgentThreadId`
 - **Two-pass recall**: `GET /api/chat` fetches routing agent thread, then sub-agent threads to reconstruct internal tool call data for UI

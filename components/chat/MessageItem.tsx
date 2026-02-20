@@ -200,8 +200,6 @@ export function MessageItem({ message, isLastMessage, isStreaming, onRegenerate 
         return true;
     }, [isLastMessage, isStreaming, message.parts, segments]);
 
-    console.log({ allSources });
-
     return (
         <div className='animate-in fade-in slide-in-from-bottom-2 flex flex-col gap-6 duration-300'>
             {segments.map((segment, segIdx) => {
