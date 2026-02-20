@@ -31,7 +31,7 @@ export function Suggestions({ onClick, suggestions, loading }: SuggestionsProps)
             style={{ scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch' }}
         >
             <div
-                className='flex w-max flex-nowrap gap-2 pb-2 md:grid md:w-full md:grid-cols-1 md:gap-2 max-h-24 md:overflow-y-auto md:snap-y md:snap-mandatory'
+                className='flex w-max flex-nowrap gap-2 pb-2 md:grid md:w-full md:grid-cols-1 md:gap-2 max-h-24 md:overflow-y-auto md:snap-y md:snap-mandatory md:[scrollbar-width:thin] md:[scrollbar-color:var(--border)_transparent]'
                 dir='rtl'
             >
                 {items.map(([key, prompt]) => (
