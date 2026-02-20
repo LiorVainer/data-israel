@@ -123,24 +123,27 @@ export function ChatThread({ id }: ChatThreadProps) {
 
             <div className='mx-auto px-4 md:px-0 pb-4 md:pb-6 relative h-full w-full'>
                 <div className='flex flex-col gap-4 md:gap-6 h-full w-full items-center'>
-                    <Conversation className='w-full children-noscrollbar'>
-                        <ConversationContent className='w-full md:w-4xl pt-14 md:pt-5 mx-auto'>
-                            {!hasMessages && !isStreaming && (
-                                <EmptyConversation onClick={(text) => void sendMessage({ text })} />
-                            )}
-                            {messages.map((message, messageIndex) => (
-                                <MessageItem
-                                    key={message.id}
-                                    message={message}
-                                    isLastMessage={messageIndex === messages.length - 1}
-                                    isStreaming={isStreaming}
-                                    onRegenerate={regenerate}
-                                />
-                            ))}
-                            {status === 'submitted' && <LoadingShimmer />}
-                        </ConversationContent>
-                        <ConversationScrollButton />
-                    </Conversation>
+                    {!hasMessages && !isStreaming ? (
+                        <div className='flex-1 overflow-y-auto w-full md:w-4xl'>
+                            <EmptyConversation onClick={(text) => void sendMessage({ text })} />
+                        </div>
+                    ) : (
+                        <Conversation className='w-full children-noscrollbar'>
+                            <ConversationContent className='w-full md:w-4xl pt-14 md:pt-5 mx-auto'>
+                                {messages.map((message, messageIndex) => (
+                                    <MessageItem
+                                        key={message.id}
+                                        message={message}
+                                        isLastMessage={messageIndex === messages.length - 1}
+                                        isStreaming={isStreaming}
+                                        onRegenerate={regenerate}
+                                    />
+                                ))}
+                                {status === 'submitted' && <LoadingShimmer />}
+                            </ConversationContent>
+                            <ConversationScrollButton />
+                        </Conversation>
+                    )}
 
                     {!isStreaming && hasMessages && (suggestionsLoading || suggestionsFromTool) && (
                         <div className='relative z-20 w-full md:w-4xl'>
