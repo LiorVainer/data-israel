@@ -24,7 +24,7 @@ const VERSION = process.env.VERCEL_GIT_COMMIT_SHA?.slice(0, 8) ?? Date.now().toS
 
 export async function generateMetadata(): Promise<Metadata> {
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://data-israel.org';
-    const title = 'סוכן המידע הציבורי של ישראל';
+    const title = 'סוכני המידע הציבורי של ישראל';
     const description =
         'שוחח עם סוכן AI חכם שמחובר למאות אלפי מאגרי מידע פתוחים מ-data.gov.il והלמ"ס - חיפוש, ניתוח וויזואליזציה של נתונים ציבוריים בעברית';
     const ogImage = `/og.png?v=${VERSION}`;
@@ -38,14 +38,14 @@ export async function generateMetadata(): Promise<Metadata> {
             url: siteUrl,
             title,
             description,
-            siteName: 'סוכן המידע הציבורי',
+            siteName: 'סוכני המידע הציבורי',
             locale: 'he_IL',
             images: [
                 {
                     url: ogImage,
                     width: 1200,
                     height: 630,
-                    alt: 'סוכן המידע הציבורי - AI למידע הפתוח של ישראל',
+                    alt: 'סוכני המידע הציבורי - AI למידע הפתוח של ישראל',
                     type: 'image/png',
                 },
             ],
@@ -57,7 +57,7 @@ export async function generateMetadata(): Promise<Metadata> {
             images: [
                 {
                     url: ogImage,
-                    alt: 'סוכן המידע הציבורי - AI למידע הפתוח של ישראל',
+                    alt: 'סוכני המידע הציבורי - AI למידע הפתוח של ישראל',
                 },
             ],
         },
