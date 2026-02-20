@@ -124,6 +124,13 @@ export function ChatThread({ id }: ChatThreadProps) {
                 <div className='flex flex-col gap-4 md:gap-6 h-full w-full items-center'>
                     <Conversation className='w-full children-noscrollbar'>
                         <ConversationContent className='w-full md:w-4xl pt-14 md:pt-5 mx-auto'>
+                            {!hasMessages && !isStreaming && (
+                                <div className='flex items-center justify-center py-12 md:py-20'>
+                                    <div className='w-full md:w-4xl'>
+                                        <Suggestions onClick={(text) => void sendMessage({ text })} />
+                                    </div>
+                                </div>
+                            )}
                             {messages.map((message, messageIndex) => (
                                 <MessageItem
                                     key={message.id}
@@ -138,7 +145,7 @@ export function ChatThread({ id }: ChatThreadProps) {
                         <ConversationScrollButton />
                     </Conversation>
 
-                    {!isStreaming && (!hasMessages || suggestionsLoading || suggestionsFromTool) && (
+                    {!isStreaming && hasMessages && (suggestionsLoading || suggestionsFromTool) && (
                         <div className='relative z-20 w-full md:w-4xl'>
                             <Suggestions
                                 suggestions={suggestionsFromTool}
