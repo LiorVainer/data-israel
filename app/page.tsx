@@ -1,13 +1,13 @@
 'use client';
 
-import { useRef } from 'react';
+import { useCallback, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import { HeroSection } from '@/components/chat/HeroSection';
 import { GeometricBackground } from '@/components/ui/shape-landing-hero';
-import { StatsSection } from '@/components/landing/StatsSection';
+import { SourcesSection } from '@/components/landing/SourcesSection';
 import { HowItWorksSection } from '@/components/landing/HowItWorksSection';
-import { ExampleOutputsSection } from '@/components/landing/ExampleOutputsSection';
+import { AboutSection } from '@/components/landing/AboutSection';
 import { Footer } from '@/components/landing/Footer';
 import { ScrollToTop } from '@/components/ui/ScrollToTop';
 
@@ -17,8 +17,13 @@ export default function Home() {
 
     const handleStartConversation = () => {
         const chatId = crypto.randomUUID();
-        router.push(`/chat/${chatId}`);
+        router.push(`/chat/${chatId}?new`);
     };
+
+    const handleScrollToAbout = useCallback(() => {
+        const aboutEl = document.getElementById('about');
+        aboutEl?.scrollIntoView({ behavior: 'smooth' });
+    }, []);
 
     return (
         <div ref={scrollRef} className='relative h-full w-full overflow-y-auto'>
@@ -36,15 +41,18 @@ export default function Home() {
                     }}
                     className='flex flex-col gap-4 md:gap-6 w-full items-center justify-center'
                 >
-                    <HeroSection onStartConversation={handleStartConversation} />
+                    <HeroSection
+                        onStartConversation={handleStartConversation}
+                        onScrollToAbout={handleScrollToAbout}
+                    />
                 </motion.div>
             </div>
 
             {/* Below-the-fold sections */}
-            <div className='relative z-10 flex flex-col gap-16 md:gap-24 py-12 md:py-20'>
-                <StatsSection />
+            <div className='relative z-10 flex flex-col gap-16 md:gap-48 py-12 md:py-36'>
+                <AboutSection />
+                <SourcesSection />
                 <HowItWorksSection />
-                <ExampleOutputsSection />
             </div>
 
             <div className='relative z-10'>

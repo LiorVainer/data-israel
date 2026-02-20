@@ -3,12 +3,12 @@
 import { DATA_SOURCE_CONFIG } from '@/constants/tool-data-sources';
 
 export function Footer() {
+    const year = new Date().getFullYear();
+
     return (
         <footer className='w-full border-t border-border/40 bg-card/40 backdrop-blur-sm'>
             <div className='max-w-4xl mx-auto px-4 py-6 flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-muted-foreground'>
-                <div className='flex items-center gap-1'>
-                    <span>מבוסס על נתונים ממקורות רשמיים של ממשלת ישראל</span>
-                </div>
+                <span>&copy; {year} Data Israel. כל הזכויות שמורות.</span>
 
                 <div className='flex items-center gap-4'>
                     <a

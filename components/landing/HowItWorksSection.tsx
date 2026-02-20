@@ -8,11 +8,10 @@ interface StepProps {
     icon: ReactNode;
     title: string;
     description: string;
-    stepNumber: number;
     delay: number;
 }
 
-function Step({ icon, title, description, stepNumber, delay }: StepProps) {
+function Step({ icon, title, description, delay }: StepProps) {
     return (
         <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -21,13 +20,8 @@ function Step({ icon, title, description, stepNumber, delay }: StepProps) {
             transition={{ duration: 0.6, delay, ease: 'easeOut' }}
             className='flex flex-col items-center gap-4 text-center'
         >
-            <div className='relative'>
-                <div className='flex items-center justify-center w-14 h-14 rounded-2xl bg-primary/10 text-primary'>
-                    {icon}
-                </div>
-                <span className='absolute -top-2 -right-2 flex items-center justify-center w-6 h-6 rounded-full bg-action text-background text-xs font-bold'>
-                    {stepNumber}
-                </span>
+            <div className='flex items-center justify-center w-14 h-14 rounded-2xl bg-primary/10 text-primary'>
+                {icon}
             </div>
             <h3 className='text-lg font-semibold text-foreground'>{title}</h3>
             <p className='text-sm text-muted-foreground leading-relaxed max-w-[280px]'>{description}</p>
@@ -73,7 +67,6 @@ export function HowItWorksSection() {
                         icon={step.icon}
                         title={step.title}
                         description={step.description}
-                        stepNumber={i + 1}
                         delay={i * 0.15}
                     />
                 ))}
