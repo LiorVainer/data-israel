@@ -8,33 +8,8 @@
  * @module
  */
 
-import type * as datasets from "../datasets.js";
-import type * as guests from "../guests.js";
-import type * as http from "../http.js";
-import type * as mastra_storage from "../mastra/storage.js";
-import type * as rag from "../rag.js";
-import type * as resources from "../resources.js";
-import type * as search from "../search.js";
-import type * as threads from "../threads.js";
-import type * as users from "../users.js";
-
-import type {
-  ApiFromModules,
-  FilterApi,
-  FunctionReference,
-} from "convex/server";
-
-declare const fullApi: ApiFromModules<{
-  datasets: typeof datasets;
-  guests: typeof guests;
-  http: typeof http;
-  "mastra/storage": typeof mastra_storage;
-  rag: typeof rag;
-  resources: typeof resources;
-  search: typeof search;
-  threads: typeof threads;
-  users: typeof users;
-}>;
+import type { FunctionReference } from "convex/server";
+import type { GenericId as Id } from "convex/values";
 
 /**
  * A utility for referencing Convex functions in your app's public API.
@@ -44,10 +19,241 @@ declare const fullApi: ApiFromModules<{
  * const myFunctionReference = api.myModule.myFunction;
  * ```
  */
-export declare const api: FilterApi<
-  typeof fullApi,
-  FunctionReference<any, "public">
->;
+export declare const api: {
+  datasets: {
+    count: FunctionReference<"query", "public", {}, any>;
+    deleteByCkanId: FunctionReference<
+      "mutation",
+      "public",
+      { ckanId: string },
+      any
+    >;
+    get: FunctionReference<"query", "public", { id: string }, any>;
+    getByCkanId: FunctionReference<"query", "public", { ckanId: string }, any>;
+    list: FunctionReference<
+      "query",
+      "public",
+      { cursor?: string; limit?: number },
+      any
+    >;
+    upsert: FunctionReference<
+      "mutation",
+      "public",
+      {
+        author?: string;
+        ckanId: string;
+        licenseTitle?: string;
+        maintainer?: string;
+        metadataCreated?: string;
+        metadataModified?: string;
+        name: string;
+        notes?: string;
+        organizationId?: string;
+        organizationTitle?: string;
+        tags: Array<string>;
+        title: string;
+      },
+      any
+    >;
+  };
+  guests: {
+    createNewGuest: FunctionReference<
+      "mutation",
+      "public",
+      { sessionId: string },
+      any
+    >;
+    getGuestBySessionId: FunctionReference<
+      "query",
+      "public",
+      { sessionId: string },
+      any
+    >;
+    guestExists: FunctionReference<"query", "public", { guestId: string }, any>;
+  };
+  mastra: {
+    storage: {
+      handle: FunctionReference<"mutation", "public", any, any>;
+    };
+  };
+  resources: {
+    count: FunctionReference<"query", "public", {}, any>;
+    deleteByDataset: FunctionReference<
+      "mutation",
+      "public",
+      { datasetId: string },
+      any
+    >;
+    get: FunctionReference<"query", "public", { id: string }, any>;
+    getByCkanId: FunctionReference<"query", "public", { ckanId: string }, any>;
+    listByDataset: FunctionReference<
+      "query",
+      "public",
+      { datasetId: string },
+      any
+    >;
+    listByFormat: FunctionReference<
+      "query",
+      "public",
+      { format: string; limit?: number },
+      any
+    >;
+    upsert: FunctionReference<
+      "mutation",
+      "public",
+      {
+        ckanId: string;
+        created?: string;
+        datasetCkanId: string;
+        datasetId: string;
+        description?: string;
+        format: string;
+        lastModified?: string;
+        name?: string;
+        size?: number;
+        url: string;
+      },
+      any
+    >;
+  };
+  search: {
+    batchIndexDatasets: FunctionReference<
+      "action",
+      "public",
+      {
+        datasets: Array<{
+          ckanId: string;
+          notes?: string;
+          organizationId?: string;
+          organizationTitle?: string;
+          tags: Array<string>;
+          title: string;
+        }>;
+      },
+      any
+    >;
+    indexDataset: FunctionReference<
+      "action",
+      "public",
+      {
+        ckanId: string;
+        notes?: string;
+        organizationId?: string;
+        organizationTitle?: string;
+        tags: Array<string>;
+        title: string;
+      },
+      any
+    >;
+    indexResource: FunctionReference<
+      "action",
+      "public",
+      {
+        ckanId: string;
+        datasetCkanId: string;
+        description?: string;
+        format: string;
+        name?: string;
+      },
+      any
+    >;
+    searchDatasets: FunctionReference<
+      "action",
+      "public",
+      { limit?: number; organization?: string; query: string; tag?: string },
+      any
+    >;
+    searchResources: FunctionReference<
+      "action",
+      "public",
+      { datasetId?: string; format?: string; limit?: number; query: string },
+      any
+    >;
+  };
+  threads: {
+    deleteThread: FunctionReference<
+      "mutation",
+      "public",
+      { guestId?: string; threadId: string },
+      any
+    >;
+    getAuthResourceId: FunctionReference<"query", "public", {}, any>;
+    getThreadContextWindow: FunctionReference<
+      "query",
+      "public",
+      { threadId: string },
+      any
+    >;
+    listUserThreads: FunctionReference<
+      "query",
+      "public",
+      { guestId?: string },
+      any
+    >;
+    listUserThreadsPaginated: FunctionReference<
+      "query",
+      "public",
+      {
+        guestId?: string;
+        paginationOpts: { cursor: string | null; numItems: number };
+      },
+      any
+    >;
+    renameThread: FunctionReference<
+      "mutation",
+      "public",
+      { guestId?: string; newTitle: string; threadId: string },
+      any
+    >;
+    upsertThreadBilling: FunctionReference<
+      "mutation",
+      "public",
+      {
+        agentName?: string;
+        model: string;
+        provider: string;
+        threadId: string;
+        usage: {
+          cachedInputTokens?: number;
+          completionTokens: number;
+          promptTokens: number;
+          reasoningTokens?: number;
+          totalTokens: number;
+        };
+        userId: string;
+      },
+      any
+    >;
+    upsertThreadContext: FunctionReference<
+      "mutation",
+      "public",
+      {
+        agentName?: string;
+        model: string;
+        provider: string;
+        threadId: string;
+        usage: {
+          cachedInputTokens?: number;
+          completionTokens: number;
+          promptTokens: number;
+          reasoningTokens?: number;
+          totalTokens: number;
+        };
+        userId: string;
+      },
+      any
+    >;
+  };
+  users: {
+    getCurrentUser: FunctionReference<"query", "public", {}, any>;
+    updateThemePreference: FunctionReference<
+      "mutation",
+      "public",
+      { themePreference: "light" | "dark" },
+      any
+    >;
+  };
+};
 
 /**
  * A utility for referencing Convex functions in your app's internal API.
@@ -57,10 +263,72 @@ export declare const api: FilterApi<
  * const myFunctionReference = internal.myModule.myFunction;
  * ```
  */
-export declare const internal: FilterApi<
-  typeof fullApi,
-  FunctionReference<any, "internal">
->;
+export declare const internal: {
+  datasets: {
+    batchInsert: FunctionReference<
+      "mutation",
+      "internal",
+      {
+        datasets: Array<{
+          author?: string;
+          ckanId: string;
+          licenseTitle?: string;
+          maintainer?: string;
+          metadataCreated?: string;
+          metadataModified?: string;
+          name: string;
+          notes?: string;
+          organizationId?: string;
+          organizationTitle?: string;
+          tags: Array<string>;
+          title: string;
+        }>;
+      },
+      any
+    >;
+  };
+  resources: {
+    batchInsert: FunctionReference<
+      "mutation",
+      "internal",
+      {
+        resources: Array<{
+          ckanId: string;
+          created?: string;
+          datasetCkanId: string;
+          datasetId: Id<"datasets">;
+          description?: string;
+          format: string;
+          lastModified?: string;
+          name?: string;
+          size?: number;
+          url: string;
+        }>;
+      },
+      any
+    >;
+  };
+  users: {
+    deleteByClerkId: FunctionReference<
+      "mutation",
+      "internal",
+      { clerkId: string },
+      any
+    >;
+    upsertFromClerk: FunctionReference<
+      "mutation",
+      "internal",
+      {
+        clerkId: string;
+        email: string;
+        firstName?: string;
+        imageUrl?: string;
+        lastName?: string;
+      },
+      any
+    >;
+  };
+};
 
 export declare const components: {
   rag: {

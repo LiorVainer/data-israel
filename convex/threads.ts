@@ -3,12 +3,17 @@
  *
  * These thin queries provide real-time reactivity for the UI sidebar.
  * All thread CRUD operations are handled by Mastra's ConvexStore.
+ * Uses cRPC procedure builders with Zod validation and middleware-based auth.
  */
 
-import { mutation, query } from './_generated/server';
-import { paginationOptsValidator } from 'convex/server';
-import { v } from 'convex/values';
-import { vUsage, vProviderMetadata } from '@convex-dev/agent';
+import { z } from 'zod';
+import {
+    guestAwareMutation,
+    guestAwareQuery,
+    optionalAuthQuery,
+    publicMutation,
+    publicQuery,
+} from './lib/crpc';
 
 /**
  * Thread data returned by listUserThreads query.
@@ -22,48 +27,33 @@ export interface ThreadListItem {
 }
 
 /**
- * Lists all threads for a given user/resource.
- *
- * This query reads directly from the mastra_threads table and provides
- * real-time reactivity for the sidebar thread list.
- *
- * @param resourceId - The user/resource identifier to filter threads by
- * @returns Array of threads ordered by creation time (newest first)
- */
-/**
  * Resolves the authenticated user's canonical resource identifier.
  *
- * Uses Convex auth (Clerk JWT) to get the user's identity subject.
+ * Uses optionalAuthQuery middleware - ctx.identity is nullable.
  * Called from Server Components via fetchQuery with a Clerk token.
  *
  * @returns The Clerk user subject string, or null if unauthenticated
  */
-export const getAuthResourceId = query({
-    handler: async (ctx) => {
-        const identity = await ctx.auth.getUserIdentity();
-        console.log({ identity });
-        return identity?.subject ?? null;
-    },
-});
+export const getAuthResourceId = optionalAuthQuery
+    .query(async ({ ctx }) => {
+        return ctx.identity?.subject ?? null;
+    });
 
-export const listUserThreads = query({
-    args: {
-        guestId: v.optional(v.id('guests')),
-    },
-    handler: async (ctx, { guestId }) => {
-        const identity = await ctx.auth.getUserIdentity();
-
-        // Must have either authenticated user or guestId
-        if (!identity && !guestId) {
-            throw new Error('Not authenticated and no guest ID provided');
-        }
-
-        const resourceId = identity?.subject || guestId;
-
-        // Query threads using the by_resource index for efficient filtering
+/**
+ * Lists all threads for a given user/resource.
+ *
+ * Uses guestAwareQuery middleware which resolves ctx.resourceId
+ * from either Clerk identity.subject or input.guestId.
+ *
+ * @returns Array of threads ordered by creation time (newest first)
+ */
+export const listUserThreads = guestAwareQuery
+    .input(z.object({ guestId: z.string().optional() }))
+    .query(async ({ ctx }) => {
+        // ctx.resourceId is resolved by guestAwareMiddleware
         const threads = await ctx.db
             .query('mastra_threads')
-            .withIndex('by_resource', (q) => q.eq('resourceId', resourceId))
+            .withIndex('by_resource', (q) => q.eq('resourceId', ctx.resourceId))
             .order('desc')
             .collect();
 
@@ -75,68 +65,48 @@ export const listUserThreads = query({
             metadata: thread.metadata,
             _creationTime: thread._creationTime,
         }));
-    },
-});
+    });
 
 /**
  * Paginated version of listUserThreads for infinite scroll in the sidebar.
  *
- * Uses Convex cursor-based pagination for efficient loading of large thread lists.
+ * Uses guestAwareQuery middleware with Zod-validated pagination options.
  *
- * @param guestId - Optional guest identifier for unauthenticated users
- * @param paginationOpts - Pagination options (numItems, cursor)
  * @returns Paginated result with page of threads, isDone flag, and continueCursor
  */
-export const listUserThreadsPaginated = query({
-    args: {
-        guestId: v.optional(v.id('guests')),
-        paginationOpts: paginationOptsValidator,
-    },
-    handler: async (ctx, { guestId, paginationOpts }) => {
-        const identity = await ctx.auth.getUserIdentity();
-
-        if (!identity && !guestId) {
-            return { page: [], isDone: true, continueCursor: '' };
-        }
-
-        const resourceId = identity?.subject || guestId;
-
+export const listUserThreadsPaginated = guestAwareQuery
+    .input(
+        z.object({
+            guestId: z.string().optional(),
+            paginationOpts: z.object({
+                numItems: z.number(),
+                cursor: z.union([z.string(), z.null()]),
+            }),
+        }),
+    )
+    .query(async ({ ctx, input }) => {
         return await ctx.db
             .query('mastra_threads')
-            .withIndex('by_resource', (q) => q.eq('resourceId', resourceId))
+            .withIndex('by_resource', (q) => q.eq('resourceId', ctx.resourceId))
             .order('desc')
-            .paginate(paginationOpts);
-    },
-});
+            .paginate(input.paginationOpts);
+    });
 
 /**
  * Deletes a thread and all its associated messages.
  *
+ * Uses guestAwareMutation middleware which resolves ctx.resourceId.
  * Performs authorization check to ensure the caller owns the thread.
- * Uses the `by_record_id` index on mastra_threads to find the thread by
- * its Mastra UUID, then the `by_thread` index on mastra_messages to
- * collect and delete all related messages before removing the thread itself.
  *
  * @param threadId - The Mastra UUID of the thread (not the Convex _id)
- * @param guestId - Optional guest identifier for unauthenticated users
  */
-export const deleteThread = mutation({
-    args: {
-        threadId: v.string(),
-        guestId: v.optional(v.id('guests')),
-    },
-    handler: async (ctx, { threadId, guestId }) => {
-        const identity = await ctx.auth.getUserIdentity();
-        const resourceId = identity?.subject ?? guestId;
-
-        if (!resourceId) {
-            throw new Error('Not authenticated and no guest ID provided');
-        }
-
+export const deleteThread = guestAwareMutation
+    .input(z.object({ threadId: z.string(), guestId: z.string().optional() }))
+    .mutation(async ({ ctx, input }) => {
         // Find thread by its Mastra UUID (not Convex _id)
         const thread = await ctx.db
             .query('mastra_threads')
-            .withIndex('by_record_id', (q) => q.eq('id', threadId))
+            .withIndex('by_record_id', (q) => q.eq('id', input.threadId))
             .unique();
 
         if (!thread) {
@@ -144,14 +114,14 @@ export const deleteThread = mutation({
         }
 
         // Authorization: verify caller owns this thread
-        if (thread.resourceId !== resourceId) {
+        if (thread.resourceId !== ctx.resourceId) {
             throw new Error('Not authorized to delete this thread');
         }
 
         // Delete all messages belonging to this thread
         const messages = await ctx.db
             .query('mastra_messages')
-            .withIndex('by_thread', (q) => q.eq('thread_id', threadId))
+            .withIndex('by_thread', (q) => q.eq('thread_id', input.threadId))
             .collect();
 
         for (const message of messages) {
@@ -160,94 +130,88 @@ export const deleteThread = mutation({
 
         // Delete the thread itself
         await ctx.db.delete(thread._id);
-    },
-});
+    });
 
 /**
  * Renames a thread by updating its title.
  *
+ * Uses guestAwareMutation middleware which resolves ctx.resourceId.
  * Performs authorization check to ensure the caller owns the thread.
- * Uses the `by_record_id` index on mastra_threads to locate the thread,
- * then patches the title and updatedAt timestamp.
  *
  * @param threadId - The Mastra UUID of the thread (not the Convex _id)
  * @param newTitle - The new title to set on the thread
- * @param guestId - Optional guest identifier for unauthenticated users
  */
-export const renameThread = mutation({
-    args: {
-        threadId: v.string(),
-        newTitle: v.string(),
-        guestId: v.optional(v.id('guests')),
-    },
-    handler: async (ctx, { threadId, newTitle, guestId }) => {
-        const identity = await ctx.auth.getUserIdentity();
-        const resourceId = identity?.subject ?? guestId;
-
-        if (!resourceId) {
-            throw new Error('Not authenticated and no guest ID provided');
-        }
-
+export const renameThread = guestAwareMutation
+    .input(z.object({ threadId: z.string(), newTitle: z.string(), guestId: z.string().optional() }))
+    .mutation(async ({ ctx, input }) => {
         const thread = await ctx.db
             .query('mastra_threads')
-            .withIndex('by_record_id', (q) => q.eq('id', threadId))
+            .withIndex('by_record_id', (q) => q.eq('id', input.threadId))
             .unique();
 
         if (!thread) {
             throw new Error('Thread not found');
         }
 
-        if (thread.resourceId !== resourceId) {
+        if (thread.resourceId !== ctx.resourceId) {
             throw new Error('Not authorized to rename this thread');
         }
 
         await ctx.db.patch(thread._id, {
-            title: newTitle,
+            title: input.newTitle,
             updatedAt: new Date().toISOString(),
         });
-    },
+    });
+
+// ---------------------------------------------------------------------------
+// Zod schema for usage matching vUsage from @convex-dev/agent
+// ---------------------------------------------------------------------------
+
+const zUsage = z.object({
+    promptTokens: z.number(),
+    completionTokens: z.number(),
+    totalTokens: z.number(),
+    reasoningTokens: z.number().optional(),
+    cachedInputTokens: z.number().optional(),
 });
 
 /**
  * Upserts the context window record for a thread.
  *
- * One record per thread — each turn adds to the running total.
- *
- * @param threadId - The thread UUID
- * @param userId - The user or guest identifier
- * @param model - The model identifier used
- * @param provider - The provider name
- * @param usage - Context window usage from this turn to add to the running total
+ * One record per thread - each turn adds to the running total.
+ * Uses publicMutation since this is called from the API route (no auth context).
  */
-export const upsertThreadContext = mutation({
-    args: {
-        threadId: v.string(),
-        userId: v.string(),
-        agentName: v.optional(v.string()),
-        model: v.string(),
-        provider: v.string(),
-        usage: vUsage,
-    },
-    handler: async (ctx, args) => {
+export const upsertThreadContext = publicMutation
+    .input(
+        z.object({
+            threadId: z.string(),
+            userId: z.string(),
+            agentName: z.string().optional(),
+            model: z.string(),
+            provider: z.string(),
+            usage: zUsage,
+        }),
+    )
+    .mutation(async ({ ctx, input }) => {
         const existing = await ctx.db
             .query('thread_usage')
-            .withIndex('by_thread', (q) => q.eq('threadId', args.threadId))
+            .withIndex('by_thread', (q) => q.eq('threadId', input.threadId))
             .first();
 
         if (existing) {
             await ctx.db.patch(existing._id, {
-                model: args.model,
-                provider: args.provider,
-                agentName: args.agentName,
+                model: input.model,
+                provider: input.provider,
+                agentName: input.agentName,
                 usage: {
-                    promptTokens: (existing.usage.promptTokens ?? 0) + (args.usage.promptTokens ?? 0),
+                    promptTokens: (existing.usage.promptTokens ?? 0) + (input.usage.promptTokens ?? 0),
                     completionTokens:
-                        (existing.usage.completionTokens ?? 0) + (args.usage.completionTokens ?? 0),
-                    totalTokens: (existing.usage.totalTokens ?? 0) + (args.usage.totalTokens ?? 0),
+                        (existing.usage.completionTokens ?? 0) + (input.usage.completionTokens ?? 0),
+                    totalTokens: (existing.usage.totalTokens ?? 0) + (input.usage.totalTokens ?? 0),
                     reasoningTokens:
-                        (existing.usage.reasoningTokens ?? 0) + (args.usage.reasoningTokens ?? 0) || undefined,
+                        (existing.usage.reasoningTokens ?? 0) + (input.usage.reasoningTokens ?? 0) || undefined,
                     cachedInputTokens:
-                        (existing.usage.cachedInputTokens ?? 0) + (args.usage.cachedInputTokens ?? 0) ||
+                        (existing.usage.cachedInputTokens ?? 0) + (input.usage.cachedInputTokens ?? 0) ||
                         undefined,
                 },
                 createdAt: Date.now(),
@@ -256,27 +220,23 @@ export const upsertThreadContext = mutation({
         }
 
         return ctx.db.insert('thread_usage', {
-            ...args,
+            ...input,
             createdAt: Date.now(),
         });
-    },
-});
+    });
 
 /**
  * Returns the context window snapshot for a thread.
  *
  * Single record per thread representing the current context window size.
  * Used by the ContextWindowIndicator to display usage relative to the model's limit.
- *
- * @param threadId - The thread UUID to look up
- * @returns Snapshot: promptTokens, completionTokens, totalTokens
  */
-export const getThreadContextWindow = query({
-    args: { threadId: v.string() },
-    handler: async (ctx, { threadId }) => {
+export const getThreadContextWindow = publicQuery
+    .input(z.object({ threadId: z.string() }))
+    .query(async ({ ctx, input }) => {
         const record = await ctx.db
             .query('thread_usage')
-            .withIndex('by_thread', (q) => q.eq('threadId', threadId))
+            .withIndex('by_thread', (q) => q.eq('threadId', input.threadId))
             .first();
 
         if (!record) {
@@ -288,51 +248,46 @@ export const getThreadContextWindow = query({
             completionTokens: record.usage.completionTokens ?? 0,
             totalTokens: record.usage.totalTokens ?? 0,
         };
-    },
-});
+    });
 
 /**
  * Upserts accumulated token billing for a thread.
  *
- * One record per thread — each turn adds to the running total.
+ * One record per thread - each turn adds to the running total.
  * Tracks the real API cost (sum of all steps across all turns).
- * Not displayed in the UI; used for cost tracking and analytics only.
- *
- * @param threadId - The thread UUID
- * @param userId - The user or guest identifier
- * @param model - The model identifier used
- * @param provider - The provider name
- * @param usage - This turn's accumulated token usage to add to the running total
+ * Uses publicMutation since this is called from the API route (no auth context).
  */
-export const upsertThreadBilling = mutation({
-    args: {
-        threadId: v.string(),
-        userId: v.string(),
-        agentName: v.optional(v.string()),
-        model: v.string(),
-        provider: v.string(),
-        usage: vUsage,
-    },
-    handler: async (ctx, args) => {
+export const upsertThreadBilling = publicMutation
+    .input(
+        z.object({
+            threadId: z.string(),
+            userId: z.string(),
+            agentName: z.string().optional(),
+            model: z.string(),
+            provider: z.string(),
+            usage: zUsage,
+        }),
+    )
+    .mutation(async ({ ctx, input }) => {
         const existing = await ctx.db
             .query('thread_billing')
-            .withIndex('by_thread', (q) => q.eq('threadId', args.threadId))
+            .withIndex('by_thread', (q) => q.eq('threadId', input.threadId))
             .first();
 
         if (existing) {
             await ctx.db.patch(existing._id, {
-                model: args.model,
-                provider: args.provider,
-                agentName: args.agentName,
+                model: input.model,
+                provider: input.provider,
+                agentName: input.agentName,
                 usage: {
-                    promptTokens: (existing.usage.promptTokens ?? 0) + (args.usage.promptTokens ?? 0),
+                    promptTokens: (existing.usage.promptTokens ?? 0) + (input.usage.promptTokens ?? 0),
                     completionTokens:
-                        (existing.usage.completionTokens ?? 0) + (args.usage.completionTokens ?? 0),
-                    totalTokens: (existing.usage.totalTokens ?? 0) + (args.usage.totalTokens ?? 0),
+                        (existing.usage.completionTokens ?? 0) + (input.usage.completionTokens ?? 0),
+                    totalTokens: (existing.usage.totalTokens ?? 0) + (input.usage.totalTokens ?? 0),
                     reasoningTokens:
-                        (existing.usage.reasoningTokens ?? 0) + (args.usage.reasoningTokens ?? 0) || undefined,
+                        (existing.usage.reasoningTokens ?? 0) + (input.usage.reasoningTokens ?? 0) || undefined,
                     cachedInputTokens:
-                        (existing.usage.cachedInputTokens ?? 0) + (args.usage.cachedInputTokens ?? 0) ||
+                        (existing.usage.cachedInputTokens ?? 0) + (input.usage.cachedInputTokens ?? 0) ||
                         undefined,
                 },
                 createdAt: Date.now(),
@@ -341,8 +296,7 @@ export const upsertThreadBilling = mutation({
         }
 
         return ctx.db.insert('thread_billing', {
-            ...args,
+            ...input,
             createdAt: Date.now(),
         });
-    },
-});
+    });

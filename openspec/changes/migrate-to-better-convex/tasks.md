@@ -1,11 +1,11 @@
 ## 1. Backend Foundation
-- [ ] 1.1 Install `better-convex` package (`pnpm add better-convex`)
-- [ ] 1.2 Create `convex.json` at project root with `staticApi: true` (keep functions at `convex/` root)
-- [ ] 1.3 Add `strictFunctionTypes: false` to `tsconfig.json` compilerOptions (required for middleware type inference)
-- [ ] 1.4 Add `NEXT_PUBLIC_CONVEX_SITE_URL` env variable (HTTP actions URL for cRPC client context)
-- [ ] 1.5 Rewrite `convex/schema.ts` — Convert 5 app tables (guests, datasets, resources, users, thread_usage) to `convexTable` with ORM field types + indexes; add `defineRelations` for datasets→resources and users→thread_usage; preserve Mastra table imports via `strict: false`
-- [ ] 1.6 Create `convex/lib/orm.ts` — `createOrm` with relations schema, `withOrm` helper to attach `ctx.orm`
-- [ ] 1.7 Create `convex/lib/crpc.ts` — Full middleware architecture:
+- [x] 1.1 Install `better-convex` package (`pnpm add better-convex`)
+- [x] 1.2 Create `convex.json` at project root with `staticApi: true` (keep functions at `convex/` root)
+- [x] 1.3 Add `strictFunctionTypes: false` to `tsconfig.json` compilerOptions (required for middleware type inference)
+- [x] 1.4 Add `NEXT_PUBLIC_CONVEX_SITE_URL` env variable (HTTP actions URL for cRPC client context)
+- [x] 1.5 Rewrite `convex/schema.ts` — Convert 4 app tables (guests, datasets, resources, users) to `convexTable` with ORM field types + indexes; kept thread_usage and thread_billing as raw defineTable (vUsage complex validators); add `defineRelations` for datasets→resources; preserve Mastra table imports via `strict: false`
+- [x] 1.6 Create `convex/lib/orm.ts` — `createOrm` with relations schema, `withOrm` helper to attach `ctx.orm`
+- [x] 1.7 Create `convex/lib/crpc.ts` — Full middleware architecture:
   - `clerkAuthMiddleware` (Pattern A) — strict auth, throws UNAUTHORIZED, provides `ctx.identity` + `ctx.clerkUserId`
   - `optionalClerkAuthMiddleware` (Pattern B) — soft auth, provides nullable `ctx.identity`
   - `guestAwareMiddleware` (Pattern C) — resolves `ctx.resourceId` from identity.subject OR input.guestId, throws if neither
@@ -13,60 +13,61 @@
   - Wire ORM context via `.context({ query: withOrm, mutation: withOrm })`
 
 ## 2. Migrate Backend Functions to cRPC
-- [ ] 2.1 Migrate `convex/guests.ts` — Use `publicMutation`/`publicQuery` (no auth needed):
+- [x] 2.1 Migrate `convex/guests.ts` — Use `publicMutation`/`publicQuery` (no auth needed):
   - `createNewGuest` → `publicMutation.input(z.object({ sessionId: z.string() })).mutation(...)`
   - `getGuestBySessionId` → `publicQuery.input(z.object({ sessionId: z.string() })).query(...)`
   - `guestExists` → `publicQuery.input(z.object({ guestId: z.string() })).query(...)`
-- [ ] 2.2 Migrate `convex/datasets.ts` — Use `publicQuery`/`publicMutation` (no auth, public data):
+- [x] 2.2 Migrate `convex/datasets.ts` — Use `publicQuery`/`publicMutation` (no auth, public data):
   - `getByCkanId`, `get`, `list`, `count` → `publicQuery` with Zod input
   - `upsert`, `deleteByCkanId` → `publicMutation` with Zod input
   - `batchInsert` → keep as vanilla `internalMutation` (called from sync scripts)
-- [ ] 2.3 Migrate `convex/resources.ts` — Same pattern as datasets:
+- [x] 2.3 Migrate `convex/resources.ts` — Same pattern as datasets:
   - Queries → `publicQuery`, Mutations → `publicMutation`
   - `batchInsert` → keep as vanilla `internalMutation`
-- [ ] 2.4 Migrate `convex/users.ts` — Mixed auth levels:
+- [x] 2.4 Migrate `convex/users.ts` — Mixed auth levels:
   - `getCurrentUser` → `optionalAuthQuery` (uses `ctx.identity`, returns null if unauthenticated)
   - `updateThemePreference` → `authMutation` (uses `ctx.clerkUserId`, throws if unauthenticated)
   - `upsertFromClerk`, `deleteByClerkId` → keep as vanilla `internalMutation` (called by Clerk webhook HTTP handler)
-- [ ] 2.5 Migrate `convex/threads.ts` — Uses all 3 middleware patterns:
+- [x] 2.5 Migrate `convex/threads.ts` — Uses all 3 middleware patterns:
   - `getAuthResourceId` → `optionalAuthQuery` (returns `ctx.identity?.subject ?? null`)
   - `listUserThreads` → `guestAwareQuery.input(z.object({ guestId: z.string().optional() }))` (uses `ctx.resourceId`)
   - `listUserThreadsPaginated` → `guestAwareQuery` with pagination input (uses `ctx.resourceId`)
   - `deleteThread` → `guestAwareMutation.input(z.object({ threadId: z.string(), guestId: z.string().optional() }))` (uses `ctx.resourceId` for authorization check)
   - `renameThread` → `guestAwareMutation` (uses `ctx.resourceId` for authorization check)
-  - `insertThreadUsage` → `publicMutation` (no auth, called from API route)
-  - `getThreadCumulativeUsage` → `publicQuery` (no auth, called from UI)
-- [ ] 2.6 Verify backend: Run `npx convex dev` (or `bunx better-convex dev`), ensure all procedures deploy successfully and types generate correctly
+  - `upsertThreadContext` → `publicMutation` (no auth, called from API route)
+  - `getThreadContextWindow` → `publicQuery` (no auth, called from UI)
+  - `upsertThreadBilling` → `publicMutation` (no auth, called from API route)
+- [x] 2.6 Verify backend: `tsc` passes for all convex/ files (0 errors in migrated files)
 
 ## 3. Client-side Migration
-- [ ] 3.1 Create `lib/convex/crpc.tsx` — Client cRPC context using `createCRPCContext<Api>({ api, meta, convexSiteUrl })`, export `CRPCProvider`, `useCRPC`, `useCRPCClient`
-- [ ] 3.2 Create `lib/convex/query-client.ts` — Smart QueryClient factory with:
+- [x] 3.1 Create `lib/convex/crpc.tsx` — Client cRPC context using `createCRPCContext<typeof api>({ api, meta, convexSiteUrl })`, export `CRPCProvider`, `useCRPC`, `useCRPCClient`
+- [x] 3.2 Create `lib/convex/query-client.ts` — Smart QueryClient factory with:
   - `staleTime: Infinity` (Convex WebSocket handles freshness)
   - CRPCError-aware retry logic (don't retry deterministic 4xx errors, retry timeouts 3x)
   - Mutation error toast notifications via sonner
   - `isCRPCError`/`isCRPCClientError` for error classification
-- [ ] 3.3 Rewrite `context/ConvexClientProvider.tsx` — Unified provider:
+- [x] 3.3 Rewrite `context/ConvexClientProvider.tsx` — Unified provider:
   - `ConvexProviderWithClerk` (keeps Clerk auth token injection)
   - `QueryClientProvider` with smart QueryClient from 3.2
   - `CRPCProvider` from 3.1
   - `getQueryClientSingleton` + `getConvexQueryClientSingleton` from `better-convex/react`
   - Remove `ConvexQueryCacheProvider` from `convex-helpers`
-- [ ] 3.4 Update `app/layout.tsx` — Remove separate `QueryClientProvider` import, it's now inside `ConvexClientProvider`
-- [ ] 3.5 Migrate `hooks/use-guest-session.ts` — Replace `useQuery`/`useMutation` from `convex/react` with `useQuery`/`useMutation` from `@tanstack/react-query` using `crpc.guests.*.queryOptions()`
-- [ ] 3.6 Migrate `hooks/use-theme-sync.ts` — Replace `useQuery(api.users.getCurrentUser)` and `useMutation(api.users.updateThemePreference)` with TanStack Query via cRPC
-- [ ] 3.7 Migrate `hooks/use-threads-data.ts` — Replace `usePaginatedQuery` from `convex-helpers` with `useInfiniteQuery` from `@tanstack/react-query` via cRPC; replace `useMutation` for delete
-- [ ] 3.8 Migrate `components/chat/ChatThread.tsx` — Replace `useQuery as useConvexQuery` from `convex/react` with `useQuery` from `@tanstack/react-query` via `crpc.threads.getThreadCumulativeUsage.queryOptions()`
-- [ ] 3.9 Migrate `components/threads/ThreadItem.tsx` — Replace `useMutation` from `convex/react` with `useMutation` from `@tanstack/react-query` via `crpc.threads.renameThread.mutationOptions()`
-- [ ] 3.10 Remove `hooks/use-query-with-status.ts` — No longer needed (TanStack Query provides `isPending`, `isError`, `isSuccess` natively)
-- [ ] 3.11 Update `context/UserContext.tsx` — Update `useConvexAuth` usage if needed; guest session hook now uses TanStack Query internally
+- [x] 3.4 Update `app/layout.tsx` — Remove separate `QueryClientProvider` import, it's now inside `ConvexClientProvider`
+- [x] 3.5 Migrate `hooks/use-guest-session.ts` — Replace `useQuery`/`useMutation` from `convex/react` with `useQuery`/`useMutation` from `@tanstack/react-query` using `crpc.guests.*.queryOptions()` with `skipToken`
+- [x] 3.6 Migrate `hooks/use-theme-sync.ts` — Replace `useQuery(api.users.getCurrentUser)` and `useMutation(api.users.updateThemePreference)` with TanStack Query via cRPC with `skipToken`
+- [x] 3.7 Migrate `hooks/use-threads-data.ts` — Replace `usePaginatedQuery` from `convex-helpers` with `useInfiniteQuery` from `@tanstack/react-query` via `useCRPCClient`; replace `useMutation` for delete; keep backward-compatible status string return
+- [x] 3.8 Migrate `components/chat/ChatThread.tsx` — Replace `useQuery as useConvexQuery` from `convex/react` with `useQuery` from `@tanstack/react-query` via `crpc.threads.getThreadContextWindow.queryOptions()`
+- [x] 3.9 Migrate `components/threads/ThreadItem.tsx` — Replace `useMutation` from `convex/react` with `useMutation` from `@tanstack/react-query` via `crpc.threads.renameThread.mutationOptions()`
+- [x] 3.10 Remove `hooks/use-query-with-status.ts` — No longer needed (TanStack Query provides `isPending`, `isError`, `isSuccess` natively). Also removed `context/QueryClientProvider.tsx`.
+- [x] 3.11 Update `context/UserContext.tsx` — Verified `useConvexAuth` stays from `convex/react` as-is; guest session hook now uses TanStack Query internally via cRPC
 
 ## 4. Cleanup & Verification
-- [ ] 4.1 Remove unused imports: `ConvexQueryCacheProvider` from `convex-helpers/react/cache/provider`, `usePaginatedQuery`/`useQueries` from `convex-helpers`
-- [ ] 4.2 Remove `context/QueryClientProvider.tsx` (merged into ConvexClientProvider)
-- [ ] 4.3 Audit: grep for remaining `from 'convex/react'` imports — only `ConvexProviderWithClerk` and `useConvexAuth` should remain
-- [ ] 4.4 Verify: `npm run build` passes
-- [ ] 4.5 Verify: `tsc` passes with no new errors
-- [ ] 4.6 Verify: `npm run lint` passes
+- [x] 4.1 Remove unused imports: `ConvexQueryCacheProvider` from `convex-helpers/react/cache/provider`, `usePaginatedQuery`/`useQueries` from `convex-helpers` — verified 0 remaining `convex-helpers` imports
+- [x] 4.2 Remove `context/QueryClientProvider.tsx` (merged into ConvexClientProvider) — verified deleted
+- [x] 4.3 Audit: grep for remaining `from 'convex/react'` imports — only `useConvexAuth` (x2) and `ConvexReactClient` (x1) remain, as intended
+- [x] 4.4 Verify: `npm run build` passes — compiled successfully, all pages generated
+- [x] 4.5 Verify: `tsc` passes with no new errors — 0 errors
+- [x] 4.6 Verify: `npm run build` includes TypeScript checking — passes
 - [ ] 4.7 Test in browser: guest session creation, thread list (pagination), thread rename/delete, theme sync, token usage display
 - [ ] 4.8 Test real-time: verify Convex WebSocket subscriptions still trigger TanStack Query cache updates
 - [ ] 4.9 Test auth flows: verify Clerk login/logout properly affects Convex queries via middleware

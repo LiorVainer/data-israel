@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useRef, useCallback } from 'react';
-import { useMutation } from 'convex/react';
-import { api } from '@/convex/_generated/api';
+import { useMutation } from '@tanstack/react-query';
+import { useCRPC } from '@/lib/convex/crpc';
 
 import { useUser } from '@/context/UserContext';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -37,7 +37,8 @@ interface ThreadItemProps {
 export function ThreadItem({ thread, isActive, onSelect, onDelete }: ThreadItemProps) {
     const { guestId } = useUser();
     const isMobile = useIsMobile();
-    const renameMutation = useMutation(api.threads.renameThread);
+    const crpc = useCRPC();
+    const renameMutation = useMutation(crpc.threads.renameThread.mutationOptions());
 
     // Rename state
     const [isRenaming, setIsRenaming] = useState(false);
@@ -61,7 +62,7 @@ export function ThreadItem({ thread, isActive, onSelect, onDelete }: ThreadItemP
             return;
         }
         try {
-            await renameMutation({
+            await renameMutation.mutateAsync({
                 threadId: thread.id,
                 newTitle: trimmed,
                 guestId: guestId ?? undefined,

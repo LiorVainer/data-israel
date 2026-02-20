@@ -11,6 +11,7 @@ interface ContextWindowIndicatorProps {
 }
 
 const THRESHOLDS = {
+    SHOWN: process.env.NODE_ENV === 'production' ? 60 : 0,
     WARNING: 70,
     CRITICAL: 90,
 } as const;
@@ -41,18 +42,20 @@ export function ContextWindowIndicator({ usedTokens, maxTokens }: ContextWindowI
     const isMobile = useIsMobile();
 
     return (
-        <div className={cn('flex gap-1.5 flex-col w-full sm:justify-end sm:items-end px-1')}>
-            <div className='flex gap-1 md:gap-4 sm:items-end md:items-center flex-col md:flex-row sm:justify-end'>
-                <div className='flex text-xs text-muted-foreground sm:justify-end' dir='rtl'>
-                    <span className='whitespace-nowrap'>{percentage}% מכמות המילים המקסימלית לשיחה נוצלו</span>
+        percentage > THRESHOLDS.SHOWN && (
+            <div className={cn('flex gap-1.5 flex-col w-full sm:justify-end sm:items-end px-1')}>
+                <div className='flex gap-1 md:gap-4 sm:items-end md:items-center flex-col md:flex-row sm:justify-end'>
+                    <div className='flex text-xs text-muted-foreground sm:justify-end' dir='rtl'>
+                        <span className='whitespace-nowrap'>{percentage}% מכמות המילים המקסימלית לשיחה נוצלו</span>
+                    </div>
+                    <Progress value={percentage} style={indicatorStyle} />
                 </div>
-                <Progress value={percentage} style={indicatorStyle} />
+                {isWarning && (
+                    <p className='text-xs text-amber-600 dark:text-amber-400 sm:text-left' dir='rtl'>
+                        אחוז גבוה עלול לגרום לירידה באיכות התשובות. מומלץ לפתוח שיחה חדשה.
+                    </p>
+                )}
             </div>
-            {isWarning && (
-                <p className='text-xs text-amber-600 dark:text-amber-400 sm:text-left' dir='rtl'>
-                    אחוז גבוה עלול לגרום לירידה באיכות התשובות. מומלץ לפתוח שיחה חדשה.
-                </p>
-            )}
-        </div>
+        )
     );
 }

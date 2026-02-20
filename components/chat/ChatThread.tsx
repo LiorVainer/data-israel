@@ -5,8 +5,7 @@ import { DefaultChatTransport, UIMessage } from 'ai';
 import { useEffect, useMemo, useRef } from 'react';
 import { useAuth } from '@clerk/nextjs';
 import { useQuery } from '@tanstack/react-query';
-import { useQuery as useConvexQuery } from 'convex/react';
-import { api } from '@/convex/_generated/api';
+import { useCRPC } from '@/lib/convex/crpc';
 import { AgentConfig } from '@/agents/agent.config';
 import { threadService } from '@/services/thread.service';
 import { Conversation, ConversationContent, ConversationScrollButton } from '@/components/ai-elements/conversation';
@@ -33,7 +32,10 @@ export function ChatThread({ id }: ChatThreadProps) {
 
     const userId = clerkUserId ?? guestId;
 
-    const contextWindow = useConvexQuery(api.threads.getThreadContextWindow, { threadId: id });
+    const crpc = useCRPC();
+    const { data: contextWindow } = useQuery(
+        crpc.threads.getThreadContextWindow.queryOptions({ threadId: id }),
+    );
     const totalTokens = contextWindow?.totalTokens ?? 0;
 
     const [initialMessageData, , removeInitialMessage] = useSessionStorage<InitialMessageData>(INITIAL_MESSAGE_KEY);

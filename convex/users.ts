@@ -1,10 +1,20 @@
-import { internalMutation, mutation, query } from './_generated/server';
+/**
+ * User Convex Functions
+ *
+ * Uses cRPC procedure builders with Zod validation for auth-aware operations.
+ * Internal mutations (Clerk webhook handlers) remain as vanilla internalMutation.
+ */
+
+import { z } from 'zod';
+import { internalMutation } from './_generated/server';
 import { v } from 'convex/values';
+import { authMutation, optionalAuthQuery } from './lib/crpc';
 
 /**
  * Upsert a user from Clerk webhook data.
  * If user exists, updates their profile fields (preserving themePreference).
  * If not, creates a new user record.
+ * Kept as vanilla internalMutation - called by Clerk webhook HTTP handler.
  */
 export const upsertFromClerk = internalMutation({
     args: {
@@ -49,6 +59,7 @@ export const upsertFromClerk = internalMutation({
 /**
  * Delete a user by their Clerk ID.
  * Called when a user.deleted webhook event is received.
+ * Kept as vanilla internalMutation - called by Clerk webhook HTTP handler.
  */
 export const deleteByClerkId = internalMutation({
     args: {
@@ -68,50 +79,39 @@ export const deleteByClerkId = internalMutation({
 
 /**
  * Get the current authenticated user.
- * Uses ctx.auth.getUserIdentity() to identify the Clerk user,
- * then looks up the corresponding Convex user record.
+ * Uses optionalAuthQuery middleware - ctx.identity is nullable.
+ * Returns null if not authenticated or user not found in database.
  */
-export const getCurrentUser = query({
-    args: {},
-    handler: async (ctx) => {
-        const identity = await ctx.auth.getUserIdentity();
-        if (!identity) {
+export const getCurrentUser = optionalAuthQuery
+    .query(async ({ ctx }) => {
+        if (!ctx.identity) {
             return null;
         }
 
         const user = await ctx.db
             .query('users')
-            .withIndex('by_clerk_id', (q) => q.eq('clerkId', identity.subject))
+            .withIndex('by_clerk_id', (q) => q.eq('clerkId', ctx.clerkUserId!))
             .first();
 
         return user;
-    },
-});
+    });
 
 /**
  * Update the current user's theme preference.
- * Requires authentication - throws if not logged in.
+ * Uses authMutation middleware - ctx.clerkUserId is guaranteed non-null.
  */
-export const updateThemePreference = mutation({
-    args: {
-        themePreference: v.union(v.literal('light'), v.literal('dark')),
-    },
-    handler: async (ctx, { themePreference }) => {
-        const identity = await ctx.auth.getUserIdentity();
-        if (!identity) {
-            throw new Error('Not authenticated');
-        }
-
+export const updateThemePreference = authMutation
+    .input(z.object({ themePreference: z.union([z.literal('light'), z.literal('dark')]) }))
+    .mutation(async ({ ctx, input }) => {
         const user = await ctx.db
             .query('users')
-            .withIndex('by_clerk_id', (q) => q.eq('clerkId', identity.subject))
+            .withIndex('by_clerk_id', (q) => q.eq('clerkId', ctx.clerkUserId))
             .first();
 
         if (user) {
             await ctx.db.patch(user._id, {
-                themePreference,
+                themePreference: input.themePreference,
                 updatedAt: Date.now(),
             });
         }
-    },
-});
+    });

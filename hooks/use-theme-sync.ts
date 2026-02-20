@@ -1,8 +1,8 @@
 'use client';
 
 import { useTheme } from 'next-themes';
-import { useQuery, useMutation } from 'convex/react';
-import { api } from '@/convex/_generated/api';
+import { useQuery, useMutation, skipToken } from '@tanstack/react-query';
+import { useCRPC } from '@/lib/convex/crpc';
 import { useUser } from '@/context/UserContext';
 import { useEffect, useRef, useCallback } from 'react';
 
@@ -19,11 +19,15 @@ export function useThemeSync() {
     const { theme, setTheme } = useTheme();
     const { isAuthenticated } = useUser();
 
-    const convexUser = useQuery(
-        api.users.getCurrentUser,
-        isAuthenticated ? undefined : 'skip',
+    const crpc = useCRPC();
+
+    const { data: convexUser } = useQuery(
+        crpc.users.getCurrentUser.queryOptions(
+            isAuthenticated ? {} : skipToken,
+        ),
     );
-    const updateThemePreference = useMutation(api.users.updateThemePreference);
+
+    const updateThemeMutation = useMutation(crpc.users.updateThemePreference.mutationOptions());
 
     const hasSynced = useRef(false);
 
@@ -40,10 +44,10 @@ export function useThemeSync() {
         (newTheme: string) => {
             setTheme(newTheme);
             if (isAuthenticated && (newTheme === 'light' || newTheme === 'dark')) {
-                void updateThemePreference({ themePreference: newTheme });
+                void updateThemeMutation.mutate({ themePreference: newTheme });
             }
         },
-        [setTheme, isAuthenticated, updateThemePreference],
+        [setTheme, isAuthenticated, updateThemeMutation],
     );
 
     const isDarkMode = theme === 'dark';

@@ -1,8 +1,9 @@
 'use client';
 
 import { useLocalStorage } from '@/hooks/use-local-storage';
-import { useConvexAuth, useMutation, useQuery } from 'convex/react';
-import { api } from '@/convex/_generated/api';
+import { useConvexAuth } from 'convex/react';
+import { useQuery, useMutation, skipToken } from '@tanstack/react-query';
+import { useCRPC } from '@/lib/convex/crpc';
 import { Id } from '@/convex/_generated/dataModel';
 import { useEffect, useState, useCallback, useRef } from 'react';
 
@@ -26,14 +27,25 @@ export const useGuestSession = () => {
     // Track if we're currently creating to avoid race conditions
     const isCreatingRef = useRef(false);
 
-    const createNewGuest = useMutation(api.guests.createNewGuest);
+    const crpc = useCRPC();
+
+    const createGuestMutation = useMutation(crpc.guests.createNewGuest.mutationOptions());
 
     // Validate that stored guestId still exists in Convex DB.
     // Prevents stale localStorage IDs from causing query errors.
-    const guestExistsResult = useQuery(
-        api.guests.guestExists,
-        !isAuthenticated && guestId ? { guestId: String(guestId) } : 'skip',
+    const shouldCheckGuestExists = !isAuthenticated && !!guestId;
+
+    const { data: guestExistsData, isPending: isGuestExistsPending } = useQuery(
+        crpc.guests.guestExists.queryOptions(
+            shouldCheckGuestExists ? { guestId: String(guestId) } : skipToken,
+        ),
     );
+
+    // Convex useQuery returned undefined while loading, now isPending handles that.
+    // guestExistsResult was the direct value; now it's guestExistsData.
+    const guestExistsResult = shouldCheckGuestExists
+        ? (isGuestExistsPending ? undefined : guestExistsData)
+        : undefined;
 
     const isValidatingGuest = !isAuthenticated && guestId !== null && guestExistsResult === undefined;
 
@@ -63,7 +75,7 @@ export const useGuestSession = () => {
         setIsCreatingGuest(true);
 
         try {
-            const newGuestId = await createNewGuest({ sessionId });
+            const newGuestId = await createGuestMutation.mutateAsync({ sessionId });
             setGuestId(newGuestId);
         } catch (error) {
             console.error('Error creating guest:', error);
@@ -71,7 +83,7 @@ export const useGuestSession = () => {
             setIsCreatingGuest(false);
             isCreatingRef.current = false;
         }
-    }, [sessionId, createNewGuest, setGuestId]);
+    }, [sessionId, createGuestMutation, setGuestId]);
 
     // Auto-create guest when unauthenticated and no guest exists
     // Skip during auth loading to prevent race conditions on signout
@@ -135,7 +147,7 @@ export const useGuestSession = () => {
         setIsCreatingGuest(true);
 
         try {
-            const newGuestId = await createNewGuest({ sessionId });
+            const newGuestId = await createGuestMutation.mutateAsync({ sessionId });
             setGuestId(newGuestId);
             return newGuestId;
         } catch (error) {
@@ -145,7 +157,7 @@ export const useGuestSession = () => {
             setIsCreatingGuest(false);
             isCreatingRef.current = false;
         }
-    }, [guestId, sessionId, createNewGuest, setGuestId]);
+    }, [guestId, sessionId, createGuestMutation, setGuestId]);
 
     return {
         guestId,
