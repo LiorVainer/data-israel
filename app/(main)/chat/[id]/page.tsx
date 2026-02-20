@@ -1,13 +1,14 @@
+'use client';
+
+import { useParams } from 'next/navigation';
 import { ChatThread } from '@/components/chat/ChatThread';
 
 /**
- * Chat page that displays a conversation thread.
- *
- * Lightweight server component — auth resolution and message hydration
- * are handled client-side in ChatThread for instant navigation transitions.
+ * Chat page — client component to avoid Suspense boundary flash.
+ * Auth resolution and message hydration are handled in ChatThread.
  */
-export default async function ChatPage({ params }: { params: Promise<{ id: string }> }) {
-    const { id } = await params;
+export default function ChatPage() {
+    const { id } = useParams<{ id: string }>();
 
     return <ChatThread id={id} />;
 }
