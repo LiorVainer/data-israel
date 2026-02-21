@@ -48,3 +48,6 @@ mcp-ref
 mastra.db-shm
 mastra.db
 mastra.db-wal
+
+# clerk configuration (can include secrets)
+/.clerk/

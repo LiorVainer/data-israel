@@ -8,7 +8,7 @@ import { Shimmer } from '@/components/ai-elements/shimmer';
 import { useTheme } from 'next-themes';
 import { useIsMobile } from '@/hooks/use-mobile';
 
-// Theme colors matching globals.css chart colors
+/** Chart colors from globals.css — professional palette that adapts to light/dark theme */
 const CHART_COLORS = ['var(--chart-1)', 'var(--chart-2)', 'var(--chart-3)', 'var(--chart-4)', 'var(--chart-5)'];
 
 /** Responsive chart margins — tighter on mobile to maximize chart area */
@@ -107,7 +107,7 @@ interface BarChartRendererProps {
 }
 
 function BarChartRenderer({ data, config, title }: BarChartRendererProps) {
-    const { indexBy, keys, layout = 'vertical', groupMode = 'grouped' } = config;
+    const { indexBy, keys, layout = 'vertical', groupMode = 'grouped', uniqueColors = true } = config;
     const nivoTheme = useNivoTheme();
     const isMobile = useIsMobile();
     const margin = isMobile ? CHART_MARGINS.mobile : CHART_MARGINS.desktop;
@@ -127,6 +127,7 @@ function BarChartRenderer({ data, config, title }: BarChartRendererProps) {
                     valueScale={{ type: 'linear' }}
                     indexScale={{ type: 'band', round: true }}
                     colors={CHART_COLORS}
+                    colorBy={uniqueColors && keys.length === 1 ? 'indexValue' : 'id'}
                     theme={nivoTheme}
                     borderRadius={4}
                     borderWidth={1}
@@ -141,6 +142,7 @@ function BarChartRenderer({ data, config, title }: BarChartRendererProps) {
                         tickPadding: 5,
                         tickRotation: 0,
                     }}
+                    tooltipLabel={(datum) => String(datum.indexValue)}
                     enableLabel={true}
                     labelSkipWidth={16}
                     labelSkipHeight={16}

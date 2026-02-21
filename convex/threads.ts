@@ -41,7 +41,6 @@ export interface ThreadListItem {
 export const getAuthResourceId = query({
     handler: async (ctx) => {
         const identity = await ctx.auth.getUserIdentity();
-        console.log({ identity });
         return identity?.subject ?? null;
     },
 });

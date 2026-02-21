@@ -74,7 +74,6 @@ export const searchResources = action({
             filters.push({ name: 'format', value: format.toUpperCase() });
         }
 
-        console.log('Searching resources with filters:', filters);
 
         const { results, entries } = await resourceRag.search(ctx, {
             namespace: 'resources',

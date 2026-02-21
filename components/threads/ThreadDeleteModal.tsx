@@ -35,23 +35,27 @@ export function ThreadDeleteModal({ thread, onConfirm }: ThreadDeleteModalProps)
     };
 
     return (
-        <DialogContent>
-            <DialogHeader>
-                <DialogTitle>מחיקת שיחה</DialogTitle>
-                <DialogDescription>פעולה זו אינה ניתנת לביטול</DialogDescription>
+        <DialogContent className='sm:max-w-sm text-center' showCloseButton={false}>
+            <DialogHeader className='items-center'>
+                <DialogTitle className='text-base'>מחיקת שיחה</DialogTitle>
+                <DialogDescription>
+                    {thread.title ? (
+                        <span className='line-clamp-2'>&ldquo;{thread.title}&rdquo;</span>
+                    ) : (
+                        'כל ההודעות יימחקו לצמיתות.'
+                    )}
+                </DialogDescription>
             </DialogHeader>
-            <p className='text-sm text-muted-foreground'>האם למחוק שיחה זו? כל ההודעות יימחקו לצמיתות.</p>
-            {thread.title && <p className='text-sm font-medium truncate'>&ldquo;{thread.title}&rdquo;</p>}
-            <DialogFooter>
-                <DialogClose asChild>
-                    <Button variant='outline' disabled={isDeleting}>
-                        ביטול
-                    </Button>
-                </DialogClose>
+            <div className='flex flex-col gap-2 pt-2'>
                 <Button variant='destructive' onClick={handleConfirm} disabled={isDeleting}>
                     מחק שיחה
                 </Button>
-            </DialogFooter>
+                <DialogClose asChild>
+                    <Button variant='ghost' disabled={isDeleting}>
+                        ביטול
+                    </Button>
+                </DialogClose>
+            </div>
         </DialogContent>
     );
 }

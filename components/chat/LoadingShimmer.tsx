@@ -17,7 +17,7 @@ export function LoadingShimmer({
             {showIcon && <DataIsraelLoader size={18} />}
             {showText && (
                 <div className='flex-1'>
-                    <Shimmer as='p' className='py-2' duration={1.5}>
+                    <Shimmer as='p' className='text-sm' duration={1.5}>
                         {text}
                     </Shimmer>
                 </div>

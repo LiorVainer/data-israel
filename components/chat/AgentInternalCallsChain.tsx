@@ -28,7 +28,11 @@ interface InternalCallGroup {
     activeCount: number;
 }
 
-/** Group internal calls by toolName, preserving first-seen order. */
+/**
+ * Group internal calls by toolName, preserving first-seen order.
+ * Counts are deduplicated by searchedResourceName — duplicate calls for the
+ * same resource (e.g. retries) count as one, using the best status.
+ */
 function groupInternalCalls(calls: AgentInternalToolCall[], isAgentActive: boolean): InternalCallGroup[] {
     const map = new Map<string, InternalCallGroup>();
 
@@ -48,9 +52,25 @@ function groupInternalCalls(calls: AgentInternalToolCall[], isAgentActive: boole
             map.set(call.toolName, group);
         }
         group.calls.push(call);
-        if (call.success === false) group.failedCount++;
-        else if (call.isComplete) group.completedCount++;
-        else if (isAgentActive) group.activeCount++;
+    }
+
+    // Compute deduplicated counts per group
+    for (const group of map.values()) {
+        const seen = new Map<string, AgentInternalToolCall>();
+        let anonymousIdx = 0;
+        for (const call of group.calls) {
+            const key = call.searchedResourceName ?? `__anon_${anonymousIdx++}`;
+            const existing = seen.get(key);
+            // Keep the call with the best status: success > complete > active > failed
+            if (!existing || (call.isComplete && call.success !== false && !(existing.isComplete && existing.success !== false))) {
+                seen.set(key, call);
+            }
+        }
+        for (const call of seen.values()) {
+            if (call.success === false) group.failedCount++;
+            else if (call.isComplete) group.completedCount++;
+            else if (isAgentActive) group.activeCount++;
+        }
     }
 
     return Array.from(map.values());
@@ -76,11 +96,13 @@ export interface AgentInternalCallsChainProps {
 export function AgentInternalCallsChain({ calls, isAgentActive }: AgentInternalCallsChainProps) {
     const { isOpen, handleOpenChange } = useAutoOpen(isAgentActive);
 
-    const completedCount = calls.filter((c) => c.isComplete).length;
-    const failedCount = calls.filter((c) => c.success === false).length;
-    const activeCount = calls.filter((c) => !c.isComplete && isAgentActive).length;
-
     const groups = useMemo(() => groupInternalCalls(calls, isAgentActive), [calls, isAgentActive]);
+
+    // Derive header counts from deduplicated group totals
+    const completedCount = groups.reduce((sum, g) => sum + g.completedCount, 0);
+    const failedCount = groups.reduce((sum, g) => sum + g.failedCount, 0);
+    const activeCount = groups.reduce((sum, g) => sum + g.activeCount, 0);
+    const totalCount = completedCount + failedCount + activeCount;
 
     const getHeaderContent = () => {
         if (activeCount > 0) {
@@ -98,11 +120,11 @@ export function AgentInternalCallsChain({ calls, isAgentActive }: AgentInternalC
             return (
                 <span>
                     {completedCount} פעולות הושלמו
-                    <span className='text-error mr-1'> ({failedCount} שגיאות)</span>
+                    {/*<span className='text-error mr-1'> ({failedCount} שגיאות)</span>*/}
                 </span>
             );
         }
-        return `${calls.length} פעולות הושלמו`;
+        return `${totalCount} פעולות הושלמו`;
     };
 
     return (
@@ -113,29 +135,32 @@ export function AgentInternalCallsChain({ calls, isAgentActive }: AgentInternalC
                     const status = getGroupStatus(group);
                     const hasAllFailed = group.failedCount > 0 && group.completedCount === 0;
 
-                    // Collect chips: named results with per-call color
-                    const chips = group.calls
-                        .filter((c) => c.searchedResourceName)
-                        .map((c) => ({
-                            key: c.toolCallId,
-                            label: c.searchedResourceName!,
-                            className:
-                                c.success === false
-                                    ? 'text-error bg-red-100/40 dark:bg-red-700/10'
-                                    : c.isComplete
-                                      ? 'bg-emerald-100/40 text-success dark:bg-emerald-700/10'
-                                      : undefined,
-                        }));
+                    // Collect chips: deduplicate by searchedResourceName, keeping best status
+                    const chipMap = new Map<string, { key: string; label: string; className: string | undefined }>();
+                    for (const c of group.calls) {
+                        if (!c.searchedResourceName) continue;
+                        const label = c.searchedResourceName;
+                        const existing = chipMap.get(label);
+                        const className =
+                            c.success === false
+                                ? 'text-foreground-muted bg-muted/40 dark:bg-muted-700/10'
+                                : c.isComplete
+                                  ? 'bg-emerald-100/40 text-success dark:bg-emerald-700/10'
+                                  : undefined;
+                        // Prefer success (emerald) > active (undefined) > failed (muted)
+                        if (!existing || (className?.includes('emerald') && !existing.className?.includes('emerald'))) {
+                            chipMap.set(label, { key: c.toolCallId, label, className });
+                        }
+                    }
+                    const chips = Array.from(chipMap.values());
 
                     return (
                         <ChainOfThoughtStep
                             key={group.toolName}
                             icon={group.icon}
-                            label={<span className={hasAllFailed ? 'text-error' : undefined}>{group.name}</span>}
+                            label={<span>{group.name}</span>}
                             description={
-                                hasAllFailed ? (
-                                    <span className='text-error'>שגיאה</span>
-                                ) : status === 'active' ? undefined : group.completedCount > 1 ? (
+                                hasAllFailed ? null : status === 'active' ? undefined : group.completedCount > 1 ? (
                                     <span className='text-muted-foreground'>{group.completedCount} הושלמו</span>
                                 ) : (
                                     <span className='text-muted-foreground'>הושלם</span>

@@ -21,17 +21,14 @@ export function useSessionStorage<T>(
     useEffect(() => {
         try {
             const item = sessionStorage.getItem(key);
-            console.log(`[useSessionStorage] Reading key "${key}":`, item);
             if (item !== null) {
                 const parsed = JSON.parse(item) as T;
-                console.log(`[useSessionStorage] Parsed value:`, parsed);
                 setStoredValue(parsed);
             } else if (initialValue !== undefined) {
                 setStoredValue(initialValue);
                 sessionStorage.setItem(key, JSON.stringify(initialValue));
             }
         } catch (error) {
-            console.error(`Error reading session storage key "${key}":`, error);
             if (initialValue !== undefined) {
                 setStoredValue(initialValue);
             }

@@ -2,13 +2,21 @@
 
 import { Button } from '@/components/ui/button';
 import { ButtonGroup, ButtonGroupText } from '@/components/ui/button-group';
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from '@/components/ui/dialog';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
 import type { FileUIPart, UIMessage } from 'ai';
-import { ChevronLeftIcon, ChevronRightIcon, PaperclipIcon, XIcon } from 'lucide-react';
+import { ChevronLeftIcon, ChevronRightIcon, CopyIcon, ExternalLinkIcon, PaperclipIcon, XIcon } from 'lucide-react';
 import type { ComponentProps, HTMLAttributes, ReactElement } from 'react';
 import { createContext, memo, useContext, useEffect, useState } from 'react';
-import { Streamdown } from 'streamdown';
+import { Streamdown, type LinkSafetyModalProps } from 'streamdown';
 
 export type MessageProps = HTMLAttributes<HTMLDivElement> & {
     from: UIMessage['role'];
@@ -246,6 +254,51 @@ export const MessageBranchPage = ({ className, ...props }: MessageBranchPageProp
     );
 };
 
+function HebrewLinkSafetyModal({ url, isOpen, onClose, onConfirm }: LinkSafetyModalProps) {
+    return (
+        <Dialog
+            open={isOpen}
+            onOpenChange={(open) => {
+                if (!open) onClose();
+            }}
+        >
+            <DialogContent dir='rtl'>
+                <DialogHeader>
+                    <DialogTitle className='flex items-center gap-2'>
+                        <ExternalLinkIcon className='size-5' />
+                        פתיחת קישור חיצוני
+                    </DialogTitle>
+                    <DialogDescription>אתה עומד לבקר באתר חיצוני.</DialogDescription>
+                </DialogHeader>
+                <code className='bg-muted rounded-md p-3 text-sm break-all text-center' dir='ltr'>
+                    {url}
+                </code>
+                <DialogFooter className='sm:justify-start'>
+                    <Button onClick={onConfirm}>
+                        פתח קישור
+                        <ExternalLinkIcon className='size-4' />
+                    </Button>
+                    <Button
+                        variant='outline'
+                        onClick={() => {
+                            navigator.clipboard.writeText(url);
+                            onClose();
+                        }}
+                    >
+                        העתק קישור
+                        <CopyIcon className='size-4' />
+                    </Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
+    );
+}
+
+const hebrewLinkSafety = {
+    enabled: true,
+    renderModal: (props: LinkSafetyModalProps) => <HebrewLinkSafetyModal {...props} />,
+};
+
 export type MessageResponseProps = ComponentProps<typeof Streamdown>;
 
 type StreamdownComponents = NonNullable<ComponentProps<typeof Streamdown>['components']>;
@@ -266,10 +319,11 @@ const rtlTableComponents: StreamdownComponents = {
 };
 
 export const MessageResponse = memo(
-    ({ className, components, ...props }: MessageResponseProps) => (
+    ({ className, components, linkSafety, ...props }: MessageResponseProps) => (
         <Streamdown
             className={cn('size-full [&>*:first-child]:mt-0 [&>*:last-child]:mb-0 ', className)}
             components={{ ...rtlTableComponents, ...components }}
+            linkSafety={linkSafety ?? hebrewLinkSafety}
             {...props}
         />
     ),
