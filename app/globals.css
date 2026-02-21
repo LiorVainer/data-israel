@@ -2,7 +2,7 @@
 @import "tw-animate-css";
 
 /* Safelist dynamic color utilities used in chip/badge components (ToolCallStep, etc.) */
-@source inline("{,dark:}{text,border,bg}-{emerald,green,red}-{400,500,600,700}");
+@source inline("{,dark:}{text,border,bg}-{emerald,green,red,muted}-{400,500,600,700}");
 
 @custom-variant dark (&:is(.dark *));
 
