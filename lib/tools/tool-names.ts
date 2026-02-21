@@ -64,24 +64,17 @@ export const SOURCE_URL_TOOL_NAMES = [
 
 /**
  * Data tools whose outputs should auto-generate source links.
- * Subset of DataGov + CBS tools that return enough context
- * (apiUrl, dataset name, etc.) to produce a user-facing source link.
+ * Only tools that fetch actual dataset/datasource data — not search or browse tools.
  */
 export const SOURCE_GENERATING_TOOL_NAMES = [
-    'searchDatasets',
     'getDatasetDetails',
-    'queryDatastoreResource',
-    'getResourceDetails',
-    'searchResources',
     'getOrganizationDetails',
-    'browseCbsCatalog',
-    'browseCbsCatalogPath',
+    'getResourceDetails',
+    'queryDatastoreResource',
     'getCbsSeriesData',
     'getCbsSeriesDataByPath',
-    'browseCbsPriceIndices',
     'getCbsPriceData',
     'calculateCbsPriceIndex',
-    'searchCbsLocalities',
 ] as const satisfies readonly AllToolName[];
 
 /** Prefix a tool name with 'tool-' for matching against message part types */

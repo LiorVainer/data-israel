@@ -52,26 +52,7 @@ export function resolveToolSourceUrl(toolType: string, input: unknown, output: u
     const toolName = toolType.replace(/^tool-/, '');
 
     switch (toolName) {
-        // ── DataGov: search-based tools ──────────────────────────────────
-        case 'searchDatasets': {
-            return {
-                url: DATAGOV_PORTAL,
-                title: 'חיפוש מאגרים - data.gov',
-            };
-        }
-
-        case 'searchResources': {
-            const query = getString(input, 'query');
-            const apiUrl = getString(output, 'apiUrl');
-            if (!apiUrl) return null;
-            const resourceName = getResourceName(input, output);
-            return {
-                url: apiUrl,
-                title: resourceName ?? (query ? `חיפוש משאבים: ${query}` : 'חיפוש משאבים - data.gov.il'),
-            };
-        }
-
-        // ── DataGov: detail tools (have searchedResourceName) ────────────
+        // ── DataGov: detail/query tools ──────────────────────────────────
         case 'getDatasetDetails': {
             const dataset = isRecord(output) ? output.dataset : undefined;
             const name = getString(dataset, 'name');
@@ -146,43 +127,6 @@ export function resolveToolSourceUrl(toolType: string, input: unknown, output: u
             return {
                 url: apiUrl,
                 title: resourceName ? `מחשבון הצמדה: ${resourceName}` : 'מחשבון הצמדה - הלמ"ס',
-            };
-        }
-
-        // ── CBS: localities ──────────────────────────────────────────────
-        case 'searchCbsLocalities': {
-            const apiUrl = getString(output, 'apiUrl');
-            if (!apiUrl) return null;
-            const resourceName = getResourceName(input, output);
-            const query = getString(input, 'query');
-            return {
-                url: apiUrl,
-                title: resourceName ?? (query ? `חיפוש יישובים: ${query}` : 'מילון יישובים - הלמ"ס'),
-            };
-        }
-
-        // ── CBS: catalog/browse tools ────────────────────────────────────
-        case 'browseCbsCatalog':
-        case 'browseCbsCatalogPath': {
-            const apiUrl = getString(output, 'apiUrl');
-            if (!apiUrl) return null;
-            const resourceName = getResourceName(input, output);
-            return { url: apiUrl, title: resourceName ?? 'קטלוג הלמ"ס' };
-        }
-
-        case 'browseCbsPriceIndices': {
-            const apiUrl = getString(output, 'apiUrl');
-            if (!apiUrl) return null;
-            const resourceName = getResourceName(input, output);
-            const mode = getString(input, 'mode');
-            const modeLabels: Record<string, string> = {
-                chapters: 'פרקי מדדים',
-                topics: 'נושאי מדדים',
-                indices: 'קודי מדדים',
-            };
-            return {
-                url: apiUrl,
-                title: resourceName ?? (mode && modeLabels[mode]) ?? 'מדדי מחירים - הלמ"ס',
             };
         }
 
