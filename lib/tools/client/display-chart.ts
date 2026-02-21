@@ -37,6 +37,12 @@ export const displayBarChartInputSchema = z.object({
             ),
         layout: z.enum(['horizontal', 'vertical']).default('vertical').describe('Bar orientation'),
         groupMode: z.enum(['grouped', 'stacked']).default('grouped').describe('How to display multiple keys'),
+        uniqueColors: z
+            .boolean()
+            .default(true)
+            .describe(
+                'When true, each bar gets a unique color from the theme palette. When false, all bars share the same color. Default true for single-key charts.',
+            ),
     }),
 });
 
