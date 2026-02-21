@@ -104,7 +104,7 @@ export function ChatThread({ id }: ChatThreadProps) {
 
     const isStreaming = status === 'submitted' || status === 'streaming';
     const hasMessages = messages.length > 0;
-    const isLoading = !isLoadingMessages && !didLoad.current;
+    const isLoading = isLoadingMessages && !didLoad.current;
 
     const lastAssistantMessage = messages.filter((m) => m.role === 'assistant').at(-1);
     const { suggestions: suggestionsFromTool, loading: suggestionsLoading } = useMemo(() => {
@@ -138,7 +138,7 @@ export function ChatThread({ id }: ChatThreadProps) {
 
             <div className='mx-auto px-4 md:px-0 pb-4 md:pb-6 relative h-full w-full pt-14 md:pt-4'>
                 <div className='flex flex-col gap-4 md:gap-6 h-full w-full items-center'>
-                    {isLoading ? (
+                    {isLoading && !isNewConversation ? (
                         <div className='flex-1 w-full md:w-4xl mx-auto overflow-hidden'>
                             <MessageListSkeleton />
                         </div>
