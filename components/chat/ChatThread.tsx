@@ -51,7 +51,6 @@ export function ChatThread({ id }: ChatThreadProps) {
                     [USER_ID_HEADER]: userId ?? 'anonymous',
                 },
                 prepareSendMessagesRequest({ messages }) {
-                    console.log(userId);
                     return {
                         body: {
                             messages,
@@ -130,7 +129,6 @@ export function ChatThread({ id }: ChatThreadProps) {
         return { suggestions: undefined, loading: false };
     }, [lastAssistantMessage]);
 
-    console.log({isLoading, hasMessages, isStreaming});
 
     return (
         <div className='relative h-full w-full'>

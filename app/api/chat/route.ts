@@ -274,7 +274,6 @@ export async function POST(req: Request) {
                 toolCallConcurrency: CHAT.TOOL_CALL_CONCURRENCY,
                 stopWhen: hasCompletedWithSuggestions,
                 onStepFinish: ({ usage, toolCalls, text, stepType }) => {
-                    console.log({ usage, toolCalls: toolCalls.length, text: text.length, stepType });
                     // Context snapshot: override (last step = context window size)
                     contextSnapshot.inputTokens = usage.inputTokens ?? 0;
                     contextSnapshot.outputTokens = usage.outputTokens ?? 0;

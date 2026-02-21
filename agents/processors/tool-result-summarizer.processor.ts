@@ -67,7 +67,6 @@ ${toolResults
 אנא סכם את התוצאות הללו בצורה מובנת ומשימושית, תוך שימוש בתיאורי הכלים להבנה טובה יותר.`,
                         });
 
-                        console.log('Summarized tool results:', summary);
 
                         // הוספת הסיכום כתשובה טקסט
                         if (lastMessage.content.parts) {
