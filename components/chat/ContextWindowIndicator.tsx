@@ -11,6 +11,7 @@ interface ContextWindowIndicatorProps {
 }
 
 const THRESHOLDS = {
+    SHOWN: process.env.NODE_ENV === 'production' ? 60 : 0,
     WARNING: 70,
     CRITICAL: 90,
 } as const;
@@ -40,7 +41,7 @@ export function ContextWindowIndicator({ usedTokens, maxTokens }: ContextWindowI
     const isWarning = percentage >= THRESHOLDS.WARNING;
     const isMobile = useIsMobile();
 
-    return (
+    return percentage > THRESHOLDS.SHOWN ? (
         <div className={cn('flex gap-1.5 flex-col w-full sm:justify-end sm:items-end px-1')}>
             <div className='flex gap-1 md:gap-4 md:items-center flex-col md:flex-row w-full'>
                 <div className='flex text-xs text-muted-foreground shrink-0' dir='rtl'>
@@ -54,5 +55,5 @@ export function ContextWindowIndicator({ usedTokens, maxTokens }: ContextWindowI
                 </p>
             )}
         </div>
-    );
+    ) : null;
 }

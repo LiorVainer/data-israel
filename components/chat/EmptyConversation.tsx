@@ -39,7 +39,7 @@ interface EmptyConversationProps {
 
 export function EmptyConversation({ onClick }: EmptyConversationProps) {
     return (
-        <div className='flex flex-col gap-4 h-full items-center justify-center w-fit' dir='rtl'>
+        <div className='flex flex-col gap-4 md:gap-12 h-full items-center justify-center w-fit' dir='rtl'>
             <div className='shrink-0 text-right space-y-2 self-start'>
                 <h2 className='text-xl md:text-2xl font-semibold text-foreground/90'>במה אוכל לעזור?</h2>
                 <p className='text-sm text-muted-foreground'>בחרו נושא או הקלידו שאלה חופשית</p>

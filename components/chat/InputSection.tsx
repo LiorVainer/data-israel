@@ -35,9 +35,9 @@ export function InputSection({ onSubmit, status, onStop, placeholder = 'מה ת�
             />
             <PromptInputSubmit
                 className='self-end rounded-2xl bg-action'
-                status={status}
+                status={status !== 'streaming' ? status : 'submitted'}
                 onClick={isBusy ? handleStopClick : undefined}
-                disabled={!isReady && !isBusy}
+                disabled={!isReady && isBusy}
             />
         </PromptInput>
     );
