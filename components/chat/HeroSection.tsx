@@ -42,8 +42,8 @@ export function HeroSection({ onStartConversation, onScrollToAbout }: HeroSectio
                 <div className='flex flex-col gap-2'>
                     <HeroTitle line1='שואלים שאלה.' line2='מקבלים נתונים רשמיים.' />
                     <div>
-                        <HeroSubtitle>Data Israel היא פלטפורמה מבוססת AI</HeroSubtitle>
-                        <HeroSubtitle>המחוברת למאגרים ציבוריים רשמיים של ישראל.</HeroSubtitle>
+                        <HeroSubtitle>AI המחובר לנתונים הציבוריים של ישראל.</HeroSubtitle>
+                        <HeroSubtitle>כל תשובה נשענת על מקור רשמי.</HeroSubtitle>
                     </div>
                 </div>
                 {onStartConversation && (
