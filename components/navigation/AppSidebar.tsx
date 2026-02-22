@@ -47,7 +47,7 @@ function SidebarLogo() {
                     <Logo className='size-10 shrink-0' width={20} aria-label='לוגו' />
                     <div className='grid flex-1 text-right text-sm leading-tight'>
                         <span className='truncate font-semibold'>Data Israel</span>
-                        <span className='truncate text-xs text-muted-foreground'>סוכני המידע הציבורי של ישראל</span>
+                        <span className='truncate text-xs text-muted-foreground'>AI לנתונים הציבוריים של ישראל</span>
                     </div>
                 </SidebarMenuButton>
             </SidebarMenuItem>
