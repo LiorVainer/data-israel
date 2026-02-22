@@ -49,10 +49,10 @@
   /* Semantic status colors */
   --color-success: var(--success);
   --color-error: var(--error);
-  /* Logo colors */
-  --color-logo-blue-light: var(--logo-blue-light);
-  --color-logo-blue-mid: var(--logo-blue-mid);
-  --color-logo-blue-dark: var(--logo-blue-dark);
+  /* Logo gradient stops */
+  --color-logo-gradient-start: var(--logo-gradient-start);
+  --color-logo-gradient-mid: var(--logo-gradient-mid);
+  --color-logo-gradient-end: var(--logo-gradient-end);
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
@@ -96,10 +96,10 @@
   /* Semantic status colors */
   --success: oklch(0.508 0.118 165.612); /* emerald-700 */
   --error: oklch(0.505 0.213 27.518);   /* red-700 */
-  /* Logo colors */
-  --logo-blue-light: #0170d0;
-  --logo-blue-mid: #085697;
-  --logo-blue-dark: #102a46;
+  /* Logo gradient stops — derived from theme blues */
+  --logo-gradient-start: var(--secondary-foreground);
+  --logo-gradient-mid: var(--primary);
+  --logo-gradient-end: var(--accent);
   --sidebar: oklch(0.985 0 0);
   --sidebar-foreground: oklch(0.145 0.02 250);
   --sidebar-primary: oklch(0.35 0.15 250);
@@ -144,10 +144,10 @@
   /* Semantic status colors (dark) */
   --success: oklch(0.696 0.17 162.48);  /* emerald-500 */
   --error: oklch(0.637 0.237 25.331);   /* red-500 */
-  /* Logo colors */
-  --logo-blue-light: oklch(0.75 0.16 250);
-  --logo-blue-mid: oklch(0.65 0.14 250);
-  --logo-blue-dark: oklch(0.55 0.12 250);
+  /* Logo gradient stops — derived from theme blues */
+  --logo-gradient-start: var(--accent);
+  --logo-gradient-mid: var(--primary);
+  --logo-gradient-end: var(--ring);
   --sidebar: oklch(0.18 0.03 250);
   --sidebar-foreground: oklch(0.95 0.01 250);
   --sidebar-primary: oklch(0.55 0.18 250);

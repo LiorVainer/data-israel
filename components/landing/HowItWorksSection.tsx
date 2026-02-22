@@ -1,7 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { MessageSquareText, Search, FileChartColumn } from 'lucide-react';
+import { FileChartColumn, MessageSquareText, Search } from 'lucide-react';
 import type { ReactNode } from 'react';
 
 interface StepProps {
@@ -38,7 +38,7 @@ const STEPS = [
     {
         icon: <Search className='w-7 h-7' />,
         title: 'הסוכן חוקר',
-        description: 'הסוכן מחפש במאגרי data.gov.il והלמ"ס, מסנן ומנתח את המידע הרלוונטי',
+        description: 'הסוכן מחפש במאגרי data.gov.il והלמ״ס, מסנן ומנתח את הנתונים הרלוונטיים.',
     },
     {
         icon: <FileChartColumn className='w-7 h-7' />,

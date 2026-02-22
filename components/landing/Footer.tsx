@@ -7,7 +7,7 @@ export function Footer() {
 
     return (
         <footer className='w-full border-t border-border/40 bg-card/40 backdrop-blur-sm'>
-            <div className='max-w-4xl mx-auto px-4 py-6 flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-muted-foreground'>
+            <div className='max-w-4xl mx-auto px-4 py-4 flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-muted-foreground'>
                 <span>&copy; {year} Data Israel. כל הזכויות שמורות.</span>
 
                 <div className='flex items-center gap-4'>

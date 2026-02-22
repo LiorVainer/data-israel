@@ -43,11 +43,11 @@ function SidebarLogo() {
     return (
         <SidebarMenu>
             <SidebarMenuItem>
-                <SidebarMenuButton size='lg' className='gap-4' onClick={handleClick}>
-                    <Logo className='size-7 shrink-0' aria-label='לוגו' />
+                <SidebarMenuButton size='lg' className='gap-4 [&>svg]:size-5' onClick={handleClick}>
+                    <Logo className='size-10 shrink-0' width={20} aria-label='לוגו' />
                     <div className='grid flex-1 text-right text-sm leading-tight'>
-                        <span className='truncate font-semibold'>סוכני המידע הציבורי</span>
-                        <span className='truncate text-xs text-muted-foreground'>data-israel.org</span>
+                        <span className='truncate font-semibold'>Data Israel</span>
+                        <span className='truncate text-xs text-muted-foreground'>סוכני המידע הציבורי של ישראל</span>
                     </div>
                 </SidebarMenuButton>
             </SidebarMenuItem>

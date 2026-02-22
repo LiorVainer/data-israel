@@ -42,14 +42,21 @@ function SourceBlock({ href, logoSrc, logoAlt, logoWidth, logoHeight, descriptio
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: '-50px' }}
             transition={{ duration: 0.6, delay, ease: 'easeOut' }}
-            className='flex flex-col items-center gap-6'
+            className='flex flex-col items-center gap-12'
         >
-            <a href={href} target='_blank' rel='noopener noreferrer' className='hover:opacity-70 transition-opacity'>
-                <Image src={logoSrc} alt={logoAlt} width={logoWidth} height={logoHeight} />
-            </a>
-            <p className='text-sm md:text-base text-muted-foreground text-center leading-relaxed max-w-md'>
-                {description}
-            </p>
+            <div className='flex flex-col items-center gap-6 w-full'>
+                <a
+                    href={href}
+                    target='_blank'
+                    rel='noopener noreferrer'
+                    className='hover:opacity-70 transition-opacity'
+                >
+                    <Image src={logoSrc} alt={logoAlt} width={logoWidth} height={logoHeight} />
+                </a>
+                <p className='text-sm md:text-base text-muted-foreground text-center leading-relaxed max-w-md'>
+                    {description}
+                </p>
+            </div>
             <div className='grid grid-cols-1 sm:grid-cols-3 gap-3 w-full'>
                 {stats.map((stat) => (
                     <StatCard key={stat.label} icon={stat.icon} value={stat.value} label={stat.label} />
@@ -61,7 +68,7 @@ function SourceBlock({ href, logoSrc, logoAlt, logoWidth, logoHeight, descriptio
 
 export function SourcesSection() {
     return (
-        <section className='w-full max-w-4xl mx-auto px-4 flex flex-col gap-20 md:gap-24'>
+        <section className='w-full max-w-4xl mx-auto px-4 flex flex-col gap-8 md:gap-16'>
             <motion.h2
                 initial={{ opacity: 0, y: 15 }}
                 whileInView={{ opacity: 1, y: 0 }}
@@ -72,35 +79,39 @@ export function SourcesSection() {
                 מקורות המידע
             </motion.h2>
 
-            <SourceBlock
-                href={DATA_SOURCE_CONFIG.datagov.url}
-                logoSrc='/datagov-logo.svg'
-                logoAlt='data.gov.il'
-                logoWidth={150}
-                logoHeight={65}
-                description='הפורטל הלאומי לנתונים פתוחים של ממשלת ישראל — מאגרי מידע ממשרדי ממשלה, רשויות מקומיות וגופים ציבוריים, הנגישים לכלל הציבור'
-                delay={0}
-                stats={[
-                    { icon: <Database className='w-6 h-6' />, value: '15,000+', label: 'מאגרי מידע' },
-                    { icon: <Building2 className='w-6 h-6' />, value: '100+', label: 'גופים מפרסמים' },
-                    { icon: <FolderOpen className='w-6 h-6' />, value: '50,000+', label: 'קבצי נתונים' },
-                ]}
-            />
+            <div className='flex flex-col gap-16 md:gap-24'>
+                <SourceBlock
+                    href={DATA_SOURCE_CONFIG.datagov.url}
+                    logoSrc='/datagov-logo.svg'
+                    logoAlt='data.gov.il'
+                    logoWidth={150}
+                    logoHeight={65}
+                    description='הפורטל הלאומי לנתונים פתוחים של ממשלת ישראל —
+מאגרי מידע ממשרדי ממשלה, רשויות וגופים ציבוריים.'
+                    delay={0}
+                    stats={[
+                        { icon: <Database className='w-6 h-6' />, value: '15,000+', label: 'מאגרי מידע' },
+                        { icon: <Building2 className='w-6 h-6' />, value: '100+', label: 'גופים מפרסמים' },
+                        { icon: <FolderOpen className='w-6 h-6' />, value: '50,000+', label: 'קבצי נתונים' },
+                    ]}
+                />
 
-            <SourceBlock
-                href={DATA_SOURCE_CONFIG.cbs.url}
-                logoSrc='/cbs-logo.svg'
-                logoAlt='הלמ"ס'
-                logoWidth={150}
-                logoHeight={75}
-                description='הלשכה המרכזית לסטטיסטיקה — הגוף הרשמי לאיסוף, עיבוד ופרסום נתונים סטטיסטיים על מדינת ישראל, כולל מדדי מחירים, דמוגרפיה ונתוני יישובים'
-                delay={0.15}
-                stats={[
-                    { icon: <BarChart3 className='w-6 h-6' />, value: '1,000+', label: 'סדרות סטטיסטיות' },
-                    { icon: <Layers className='w-6 h-6' />, value: '50+', label: 'תחומי מידע' },
-                    { icon: <Calendar className='w-6 h-6' />, value: '75+', label: 'שנות נתונים' },
-                ]}
-            />
+                <SourceBlock
+                    href={DATA_SOURCE_CONFIG.cbs.url}
+                    logoSrc='/cbs-logo.svg'
+                    logoAlt='הלמ"ס'
+                    logoWidth={150}
+                    logoHeight={75}
+                    description='הגוף הרשמי לסטטיסטיקה של מדינת ישראל —
+מדדי מחירים, דמוגרפיה, נתוני יישובים ועוד.'
+                    delay={0.15}
+                    stats={[
+                        { icon: <BarChart3 className='w-6 h-6' />, value: '1,000+', label: 'סדרות סטטיסטיות' },
+                        { icon: <Layers className='w-6 h-6' />, value: '50+', label: 'תחומי מידע' },
+                        { icon: <Calendar className='w-6 h-6' />, value: '75+', label: 'שנות נתונים' },
+                    ]}
+                />
+            </div>
         </section>
     );
 }

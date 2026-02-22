@@ -4,12 +4,12 @@ import { useCallback, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import { HeroSection } from '@/components/chat/HeroSection';
-import { GeometricBackground } from '@/components/ui/shape-landing-hero';
 import { SourcesSection } from '@/components/landing/SourcesSection';
 import { HowItWorksSection } from '@/components/landing/HowItWorksSection';
 import { AboutSection } from '@/components/landing/AboutSection';
 import { Footer } from '@/components/landing/Footer';
 import { ScrollToTop } from '@/components/ui/ScrollToTop';
+import { BGPattern } from '@/components/bg-pattern';
 
 export default function Home() {
     const router = useRouter();
@@ -27,9 +27,8 @@ export default function Home() {
 
     return (
         <div ref={scrollRef} className='relative h-full w-full overflow-y-auto'>
-            <GeometricBackground />
-
             {/* Hero Section — centered within first viewport */}
+            <BGPattern variant='grid' mask='fade-center' fill='hsla(217, 68%, 56%, 0.2)' />
             <div className='relative z-10 flex min-h-dvh flex-col items-center justify-center px-4 md:px-0'>
                 <motion.div
                     initial={{ opacity: 0, y: 40 }}
@@ -41,15 +40,14 @@ export default function Home() {
                     }}
                     className='flex flex-col gap-4 md:gap-6 w-full items-center justify-center'
                 >
-                    <HeroSection
-                        onStartConversation={handleStartConversation}
-                        onScrollToAbout={handleScrollToAbout}
-                    />
+                    <HeroSection onStartConversation={handleStartConversation} onScrollToAbout={handleScrollToAbout} />
                 </motion.div>
             </div>
 
             {/* Below-the-fold sections */}
-            <div className='relative z-10 flex flex-col gap-16 md:gap-48 py-12 md:py-36'>
+            <div className='relative z-10 flex flex-col gap-40 md:gap-48 py-24 md:py-36'>
+                <BGPattern variant='diagonal-stripes' mask='fade-edges' fill='hsla(217, 68%, 56%, 0.2)' />
+
                 <AboutSection />
                 <SourcesSection />
                 <HowItWorksSection />

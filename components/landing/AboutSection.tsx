@@ -1,7 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { ShieldCheck, MessageSquareText, BarChart3, Globe } from 'lucide-react';
+import { BarChart3, Globe, MessageSquareText, ShieldCheck } from 'lucide-react';
 import type { ReactNode } from 'react';
 
 interface FeatureProps {
@@ -38,7 +38,7 @@ const FEATURES = [
     {
         icon: <ShieldCheck className='w-6 h-6' />,
         title: 'מידע אמיתי בלבד',
-        description: 'כל תשובה מבוססת על נתונים רשמיים ממאגרי הממשלה — לא המצאות ולא ניחושים',
+        description: 'כל תשובה מבוססת על נתונים רשמיים ממאגרים ממשלתיים עם שקיפות למקורות.',
     },
     {
         icon: <BarChart3 className='w-6 h-6' />,
@@ -48,7 +48,7 @@ const FEATURES = [
     {
         icon: <Globe className='w-6 h-6' />,
         title: 'שני מאגרים רשמיים',
-        description: 'חיפוש אוטומטי ב-data.gov.il (מאגר הממשלה הפתוח) ובלמ"ס (הלשכה המרכזית לסטטיסטיקה)',
+        description: 'חיפוש אוטומטי ב-data.gov.il ובלמ״ס (הלשכה המרכזית לסטטיסטיקה).',
     },
 ] as const;
 
@@ -62,16 +62,18 @@ export function AboutSection() {
                 transition={{ duration: 0.5 }}
                 className='flex flex-col items-center gap-4 mb-12 text-center'
             >
-                <h2 className='text-2xl md:text-3xl font-bold text-foreground'>מי אנחנו</h2>
+                <h2 className='text-2xl md:text-3xl font-bold text-foreground'>מי אנחנו?</h2>
                 <p className='text-base md:text-lg text-muted-foreground leading-relaxed max-w-2xl'>
-                    למדינת ישראל יש כמות עצומה של מידע פתוח — סטטיסטיקה, מחירים, אוכלוסייה, תחבורה, חינוך, תקציבים
-                    ועוד. הבעיה? המידע קיים, אבל הוא לא באמת נגיש לאזרח הרגיל.
+                    למדינת ישראל יש כמות עצומה של מידע פתוח — סטטיסטיקה, מחירים, אוכלוסייה, תחבורה, חינוך ועוד. המידע
+                    קיים, אבל לרוב אינו נגיש באמת לאזרח הרגיל.
                 </p>
                 <p className='text-base md:text-lg text-muted-foreground leading-relaxed max-w-2xl'>
-                    <strong className='text-foreground'>Data Israel</strong> הוא רשת של סוכני AI שעובדים יחד — סוכן
-                    ניתוב מרכזי שמנהל את השיחה, וסוכנים מומחים שמתחברים בזמן אמת למאגרי data.gov.il ולנתוני הלמ&quot;ס.
-                    כל סוכן יודע לחפש, לסנן ולנתח מידע מהמקור שלו, ויחד הם מאפשרים לכל אחד לשאול שאלות בעברית ולקבל
-                    תשובות מבוססות נתונים אמיתיים — עם הקשר, טבלאות וגרפים.
+                    <strong className='text-foreground'>Data Israel</strong> היא רשת של סוכני AI שעובדים יחד כדי לחבר
+                    שאלות יומיומיות למאגרי המידע הציבוריים של ישראל.
+                </p>
+                <p className='text-base md:text-lg text-muted-foreground leading-relaxed max-w-2xl'>
+                    המערכת מתחברת בזמן אמת למאגרים כמו data.gov.il והלמ״ס, ומאפשרת לכל אחד לשאול שאלה בעברית ולקבל תשובה
+                    מבוססת נתונים רשמיים — עם הקשר, טבלאות וגרפים.
                 </p>
             </motion.div>
 

@@ -189,7 +189,7 @@ function HeroTitle({ line1, line2, delay = 1 }: { line1: string; line2: string; 
 function HeroSubtitle({ children, delay = 2 }: { children: React.ReactNode; delay?: number }) {
     return (
         <motion.div custom={delay} variants={fadeUpVariants} initial='hidden' animate='visible'>
-            <p className='text-base sm:text-xl text-muted-foreground dark:text-foreground leading-relaxed font-light tracking-wide max-w-xl mx-auto'>
+            <p className='text-base sm:text-xl text-muted-foreground dark:text-foreground leading-relaxed font-light tracking-wide max-w-2xl mx-auto'>
                 {children}
             </p>
         </motion.div>
