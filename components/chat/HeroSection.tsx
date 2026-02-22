@@ -30,7 +30,7 @@ export function HeroSection({ onStartConversation, onScrollToAbout }: HeroSectio
     return (
         <div className='w-full max-w-4xl mx-auto text-center flex flex-col items-center justify-center gap-10 md:gap-16'>
             <motion.div
-                className='flex flex-col gap-2 md:gap-6 items-center'
+                className='flex flex-col gap-2 md:gap-4 items-center'
                 variants={fadeUpVariants}
                 initial='hidden'
                 animate='visible'
