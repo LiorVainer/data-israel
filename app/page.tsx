@@ -28,7 +28,12 @@ export default function Home() {
     return (
         <div ref={scrollRef} className='relative h-full w-full overflow-y-auto'>
             {/* Hero Section — centered within first viewport */}
-            <BGPattern variant='grid' mask='fade-center' fill='hsla(217, 68%, 56%, 0.2)' className='dark:opacity-50' />
+            <BGPattern
+                variant='grid'
+                mask='fade-center'
+                fill='hsla(217, 68%, 56%, 0.2)'
+                className='dark:opacity-50 bg-background'
+            />
             <div className='relative z-10 flex min-h-dvh flex-col items-center justify-center px-4 md:px-0'>
                 <motion.div
                     initial={{ opacity: 0, y: 40 }}
