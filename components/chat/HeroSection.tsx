@@ -28,9 +28,15 @@ export function HeroSection({ onStartConversation, onScrollToAbout }: HeroSectio
     const isMobile = useIsMobile();
 
     return (
-        <div className='w-full max-w-4xl mx-auto text-center flex flex-col items-center justify-center gap-10 md:gap-20'>
-            <motion.div variants={fadeUpVariants} initial='hidden' animate='visible'>
+        <div className='w-full max-w-4xl mx-auto text-center flex flex-col items-center justify-center gap-10 md:gap-16'>
+            <motion.div
+                className='flex flex-col gap-2 md:gap-6 items-center'
+                variants={fadeUpVariants}
+                initial='hidden'
+                animate='visible'
+            >
                 <Logo width={isMobile ? 80 : 130} aria-label='DataGov Logo' />
+                <h1 className='text-primary font-bold text-xl md:text-2xl'>Data Israel</h1>
             </motion.div>
             <div className='flex-shrink-0 flex flex-col items-center gap-16 md:gap-24 4xl:gap-20'>
                 <div className='flex flex-col gap-2'>
