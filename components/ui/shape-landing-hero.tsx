@@ -173,7 +173,7 @@ function HeroBadge({
 function HeroTitle({ line1, line2, delay = 1 }: { line1: string; line2: string; delay?: number }) {
     return (
         <motion.div custom={delay} variants={fadeUpVariants} initial='hidden' animate='visible'>
-            <h1 className='text-4xl sm:text-5xl md:text-6xl font-bold mb-4 md:mb-6 tracking-tight'>
+            <h1 className='text-3xl sm:text-5xl md:text-6xl font-bold mb-4 md:mb-6 tracking-tight'>
                 <span className='bg-clip-text text-transparent bg-gradient-to-b from-foreground to-foreground/80'>
                     {line1}
                 </span>
