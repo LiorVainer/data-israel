@@ -7,7 +7,8 @@ interface AiDisclaimerProps {
 export function AiDisclaimer({ className }: AiDisclaimerProps) {
     return (
         <p className={cn('text-xs text-muted-foreground/60 text-center', className)} dir='rtl'>
-            האתר משתמש בבינה מלאכותית. התשובות עלולות להכיל אי-דיוקים — מומלץ לאמת את המידע.
+            התשובות מבוססות על נתונים רשמיים ממאגרים ציבוריים.
+            כמו בכל מערכת מבוססת AI, מומלץ לאמת נתונים קריטיים מול המקור.
         </p>
     );
 }

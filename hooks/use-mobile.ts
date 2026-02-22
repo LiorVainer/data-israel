@@ -21,7 +21,7 @@ export function useIsMobile() {
     return mounted ? isMobile : false;
 }
 
-const TABLET_BREAKPOINT = 1560;
+const TABLET_BREAKPOINT = 1360;
 
 export function useIsTablet() {
     const [isTablet, setIsTablet] = React.useState<boolean>(false);

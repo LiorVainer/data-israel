@@ -49,10 +49,10 @@
   /* Semantic status colors */
   --color-success: var(--success);
   --color-error: var(--error);
-  /* Logo colors */
-  --color-logo-blue-light: var(--logo-blue-light);
-  --color-logo-blue-mid: var(--logo-blue-mid);
-  --color-logo-blue-dark: var(--logo-blue-dark);
+  /* Logo gradient stops */
+  --color-logo-gradient-start: var(--logo-gradient-start);
+  --color-logo-gradient-mid: var(--logo-gradient-mid);
+  --color-logo-gradient-end: var(--logo-gradient-end);
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
@@ -96,10 +96,10 @@
   /* Semantic status colors */
   --success: oklch(0.508 0.118 165.612); /* emerald-700 */
   --error: oklch(0.505 0.213 27.518);   /* red-700 */
-  /* Logo colors */
-  --logo-blue-light: #0170d0;
-  --logo-blue-mid: #085697;
-  --logo-blue-dark: #102a46;
+  /* Logo gradient stops — derived from theme blues */
+  --logo-gradient-start: var(--secondary-foreground);
+  --logo-gradient-mid: var(--primary);
+  --logo-gradient-end: var(--accent);
   --sidebar: oklch(0.985 0 0);
   --sidebar-foreground: oklch(0.145 0.02 250);
   --sidebar-primary: oklch(0.35 0.15 250);
@@ -111,19 +111,19 @@
 }
 
 .dark {
-  --background: oklch(0.13 0.02 250);
+  --background: oklch(0 0 0);
   --foreground: oklch(0.95 0.01 250);
   --card: oklch(0.18 0.03 250);
   --card-foreground: oklch(0.95 0.01 250);
   --popover: oklch(0.18 0.03 250);
   --popover-foreground: oklch(0.95 0.01 250);
-  --primary: oklch(0.65 0.18 250);
+  --primary: oklch(0.72 0.14 235);
   --primary-foreground: oklch(0.1 0.02 250);
   --secondary: oklch(0.22 0.04 250);
   --secondary-foreground: oklch(0.95 0.01 250);
   --muted: oklch(0.22 0.04 250);
   --muted-foreground: oklch(0.65 0.05 250);
-  --accent: oklch(0.55 0.18 250);
+  --accent: oklch(0.60 0.14 245);
   --accent-foreground: oklch(0.95 0.01 250);
   --destructive: oklch(0.704 0.191 22.216);
   --border: oklch(0.95 0.01 250 / 10%);
@@ -144,17 +144,17 @@
   /* Semantic status colors (dark) */
   --success: oklch(0.696 0.17 162.48);  /* emerald-500 */
   --error: oklch(0.637 0.237 25.331);   /* red-500 */
-  /* Logo colors */
-  --logo-blue-light: oklch(0.75 0.16 250);
-  --logo-blue-mid: oklch(0.65 0.14 250);
-  --logo-blue-dark: oklch(0.55 0.12 250);
-  --sidebar: oklch(0.18 0.03 250);
-  --sidebar-foreground: oklch(0.95 0.01 250);
+  /* Logo gradient stops — derived from theme blues */
+  --logo-gradient-start: var(--accent);
+  --logo-gradient-mid: var(--primary);
+  --logo-gradient-end: oklch(0.88 0.07 220);
+  --sidebar: oklch(0.12 0 0);
+  --sidebar-foreground: oklch(0.95 0 0);
   --sidebar-primary: oklch(0.55 0.18 250);
-  --sidebar-primary-foreground: oklch(0.95 0.01 250);
-  --sidebar-accent: oklch(0.22 0.04 250);
-  --sidebar-accent-foreground: oklch(0.95 0.01 250);
-  --sidebar-border: oklch(0.95 0.01 250 / 10%);
+  --sidebar-primary-foreground: oklch(0.95 0 0);
+  --sidebar-accent: oklch(0.18 0 0);
+  --sidebar-accent-foreground: oklch(0.95 0 0);
+  --sidebar-border: oklch(1 0 0 / 8%);
   --sidebar-ring: oklch(0.55 0.15 250);
 }
 
