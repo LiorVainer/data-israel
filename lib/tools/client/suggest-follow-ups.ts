@@ -25,7 +25,7 @@ export type SuggestFollowUpsOutput = z.infer<typeof suggestFollowUpsOutputSchema
 
 export const suggestFollowUps = tool({
     description:
-        'Display follow-up suggestions to the user. MUST be called at the end of every response with 2-4 relevant Hebrew suggestions.',
+        'Display follow-up suggestions to the user. MUST be called ONLY AFTER all agent delegations and chart tools have completed — never mid-chain. Call once per response with 2-4 relevant Hebrew suggestions, right before the final text.',
     inputSchema: suggestFollowUpsInputSchema,
     execute: async (input) => ({ suggestions: input.suggestions }),
 });

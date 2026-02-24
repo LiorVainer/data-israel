@@ -9,7 +9,7 @@ import { LoadingShimmer } from './LoadingShimmer';
 import { ChartError, ChartLoadingState, ChartRenderer } from './ChartRenderer';
 import { getToolStatus, isToolPart, isAgentDataPart, SourceUrlUIPart, ToolCallPart } from './types';
 import { resolveToolSourceUrl } from '@/lib/tools/source-url-resolvers';
-import { CLIENT_TOOL_NAMES, SOURCE_URL_TOOL_NAMES, toToolPartTypeSet } from '@/lib/tools/tool-names';
+import { CLIENT_TOOL_NAMES, SOURCE_URL_TOOL_NAMES, toToolPartTypeSet, toToolPartType } from '@/lib/tools/tool-names';
 import type { DisplayChartInput } from '@/lib/tools';
 import { UIMessage } from 'ai';
 
@@ -22,6 +22,9 @@ const CLIENT_TOOL_TYPES = toToolPartTypeSet([...CLIENT_TOOL_NAMES, ...SOURCE_URL
 
 /** Tool types that generate source URLs from dedicated tool results */
 const SOURCE_TOOL_TYPES = toToolPartTypeSet(SOURCE_URL_TOOL_NAMES);
+
+/** suggestFollowUps part type — consumed by ChatThread for the Suggestions UI, not rendered in message body */
+const SUGGEST_FOLLOW_UPS_TYPE = toToolPartType('suggestFollowUps');
 
 /** A segment is either a group of consecutive server-side tool parts or a single non-tool part */
 type RenderSegment =
@@ -69,6 +72,11 @@ function segmentMessageParts(parts: UIMessage['parts']): RenderSegment[] {
         } else if (part.type === 'data-tool-agent' && segments.at(-1)?.kind === 'tool-group') {
             // data-tool-agent: companion data for agent tools — absorb into preceding tool-group
             // (consumed by buildAgentInternalCallsMap via allParts, not rendered directly)
+            pendingParts = [];
+        } else if (part.type === SUGGEST_FOLLOW_UPS_TYPE) {
+            // suggestFollowUps: consumed by ChatThread for the Suggestions UI.
+            // Absorb silently so it never breaks tool-group continuity
+            // (model may call it mid-chain despite instructions).
             pendingParts = [];
         } else {
             // Flush any buffered parts (tool group ended, followed by non-tool content)
