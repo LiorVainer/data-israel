@@ -41,7 +41,7 @@ export function ChatThread({ id }: ChatThreadProps) {
 
     const searchParams = useSearchParams();
     const [initialMessageData, , removeInitialMessage] = useSessionStorage<InitialMessageData>(INITIAL_MESSAGE_KEY);
-    const isNewConversation = initialMessageData?.chatId === id || searchParams.has('new');
+    const startedAsNew = useRef(initialMessageData?.chatId === id || searchParams.has('new'));
 
     const transport = useMemo(
         () =>
@@ -73,10 +73,12 @@ export function ChatThread({ id }: ChatThreadProps) {
         resume: true,
     });
 
+    const isNewConversation = startedAsNew.current && !messages.length;
+
     const { data: savedMessages, isFetching: isLoadingMessages } = useQuery({
         queryKey: ['threads', id, 'messages', userId],
         queryFn: () => threadService.getMessages(id, userId!),
-        enabled: !isNewConversation,
+        enabled: !startedAsNew.current,
     });
 
     const didLoad = useRef(false);
@@ -106,7 +108,7 @@ export function ChatThread({ id }: ChatThreadProps) {
 
     const isStreaming = status === 'submitted' || status === 'streaming';
     const hasMessages = messages.length > 0;
-    const isLoading = isLoadingMessages && !didLoad.current && !hasMessages;
+    const isLoading = isLoadingMessages && !didLoad.current;
 
     const lastAssistantMessage = messages.filter((m) => m.role === 'assistant').at(-1);
     const { suggestions: suggestionsFromTool, loading: suggestionsLoading } = useMemo(() => {
