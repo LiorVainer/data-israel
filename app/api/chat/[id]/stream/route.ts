@@ -21,7 +21,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
         return new Response(null, { status: 204 });
     }
 
-    const streamContext = getResumableStreamContext(after);
+    const streamContext = await getResumableStreamContext(after);
     if (!streamContext) {
         return new Response(null, { status: 204 });
     }

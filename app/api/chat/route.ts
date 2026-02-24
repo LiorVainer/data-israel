@@ -336,12 +336,17 @@ export async function POST(req: Request) {
         return createUIMessageStreamResponse({
             stream,
             consumeSseStream: async ({ stream: sseStream }) => {
-                const streamContext = getResumableStreamContext(after);
-                if (!streamContext || !threadId) return;
+                try {
+                    const streamContext = await getResumableStreamContext(after);
+                    if (!streamContext || !threadId) return;
 
-                const streamId = generateId();
-                await streamContext.createNewResumableStream(streamId, () => sseStream);
-                await setActiveStreamId(threadId, streamId);
+                    const streamId = generateId();
+                    await streamContext.createNewResumableStream(streamId, () => sseStream);
+                    await setActiveStreamId(threadId, streamId);
+                } catch (error: unknown) {
+                    const message = error instanceof Error ? error.message : String(error);
+                    console.error('[resumable-stream] consumeSseStream error:', message);
+                }
             },
         });
     } catch (error) {

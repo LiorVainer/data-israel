@@ -4,8 +4,11 @@
  * Two responsibilities:
  *
  * A) Resumable Stream Context Factory
- *    - Uses `resumable-stream` package which internally manages Redis pub/sub
- *      connections via the REDIS_URL environment variable.
+ *    - Uses `resumable-stream` package with our own properly-configured Redis clients
+ *    - The `redis` npm TCP clients are created with error handlers and reconnect
+ *      strategy to prevent uncaught "Socket closed unexpectedly" crashes with Upstash
+ *    - Clients are connected eagerly and cached as module-level singletons
+ *      (the `resumable-stream` package skips `.connect()` on externally-provided clients)
  *    - Exports `getResumableStreamContext()` for creating resumable stream contexts.
  *
  * B) ActiveStreamId Helpers
@@ -14,6 +17,7 @@
  *    - Key pattern: `stream:active:{threadId}`
  */
 
+import { createClient, type RedisClientType } from 'redis';
 import { createResumableStreamContext, type ResumableStreamContext } from 'resumable-stream';
 
 import { getRedisClient } from './client';
@@ -29,21 +33,107 @@ const ACTIVE_STREAM_KEY_PREFIX = 'stream:active';
 // ---------------------------------------------------------------------------
 
 /**
+ * Creates a Redis client from REDIS_URL with proper error handling.
+ * Attaches an 'error' event handler to prevent uncaught exceptions
+ * when Upstash closes idle TCP connections.
+ */
+function createManagedRedisClient(): RedisClientType | null {
+    const redisUrl = process.env.REDIS_URL || process.env.KV_URL;
+    if (!redisUrl) {
+        return null;
+    }
+
+    const client = createClient({
+        url: redisUrl,
+        socket: {
+            reconnectStrategy: (retries: number) => {
+                if (retries > 5) {
+                    console.error('[redis/resumable-stream] Max reconnection attempts reached');
+                    return new Error('Max reconnection attempts reached');
+                }
+                return Math.min(retries * 200, 2000);
+            },
+        },
+    }) as RedisClientType;
+
+    client.on('error', (err: Error) => {
+        console.warn('[redis/resumable-stream] Redis client error (handled):', err.message);
+    });
+
+    return client;
+}
+
+// Module-level singleton for pre-connected Redis TCP clients.
+// The `resumable-stream` package does NOT call `.connect()` on externally-provided
+// clients, so we must connect them ourselves and reuse across requests.
+let publisherClient: RedisClientType | null = null;
+let subscriberClient: RedisClientType | null = null;
+let connectPromise: Promise<void> | null = null;
+let connectionFailed = false;
+
+/**
+ * Lazily creates and connects Redis pub/sub clients (singleton).
+ * Returns the connected pair, or `null` if REDIS_URL is missing or
+ * the connection permanently failed.
+ */
+async function ensureConnectedClients(): Promise<{
+    publisher: RedisClientType;
+    subscriber: RedisClientType;
+} | null> {
+    if (connectionFailed) return null;
+    if (publisherClient && subscriberClient) {
+        return { publisher: publisherClient, subscriber: subscriberClient };
+    }
+
+    if (!connectPromise) {
+        connectPromise = (async () => {
+            const pub = createManagedRedisClient();
+            const sub = createManagedRedisClient();
+            if (!pub || !sub) {
+                console.warn('[redis/resumable-stream] REDIS_URL/KV_URL not set, resumable streams disabled');
+                connectionFailed = true;
+                return;
+            }
+            await Promise.all([pub.connect(), sub.connect()]);
+            publisherClient = pub;
+            subscriberClient = sub;
+        })().catch((err: unknown) => {
+            const message = err instanceof Error ? err.message : String(err);
+            console.error('[redis/resumable-stream] Failed to connect Redis clients:', message);
+            connectionFailed = true;
+            publisherClient = null;
+            subscriberClient = null;
+        });
+    }
+
+    await connectPromise;
+
+    if (!publisherClient || !subscriberClient) return null;
+    return { publisher: publisherClient, subscriber: subscriberClient };
+}
+
+/**
  * Creates a `ResumableStreamContext` for use in streaming API routes.
  *
- * The `resumable-stream` package internally creates Redis pub/sub connections
- * using the `REDIS_URL` (or `KV_URL`) environment variable. If that variable
- * is not set, `createResumableStreamContext` will throw, so we catch and
- * return `null` to allow graceful degradation.
+ * Uses pre-connected singleton Redis clients with error handlers and reconnect
+ * strategy. A fresh context is created per request so each gets its own
+ * `waitUntil`, but the underlying TCP connections are reused.
  *
  * @param waitUntil - Vercel / Next.js `waitUntil` callback, or `null` for
  *   long-lived server environments.
  */
-export function getResumableStreamContext(
+export async function getResumableStreamContext(
     waitUntil: ((promise: Promise<unknown>) => void) | null,
-): ResumableStreamContext | null {
+): Promise<ResumableStreamContext | null> {
     try {
-        return createResumableStreamContext({ waitUntil });
+        const clients = await ensureConnectedClients();
+        if (!clients) return null;
+
+        return createResumableStreamContext({
+            waitUntil,
+            publisher: clients.publisher,
+            subscriber: clients.subscriber,
+        });
     } catch (error: unknown) {
         const message = error instanceof Error ? error.message : String(error);
         console.warn(`[redis/resumable-stream] Could not create resumable stream context: ${message}`);
