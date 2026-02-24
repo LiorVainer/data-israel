@@ -4,8 +4,8 @@
  * Streaming endpoint using Mastra agent network
  */
 
-import { createUIMessageStreamResponse, StopCondition, UIMessage } from 'ai';
-import { NextResponse } from 'next/server';
+import { createUIMessageStreamResponse, generateId, StopCondition, UIMessage } from 'ai';
+import { after, NextResponse } from 'next/server';
 import { mastra } from '@/agents/mastra';
 import { handleChatStream } from '@mastra/ai-sdk';
 import { toAISdkV5Messages } from '@mastra/ai-sdk/ui';
@@ -20,6 +20,7 @@ import {
     isToolPart,
     type ToolCallPart,
 } from '@/components/chat/types';
+import { getResumableStreamContext, setActiveStreamId, clearActiveStreamId } from '@/lib/redis/resumable-stream';
 
 const { CHAT } = AgentConfig;
 
@@ -323,13 +324,31 @@ export async function POST(req: Request) {
                             cachedInputTokens: billingUsage.cachedInputTokens || undefined,
                         },
                     });
+
+                    // Clear the resumable stream mapping now that streaming is complete
+                    void clearActiveStreamId(threadId);
                 },
             },
             sendReasoning: true,
             sendSources: true,
         });
 
-        return createUIMessageStreamResponse({ stream });
+        return createUIMessageStreamResponse({
+            stream,
+            consumeSseStream: async ({ stream: sseStream }) => {
+                try {
+                    const streamContext = await getResumableStreamContext(after);
+                    if (!streamContext || !threadId) return;
+
+                    const streamId = generateId();
+                    await streamContext.createNewResumableStream(streamId, () => sseStream);
+                    await setActiveStreamId(threadId, streamId);
+                } catch (error: unknown) {
+                    const message = error instanceof Error ? error.message : String(error);
+                    console.error('[resumable-stream] consumeSseStream error:', message);
+                }
+            },
+        });
     } catch (error) {
         return NextResponse.json(
             { error: error instanceof Error ? error.message : 'Unknown error occurred' },

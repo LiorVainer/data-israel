@@ -40,7 +40,7 @@ export function HeroSection({ onStartConversation, onScrollToAbout }: HeroSectio
             </motion.div>
             <div className='flex-shrink-0 flex flex-col items-center gap-16 md:gap-24 4xl:gap-20'>
                 <div className='flex flex-col gap-2'>
-                    <HeroTitle line1='שואלים שאלה.' line2='מקבלים נתונים רשמיים.' />
+                    <HeroTitle line1='שואלים שאלה.' line2='מקבלים מידע רשמי.' />
                     <div>
                         <HeroSubtitle>AI המחובר לנתונים הציבוריים של ישראל.</HeroSubtitle>
                         <HeroSubtitle>כל תשובה נשענת על מקור רשמי.</HeroSubtitle>

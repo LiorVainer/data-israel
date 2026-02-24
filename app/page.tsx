@@ -28,12 +28,7 @@ export default function Home() {
     return (
         <div ref={scrollRef} className='relative h-full w-full overflow-y-auto'>
             {/* Hero Section — centered within first viewport */}
-            <BGPattern
-                variant='grid'
-                mask='fade-center'
-                fill='hsla(217, 68%, 56%, 0.2)'
-                className='dark:opacity-50 bg-background'
-            />
+            <BGPattern variant='dots' mask='fade-center' fill='hsla(217, 68%, 56%, 0.4)' className='bg-background' />
             <div className='relative z-10 flex min-h-dvh flex-col items-center justify-center px-4 md:px-0'>
                 <motion.div
                     initial={{ opacity: 0, y: 40 }}
@@ -51,7 +46,12 @@ export default function Home() {
 
             {/* Below-the-fold sections */}
             <div className='relative z-10 flex flex-col gap-40 md:gap-48 py-24 md:py-36'>
-                <BGPattern variant='diagonal-stripes' mask='fade-edges' fill='hsla(217, 68%, 56%, 0.2)' />
+                <BGPattern
+                    variant='dots'
+                    mask='fade-center'
+                    fill='hsla(217, 68%, 56%, 0.4)'
+                    className='bg-background'
+                />
 
                 <AboutSection />
                 <SourcesSection />

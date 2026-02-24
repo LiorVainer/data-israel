@@ -178,7 +178,7 @@ function HeroTitle({ line1, line2, delay = 1 }: { line1: string; line2: string; 
                     {line1}
                 </span>
                 <br />
-                <span className='bg-clip-text text-transparent bg-gradient-to-r from-primary via-foreground/90 to-accent'>
+                <span className='bg-clip-text text-transparent bg-gradient-to-r from-primary/90 via-foreground/90 to-primary/90'>
                     {line2}
                 </span>
             </h1>

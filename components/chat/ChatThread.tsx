@@ -53,6 +53,7 @@ export function ChatThread({ id }: ChatThreadProps) {
                 prepareSendMessagesRequest({ messages }) {
                     return {
                         body: {
+                            id,
                             messages,
                             memory: {
                                 thread: id,
@@ -66,14 +67,16 @@ export function ChatThread({ id }: ChatThreadProps) {
     );
 
     const { messages, sendMessage, setMessages, status, regenerate, stop } = useChat({
+        id,
         messages: [] as UIMessage[],
         transport,
+        resume: true,
     });
 
     const { data: savedMessages, isFetching: isLoadingMessages } = useQuery({
         queryKey: ['threads', id, 'messages', userId],
         queryFn: () => threadService.getMessages(id, userId!),
-        enabled: !isNewConversation && isAuthLoaded && !!userId,
+        enabled: !isNewConversation,
     });
 
     const didLoad = useRef(false);
@@ -129,7 +132,6 @@ export function ChatThread({ id }: ChatThreadProps) {
         return { suggestions: undefined, loading: false };
     }, [lastAssistantMessage]);
 
-
     return (
         <div className='relative h-full w-full'>
             <GeometricBackground noShapes />
@@ -140,7 +142,7 @@ export function ChatThread({ id }: ChatThreadProps) {
                         <div className='flex-1 w-full md:w-4xl mx-auto overflow-hidden'>
                             <MessageListSkeleton />
                         </div>
-                    ) : !hasMessages && !isStreaming ? (
+                    ) : isNewConversation ? (
                         <div className='flex-1 min-h-0 w-full md:w-4xl flex items-center justify-center'>
                             <EmptyConversation onClick={handleSend} />
                         </div>
