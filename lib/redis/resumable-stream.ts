@@ -25,6 +25,13 @@ import { getRedisClient } from './client';
 /** TTL for active stream IDs in seconds (10 minutes). */
 const ACTIVE_STREAM_TTL_SECONDS = 600;
 
+/**
+ * TTL for resumable stream Redis records in seconds (10 minutes).
+ * The `resumable-stream` package hardcodes 24h internally; we override
+ * by wrapping the publisher's `set` method to cap the EX value.
+ */
+const RESUMABLE_STREAM_TTL_SECONDS = 600;
+
 /** Key prefix for active stream ID entries. */
 const ACTIVE_STREAM_KEY_PREFIX = 'stream:active';
 
@@ -113,11 +120,38 @@ async function ensureConnectedClients(): Promise<{
 }
 
 /**
+ * Wraps a Redis publisher to cap the EX (expiry) value on `set` calls.
+ *
+ * The `resumable-stream` package hardcodes `EX: 24 * 60 * 60` (24 hours)
+ * for its sentinel keys. This proxy intercepts `set` calls and replaces
+ * the EX value with `RESUMABLE_STREAM_TTL_SECONDS` so stream records
+ * expire after 10 minutes instead.
+ */
+function wrapPublisherWithTtl(publisher: RedisClientType): RedisClientType {
+    return new Proxy(publisher, {
+        get(target, prop, receiver) {
+            if (prop === 'set') {
+                return (key: string, value: string, options?: { EX?: number }) => {
+                    const patched = options?.EX
+                        ? { ...options, EX: RESUMABLE_STREAM_TTL_SECONDS }
+                        : options;
+                    return target.set(key, value, patched);
+                };
+            }
+            return Reflect.get(target, prop, receiver);
+        },
+    });
+}
+
+/**
  * Creates a `ResumableStreamContext` for use in streaming API routes.
  *
  * Uses pre-connected singleton Redis clients with error handlers and reconnect
  * strategy. A fresh context is created per request so each gets its own
  * `waitUntil`, but the underlying TCP connections are reused.
+ *
+ * The publisher is wrapped with a Proxy that overrides the hardcoded 24h TTL
+ * in the `resumable-stream` package to `RESUMABLE_STREAM_TTL_SECONDS` (10 min).
  *
  * @param waitUntil - Vercel / Next.js `waitUntil` callback, or `null` for
  *   long-lived server environments.
@@ -131,7 +165,7 @@ export async function getResumableStreamContext(
 
         return createResumableStreamContext({
             waitUntil,
-            publisher: clients.publisher,
+            publisher: wrapPublisherWithTtl(clients.publisher),
             subscriber: clients.subscriber,
         });
     } catch (error: unknown) {
