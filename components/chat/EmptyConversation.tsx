@@ -55,7 +55,7 @@ export function EmptyConversation({ onClick }: EmptyConversationProps) {
                             className='group flex flex-col gap-3 rounded-xl border border-border/60 bg-card/50 p-4 text-right transition-all hover:border-border hover:bg-card/80 hover:shadow-sm'
                         >
                             <div className='flex items-center gap-2'>
-                                <div className='flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary/10'>
+                                <div className='flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary-tint'>
                                     <card.icon className='size-4 text-primary' />
                                 </div>
                                 <span className='text-sm font-medium text-foreground/80'>{card.label}</span>

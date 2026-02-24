@@ -20,7 +20,7 @@ function Step({ icon, title, description, delay }: StepProps) {
             transition={{ duration: 0.6, delay, ease: 'easeOut' }}
             className='flex flex-col items-center gap-4 text-center'
         >
-            <div className='flex items-center justify-center w-14 h-14 rounded-2xl bg-primary/10 text-primary'>
+            <div className='flex items-center justify-center w-14 h-14 rounded-2xl bg-primary-tint text-primary'>
                 {icon}
             </div>
             <h3 className='text-lg font-semibold text-foreground'>{title}</h3>

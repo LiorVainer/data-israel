@@ -20,7 +20,7 @@ function Feature({ icon, title, description, delay }: FeatureProps) {
             transition={{ duration: 0.6, delay, ease: 'easeOut' }}
             className='flex flex-col items-center gap-3 text-center'
         >
-            <div className='flex items-center justify-center w-12 h-12 rounded-xl bg-primary/10 text-primary'>
+            <div className='flex items-center justify-center w-12 h-12 rounded-xl bg-primary-tint text-primary'>
                 {icon}
             </div>
             <h3 className='text-base font-semibold text-foreground'>{title}</h3>
