@@ -106,7 +106,7 @@ export function ChatThread({ id }: ChatThreadProps) {
 
     const isStreaming = status === 'submitted' || status === 'streaming';
     const hasMessages = messages.length > 0;
-    const isLoading = isLoadingMessages && !didLoad.current;
+    const isLoading = isLoadingMessages && !didLoad.current && !hasMessages;
 
     const lastAssistantMessage = messages.filter((m) => m.role === 'assistant').at(-1);
     const { suggestions: suggestionsFromTool, loading: suggestionsLoading } = useMemo(() => {
