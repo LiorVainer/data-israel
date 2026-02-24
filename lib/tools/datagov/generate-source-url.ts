@@ -7,13 +7,12 @@
 
 import { tool } from 'ai';
 import { z } from 'zod';
-
-const DATAGOV_PORTAL_BASE = 'https://data.gov.il/dataset';
+import { buildDatasetPortalUrl, buildResourcePortalUrl } from '@/constants/datagov-urls';
 
 export const generateDataGovSourceUrlInputSchema = z.object({
+    orgName: z.string().describe('Organization slug/name (e.g., "labor", "airport_authority")'),
     datasetName: z.string().describe('Dataset slug/name from dataset details'),
     resourceId: z.string().optional().describe('Resource UUID for direct resource link'),
-    query: z.string().optional().describe('Search query within the resource'),
     title: z.string().describe('Hebrew display title for the source link'),
 });
 
@@ -35,10 +34,10 @@ export type GenerateDataGovSourceUrlOutput = z.infer<typeof generateDataGovSourc
 export const generateDataGovSourceUrl = tool({
     description: 'Generate a clickable data.gov.il portal URL so users can view dataset data in a browser table.',
     inputSchema: generateDataGovSourceUrlInputSchema,
-    execute: async ({ datasetName, resourceId, query, title }) => {
-        let url = `${DATAGOV_PORTAL_BASE}/${encodeURIComponent(datasetName)}`;
-        if (resourceId) url += `/resource/${encodeURIComponent(resourceId)}`;
-        if (query) url += `?query=${encodeURIComponent(query)}`;
+    execute: async ({ orgName, datasetName, resourceId, title }) => {
+        const url = resourceId
+            ? buildResourcePortalUrl(orgName, datasetName, resourceId)
+            : buildDatasetPortalUrl(orgName, datasetName);
         return { success: true as const, url, title };
     },
 });

@@ -8,6 +8,7 @@ import { tool } from 'ai';
 import { z } from 'zod';
 import { dataGovApi } from '@/lib/api/data-gov/client';
 import { buildDataGovUrl, DATAGOV_ENDPOINTS } from '@/lib/api/data-gov/endpoints';
+import { buildResourcePortalUrl } from '@/constants/datagov-urls';
 
 // ============================================================================
 // Schemas (Single Source of Truth)
@@ -38,6 +39,7 @@ export const getResourceDetailsOutputSchema = z.discriminatedUnion('success', [
             packageId: z.string(),
             state: z.string(),
         }),
+        portalUrl: z.string().optional().describe('Portal URL for browsing this resource on data.gov.il'),
         apiUrl: z.string().optional(),
         searchedResourceName: z.string(),
     }),
@@ -69,6 +71,21 @@ export const getResourceDetails = tool({
         try {
             const resource = await dataGovApi.resource.show(id, includeTracking);
 
+            // Fetch parent dataset to build portal URL
+            let portalUrl: string | undefined;
+            if (resource.package_id) {
+                try {
+                    const dataset = await dataGovApi.dataset.show(resource.package_id);
+                    portalUrl = buildResourcePortalUrl(
+                        dataset.organization.name,
+                        dataset.name,
+                        resource.id,
+                    );
+                } catch {
+                    // Non-critical: portal URL is optional
+                }
+            }
+
             return {
                 success: true,
                 resource: {
@@ -85,6 +102,7 @@ export const getResourceDetails = tool({
                     packageId: resource.package_id,
                     state: resource.state,
                 },
+                portalUrl,
                 apiUrl,
                 searchedResourceName,
             };

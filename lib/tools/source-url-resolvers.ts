@@ -11,9 +11,6 @@
 
 import { SOURCE_GENERATING_TOOL_NAMES, toToolPartTypeSet } from './tool-names';
 
-const DATAGOV_PORTAL = 'https://data.gov.il/datasets';
-const DATAGOV_ORG_PORTAL = 'https://data.gov.il/organization';
-
 /** Set of tool-prefixed types for source-generating tools (e.g. 'tool-searchDatasets') */
 const SOURCE_GENERATING_TOOL_TYPES = toToolPartTypeSet(SOURCE_GENERATING_TOOL_NAMES);
 
@@ -40,8 +37,9 @@ function getResourceName(input: unknown, output: unknown): string | undefined {
 /**
  * Resolves a source URL from a data tool's part type, input, and output.
  *
- * Produces dynamic, context-aware titles by extracting tool-specific
- * fields (searchedResourceName, query, dataset title, series path, etc.).
+ * Prefers `portalUrl` from tool output when available (server-computed,
+ * includes /he/ prefix and org name). Falls back to `apiUrl` for tools
+ * that don't provide a portal URL.
  *
  * Returns null for non-data tools or failed outputs.
  */
@@ -54,24 +52,26 @@ export function resolveToolSourceUrl(toolType: string, input: unknown, output: u
     switch (toolName) {
         // ── DataGov: detail/query tools ──────────────────────────────────
         case 'getDatasetDetails': {
+            const portalUrl = getString(output, 'portalUrl');
+            if (!portalUrl) return null;
             const dataset = isRecord(output) ? output.dataset : undefined;
-            const name = getString(dataset, 'name');
             const title = getString(dataset, 'title') ?? getResourceName(input, output);
-            if (!name) return null;
+            const name = getString(dataset, 'name');
             return {
-                url: `${DATAGOV_PORTAL}/${encodeURIComponent(name)}`,
-                title: title ?? name,
+                url: portalUrl,
+                title: title ?? name ?? 'מאגר מידע - data.gov.il',
             };
         }
 
         case 'getOrganizationDetails': {
+            const portalUrl = getString(output, 'portalUrl');
+            if (!portalUrl) return null;
             const org = isRecord(output) ? output.organization : undefined;
-            const name = getString(org, 'name');
             const title = getString(org, 'title') ?? getResourceName(input, output);
-            if (!name) return null;
+            const name = getString(org, 'name');
             return {
-                url: `${DATAGOV_ORG_PORTAL}/${encodeURIComponent(name)}`,
-                title: title ?? name,
+                url: portalUrl,
+                title: title ?? name ?? 'ארגון - data.gov.il',
             };
         }
 
@@ -86,13 +86,15 @@ export function resolveToolSourceUrl(toolType: string, input: unknown, output: u
         }
 
         case 'getResourceDetails': {
+            const portalUrl = getString(output, 'portalUrl');
             const apiUrl = getString(output, 'apiUrl');
-            if (!apiUrl) return null;
+            const url = portalUrl ?? apiUrl;
+            if (!url) return null;
             const resourceName = getResourceName(input, output);
             const resource = isRecord(output) ? output.resource : undefined;
             const name = getString(resource, 'name');
             return {
-                url: apiUrl,
+                url,
                 title: resourceName ?? name ?? 'פרטי משאב - data.gov.il',
             };
         }

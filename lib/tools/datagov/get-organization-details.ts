@@ -8,6 +8,7 @@ import { tool } from 'ai';
 import { z } from 'zod';
 import { dataGovApi } from '@/lib/api/data-gov/client';
 import { buildDataGovUrl, DATAGOV_ENDPOINTS } from '@/lib/api/data-gov/endpoints';
+import { buildOrganizationPortalUrl } from '@/constants/datagov-urls';
 
 // ============================================================================
 // Schemas (Single Source of Truth)
@@ -34,6 +35,7 @@ export const getOrganizationDetailsOutputSchema = z.discriminatedUnion('success'
             packageCount: z.number(),
             state: z.string(),
         }),
+        portalUrl: z.string().describe('Portal URL for browsing this organization on data.gov.il'),
         apiUrl: z.string().optional().describe('The API URL used to fetch the organization details'),
         searchedResourceName: z.string().describe('Hebrew name of the organization for UI display'),
     }),
@@ -75,6 +77,7 @@ export const getOrganizationDetails = tool({
                     packageCount: org.package_count,
                     state: org.state,
                 },
+                portalUrl: buildOrganizationPortalUrl(org.name),
                 apiUrl,
                 searchedResourceName,
             };

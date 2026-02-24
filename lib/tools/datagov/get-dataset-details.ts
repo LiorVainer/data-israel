@@ -8,6 +8,7 @@ import { tool } from 'ai';
 import { z } from 'zod';
 import { dataGovApi } from '@/lib/api/data-gov/client';
 import { buildDataGovUrl, DATAGOV_ENDPOINTS } from '@/lib/api/data-gov/endpoints';
+import { buildDatasetPortalUrl } from '@/constants/datagov-urls';
 
 // ============================================================================
 // Schemas (Single Source of Truth)
@@ -27,7 +28,10 @@ export const getDatasetDetailsOutputSchema = z.discriminatedUnion('success', [
             id: z.string(),
             title: z.string(),
             name: z.string(),
-            organization: z.unknown(),
+            organization: z.object({
+                name: z.string(),
+                title: z.string(),
+            }),
             tags: z.array(z.unknown()),
             notes: z.string(),
             author: z.string(),
@@ -48,6 +52,7 @@ export const getDatasetDetailsOutputSchema = z.discriminatedUnion('success', [
                 }),
             ),
         }),
+        portalUrl: z.string(),
         apiUrl: z.string().optional(),
         searchedResourceName: z.string(),
     }),
@@ -82,7 +87,10 @@ export const getDatasetDetails = tool({
                     id: dataset.id,
                     title: dataset.title,
                     name: dataset.name,
-                    organization: dataset.organization,
+                    organization: {
+                        name: dataset.organization.name,
+                        title: dataset.organization.title,
+                    },
                     tags: dataset.tags,
                     notes: dataset.notes,
                     author: dataset.author,
@@ -101,6 +109,7 @@ export const getDatasetDetails = tool({
                         last_modified: r.last_modified,
                     })),
                 },
+                portalUrl: buildDatasetPortalUrl(dataset.organization.name, dataset.name),
                 apiUrl,
                 searchedResourceName,
             };
