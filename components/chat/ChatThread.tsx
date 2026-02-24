@@ -53,6 +53,7 @@ export function ChatThread({ id }: ChatThreadProps) {
                 prepareSendMessagesRequest({ messages }) {
                     return {
                         body: {
+                            id,
                             messages,
                             memory: {
                                 thread: id,
@@ -66,8 +67,10 @@ export function ChatThread({ id }: ChatThreadProps) {
     );
 
     const { messages, sendMessage, setMessages, status, regenerate, stop } = useChat({
+        id,
         messages: [] as UIMessage[],
         transport,
+        resume: true,
     });
 
     const { data: savedMessages, isFetching: isLoadingMessages } = useQuery({
