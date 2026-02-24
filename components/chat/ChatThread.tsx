@@ -98,12 +98,12 @@ export function ChatThread({ id }: ChatThreadProps) {
 
     const handleSend = useCallback(
         (text: string) => {
-            if (!messages.length && searchParams.has('new')) {
+            if (!messages.length && startedAsNew.current) {
                 window.history.replaceState(null, '', `/chat/${id}`);
             }
             void sendMessage({ text });
         },
-        [messages.length, searchParams, id, sendMessage],
+        [messages.length, id, sendMessage],
     );
 
     const isStreaming = status === 'submitted' || status === 'streaming';
