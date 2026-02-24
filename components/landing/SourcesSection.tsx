@@ -15,7 +15,7 @@ interface StatProps {
 function StatCard({ icon, value, label }: StatProps) {
     return (
         <div className='flex flex-col items-center gap-3 rounded-2xl border border-border/50 bg-card/60 backdrop-blur-sm px-6 py-8'>
-            <div className='flex items-center justify-center w-12 h-12 rounded-xl bg-primary/10 text-primary'>
+            <div className='flex items-center justify-center w-12 h-12 rounded-xl bg-primary-tint text-primary'>
                 {icon}
             </div>
             <span className='text-3xl md:text-4xl font-bold text-foreground tabular-nums'>{value}</span>
@@ -90,9 +90,9 @@ export function SourcesSection() {
 מאגרי מידע ממשרדי ממשלה, רשויות וגופים ציבוריים.'
                     delay={0}
                     stats={[
-                        { icon: <Database className='w-6 h-6' />, value: '15,000+', label: 'מאגרי מידע' },
-                        { icon: <Building2 className='w-6 h-6' />, value: '100+', label: 'גופים מפרסמים' },
-                        { icon: <FolderOpen className='w-6 h-6' />, value: '50,000+', label: 'קבצי נתונים' },
+                        { icon: <Database className='w-6 h-6' />, value: '1,100+', label: 'מאגרי מידע' },
+                        { icon: <Building2 className='w-6 h-6' />, value: '60+', label: 'גופים מפרסמים' },
+                        { icon: <FolderOpen className='w-6 h-6' />, value: '3,500+', label: 'קבצי נתונים' },
                     ]}
                 />
 
@@ -106,8 +106,8 @@ export function SourcesSection() {
 מדדי מחירים, דמוגרפיה, נתוני יישובים ועוד.'
                     delay={0.15}
                     stats={[
-                        { icon: <BarChart3 className='w-6 h-6' />, value: '1,000+', label: 'סדרות סטטיסטיות' },
-                        { icon: <Layers className='w-6 h-6' />, value: '50+', label: 'תחומי מידע' },
+                        { icon: <BarChart3 className='w-6 h-6' />, value: '95,000+', label: 'סדרות סטטיסטיות' },
+                        { icon: <Layers className='w-6 h-6' />, value: '35', label: 'תחומי מידע' },
                         { icon: <Calendar className='w-6 h-6' />, value: '75+', label: 'שנות נתונים' },
                     ]}
                 />
