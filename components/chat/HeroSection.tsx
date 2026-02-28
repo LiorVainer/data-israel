@@ -5,6 +5,7 @@ import { HeroSubtitle, HeroTitle } from '@/components/ui/shape-landing-hero';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Logo } from '@/components/ui/logo';
 import { Button } from '@/components/ui/button';
+import { ArrowLeft } from 'lucide-react';
 
 const fadeUpVariants = {
     hidden: { opacity: 0, y: 30 },
@@ -40,10 +41,10 @@ export function HeroSection({ onStartConversation, onScrollToAbout }: HeroSectio
             </motion.div>
             <div className='flex-shrink-0 flex flex-col items-center gap-16 md:gap-24 4xl:gap-20'>
                 <div className='flex flex-col gap-2'>
-                    <HeroTitle line1='שואלים שאלה.' line2='מקבלים מידע רשמי.' />
+                    <HeroTitle line1='שואלים על ישראל.' line2='מקבלים נתונים רשמיים.' />
                     <div>
-                        <HeroSubtitle>AI המחובר לנתונים הציבוריים של ישראל.</HeroSubtitle>
-                        <HeroSubtitle>כל תשובה נשענת על מקור רשמי.</HeroSubtitle>
+                        <HeroSubtitle>בינה מלאכותית המחוברת למאגרי מידע ציבוריים.</HeroSubtitle>
+                        <HeroSubtitle>כל תשובה מבוססת על מקור רשמי.</HeroSubtitle>
                     </div>
                 </div>
                 {onStartConversation && (
@@ -58,7 +59,8 @@ export function HeroSection({ onStartConversation, onScrollToAbout }: HeroSectio
                             onClick={onStartConversation}
                             className='w-full sm:w-48 rounded-full bg-action px-10 py-4 text-base font-semibold text-background hover:bg-action/90'
                         >
-                            בדקו נתונים עכשיו
+                            התחילו לשאול
+                            <ArrowLeft className='w-4 h-4' />
                         </Button>
                         <Button
                             size='lg'
@@ -66,7 +68,7 @@ export function HeroSection({ onStartConversation, onScrollToAbout }: HeroSectio
                             onClick={onScrollToAbout}
                             className='w-full sm:w-48 rounded-full px-10 py-4 text-base font-semibold'
                         >
-                            מי אנחנו?
+                            על המערכת
                         </Button>
                     </motion.div>
                 )}
