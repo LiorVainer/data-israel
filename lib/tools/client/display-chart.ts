@@ -134,15 +134,20 @@ Use line charts for:
 - Price changes over months (שינויי מחירים חודשיים)
 - Sequential data comparison
 
-Data format:
-- Each series has an id (name) and array of {x, y} points
-- x can be string (month name) or number (year)
-- y must be numeric
+IMPORTANT — You MUST provide all three fields: title, data, and config.
+
+Example call:
+  title: "מגמת מחירי דלק (₪ לליטר)"
+  data: [
+    { id: "בנזין 95", data: [{ x: "ינואר", y: 6.5 }, { x: "פברואר", y: 6.8 }] },
+    { id: "סולר", data: [{ x: "ינואר", y: 5.9 }, { x: "פברואר", y: 6.1 }] }
+  ]
+  config: { enableArea: false, curve: "monotoneX" }
 
 Guidelines:
-- ALL labels, series ids, and string x-values MUST be in Hebrew
-- Title MUST be in Hebrew and MUST include measurement units when applicable (e.g. "מגמת מחירי דלק (₪ לליטר)", "שינוי אוכלוסייה (אלפים)")
+- Title MUST be in Hebrew with units (e.g. "שינוי מדד המחירים (%)")
 - Series id MUST be a descriptive Hebrew name (e.g. "בנזין 95", not "benzin_95")
+- String x-values MUST be in Hebrew
 - Limit to 5 series max for readability`,
     inputSchema: displayLineChartInputSchema,
     execute: async (input) => {

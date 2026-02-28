@@ -24,7 +24,7 @@ const VERSION = process.env.VERCEL_GIT_COMMIT_SHA?.slice(0, 8) ?? Date.now().toS
 
 export async function generateMetadata(): Promise<Metadata> {
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://data-israel.org';
-    const title = 'דאטה ישראל — נתונים רשמיים על ישראל. תשובות מבוססות מקור רשמי.';
+    const title = 'דאטה ישראל';
     const description = 'מערכת בינה מלאכותית המחוברת למאגרי המידע הציבוריים של ישראל.';
     const ogImage = `/og.png?v=${VERSION}`;
 

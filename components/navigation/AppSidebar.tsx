@@ -110,7 +110,7 @@ function NewThreadButton() {
             onClick={handleClick}
             aria-label='שיחה חדשה'
         >
-            <SquarePen className='size-4 md:size-5' />
+            <SquarePen className='size-4' />
         </Button>
     );
 }
