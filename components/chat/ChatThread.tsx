@@ -18,6 +18,7 @@ import { MessageListSkeleton } from '@/components/chat/MessageListSkeleton';
 import { LoadingShimmer } from '@/components/chat/LoadingShimmer';
 import { ContextWindowIndicator } from '@/components/chat/ContextWindowIndicator';
 import { GeometricBackground } from '@/components/ui/shape-landing-hero';
+import { AIDevtools } from '@ai-sdk-tools/devtools';
 import { useSessionStorage } from '@/hooks/use-session-storage';
 import { INITIAL_MESSAGE_KEY, type InitialMessageData } from '@/constants/chat';
 import { useUser } from '@/context/UserContext';
@@ -134,11 +135,13 @@ export function ChatThread({ id }: ChatThreadProps) {
         return { suggestions: undefined, loading: false };
     }, [lastAssistantMessage]);
 
+    console.log({ messages });
+
     return (
         <div className='relative h-full w-full'>
             <GeometricBackground noShapes />
 
-            <div className='mx-auto px-4 md:px-0 pb-4 md:pb-6 relative h-full w-full pt-14 md:pt-4'>
+            <div className='mx-auto px-4 md:px-0 pb-4 md:pb-6 relative h-full w-full pt-14 md:pt-6'>
                 <div className='flex flex-col gap-4 md:gap-6 h-full w-full items-center'>
                     {isLoading && !isNewConversation ? (
                         <div className='flex-1 w-full md:w-4xl mx-auto overflow-hidden'>
@@ -186,6 +189,22 @@ export function ChatThread({ id }: ChatThreadProps) {
                     </div>
                 </div>
             </div>
+
+            {process.env.NODE_ENV === 'development' && (
+                <AIDevtools
+                    enabled
+                    maxEvents={1000}
+                    config={{
+                        position: 'bottom',
+                        height: 400,
+                        streamCapture: {
+                            enabled: true,
+                            endpoint: '/api/chat',
+                            autoConnect: true,
+                        },
+                    }}
+                />
+            )}
         </div>
     );
 }

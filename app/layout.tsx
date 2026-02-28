@@ -44,7 +44,7 @@ export async function generateMetadata(): Promise<Metadata> {
                     url: ogImage,
                     width: 1200,
                     height: 630,
-                    alt: 'סוכני המידע הציבורי - AI למידע הפתוח של ישראל',
+                    alt: 'סוכני המידע הציבורי - בינה מלאכותית למידע הפתוח של ישראל',
                     type: 'image/png',
                 },
             ],

@@ -10,6 +10,8 @@
   "enableAllProjectMcpServers": true,
   "enabledMcpjsonServers": [
     "ai-elements",
-    "next-devtools"
+    "grep_app",
+    "next-devtools",
+    "shadcn"
   ]
 }

@@ -10,7 +10,7 @@ export const EnvSchema = z.object({
     // AI Configuration
     // =======================
     OPENROUTER_API_KEY: z.string(),
-    AI_DEFAULT_MODEL_ID: z.string().default('google/gemini-3-flash-preview'),
+    AI_DEFAULT_MODEL_ID: z.string().default('qwen/qwen3.5-35b-a3b'),
     AI_MAX_STEPS: z.coerce.number().int().min(1).default(25),
     AI_TOOL_CALL_CONCURRENCY: z.coerce.number().int().min(1).default(10),
 
