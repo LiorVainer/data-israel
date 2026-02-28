@@ -68,7 +68,7 @@ export function AboutSection() {
                     אינו תמיד נגיש או פשוט להבנה.
                 </p>
                 <p className='text-base md:text-lg text-muted-foreground leading-relaxed max-w-2xl'>
-                    <strong className='text-foreground'>Data Israel</strong> נוצרה כדי לחבר בין שאלות יומיומיות למאגרי
+                    <strong className='text-foreground'>דאטה ישראל</strong> נוצרה כדי לחבר בין שאלות יומיומיות למאגרי
                     המידע הציבוריים של ישראל, באמצעות בינה מלאכותית.
                 </p>
                 <p className='text-base md:text-lg text-muted-foreground leading-relaxed max-w-2xl'>
