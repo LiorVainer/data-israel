@@ -20,7 +20,7 @@ import {
     isToolPart,
     type ToolCallPart,
 } from '@/components/chat/types';
-import { getResumableStreamContext, setActiveStreamId, clearActiveStreamId } from '@/lib/redis/resumable-stream';
+import { clearActiveStreamId, getResumableStreamContext, setActiveStreamId } from '@/lib/redis/resumable-stream';
 
 const { CHAT } = AgentConfig;
 
@@ -54,11 +54,7 @@ const hasCompletedWithSuggestions: StopCondition<any> = ({ steps }) => {
     if (!hasTextResponse) return false;
 
     // Condition 2: suggestFollowUps must have been called in some step
-    const calledSuggestions = steps.some((step) =>
-        step.toolCalls?.some((tc: { toolName: string }) => tc.toolName === CHAT.SUGGEST_TOOL_NAME),
-    );
-
-    return calledSuggestions;
+    return steps.some((step) => step.toolCalls?.some((tc) => tc.toolName === CHAT.SUGGEST_TOOL_NAME));
 };
 
 /**
@@ -274,7 +270,20 @@ export async function POST(req: Request) {
             defaultOptions: {
                 toolCallConcurrency: CHAT.TOOL_CALL_CONCURRENCY,
                 stopWhen: hasCompletedWithSuggestions,
-                onStepFinish: ({ usage, toolCalls, text, stepType }) => {
+                onStepFinish: ({ usage, toolResults }) => {
+                    // Debug: log sub-agent delegation results
+                    if (process.env.NODE_ENV === 'development') {
+                        for (const tr of toolResults) {
+                            const { toolName, result } = tr.payload;
+                            if (toolName.startsWith('agent-')) {
+                                console.log(
+                                    `\n[debug] Sub-agent "${toolName}" result:`,
+                                    JSON.stringify(result, null, 2),
+                                );
+                            }
+                        }
+                    }
+
                     // Context snapshot: override (last step = context window size)
                     contextSnapshot.inputTokens = usage.inputTokens ?? 0;
                     contextSnapshot.outputTokens = usage.outputTokens ?? 0;

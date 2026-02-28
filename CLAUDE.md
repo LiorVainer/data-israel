@@ -101,6 +101,33 @@ agents/                       # Mastra agent network
     ├── datagov/              # DataGov sub-agent (16 tools, data.gov.il CKAN API)
     └── cbs/                  # CBS sub-agent (9 tools, Central Bureau of Statistics)
 
+constants/                    # Application constants
+├── agents-display.ts         # Agent display configurations
+├── chat.ts                   # Chat constants
+├── datagov-urls.ts           # data.gov.il URL patterns
+├── prompts.ts                # AI system prompts
+├── tool-data-sources.ts      # Tool → data source mappings
+└── tool-translations.tsx     # Hebrew tool name translations
+
+context/                      # React context providers
+├── ConvexClientProvider.tsx   # Convex client wrapper
+├── QueryClientProvider.tsx    # TanStack Query provider
+├── ThemeProvider.tsx          # Theme (dark/light) provider
+└── UserContext.tsx            # User session context
+
+hooks/                        # Custom React hooks
+├── use-guest-session.ts      # Guest session management
+├── use-mobile.ts             # Mobile breakpoint detection
+├── use-threads-data.ts       # Thread listing/management
+└── ...                       # Additional utility hooks
+
+services/                     # Service layer
+└── thread.service.ts         # Thread CRUD operations
+
+scripts/                      # Data sync utilities
+├── fetch-all-datasets.ts     # Fetch all datasets from data.gov.il
+└── sync-to-convex.ts         # Sync datasets to Convex
+
 lib/
 ├── tools/
 │   ├── datagov/              # 16 data.gov.il tools (search, details, schema, etc.)
@@ -109,6 +136,7 @@ lib/
 ├── api/
 │   ├── data-gov/             # CKAN API client (data.gov.il)
 │   └── cbs/                  # CBS API client
+├── redis/                    # Redis/Upstash rate limiting & caching
 └── convex/                   # Convex client utilities
 
 convex/                       # Convex backend
@@ -131,12 +159,14 @@ components/
 │   ├── HeroSection.tsx       # Landing hero with CTA buttons
 │   ├── MessageItem.tsx       # Message renderer (source URL dedup by URL + title)
 │   └── Suggestions.tsx       # Follow-up suggestion chips (horizontal scroll mobile, vertical desktop)
+├── threads/                  # Thread list and management components
 ├── landing/
 │   ├── AboutSection.tsx      # About section
 │   ├── SourcesSection.tsx    # Data sources section (replaced StatsSection)
 │   ├── HowItWorksSection.tsx # How-it-works steps
 │   ├── ExampleOutputsSection.tsx
 │   └── Footer.tsx            # Footer with copyright
+├── ai-elements/              # AI UI elements (DO NOT modify unless instructed)
 └── ui/                       # shadcn/ui primitives (DO NOT modify unless instructed)
 
 spec/
@@ -238,8 +268,31 @@ Key types in `components/chat/types.ts`:
 - **Vector search**: `ConvexVector` on routing agent for semantic recall (topK: 3)
 - **Thread management**: UUID-based, passed from frontend via `memory: { thread, resource }`
 - **Convex deployment**: `decisive-alpaca-889.convex.cloud`
-- **Env vars**: `NEXT_PUBLIC_CONVEX_URL`, `CONVEX_ADMIN_KEY`
 - **Graceful fallback**: If Convex env vars are missing, storage/vector are disabled (in-memory only)
+
+### Integrations
+
+- **Authentication**: Clerk (sign-in/sign-up flows, user context via `UserContext.tsx`)
+- **Error tracking**: Sentry (client/server/edge configs in root, `instrumentation.ts` for Next.js)
+- **Rate limiting/caching**: Redis via Upstash (`lib/redis/`)
+- **Code formatting**: Prettier (`.prettierrc`), shadcn config (`components.json`)
+
+### Environment Variables
+
+Key env vars (see `.env.example` for base set):
+
+| Variable | Purpose |
+|----------|---------|
+| `OPENROUTER_API_KEY` | OpenRouter API access |
+| `AI_DEFAULT_MODEL_ID` | Default model (e.g., `google/gemini-3-flash-preview`) |
+| `NEXT_PUBLIC_CONVEX_URL` | Convex deployment URL |
+| `CONVEX_ADMIN_KEY` | Convex admin access |
+| `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` | Clerk auth (public) |
+| `CLERK_SECRET_KEY` | Clerk auth (server) |
+| `UPSTASH_REDIS_REST_URL` | Upstash Redis endpoint |
+| `UPSTASH_REDIS_REST_TOKEN` | Upstash Redis token |
+| `NEXT_PUBLIC_SENTRY_DSN` | Sentry error tracking |
+| `SENTRY_AUTH_TOKEN` | Sentry source maps upload |
 
 ### Path Aliases
 The project uses `@/*` to reference files from the root:

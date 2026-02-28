@@ -68,7 +68,7 @@ export function AboutSection() {
                     קיים, אבל לרוב אינו נגיש באמת לאזרח הרגיל.
                 </p>
                 <p className='text-base md:text-lg text-muted-foreground leading-relaxed max-w-2xl'>
-                    <strong className='text-foreground'>Data Israel</strong> היא רשת של סוכני AI שעובדים יחד כדי לחבר
+                    <strong className='text-foreground'>דאטה ישראל</strong> היא רשת של סוכני AI שעובדים יחד כדי לחבר
                     שאלות יומיומיות למאגרי המידע הציבוריים של ישראל.
                 </p>
                 <p className='text-base md:text-lg text-muted-foreground leading-relaxed max-w-2xl'>
