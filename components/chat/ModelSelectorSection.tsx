@@ -30,11 +30,13 @@ export function ModelSelectorSection({ selectedModel, open, onOpenChange, onSele
     const providers = Array.from(new Set(AgentConfig.AVAILABLE_MODELS.map((m) => m.provider)));
 
     return (
-        <ModelSelector open={open} onOpenChange={onOpenChange}>
+        <ModelSelector open={open} onOpenChange={onOpenChange} modal={false}>
             <ModelSelectorTrigger asChild>
                 <PromptInputButton className='gap-2'>
                     {selectedModelData?.providerSlug && <ModelSelectorLogo provider={selectedModelData.providerSlug} />}
-                    <ModelSelectorName className='hidden sm:inline'>{selectedModelData?.name}</ModelSelectorName>
+                    <ModelSelectorName className='hidden sm:inline'>
+                        {selectedModelData?.name ?? selectedModel}
+                    </ModelSelectorName>
                 </PromptInputButton>
             </ModelSelectorTrigger>
             <ModelSelectorContent>

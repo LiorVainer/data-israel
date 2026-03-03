@@ -31,28 +31,34 @@ const vector =
           })
         : undefined;
 
-export const routingAgent = new Agent({
-    id: 'routingAgent',
-    name: ROUTING_CONFIG.name,
-    instructions: ROUTING_CONFIG.instructions,
-    model: getMastraModelId(),
-    memory: new Memory({
-        ...(vector && { vector }),
-        embedder: openrouter.textEmbeddingModel(MEMORY.EMBEDDER_MODEL),
-        options: {
-            lastMessages: MEMORY.LAST_MESSAGES,
-            semanticRecall: vector
-                ? {
-                      topK: MEMORY.SEMANTIC_RECALL.TOP_K,
-                      messageRange: MEMORY.SEMANTIC_RECALL.MESSAGE_RANGE,
-                      scope: 'resource',
-                  }
-                : false,
-            generateTitle: MEMORY.GENERATE_TITLE,
+/** Factory: creates a routing agent with the given model and sub-agents */
+export function createRoutingAgent(modelId: string, subAgents: Record<string, Agent>): Agent {
+    return new Agent({
+        id: 'routingAgent',
+        name: ROUTING_CONFIG.name,
+        instructions: ROUTING_CONFIG.instructions,
+        model: modelId,
+        memory: new Memory({
+            ...(vector && { vector }),
+            embedder: openrouter.textEmbeddingModel(MEMORY.EMBEDDER_MODEL),
+            options: {
+                lastMessages: MEMORY.LAST_MESSAGES,
+                semanticRecall: vector
+                    ? {
+                          topK: MEMORY.SEMANTIC_RECALL.TOP_K,
+                          messageRange: MEMORY.SEMANTIC_RECALL.MESSAGE_RANGE,
+                          scope: 'resource',
+                      }
+                    : false,
+                generateTitle: MEMORY.GENERATE_TITLE,
+            },
+        }),
+        agents: subAgents,
+        tools: {
+            ...ClientTools,
         },
-    }),
-    agents: { datagovAgent, cbsAgent },
-    tools: {
-        ...ClientTools,
-    },
-});
+    });
+}
+
+/** Static default instance (backward compat) */
+export const routingAgent = createRoutingAgent(getMastraModelId(), { datagovAgent, cbsAgent });

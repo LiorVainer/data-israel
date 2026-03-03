@@ -8,6 +8,7 @@
  * @module
  */
 
+import type * as aiModels from "../aiModels.js";
 import type * as datasets from "../datasets.js";
 import type * as guests from "../guests.js";
 import type * as http from "../http.js";
@@ -26,6 +27,7 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
+  aiModels: typeof aiModels;
   datasets: typeof datasets;
   guests: typeof guests;
   http: typeof http;

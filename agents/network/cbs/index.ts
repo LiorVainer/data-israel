@@ -1,1 +1,1 @@
-export { cbsAgent } from './cbs.agent';
+export { cbsAgent, createCbsAgent } from './cbs.agent';

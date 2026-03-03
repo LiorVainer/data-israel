@@ -1,7 +1,8 @@
 'use client';
 
 import { createContext, ReactNode, useContext, useMemo } from 'react';
-import { useConvexAuth } from 'convex/react';
+import { useConvexAuth, useQuery } from 'convex/react';
+import { api } from '@/convex/_generated/api';
 import { useGuestSession } from '@/hooks/use-guest-session';
 import { Id } from '@/convex/_generated/dataModel';
 
@@ -14,6 +15,8 @@ interface UserContextType {
     isAuthenticated: boolean;
     /** Whether auth state or guest creation is still loading */
     isLoading: boolean;
+    /** Whether the current user has admin role (Convex users.role === 'admin') */
+    isAdmin: boolean;
 
     /** Guest ID for unauthenticated users (null if authenticated) */
     guestId: Id<'guests'> | null;
@@ -67,8 +70,13 @@ interface UserProviderProps {
  */
 export const UserProvider = ({ children }: UserProviderProps) => {
     const { isAuthenticated, isLoading: isAuthLoading } = useConvexAuth();
-    const { guestId, sessionId, isCreatingGuest, isValidatingGuest, ensureGuestExists } =
-        useGuestSession();
+    const convexUser = useQuery(api.users.getCurrentUser, isAuthenticated ? {} : 'skip');
+    const { guestId, sessionId, isCreatingGuest, isValidatingGuest, ensureGuestExists } = useGuestSession();
+
+    const isAdmin = useMemo(() => {
+        if (!isAuthenticated || !convexUser) return false;
+        return convexUser.role === 'admin';
+    }, [isAuthenticated, convexUser]);
 
     // Compute the user identifier for Convex queries
     // For authenticated users, Convex uses identity.subject internally
@@ -84,6 +92,7 @@ export const UserProvider = ({ children }: UserProviderProps) => {
         () => ({
             isAuthenticated,
             isLoading: isAuthLoading || isCreatingGuest || isValidatingGuest,
+            isAdmin,
             guestId,
             sessionId,
             isCreatingGuest,
@@ -96,6 +105,7 @@ export const UserProvider = ({ children }: UserProviderProps) => {
             isAuthLoading,
             isCreatingGuest,
             isValidatingGuest,
+            isAdmin,
             guestId,
             sessionId,
             ensureGuestExists,

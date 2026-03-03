@@ -17,32 +17,8 @@
 
 import webpush from 'web-push';
 import type { PushSubscription } from 'web-push';
-import { makeFunctionReference } from 'convex/server';
 import { convexClient } from '@/lib/convex/client';
-
-// ---------------------------------------------------------------------------
-// Function references (manual — avoids requiring `convex dev` code-gen on CI)
-// ---------------------------------------------------------------------------
-
-type GetPushSubscriptionsResult = Array<{
-    _id: string;
-    userId: string;
-    endpoint: string;
-    keys: { p256dh: string; auth: string };
-    createdAt: number;
-}>;
-
-const getPushSubscriptionsByUser = makeFunctionReference<
-    'query',
-    { userId: string },
-    GetPushSubscriptionsResult
->('pushSubscriptions:getPushSubscriptionsByUser');
-
-const deleteByEndpoint = makeFunctionReference<
-    'mutation',
-    { endpoint: string },
-    void
->('pushSubscriptions:deleteByEndpoint');
+import { api } from '@/convex/_generated/api';
 
 // ---------------------------------------------------------------------------
 // VAPID configuration
@@ -96,10 +72,10 @@ export async function sendPushToUser(userId: string, payload: PushPayload): Prom
         return;
     }
 
-    let subscriptions: GetPushSubscriptionsResult;
+    let subscriptions;
 
     try {
-        subscriptions = await convexClient.query(getPushSubscriptionsByUser, { userId });
+        subscriptions = await convexClient.query(api.pushSubscriptions.getPushSubscriptionsByUser, { userId });
     } catch (err) {
         console.error('[push] Failed to fetch subscriptions for user', userId, err);
         return;
@@ -129,7 +105,9 @@ export async function sendPushToUser(userId: string, payload: PushPayload): Prom
                 if (isGone) {
                     // Browser permanently invalidated this subscription — clean it up
                     try {
-                        await convexClient.mutation(deleteByEndpoint, { endpoint: sub.endpoint });
+                        await convexClient.mutation(api.pushSubscriptions.deleteByEndpoint, {
+                            endpoint: sub.endpoint,
+                        });
                     } catch (deleteErr) {
                         console.error(
                             '[push] Failed to delete stale subscription',

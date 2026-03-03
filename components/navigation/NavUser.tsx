@@ -2,7 +2,7 @@
 
 import { SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar } from '@/components/ui/sidebar';
 import { SignedIn, SignedOut, useClerk } from '@clerk/nextjs';
-import { ChevronsUpDown, LogOut, LucideLogIn, Moon, Sun } from 'lucide-react';
+import { ChevronsUpDown, LogOut, LucideLogIn, Moon, Settings, Sun } from 'lucide-react';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -16,8 +16,8 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import * as React from 'react';
 import { useThemeSync } from '@/hooks/use-theme-sync';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useUser } from '@/context/UserContext';
 import Link from 'next/link';
-
 
 /**
  * NavUser component for the sidebar footer.
@@ -26,6 +26,7 @@ import Link from 'next/link';
  */
 export function NavUser() {
     const { user, openUserProfile, signOut } = useClerk();
+    const { isAdmin } = useUser();
     const isMobile = useIsMobile();
     const { setOpen, setOpenMobile } = useSidebar();
 
@@ -86,7 +87,7 @@ export function NavUser() {
                                 </SidebarMenuButton>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent
-                                className='w-[--radix-dropdown-menu-trigger-width] min-w-56 rounded-lg'
+                                className='w-[--radix-dropdown-menu-trigger-width] min-w-56 rounded-lg bg-sidebar'
                                 side={isMobile ? 'bottom' : 'left'}
                                 align='end'
                                 sideOffset={4}
@@ -113,6 +114,14 @@ export function NavUser() {
                                     {/*    <BadgeCheck />*/}
                                     {/*    חשבון*/}
                                     {/*</DropdownMenuItem>*/}
+                                    {isAdmin && (
+                                        <DropdownMenuItem className='cursor-pointer' asChild>
+                                            <Link href='/admin'>
+                                                <Settings />
+                                                פאנל ניהול
+                                            </Link>
+                                        </DropdownMenuItem>
+                                    )}
                                     <DropdownMenuItem className='cursor-pointer' onClick={toggleTheme}>
                                         {isDarkMode ? <Sun /> : <Moon />}
                                         {isDarkMode ? 'מצב בהיר' : 'מצב כהה'}

@@ -1,1 +1,1 @@
-export { datagovAgent } from './data-gov.agent';
+export { datagovAgent, createDatagovAgent } from './data-gov.agent';

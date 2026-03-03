@@ -45,8 +45,7 @@ self.addEventListener('push', function (event) {
 
     var notificationOptions = {
         body: body,
-        icon: '/icon-192x192.png',
-        badge: '/icon-192x192.png',
+        badge: '/icon-badge.png',
         vibrate: [100, 50, 100],
         tag: threadId ? 'chat-' + threadId : 'chat-notification',
         data: { threadId: threadId },

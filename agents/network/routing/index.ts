@@ -1,1 +1,1 @@
-export { routingAgent } from './routing.agent';
+export { routingAgent, createRoutingAgent } from './routing.agent';

@@ -11,6 +11,8 @@ export const EnvSchema = z.object({
     // =======================
     OPENROUTER_API_KEY: z.string(),
     AI_DEFAULT_MODEL_ID: z.string().default('google/gemini-3-pro-preview'),
+    AI_DATAGOV_MODEL_ID: z.string().optional(),
+    AI_CBS_MODEL_ID: z.string().optional(),
     AI_MAX_STEPS: z.coerce.number().int().min(1).default(25),
     AI_TOOL_CALL_CONCURRENCY: z.coerce.number().int().min(1).default(10),
 

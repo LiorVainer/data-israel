@@ -25,6 +25,7 @@ import { useUser } from '@/context/UserContext';
 import { useSearchParams } from 'next/navigation';
 import { usePushSubscription } from '@/hooks/use-push-subscription';
 import { NotificationPrompt } from '@/components/chat/NotificationPrompt';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 /** Header name for passing user ID to API */
 const USER_ID_HEADER = 'x-user-id';
@@ -36,6 +37,7 @@ interface ChatThreadProps {
 export function ChatThread({ id }: ChatThreadProps) {
     const { userId: clerkUserId, isLoaded: isAuthLoaded } = useAuth();
     const { guestId } = useUser();
+    const isMobile = useIsMobile();
 
     const userId = clerkUserId ?? guestId;
 
@@ -201,7 +203,7 @@ export function ChatThread({ id }: ChatThreadProps) {
                 </div>
             </div>
 
-            {process.env.NODE_ENV === 'development' && (
+            {process.env.NODE_ENV === 'development' && !isMobile && (
                 <AIDevtools
                     enabled
                     maxEvents={1000}

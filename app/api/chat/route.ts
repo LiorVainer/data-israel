@@ -6,12 +6,13 @@
 
 import { createUIMessageStreamResponse, generateId, StopCondition, UIMessage } from 'ai';
 import { after, NextResponse } from 'next/server';
-import { mastra } from '@/agents/mastra';
+import { mastra, getMastraWithModels } from '@/agents/mastra';
 import { handleChatStream } from '@mastra/ai-sdk';
 import { toAISdkV5Messages } from '@mastra/ai-sdk/ui';
 import { AppUIMessage } from '@/agents/types';
 import { AgentConfig } from '@/agents/agent.config';
 import { api, convexMutation } from '@/lib/convex/client';
+import { resolveModelConfig } from './resolve-model-config';
 import type { MastraMemory } from '@mastra/core/memory';
 import {
     type AgentDataPart,
@@ -229,6 +230,10 @@ export async function POST(req: Request) {
     try {
         const params = await req.json();
 
+        // Resolve per-agent model config (Convex → env vars → defaults)
+        const modelConfig = await resolveModelConfig();
+        const dynamicMastra = getMastraWithModels(modelConfig);
+
         // Get user ID from header or use the one provided in the body
         const userId = getUserIdFromRequest(req);
 
@@ -265,7 +270,7 @@ export async function POST(req: Request) {
         };
 
         const stream = await handleChatStream<AppUIMessage>({
-            mastra,
+            mastra: dynamicMastra,
             agentId: 'routingAgent',
             params: enhancedParams,
             defaultOptions: {

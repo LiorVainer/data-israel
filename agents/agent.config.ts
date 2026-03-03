@@ -4,6 +4,10 @@ export interface AvailableModel {
     name: string;
     provider: string;
     providerSlug: string;
+    /** USD per 1M input tokens (optional — only available from OpenRouter API) */
+    inputPrice?: number;
+    /** USD per 1M output tokens (optional — only available from OpenRouter API) */
+    outputPrice?: number;
 }
 
 import { ENV } from '@/lib/env';
@@ -11,8 +15,12 @@ import { ENV } from '@/lib/env';
 export const AgentConfig = {
     /** Model configuration */
     MODEL: {
-        /** Default OpenRouter model ID (configurable via DEFAULT_MODEL_ID env var) */
+        /** Default OpenRouter model ID (configurable via AI_DEFAULT_MODEL_ID env var) */
         DEFAULT_ID: ENV.AI_DEFAULT_MODEL_ID,
+        /** DataGov agent model ID (falls back to DEFAULT_ID) */
+        DATAGOV_ID: ENV.AI_DATAGOV_MODEL_ID ?? ENV.AI_DEFAULT_MODEL_ID,
+        /** CBS agent model ID (falls back to DEFAULT_ID) */
+        CBS_ID: ENV.AI_CBS_MODEL_ID ?? ENV.AI_DEFAULT_MODEL_ID,
     },
 
     /** Memory configuration for all agents */

@@ -14,28 +14,7 @@
 
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { useMutation } from 'convex/react';
-import { makeFunctionReference } from 'convex/server';
-
-// ---------------------------------------------------------------------------
-// Convex function references (manual — api.d.ts doesn't include pushSubscriptions
-// until `convex dev` code-gen runs with the new file present)
-// ---------------------------------------------------------------------------
-
-const savePushSubscriptionFn = makeFunctionReference<
-    'mutation',
-    {
-        userId: string;
-        endpoint: string;
-        keys: { p256dh: string; auth: string };
-    },
-    string
->('pushSubscriptions:savePushSubscription');
-
-const deletePushSubscriptionFn = makeFunctionReference<
-    'mutation',
-    { userId: string; endpoint: string },
-    void
->('pushSubscriptions:deletePushSubscription');
+import { api } from '@/convex/_generated/api';
 
 // ---------------------------------------------------------------------------
 // Helper: base64url → Uint8Array (required by pushManager.subscribe)
@@ -78,8 +57,8 @@ export function usePushSubscription(userId: string | null): PushSubscriptionStat
     const registrationRef = useRef<ServiceWorkerRegistration | null>(null);
     const subscriptionRef = useRef<PushSubscription | null>(null);
 
-    const savePushSubscription = useMutation(savePushSubscriptionFn);
-    const deletePushSubscription = useMutation(deletePushSubscriptionFn);
+    const savePushSubscription = useMutation(api.pushSubscriptions.savePushSubscription);
+    const deletePushSubscription = useMutation(api.pushSubscriptions.deletePushSubscription);
 
     // On mount: check browser support, register SW, check existing subscription
     useEffect(() => {
