@@ -4,68 +4,17 @@ import { useCallback, useEffect, useState } from 'react';
 import { useMutation, useQuery } from 'convex/react';
 import { api } from '@/convex/_generated/api';
 import { useUser } from '@/context/UserContext';
-import type { AvailableModel } from '@/agents/agent.config';
-import { AgentsDisplayMap } from '@/constants/agents-display';
+import { AGENT_CONFIGS, CLIENT_DEFAULT_MODEL, getModelDisplay, type AgentId } from '@/constants/admin';
 import { useOpenRouterModels } from '@/hooks/use-openrouter-models';
 import { ModelSelectorLogo } from '@/components/ai-elements/model-selector';
 import { ModelPickerDialog } from '@/components/admin/ModelPickerDialog';
-import {
-    AlertDialog,
-    AlertDialogAction,
-    AlertDialogCancel,
-    AlertDialogContent,
-    AlertDialogDescription,
-    AlertDialogFooter,
-    AlertDialogHeader,
-    AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
+import { ModelPriceDisplay } from '@/components/admin/ModelPriceDisplay';
+import { ConfirmModelChangeDialog } from '@/components/admin/ConfirmModelChangeDialog';
 import { DataIsraelLoader } from '@/components/chat/DataIsraelLoader';
 import { AlertTriangle, ChevronDown, RefreshCw, ShieldAlert } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { GeometricBackground } from '@/components/ui/shape-landing-hero';
-
-/** Agent configuration for the admin panel */
-const AGENT_CONFIGS = [
-    { id: 'routing', label: 'סוכן ניתוב', dialogTitle: 'Routing Agent', icon: AgentsDisplayMap.routingAgent.icon },
-    {
-        id: 'datagov',
-        label: 'סוכן data.gov.il',
-        dialogTitle: 'DataGov Agent',
-        icon: AgentsDisplayMap.datagovAgent.icon,
-    },
-    { id: 'cbs', label: 'סוכן הלמ"ס', dialogTitle: 'CBS Agent', icon: AgentsDisplayMap.cbsAgent.icon },
-] as const;
-
-type AgentId = (typeof AGENT_CONFIGS)[number]['id'];
-
-/** Client-safe default model ID (first model in the static config) */
-const CLIENT_DEFAULT_MODEL = 'google/gemini-3-flash-preview';
-
-/**
- * Derives display information for any model ID.
- * If the model exists in the fetched list, uses that data.
- * Otherwise, derives display info from the model ID itself.
- */
-function getModelDisplay(modelId: string, models: AvailableModel[]): AvailableModel {
-    const found = models.find((m) => m.id === modelId);
-    if (found) return found;
-
-    const slashIndex = modelId.indexOf('/');
-    const providerSlug = slashIndex > 0 ? modelId.slice(0, slashIndex) : modelId;
-    const rawName = slashIndex > 0 ? modelId.slice(slashIndex + 1) : modelId;
-    const displayName = rawName
-        .split('-')
-        .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
-        .join(' ');
-
-    return {
-        id: modelId,
-        name: displayName,
-        provider: providerSlug.charAt(0).toUpperCase() + providerSlug.slice(1),
-        providerSlug,
-    };
-}
 
 /** Loading state with spinning logo */
 function ModelsLoadingState() {
@@ -95,7 +44,7 @@ function ModelsErrorState({ error, onRetry }: { error: Error; onRetry: () => voi
 }
 
 export default function AdminPage() {
-    const { isAdmin, isLoading: isUserLoading, isAuthenticated } = useUser();
+    const { isAdmin, isAdminLoading, isLoading: isUserLoading, isAuthenticated } = useUser();
     const { models, isLoading: isModelsLoading, error: modelsError, refetch } = useOpenRouterModels();
 
     // Fetch current model configs from Convex
@@ -159,7 +108,7 @@ export default function AdminPage() {
     }, [pendingChange, selectedModels, upsertModel]);
 
     // Wait for both auth and Convex user role to resolve before showing access denied
-    const isResolving = isUserLoading || (isAuthenticated && aiModels === undefined);
+    const isResolving = isUserLoading || isAdminLoading || (isAuthenticated && aiModels === undefined);
 
     if (isResolving) {
         return (
@@ -210,15 +159,24 @@ export default function AdminPage() {
                                             {agent.label}
                                         </h2>
                                         <Button
+                                            dir='ltr'
                                             variant='outline'
-                                            className='w-full justify-between'
+                                            className='h-auto w-full flex-col items-start gap-0 px-3 py-2.5 !font-normal'
                                             onClick={() => setOpenDialog(agent.id)}
                                         >
-                                            <span className='flex items-center gap-2'>
-                                                <ModelSelectorLogo provider={modelData.providerSlug} />
-                                                <span>{modelData.name}</span>
+                                            <span className='flex w-full items-center gap-1.5'>
+                                                <ModelSelectorLogo
+                                                    provider={modelData.providerSlug}
+                                                    className='shrink-0'
+                                                />
+                                                <span className='min-w-0 truncate'>{modelData.name}</span>
+                                                <ChevronDown className='ml-auto size-4 shrink-0 opacity-50' />
                                             </span>
-                                            <ChevronDown className='size-4 opacity-50' />
+                                            <ModelPriceDisplay
+                                                inputPrice={modelData.inputPrice}
+                                                outputPrice={modelData.outputPrice}
+                                                className='mt-1'
+                                            />
                                         </Button>
                                         <ModelPickerDialog
                                             open={openDialog === agent.id}
@@ -234,73 +192,13 @@ export default function AdminPage() {
                             })}
                         </div>
                     )}
-                    <AlertDialog
-                        open={pendingChange !== null}
-                        onOpenChange={(open) => {
-                            if (!open) setPendingChange(null);
-                        }}
-                    >
-                        <AlertDialogContent size='sm' dir='rtl' className='gap-8'>
-                            <AlertDialogHeader className='place-items-start text-right'>
-                                <AlertDialogTitle>אישור שינוי מודל</AlertDialogTitle>
-                                {pendingChange &&
-                                    (() => {
-                                        const agentConfig = AGENT_CONFIGS.find((a) => a.id === pendingChange.agentId);
-                                        const currentModel = getModelDisplay(
-                                            selectedModels[pendingChange.agentId],
-                                            models,
-                                        );
-                                        const newModel = getModelDisplay(pendingChange.modelId, models);
-                                        return (
-                                            <AlertDialogDescription asChild>
-                                                <div className='w-full space-y-3 text-sm'>
-                                                    <p className='flex items-center gap-2'>
-                                                        {agentConfig && <agentConfig.icon className='size-4' />}
-                                                        <span className='font-medium text-foreground'>
-                                                            {agentConfig?.label}
-                                                        </span>
-                                                    </p>
-                                                    <div className='flex w-full flex-col gap-5' dir='ltr'>
-                                                        <div>
-                                                            <span className='text-muted-foreground mb-1 block text-left text-xs'>
-                                                                Current
-                                                            </span>
-                                                            <div className='flex items-center gap-2'>
-                                                                <ModelSelectorLogo
-                                                                    provider={currentModel.providerSlug}
-                                                                    className='mt-0.5 shrink-0'
-                                                                />
-                                                                <span className='text-muted-foreground text-left'>
-                                                                    {currentModel.name}
-                                                                </span>
-                                                            </div>
-                                                        </div>
-                                                        <div>
-                                                            <span className='text-foreground mb-1 block text-left text-xs'>
-                                                                New
-                                                            </span>
-                                                            <div className='flex items-center gap-2'>
-                                                                <ModelSelectorLogo
-                                                                    provider={newModel.providerSlug}
-                                                                    className='mt-0.5 shrink-0'
-                                                                />
-                                                                <span className='font-medium text-foreground text-left'>
-                                                                    {newModel.name}
-                                                                </span>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </AlertDialogDescription>
-                                        );
-                                    })()}
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                                <AlertDialogCancel>ביטול</AlertDialogCancel>
-                                <AlertDialogAction onClick={handleConfirmChange}>אישור</AlertDialogAction>
-                            </AlertDialogFooter>
-                        </AlertDialogContent>
-                    </AlertDialog>
+                    <ConfirmModelChangeDialog
+                        pendingChange={pendingChange}
+                        selectedModels={selectedModels}
+                        models={models}
+                        onConfirm={handleConfirmChange}
+                        onCancel={() => setPendingChange(null)}
+                    />
                 </div>
             </div>
         </div>
