@@ -9,6 +9,17 @@ import { AgentsDisplayMap } from '@/constants/agents-display';
 import { useOpenRouterModels } from '@/hooks/use-openrouter-models';
 import { ModelSelectorLogo } from '@/components/ai-elements/model-selector';
 import { ModelPickerDialog } from '@/components/admin/ModelPickerDialog';
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import { DataIsraelLoader } from '@/components/chat/DataIsraelLoader';
 import { AlertTriangle, ChevronDown, RefreshCw, ShieldAlert } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
@@ -51,19 +62,12 @@ function getModelDisplay(modelId: string, models: AvailableModel[]): AvailableMo
     };
 }
 
-/** Loading skeleton for model selector cards */
-function ModelSelectorSkeleton() {
+/** Loading state with spinning logo */
+function ModelsLoadingState() {
     return (
-        <div className='space-y-6'>
-            {AGENT_CONFIGS.map((agent) => (
-                <div key={agent.id} className='rounded-lg border p-4'>
-                    <div className='mb-3 flex items-center gap-2'>
-                        <div className='bg-muted size-5 animate-pulse rounded' />
-                        <div className='bg-muted h-5 w-32 animate-pulse rounded' />
-                    </div>
-                    <div className='bg-muted h-10 w-full animate-pulse rounded-md' />
-                </div>
-            ))}
+        <div className='flex flex-col items-center gap-3 py-16'>
+            <DataIsraelLoader size={32} />
+            <p className='text-muted-foreground text-sm'>טוען מודלים...</p>
         </div>
     );
 }
@@ -96,6 +100,9 @@ export default function AdminPage() {
     // Track which model picker dialog is open
     const [openDialog, setOpenDialog] = useState<AgentId | null>(null);
 
+    // Pending confirmation state
+    const [pendingChange, setPendingChange] = useState<{ agentId: AgentId; modelId: string } | null>(null);
+
     // Local state for selected models
     const [selectedModels, setSelectedModels] = useState<Record<AgentId, string>>({
         routing: CLIENT_DEFAULT_MODEL,
@@ -118,30 +125,42 @@ export default function AdminPage() {
         });
     }, [aiModels]);
 
-    const handleSelectModel = useCallback(
+    const handleModelPicked = useCallback(
         (agentId: AgentId, modelId: string) => {
-            const agentConfig = AGENT_CONFIGS.find((a) => a.id === agentId);
-            const agentLabel = agentConfig?.label ?? agentId;
-            const previousModel = selectedModels[agentId];
-            setSelectedModels((prev) => ({ ...prev, [agentId]: modelId }));
-            upsertModel({ agentId, modelId })
-                .then(() => {
-                    toast.success(`${agentLabel} עודכן למודל ${modelId}`);
-                })
-                .catch((error: unknown) => {
-                    setSelectedModels((prev) => ({ ...prev, [agentId]: previousModel }));
-                    const message = error instanceof Error ? error.message : 'שגיאה לא ידועה';
-                    toast.error(`שמירת המודל נכשלה: ${message}`);
-                    console.error('[AdminPage] upsertModel failed:', error);
-                });
+            if (modelId === selectedModels[agentId]) return;
+            setPendingChange({ agentId, modelId });
         },
-        [upsertModel, selectedModels],
+        [selectedModels],
     );
 
-    if (isUserLoading) {
+    const handleConfirmChange = useCallback(() => {
+        if (!pendingChange) return;
+        const { agentId, modelId } = pendingChange;
+        const agentConfig = AGENT_CONFIGS.find((a) => a.id === agentId);
+        const agentLabel = agentConfig?.label ?? agentId;
+        const previousModel = selectedModels[agentId];
+        setSelectedModels((prev) => ({ ...prev, [agentId]: modelId }));
+        setPendingChange(null);
+        upsertModel({ agentId, modelId })
+            .then(() => {
+                toast.success(`${agentLabel} עודכן למודל ${modelId}`);
+            })
+            .catch((error: unknown) => {
+                setSelectedModels((prev) => ({ ...prev, [agentId]: previousModel }));
+                const message = error instanceof Error ? error.message : 'שגיאה לא ידועה';
+                toast.error(`שמירת המודל נכשלה: ${message}`);
+                console.error('[AdminPage] upsertModel failed:', error);
+            });
+    }, [pendingChange, selectedModels, upsertModel]);
+
+    // Wait for both auth and Convex user role to resolve before showing access denied
+    const isResolving = isUserLoading || (isAuthenticated && aiModels === undefined);
+
+    if (isResolving) {
         return (
-            <div className='flex min-h-dvh items-center justify-center' dir='rtl'>
-                <p className='text-muted-foreground'>טוען...</p>
+            <div className='flex min-h-dvh flex-col items-center justify-center gap-3' dir='rtl'>
+                <DataIsraelLoader size={32} />
+                <p className='text-muted-foreground text-sm'>טוען...</p>
             </div>
         );
     }
@@ -165,7 +184,7 @@ export default function AdminPage() {
             <p className='text-muted-foreground mb-8'>בחר את המודל עבור כל סוכן. שינויים נכנסים לתוקף מיידית.</p>
 
             {isModelsLoading ? (
-                <ModelSelectorSkeleton />
+                <ModelsLoadingState />
             ) : modelsError ? (
                 <ModelsErrorState error={modelsError} onRetry={() => refetch()} />
             ) : (
@@ -196,7 +215,7 @@ export default function AdminPage() {
                                     onOpenChange={(open) => setOpenDialog(open ? agent.id : null)}
                                     models={models}
                                     selectedModelId={modelId}
-                                    onSelect={(id) => handleSelectModel(agent.id, id)}
+                                    onSelect={(id) => handleModelPicked(agent.id, id)}
                                     title={`Select model — ${agent.dialogTitle}`}
                                     showPrices
                                 />
@@ -205,6 +224,43 @@ export default function AdminPage() {
                     })}
                 </div>
             )}
+            <AlertDialog open={pendingChange !== null} onOpenChange={(open) => { if (!open) setPendingChange(null); }}>
+                <AlertDialogContent size='sm' dir='rtl'>
+                    <AlertDialogHeader className='place-items-start text-right'>
+                        <AlertDialogTitle>אישור שינוי מודל</AlertDialogTitle>
+                        {pendingChange && (() => {
+                            const agentConfig = AGENT_CONFIGS.find((a) => a.id === pendingChange.agentId);
+                            const currentModel = getModelDisplay(selectedModels[pendingChange.agentId], models);
+                            const newModel = getModelDisplay(pendingChange.modelId, models);
+                            return (
+                                <AlertDialogDescription asChild>
+                                    <div className='w-full space-y-3 text-sm'>
+                                        <p className='flex items-center gap-2'>
+                                            {agentConfig && <agentConfig.icon className='size-4' />}
+                                            <span className='font-medium text-foreground'>{agentConfig?.label}</span>
+                                        </p>
+                                        <div className='bg-muted/50 flex w-full flex-col rounded-md p-3' dir='ltr'>
+                                            <div className='flex items-start gap-2'>
+                                                <ModelSelectorLogo provider={currentModel.providerSlug} className='mt-0.5 shrink-0' />
+                                                <span className='text-muted-foreground text-left'>{currentModel.name}</span>
+                                            </div>
+                                            <div className='border-border my-2 border-t' />
+                                            <div className='flex items-start gap-2'>
+                                                <ModelSelectorLogo provider={newModel.providerSlug} className='mt-0.5 shrink-0' />
+                                                <span className='font-medium text-foreground text-left'>{newModel.name}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </AlertDialogDescription>
+                            );
+                        })()}
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel>ביטול</AlertDialogCancel>
+                        <AlertDialogAction onClick={handleConfirmChange}>אישור</AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </div>
         </div>
         </div>

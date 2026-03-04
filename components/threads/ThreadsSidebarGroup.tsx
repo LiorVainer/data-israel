@@ -4,7 +4,7 @@ import { useThreadsData } from '@/hooks/use-threads-data';
 import { ThreadItem } from '@/components/threads/ThreadItem';
 import { ThreadDeleteModal } from '@/components/threads/ThreadDeleteModal';
 import { EmptyThreadsState } from '@/components/threads/EmptyThreadsState';
-import { Dialog } from '@/components/ui/dialog';
+import { AlertDialog } from '@/components/ui/alert-dialog';
 import {
     SidebarGroup,
     SidebarGroupLabel,
@@ -92,14 +92,14 @@ export function ThreadsSidebarGroup() {
             </SidebarGroup>
 
             {/* Delete confirmation dialog */}
-            <Dialog
+            <AlertDialog
                 open={threadToDelete !== null}
                 onOpenChange={(open) => {
                     if (!open) cancelDelete();
                 }}
             >
                 {threadToDelete && <ThreadDeleteModal thread={threadToDelete} onConfirm={confirmDelete} />}
-            </Dialog>
+            </AlertDialog>
         </>
     );
 }

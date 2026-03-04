@@ -2,14 +2,13 @@
 
 import { useState } from 'react';
 import {
-    DialogContent,
-    DialogHeader,
-    DialogTitle,
-    DialogDescription,
-    DialogFooter,
-    DialogClose,
-} from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
+    AlertDialogContent,
+    AlertDialogHeader,
+    AlertDialogTitle,
+    AlertDialogDescription,
+    AlertDialogCancel,
+    AlertDialogAction,
+} from '@/components/ui/alert-dialog';
 import { toast } from 'sonner';
 
 interface ThreadDeleteModalProps {
@@ -35,27 +34,25 @@ export function ThreadDeleteModal({ thread, onConfirm }: ThreadDeleteModalProps)
     };
 
     return (
-        <DialogContent className='sm:max-w-sm text-center' showCloseButton={false}>
-            <DialogHeader className='items-center'>
-                <DialogTitle className='text-base'>מחיקת שיחה</DialogTitle>
-                <DialogDescription>
+        <AlertDialogContent size='sm'>
+            <AlertDialogHeader className='items-center'>
+                <AlertDialogTitle className='text-base'>מחיקת שיחה</AlertDialogTitle>
+                <AlertDialogDescription>
                     {thread.title ? (
                         <span className='line-clamp-2'>&ldquo;{thread.title}&rdquo;</span>
                     ) : (
                         'כל ההודעות יימחקו לצמיתות.'
                     )}
-                </DialogDescription>
-            </DialogHeader>
+                </AlertDialogDescription>
+            </AlertDialogHeader>
             <div className='flex flex-col gap-2 pt-2'>
-                <Button variant='destructive' onClick={handleConfirm} disabled={isDeleting}>
+                <AlertDialogAction variant='destructive' onClick={handleConfirm} disabled={isDeleting}>
                     מחק שיחה
-                </Button>
-                <DialogClose asChild>
-                    <Button variant='ghost' disabled={isDeleting}>
-                        ביטול
-                    </Button>
-                </DialogClose>
+                </AlertDialogAction>
+                <AlertDialogCancel variant='ghost' disabled={isDeleting}>
+                    ביטול
+                </AlertDialogCancel>
             </div>
-        </DialogContent>
+        </AlertDialogContent>
     );
 }
