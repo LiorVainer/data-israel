@@ -1,22 +1,20 @@
 'use client';
 
-import { useState, useMemo, useCallback } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import type { AvailableModel } from '@/agents/agent.config';
+import { formatPrice } from '@/constants/admin';
 import { ModelSelectorLogo } from '@/components/ai-elements/model-selector';
+import { ModelPriceDisplay } from './ModelPriceDisplay';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from '@/components/ui/drawer';
+import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { CheckIcon, Search } from 'lucide-react';
+import { ArrowDownNarrowWide, ArrowUpNarrowWide, CheckIcon, Search } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/use-mobile';
 
-function formatPrice(price: number | undefined): string {
-    if (price === undefined) return '-';
-    if (price === 0) return 'Free';
-    if (price < 0.01) return `$${price.toFixed(4)}`;
-    return `$${price.toFixed(2)}`;
-}
+export { formatPrice } from '@/constants/admin';
 
 interface ModelPickerDialogProps {
     open: boolean;
@@ -41,17 +39,28 @@ function ModelPickerContent({
     showPrices: boolean;
 }) {
     const [search, setSearch] = useState('');
+    const [priceSort, setPriceSort] = useState<'none' | 'asc' | 'desc'>('none');
 
     const filteredModels = useMemo(() => {
-        if (!search.trim()) return models;
-        const query = search.toLowerCase();
-        return models.filter(
-            (m) =>
-                m.name.toLowerCase().includes(query) ||
-                m.id.toLowerCase().includes(query) ||
-                m.provider.toLowerCase().includes(query),
-        );
-    }, [models, search]);
+        let result = models;
+        if (search.trim()) {
+            const query = search.toLowerCase();
+            result = result.filter(
+                (m) =>
+                    m.name.toLowerCase().includes(query) ||
+                    m.id.toLowerCase().includes(query) ||
+                    m.provider.toLowerCase().includes(query),
+            );
+        }
+        if (priceSort !== 'none') {
+            result = [...result].sort((a, b) => {
+                const priceA = (a.inputPrice ?? 0) + (a.outputPrice ?? 0);
+                const priceB = (b.inputPrice ?? 0) + (b.outputPrice ?? 0);
+                return priceSort === 'asc' ? priceA - priceB : priceB - priceA;
+            });
+        }
+        return result;
+    }, [models, search, priceSort]);
 
     const providers = useMemo(() => {
         const seen = new Set<string>();
@@ -65,17 +74,70 @@ function ModelPickerContent({
         return result;
     }, [filteredModels]);
 
+    const isSortedByPrice = priceSort !== 'none';
+
+    const cyclePriceSort = () => {
+        setPriceSort((prev) => (prev === 'none' ? 'asc' : prev === 'asc' ? 'desc' : 'none'));
+    };
+
+    const SortIcon = priceSort === 'desc' ? ArrowDownNarrowWide : ArrowUpNarrowWide;
+
+    function renderModelButton(m: AvailableModel) {
+        const isSelected = m.id === selectedModelId;
+        return (
+            <button
+                key={m.id}
+                type='button'
+                onClick={() => onSelect(m.id)}
+                className={cn(
+                    'flex w-full flex-col items-start rounded-md px-2 py-2 text-sm transition-colors',
+                    'hover:bg-muted/60',
+                    isSelected && 'bg-muted',
+                )}
+            >
+                <span className='flex w-full items-center gap-1.5'>
+                    <ModelSelectorLogo provider={m.providerSlug} className='shrink-0' />
+                    <span className='min-w-0 truncate'>{m.name}</span>
+                    {isSelected && <CheckIcon className='ml-auto size-4 shrink-0' />}
+                </span>
+                {showPrices && (
+                    <ModelPriceDisplay inputPrice={m.inputPrice} outputPrice={m.outputPrice} />
+                )}
+            </button>
+        );
+    }
+
     return (
         <>
             <div className='border-b px-4 py-3' dir='ltr'>
-                <div className='relative'>
-                    <Search className='text-muted-foreground absolute left-3 top-1/2 size-4 -translate-y-1/2' />
-                    <Input
-                        placeholder='Search model...'
-                        value={search}
-                        onChange={(e) => setSearch(e.target.value)}
-                        className='pl-9'
-                    />
+                <div className='flex items-center gap-2'>
+                    <div className='relative flex-1'>
+                        <Search className='text-muted-foreground absolute left-3 top-1/2 size-4 -translate-y-1/2' />
+                        <Input
+                            placeholder='Search model...'
+                            value={search}
+                            onChange={(e) => setSearch(e.target.value)}
+                            className='pl-9'
+                        />
+                    </div>
+                    {showPrices && (
+                        <Button
+                            variant='ghost'
+                            size='sm'
+                            onClick={cyclePriceSort}
+                            title={
+                                priceSort === 'none'
+                                    ? 'Sort by price'
+                                    : priceSort === 'asc'
+                                      ? 'Price: low → high'
+                                      : 'Price: high → low'
+                            }
+                            className={cn('shrink-0 gap-1 px-2 text-xs', isSortedByPrice && 'text-blue-500')}
+                        >
+                            <span className='font-semibold'>$</span>
+                            <SortIcon className='size-3.5' />
+                        </Button>
+                    )}
                 </div>
             </div>
 
@@ -83,42 +145,13 @@ function ModelPickerContent({
                 <div className='p-2' dir='ltr'>
                     {filteredModels.length === 0 ? (
                         <p className='text-muted-foreground py-8 text-center text-sm'>No models found</p>
+                    ) : isSortedByPrice ? (
+                        filteredModels.map((m) => renderModelButton(m))
                     ) : (
                         providers.map((provider) => (
                             <div key={provider} className='mb-4 last:mb-0'>
                                 <p className='text-muted-foreground mb-1 px-2 text-xs font-medium'>{provider}</p>
-                                {filteredModels
-                                    .filter((m) => m.provider === provider)
-                                    .map((m) => {
-                                        const isSelected = m.id === selectedModelId;
-                                        return (
-                                            <button
-                                                key={m.id}
-                                                type='button'
-                                                onClick={() => onSelect(m.id)}
-                                                className={cn(
-                                                    'flex w-full items-center gap-2 rounded-md px-2 py-2 text-sm transition-colors',
-                                                    'hover:bg-muted/60',
-                                                    isSelected && 'bg-muted',
-                                                )}
-                                            >
-                                                <ModelSelectorLogo provider={m.providerSlug} />
-                                                <span className='flex-1 truncate text-left'>{m.name}</span>
-                                                {showPrices && (
-                                                    <span className='text-muted-foreground flex shrink-0 items-center gap-1 text-[11px] tabular-nums'>
-                                                        <span className='text-blue-500' title='Input per 1M tokens'>
-                                                            {formatPrice(m.inputPrice)}
-                                                        </span>
-                                                        <span className='text-muted-foreground/50'>|</span>
-                                                        <span className='text-orange-500' title='Output per 1M tokens'>
-                                                            {formatPrice(m.outputPrice)}
-                                                        </span>
-                                                    </span>
-                                                )}
-                                                {isSelected && <CheckIcon className='size-4 shrink-0' />}
-                                            </button>
-                                        );
-                                    })}
+                                {filteredModels.filter((m) => m.provider === provider).map((m) => renderModelButton(m))}
                             </div>
                         ))
                     )}

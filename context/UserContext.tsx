@@ -17,6 +17,8 @@ interface UserContextType {
     isLoading: boolean;
     /** Whether the current user has admin role (Convex users.role === 'admin') */
     isAdmin: boolean;
+    /** Whether the admin role check is still loading (convexUser query pending) */
+    isAdminLoading: boolean;
 
     /** Guest ID for unauthenticated users (null if authenticated) */
     guestId: Id<'guests'> | null;
@@ -73,6 +75,8 @@ export const UserProvider = ({ children }: UserProviderProps) => {
     const convexUser = useQuery(api.users.getCurrentUser, isAuthenticated ? {} : 'skip');
     const { guestId, sessionId, isCreatingGuest, isValidatingGuest, ensureGuestExists } = useGuestSession();
 
+    const isAdminLoading = isAuthenticated && convexUser === undefined;
+
     const isAdmin = useMemo(() => {
         if (!isAuthenticated || !convexUser) return false;
         return convexUser.role === 'admin';
@@ -93,6 +97,7 @@ export const UserProvider = ({ children }: UserProviderProps) => {
             isAuthenticated,
             isLoading: isAuthLoading || isCreatingGuest || isValidatingGuest,
             isAdmin,
+            isAdminLoading,
             guestId,
             sessionId,
             isCreatingGuest,
@@ -106,6 +111,7 @@ export const UserProvider = ({ children }: UserProviderProps) => {
             isCreatingGuest,
             isValidatingGuest,
             isAdmin,
+            isAdminLoading,
             guestId,
             sessionId,
             ensureGuestExists,
