@@ -24,7 +24,7 @@ export function AmbientGlow({ top = '0', left = '50%', size = 800, className }: 
                     height: size,
                     marginTop: -half,
                     marginLeft: -half,
-                    background: 'radial-gradient(circle, oklch(0.80 0.10 250 / 0.1), transparent 70%)',
+                    background: 'radial-gradient(circle, oklch(0.80 0.10 250 / 0.2), transparent 70%)',
                 }}
             />
             <div
@@ -36,7 +36,7 @@ export function AmbientGlow({ top = '0', left = '50%', size = 800, className }: 
                     height: size,
                     marginTop: -half,
                     marginLeft: -half,
-                    background: 'radial-gradient(circle, oklch(0.55 0.18 250 / 0.1), transparent 70%)',
+                    background: 'radial-gradient(circle, oklch(0.55 0.18 250 / 0.2), transparent 70%)',
                 }}
             />
         </>
