@@ -26,8 +26,10 @@ export default defineConfig({
     },
     test: {
         environment: 'node',
-        include: ['**/__tests__/**/*.test.ts', '**/__tests__/**/*.test.tsx'],
+        include: ['**/__tests__/**/*.eval.ts'],
         exclude: ['node_modules', '.next', 'mcp-ref', 'components-ref'],
         passWithNoTests: true,
+        testTimeout: 240_000,
+        fileParallelism: true,
     },
 });

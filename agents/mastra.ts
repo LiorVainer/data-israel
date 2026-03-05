@@ -11,6 +11,7 @@ import { cbsAgent, datagovAgent, routingAgent } from './network';
 import { createRoutingAgent } from './network/routing/routing.agent';
 import { createDatagovAgent } from './network/datagov/data-gov.agent';
 import { createCbsAgent } from './network/cbs/cbs.agent';
+import { MASTRA_SCORERS } from './evals/eval.config';
 import { ENV } from '@/lib/env';
 
 const convexUrl = ENV.NEXT_PUBLIC_CONVEX_URL;
@@ -31,6 +32,7 @@ export const agents = { routingAgent, cbsAgent, datagovAgent };
 export const mastra = new Mastra({
     agents,
     ...(storage && { storage }),
+    scorers: MASTRA_SCORERS,
 });
 
 /** Per-agent model configuration (all values are OpenRouter model IDs like 'google/gemini-3-flash-preview') */
@@ -68,6 +70,7 @@ export function getMastraWithModels(config: AgentModelConfig): Mastra {
     const newMastra = new Mastra({
         agents: { routingAgent: newRouting, cbsAgent: newCbs, datagovAgent: newDatagov },
         ...(storage && { storage }),
+        scorers: MASTRA_SCORERS,
     });
 
     cachedConfigKey = configKey;

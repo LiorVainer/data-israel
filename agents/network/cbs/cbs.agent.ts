@@ -10,6 +10,7 @@ import { Memory } from '@mastra/memory';
 import { getMastraModelId } from '../model';
 import { CBS_AGENT_CONFIG } from './config';
 import { AgentConfig } from '../../agent.config';
+import { AGENT_SCORERS } from '../../evals/eval.config';
 import { CbsTools } from '@/lib/tools/cbs';
 
 const { MEMORY } = AgentConfig;
@@ -29,6 +30,7 @@ export function createCbsAgent(modelId: string): Agent {
                 lastMessages: MEMORY.LAST_MESSAGES,
             },
         }),
+        scorers: AGENT_SCORERS,
     });
 }
 

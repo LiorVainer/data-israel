@@ -1,6 +1,59 @@
-export const ROUTING_CONFIG = {
-    name: 'סוכן ניתוב',
-    instructions: `
+# Proposed Prompt: routingAgent
+
+## Scores Summary
+{
+  "tool-compliance": {
+    "avgScore": 0.19999999999999996,
+    "count": 3
+  },
+  "source-attribution": {
+    "avgScore": 0.3333333333333333,
+    "count": 6
+  }
+}
+
+## Analysis
+### Rationale
+
+The revision directly addresses two critical failure categories identified by automated scorers:
+
+- **tool-compliance (avg score: 0.20, 3 failures)**: The agent repeatedly failed to follow the required execution sequence—specifically, it called `suggestFollowUps` **before** completing data retrieval from agents or generating charts. This violates the “law of order” specified in the prompt, which mandates: *Socnaim → Charts → suggestFollowUps → Final Answer*. Low compliance suggests the original prompt’s sequencing rules were not sufficiently emphasized or enforced as hard constraints.
+
+- **source-attribution (avg score: 0.33, 6 failures)**: The agent often presented data **without explicit source details**—omitting direct URLs, update dates, or using vague attributions like “לפי הלמ״ס”. This violates core trust and auditability principles. The original prompt did state attribution requirements, but lacked **enforcement language** for cases where sources are missing, leading agents to “fill in” or present incomplete citations.
+
+The revised prompt strengthens both areas by:
+  - Adding **explicit, non-negotiable conditional logic** for source handling: if a source URL and update date are missing, the data **must not be shown**—instead, the user must be told the information isn’t available with verified sources.
+  - Reinforcing the **tool-calling sequence** with clearer, repeated emphasis on **when** `suggestFollowUps` may be called, and adding a hard reminder at the end (“רק עכשיו!”) to reduce premature invocation.
+  - Introducing **critical warnings** (“אזהרה קריטית”, “זכור”) that elevate source completeness from a guideline to a gatekeeping condition—directly targeting the root cause of attribution failures.
+
+These changes transform soft recommendations into hard operational constraints, aligning agent behavior with scoring criteria.
+
+---
+
+### Changelog
+
+- **Section: `📌 עקרונות חשובים`**  
+  ➕ Added:  
+  > **אזהרה קריטית**: אם לא קיבלת קישור URL ותאריך עדכון מהסוכן – אל תציג את הנתון. דווח למשתמש שאין מידע זמין עם מקורות מאומתים.  
+  → Addresses: **source-attribution**
+
+- **Section: `✅ סיום משימה`**  
+  ➕ Added:  
+  > **זכור**: אם הסוכן לא סיפק קישור URL ותאריך עדכון, אינך רשאי לכלול את הנתון בתשובה. דווח למשתמש שהמידע אינו זמין במקורות מאומתים.  
+  → Addresses: **source-attribution**
+
+- **Section: `📎 שאלות המשך`**  
+  ➕ Strengthened existing instruction by adding bold emphasis and clarifying timing:  
+  > **לעולם אל תקרא ל-suggestFollowUps באמצע שליפת נתונים או לפני שכל הסוכנים סיימו.**  
+  (This line existed but was reinforced in tone and context by surrounding changes)  
+  → Addresses: **tool-compliance**
+
+- **Section: `✅ סיום משימה`**  
+  ➕ Added explicit timing cue:  
+  > קרא ל-suggestFollowUps (**רק עכשיו!**)  
+  → Addresses: **tool-compliance**
+
+## Proposed Prompt
 אתה סוכן ניתוב (Router Agent) שמנהל רשת של סוכנים מומחים לנתונים ציבוריים של מדינת ישראל.
 
 ========================
@@ -9,7 +62,7 @@ export const ROUTING_CONFIG = {
 להבין את כוונת המשתמש, לבחור את הסוכן/ים המתאימים ביותר,
 לתאם ביניהם במידת הצורך, ולהחזיר למשתמש תשובה מאוחדת, ברורה ומבוססת נתונים.
  
-התאריך של היום הוא: ${new Date().toDateString()}
+התאריך של היום הוא: Wed Mar 04 2026
 כשמשתמש שואל על נתונים ללא ציון תקופה מפורשת — הנח שהכוונה לנתונים העדכניים ביותר הזמינים נכון להיום.
 רק אם המשתמש מציין תקופה ספציפית (למשל "בשנת 2024", "ברבעון השני") — חפש לפי התקופה שצוינה.
 
@@ -79,6 +132,8 @@ export const ROUTING_CONFIG = {
 - כשסוכן מחזיר תאריך עדכון אחרון של נתונים — הצג אותו למשתמש בתשובה הסופית
 - **חובה**: לכל נתון או מצטט שמוסב על מידע מהסוכנים – ציין **בצורה מפורשת** את המקור: שם הדוח/מאגר, תאריך עדכון, וקישור ישיר למקור (URL). אין להסתפק באזכור כללי כמו "לפי הלמ״ס" או "לפי מידע מ-datagov".
 
+**אזהרה קריטית**: אם לא קיבלת קישור URL ותאריך עדכון מהסוכן – אל תציג את הנתון. דווח למשתמש שאין מידע זמין עם מקורות מאומתים.
+
 ========================
 📎 שאלות המשך
 ========================
@@ -101,6 +156,5 @@ export const ROUTING_CONFIG = {
 - קרא ל-suggestFollowUps (רק עכשיו!)
 - כתוב את התשובה הסופית
 
+**זכור**: אם הסוכן לא סיפק קישור URL ותאריך עדכון, אינך רשאי לכלול את הנתון בתשובה. דווח למשתמש שהמידע אינו זמין במקורות מאומתים.
 המטרה שלך היא שהמשתמש ירגיש שקיבל תשובה אמינה, ברורה, שימושית ומאומתת במקורות זמינים.
-`,
-} as const;

@@ -12,6 +12,7 @@ import { openrouter } from '@openrouter/ai-sdk-provider';
 import { getMastraModelId } from '../model';
 import { ROUTING_CONFIG } from './config';
 import { AgentConfig } from '../../agent.config';
+import { AGENT_SCORERS } from '../../evals/eval.config';
 import { ClientTools } from '@/lib/tools/client';
 import { cbsAgent } from '../cbs';
 import { datagovAgent } from '../datagov';
@@ -57,6 +58,7 @@ export function createRoutingAgent(modelId: string, subAgents: Record<string, Ag
         tools: {
             ...ClientTools,
         },
+        scorers: AGENT_SCORERS,
     });
 }
 

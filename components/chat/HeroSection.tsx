@@ -43,7 +43,7 @@ export function HeroSection({ onStartConversation, onScrollToAbout }: HeroSectio
                 <div className='flex flex-col gap-2'>
                     <HeroTitle line1='שואלים על ישראל.' line2='מקבלים נתונים רשמיים.' />
                     <div>
-                        <HeroSubtitle>בינה מלאכותית המחוברת למאגרי מידע ציבוריים.</HeroSubtitle>
+                        <HeroSubtitle>AI המחובר למאגרי מידע ציבוריים.</HeroSubtitle>
                         <HeroSubtitle>כל תשובה מבוססת על מקור רשמי.</HeroSubtitle>
                     </div>
                 </div>
@@ -66,7 +66,7 @@ export function HeroSection({ onStartConversation, onScrollToAbout }: HeroSectio
                             size='lg'
                             variant='outline'
                             onClick={onScrollToAbout}
-                            className='w-full sm:w-48 rounded-full px-10 py-4 text-base font-semibold'
+                            className='w-full sm:w-48 rounded-full border-foreground/20 px-10 py-4 text-base font-semibold dark:border-foreground/25'
                         >
                             על המערכת
                         </Button>

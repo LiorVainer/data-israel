@@ -9,6 +9,7 @@ import { Memory } from '@mastra/memory';
 import { getMastraModelId } from '../model';
 import { DATAGOV_AGENT_CONFIG } from './config';
 import { AgentConfig } from '../../agent.config';
+import { AGENT_SCORERS } from '../../evals/eval.config';
 import { DataGovTools } from '@/lib/tools/datagov';
 
 const { MEMORY } = AgentConfig;
@@ -28,6 +29,7 @@ export function createDatagovAgent(modelId: string): Agent {
                 lastMessages: MEMORY.LAST_MESSAGES,
             },
         }),
+        scorers: AGENT_SCORERS,
     });
 }
 

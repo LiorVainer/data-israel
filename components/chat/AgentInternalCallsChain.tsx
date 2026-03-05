@@ -62,7 +62,10 @@ function groupInternalCalls(calls: AgentInternalToolCall[], isAgentActive: boole
             const key = call.searchedResourceName ?? `__anon_${anonymousIdx++}`;
             const existing = seen.get(key);
             // Keep the call with the best status: success > complete > active > failed
-            if (!existing || (call.isComplete && call.success !== false && !(existing.isComplete && existing.success !== false))) {
+            if (
+                !existing ||
+                (call.isComplete && call.success !== false && !(existing.isComplete && existing.success !== false))
+            ) {
                 seen.set(key, call);
             }
         }
@@ -168,7 +171,7 @@ export function AgentInternalCallsChain({ calls, isAgentActive }: AgentInternalC
                             }
                             status={status}
                         >
-                            {status === 'active' && <LoadingShimmer showIcon={false} text='מעבד...' />}
+                            {status === 'active' && <LoadingShimmer text='מעבד...' />}
                             {chips.length > 0 && (
                                 <ChainOfThoughtSearchResults>
                                     {chips.map((chip) => (

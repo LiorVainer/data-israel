@@ -147,6 +147,22 @@ export default defineSchema({
     }).index('by_agent_id', ['agentId']),
 
     /**
+     * Prompt revisions table - stores proposed prompt improvements from the eval optimizer.
+     * Each record tracks a current vs proposed prompt, the scores that triggered it,
+     * and whether it was accepted or rejected.
+     */
+    prompt_revisions: defineTable({
+        agentId: v.string(),
+        currentPrompt: v.string(),
+        proposedPrompt: v.string(),
+        scoresSummary: v.any(),
+        failureCount: v.number(),
+        model: v.string(),
+        status: v.string(),
+        createdAt: v.number(),
+    }).index('by_agent', ['agentId', 'createdAt']),
+
+    /**
      * Mastra tables - used by @mastra/convex for agent memory, threads, and storage
      */
     mastra_threads: mastraThreadsTable,
