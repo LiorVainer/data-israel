@@ -19,6 +19,8 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: npx tsc --noEmit
       - run: pnpm build
+        env:
+          OPENROUTER_API_KEY: dummy
       - run: pnpm lint
       - run: pnpm test -- --exclude '**/agents/evals/**'
 
