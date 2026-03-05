@@ -100,20 +100,19 @@ export const listUserThreadsPaginated = query({
 
         const resourceId = identity?.subject || guestId;
 
-        const q = ctx.db
-            .query('mastra_threads')
-            .withIndex('by_resource', (q) => q.eq('resourceId', resourceId))
-            .order('desc');
-
         try {
-            return await q.paginate(paginationOpts);
+            return await ctx.db
+                .query('mastra_threads')
+                .withIndex('by_resource', (q) => q.eq('resourceId', resourceId))
+                .order('desc')
+                .paginate(paginationOpts);
         } catch (error) {
-            // Cursor becomes invalid when the underlying query changes (e.g., auth
-            // identity change causes resourceId to differ from cursor's query).
-            // Reset to first page instead of surfacing the error.
+            // Cursor becomes invalid during auth transitions (e.g., logout changes
+            // resourceId while the client still holds a cursor from the old query).
+            // Return empty page so the client resets pagination cleanly.
             const msg = error instanceof Error ? error.message : String(error);
-            if (msg.includes('InvalidCursor') || msg.includes('cursor')) {
-                return await q.paginate({ numItems: paginationOpts.numItems, cursor: null });
+            if (msg.includes('InvalidCursor') || msg.includes('cursor is from a different query')) {
+                return { page: [], isDone: true, continueCursor: '' };
             }
             throw error;
         }
