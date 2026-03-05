@@ -6,7 +6,7 @@ on:
   pull_request:
 
 jobs:
-  build-and-test:
+  check-and-test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -18,15 +18,12 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
       - run: npx tsc --noEmit
-      - run: pnpm build
-        env:
-          OPENROUTER_API_KEY: dummy
       - run: pnpm lint
       - run: pnpm test -- --exclude '**/agents/evals/**'
 
   eval-tests:
     runs-on: ubuntu-latest
-    needs: build-and-test
+    needs: check-and-test
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
