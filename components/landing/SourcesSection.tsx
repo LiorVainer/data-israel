@@ -14,7 +14,7 @@ interface StatProps {
 
 function StatCard({ icon, value, label }: StatProps) {
     return (
-        <div className='flex flex-col items-center gap-3 rounded-2xl border border-border/40 bg-background/70 backdrop-blur-sm px-6 py-8 shadow-sm'>
+        <div className='flex flex-col items-center gap-3 rounded-2xl border border-border/40 bg-background/70 backdrop-blur-sm px-6 py-6 md:py-8 shadow-sm'>
             <div className='flex items-center justify-center w-12 h-12 rounded-xl bg-primary-tint text-primary'>
                 {icon}
             </div>
@@ -57,7 +57,7 @@ function SourceBlock({ href, logoSrc, logoAlt, logoWidth, logoHeight, descriptio
                     {description}
                 </p>
             </div>
-            <div className='grid grid-cols-1 sm:grid-cols-3 gap-3 w-full'>
+            <div className='grid grid-cols-1 sm:grid-cols-3 gap-6 md:gap-3 w-full'>
                 {stats.map((stat) => (
                     <StatCard key={stat.label} icon={stat.icon} value={stat.value} label={stat.label} />
                 ))}

@@ -54,7 +54,7 @@ export function HeroSection({ onStartConversation, onScrollToAbout }: HeroSectio
                         transition={{ delay: 0.8, duration: 0.5 }}
                     >
                         <CTAButton onClick={onStartConversation}>
-                            <span className='flex items-center font-bold gap-3'>
+                            <span className='flex items-center font-bold gap-3 justify-between'>
                                 התחילו לשאול
                                 <ArrowLeft className='w-4 h-4' />
                             </span>

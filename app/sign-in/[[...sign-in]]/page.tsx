@@ -3,35 +3,47 @@
 import * as Clerk from '@clerk/elements/common';
 import * as SignIn from '@clerk/elements/sign-in';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Logo } from '@/components/ui/logo';
+import { AmbientGlow } from '@/components/ui/AmbientGlow';
+import { GeometricBackground } from '@/components/ui/shape-landing-hero';
 import { Loader2 } from 'lucide-react';
 import { FcGoogle } from 'react-icons/fc';
 
 export default function SignInPage() {
     return (
-        <div className='grid w-full h-full grow items-center px-4 sm:justify-center'>
+        <div className='relative flex w-full min-h-dvh items-center justify-center bg-background overflow-hidden'>
+            <GeometricBackground noShapes />
+            <AmbientGlow top='30%' left='25%' size={600} />
+            <AmbientGlow top='70%' left='75%' size={500} />
+
             <SignIn.Root>
                 <Clerk.Loading>
                     {(isGlobalLoading) => (
                         <SignIn.Step name='start'>
-                            <Card className='w-full sm:w-96'>
-                                <CardHeader className='text-center'>
-                                    <CardTitle className='text-2xl'>התחברות</CardTitle>
-                                    <CardDescription>התחבר לחשבונך כדי להמשיך</CardDescription>
-                                </CardHeader>
-                                <CardContent className='grid gap-y-4'>
+                            <div className='relative z-10 w-full sm:w-[32rem] sm:bg-card/80 sm:backdrop-blur-xl text-card-foreground sm:rounded-3xl sm:border sm:border-border/40 sm:shadow-2xl px-6 sm:px-12 py-14 flex flex-col items-center gap-10'>
+                                <div className='flex flex-col items-center gap-5'>
+                                    <div className='rounded-2xl bg-background/60 p-4 border border-border/30 shadow-sm'>
+                                        <Logo className='size-14' />
+                                    </div>
+                                    <div className='text-center space-y-2.5'>
+                                        <h1 className='text-3xl font-bold tracking-tight'>ברוכים הבאים לדאטה ישראל</h1>
+                                        <p className='text-base text-muted-foreground'>AI לנתונים הציבוריים של ישראל</p>
+                                    </div>
+                                </div>
+
+                                <div className='w-full space-y-4'>
                                     <Clerk.Connection name='google' asChild>
                                         <Button
                                             size='lg'
                                             variant='outline'
                                             type='button'
                                             disabled={isGlobalLoading}
-                                            className='w-full'
+                                            className='w-full h-13 text-base gap-3 rounded-xl border-border/50 bg-background/50 hover:bg-background/80 transition-colors'
                                         >
                                             <Clerk.Loading scope='provider:google'>
                                                 {(isLoading) =>
                                                     isLoading ? (
-                                                        <Loader2 className='size-4 animate-spin' />
+                                                        <Loader2 className='size-5 animate-spin' />
                                                     ) : (
                                                         <>
                                                             <FcGoogle className='size-5' />
@@ -42,16 +54,26 @@ export default function SignInPage() {
                                             </Clerk.Loading>
                                         </Button>
                                     </Clerk.Connection>
-                                </CardContent>
-                                <CardFooter className='flex flex-col items-center gap-2'>
-                                    <p className='text-sm text-muted-foreground'>
-                                        אין לך חשבון?{' '}
-                                        <Clerk.Link navigate='sign-up' className='text-primary underline hover:no-underline'>
-                                            הרשמה
-                                        </Clerk.Link>
-                                    </p>
-                                </CardFooter>
-                            </Card>
+                                </div>
+
+                                <p className='text-center text-xs leading-relaxed text-muted-foreground/80 max-w-xs'>
+                                    בלחיצה על &quot;המשך עם Google&quot; הנך מסכים/ה ל
+                                    <a
+                                        href='/terms'
+                                        className='underline underline-offset-2 hover:text-foreground transition-colors'
+                                    >
+                                        תנאי השימוש
+                                    </a>{' '}
+                                    ול
+                                    <a
+                                        href='/privacy'
+                                        className='underline underline-offset-2 hover:text-foreground transition-colors'
+                                    >
+                                        מדיניות הפרטיות
+                                    </a>{' '}
+                                    שלנו. אנו שומרים על פרטיותך ומגנים על המידע האישי שלך.
+                                </p>
+                            </div>
                         </SignIn.Step>
                     )}
                 </Clerk.Loading>

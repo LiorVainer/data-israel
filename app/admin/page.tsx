@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { useMutation, useQuery } from 'convex/react';
 import { api } from '@/convex/_generated/api';
 import { useUser } from '@/context/UserContext';
-import { AGENT_CONFIGS, CLIENT_DEFAULT_MODEL, getModelDisplay, type AgentId } from '@/constants/admin';
+import { AGENT_CONFIGS, type AgentId, CLIENT_DEFAULT_MODEL, getModelDisplay } from '@/constants/admin';
 import { useOpenRouterModels } from '@/hooks/use-openrouter-models';
 import { ModelSelectorLogo } from '@/components/ai-elements/model-selector';
 import { ModelPickerDialog } from '@/components/admin/ModelPickerDialog';
@@ -15,6 +15,7 @@ import { AlertTriangle, ChevronDown, RefreshCw, ShieldAlert } from 'lucide-react
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { GeometricBackground } from '@/components/ui/shape-landing-hero';
+import { AmbientGlow } from '@/components/ui/AmbientGlow';
 
 /** Loading state with spinning logo */
 function ModelsLoadingState() {
@@ -131,6 +132,8 @@ export default function AdminPage() {
 
     return (
         <div className='relative h-full w-full' dir='rtl'>
+            <AmbientGlow top='30%' left='25%' size={600} />
+            <AmbientGlow top='70%' left='75%' size={500} />
             <GeometricBackground noShapes />
             <div className='relative z-10 flex min-h-dvh flex-col items-center justify-center px-4 py-12'>
                 <div className='w-full max-w-2xl'>

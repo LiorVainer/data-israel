@@ -20,9 +20,9 @@
  */
 
 import { ConvexHttpClient } from 'convex/browser';
-import { api } from '../convex/_generated/api';
-import { getAgentPrompt } from '../agents/evals/optimizer/read-agent-config';
-import { buildMetaPrompt, type FailureGroup } from '../agents/evals/optimizer/meta-prompt';
+import { api } from '@/convex/_generated/api';
+import { getAgentPrompt } from '@/agents/evals/optimizer/read-agent-config';
+import { buildMetaPrompt, type FailureGroup } from '@/agents/evals/optimizer/meta-prompt';
 import { EVAL_CONFIG } from '../agents/evals/eval.config';
 import { generateText } from 'ai';
 import { createOpenRouter } from '@openrouter/ai-sdk-provider';

@@ -35,18 +35,18 @@ const CTAButton = React.forwardRef<HTMLButtonElement, CTAButtonProps>(({ childre
                     border-radius: 999px;
                     font-size: 1rem;
                     font-weight: 700;
-                    color: var(--action);
+                    color: var(--action-tint);
                     border: 2px solid transparent;
                     background:
-                        linear-gradient(var(--action-tint), var(--action-tint)) padding-box,
-                        conic-gradient(
-                                from var(--gradient-angle),
-                                transparent 0%,
-                                var(--action) 5%,
-                                transparent 10%,
-                                transparent 100%
-                            )
-                            border-box;
+                        linear-gradient(var(--action), var(--action)) padding-box,
+                        //conic-gradient(
+                        //        from var(--gradient-angle),
+                        //        transparent 0%,
+                        //        var(--action) 5%,
+                        //        transparent 10%,
+                        //        transparent 100%
+                        //    )
+                        border-box;
                     animation: rotate-gradient 3s linear infinite;
                     cursor: pointer;
                     transition: all 0.3s ease;
@@ -58,8 +58,8 @@ const CTAButton = React.forwardRef<HTMLButtonElement, CTAButtonProps>(({ childre
                     position: absolute;
                     inset: 0;
                     border-radius: 999px;
-                    background: radial-gradient(ellipse 80% 100% at 50% 100%, var(--action) 0%, transparent 60%);
-                    opacity: 0;
+                    background: radial-gradient(ellipse 80% 100% at 50% 100%, var(--action-tint) 0%, transparent 60%);
+                    opacity: 0.2;
                     transform: translateX(30%);
                     transition:
                         opacity 600ms cubic-bezier(0.4, 0, 0.2, 1),
@@ -73,7 +73,7 @@ const CTAButton = React.forwardRef<HTMLButtonElement, CTAButtonProps>(({ childre
                 }
 
                 .cta-button:hover::after {
-                    opacity: 0.25;
+                    opacity: 0.4;
                     transform: translateX(0);
                 }
 

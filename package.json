@@ -17,8 +17,8 @@
     "eval:datagov": "vitest run agents/evals/__tests__/datagov-agent.eval.ts --config vitest.eval.config.ts",
     "eval:cbs": "vitest run agents/evals/__tests__/cbs-agent.eval.ts --config vitest.eval.config.ts",
     "eval:all": "vitest run --config vitest.eval.config.ts",
-    "optimize-prompts": "tsx --env-file=.env scripts/optimize-prompts.ts",
     "optimize-prompts:routing": "tsx --env-file=.env scripts/optimize-prompts.ts routingAgent --local",
+    "optimize-prompts:routing:prod": "tsx --env-file=.env.prod scripts/optimize-prompts.ts routingAgent --local",
     "optimize-prompts:datagov": "tsx --env-file=.env scripts/optimize-prompts.ts datagovAgent --local",
     "optimize-prompts:cbs": "tsx --env-file=.env scripts/optimize-prompts.ts cbsAgent --local"
   },

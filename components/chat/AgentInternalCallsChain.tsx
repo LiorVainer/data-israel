@@ -171,7 +171,7 @@ export function AgentInternalCallsChain({ calls, isAgentActive }: AgentInternalC
                             }
                             status={status}
                         >
-                            {status === 'active' && <LoadingShimmer text='מעבד...' />}
+                            {status === 'active' && <LoadingShimmer showIcon={false} text='מעבד...' />}
                             {chips.length > 0 && (
                                 <ChainOfThoughtSearchResults>
                                     {chips.map((chip) => (

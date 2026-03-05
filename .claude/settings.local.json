@@ -13,5 +13,7 @@
     "grep_app",
     "next-devtools",
     "shadcn"
-  ]
+  ],
+  "prefersReducedMotion": false,
+  "outputStyle": "default"
 }
