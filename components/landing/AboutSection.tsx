@@ -55,6 +55,11 @@ const FEATURES = [
 export function AboutSection() {
     return (
         <section id='about' className='w-full max-w-4xl mx-auto px-4'>
+            {/* Subtle radial accent glow behind hero */}
+            <div
+                className='pointer-events-none absolute inset-0 z-[-5] bg-[radial-gradient(ellipse_60%_50%_at_50%_40%,oklch(0.80_0.10_250/0.20),transparent)]
+                    dark:bg-[radial-gradient(ellipse_60%_50%_at_50%_40%,oklch(0.60_0.14_245/0.10),transparent)]'
+            />
             <motion.div
                 initial={{ opacity: 0, y: 15 }}
                 whileInView={{ opacity: 1, y: 0 }}

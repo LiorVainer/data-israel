@@ -9,7 +9,6 @@ import { HowItWorksSection } from '@/components/landing/HowItWorksSection';
 import { AboutSection } from '@/components/landing/AboutSection';
 import { Footer } from '@/components/landing/Footer';
 import { ScrollToTop } from '@/components/ui/ScrollToTop';
-import { BGPattern } from '@/components/bg-pattern';
 
 export default function Home() {
     const router = useRouter();
@@ -27,9 +26,13 @@ export default function Home() {
 
     return (
         <div ref={scrollRef} className='relative h-full w-full overflow-y-auto'>
-            {/* Hero Section — centered within first viewport */}
-            <BGPattern variant='dots' mask='fade-center' fill='hsla(217, 68%, 56%, 0.4)' className='bg-background' />
+            {/* Subtle ambient glow behind hero */}
+            <div className='pointer-events-none absolute top-0 right-1/4 h-96 w-96 rounded-full bg-blue-500/5 blur-3xl' />
             <div className='relative z-10 flex min-h-dvh flex-col items-center justify-center px-4 md:px-0'>
+                <div
+                    className='pointer-events-none absolute inset-0 z-[-5] bg-[radial-gradient(ellipse_60%_50%_at_50%_40%,oklch(0.80_0.10_250/0.20),transparent)]
+                        dark:bg-[radial-gradient(ellipse_60%_50%_at_50%_40%,oklch(0.60_0.14_245/0.10),transparent)]'
+                />
                 <motion.div
                     initial={{ opacity: 0, y: 40 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -46,13 +49,6 @@ export default function Home() {
 
             {/* Below-the-fold sections */}
             <div className='relative z-10 flex flex-col gap-40 md:gap-48 py-24 md:py-36'>
-                <BGPattern
-                    variant='dots'
-                    mask='fade-center'
-                    fill='hsla(217, 68%, 56%, 0.4)'
-                    className='bg-background'
-                />
-
                 <AboutSection />
                 <SourcesSection />
                 <HowItWorksSection />
