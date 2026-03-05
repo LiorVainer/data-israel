@@ -125,5 +125,6 @@
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.30.1",
     "vitest": "^4.0.18"
-  }
+  },
+  "packageManager": "pnpm@10.5.0"
 }
