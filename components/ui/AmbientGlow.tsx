@@ -16,7 +16,7 @@ export function AmbientGlow({ top = '0', left = '50%', size = 800, className }: 
     return (
         <>
             <div
-                className={cn('pointer-events-none absolute z-[-5] rounded-full dark:hidden', className)}
+                className={cn('pointer-events-none absolute z-5 rounded-full dark:hidden', className)}
                 style={{
                     top,
                     left,

@@ -14,11 +14,9 @@ import { MessageItem } from '@/components/chat/MessageItem';
 import { InputSection } from '@/components/chat/InputSection';
 import { Suggestions } from './Suggestions';
 import { EmptyConversation } from './EmptyConversation';
-import { AmbientGlow } from '@/components/ui/AmbientGlow';
 import { MessageListSkeleton } from '@/components/chat/MessageListSkeleton';
 import { LoadingShimmer } from '@/components/chat/LoadingShimmer';
 import { ContextWindowIndicator } from '@/components/chat/ContextWindowIndicator';
-import { GeometricBackground } from '@/components/ui/shape-landing-hero';
 import { AIDevtools } from '@ai-sdk-tools/devtools';
 import { useSessionStorage } from '@/hooks/use-session-storage';
 import { INITIAL_MESSAGE_KEY, type InitialMessageData } from '@/constants/chat';
@@ -145,10 +143,7 @@ export function ChatThread({ id }: ChatThreadProps) {
     console.log({ messages });
 
     return (
-        <div className='relative h-full w-full'>
-            <GeometricBackground noShapes />
-            <AmbientGlow top='15%' left='15%' size={isMobile ? 300 : 800} className='!z-0' />
-            <AmbientGlow top='80%' left='85%' size={isMobile ? 300 : 800} className='!z-0' />
+        <div className='relative h-full w-full overflow-hidden'>
             <div className='mx-auto px-4 md:px-0 pb-4 md:pb-6 relative h-full w-full pt-14 md:pt-6'>
                 <div className='flex flex-col gap-4 md:gap-6 h-full w-full items-center'>
                     {isLoading && !isNewConversation ? (

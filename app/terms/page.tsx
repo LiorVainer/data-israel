@@ -9,7 +9,7 @@ export const metadata: Metadata = {
 
 export default function TermsOfServicePage() {
     return (
-        <div className='overflow-auto'>
+        <div className='relative'>
             <div className='mx-auto max-w-3xl px-6 py-16 text-foreground'>
                 <div className='mb-12 flex flex-col items-center gap-4'>
                     <Link href='/'>

@@ -32,8 +32,8 @@ export default function Home() {
     }, []);
 
     return (
-        <div ref={scrollRef} className='relative h-full w-full overflow-y-auto overflow-x-clip'>
-            <div className='relative z-10 flex min-h-dvh flex-col items-center justify-center px-4 md:px-0'>
+        <div ref={scrollRef} className='h-full w-full overflow-y-auto overflow-x-clip'>
+            <div className='relative flex min-h-dvh flex-col items-center justify-center px-4 md:px-0'>
                 {/* Hero glows */}
                 <AmbientGlow top='15%' left='15%' size={glowSize} />
                 <AmbientGlow top='80%' left='85%' size={glowSize} />
@@ -76,30 +76,28 @@ export default function Home() {
             </div>
 
             {/* Below-the-fold sections — reduced top padding for smooth hero→about flow */}
-            <div className='relative z-10 flex flex-col pt-0 pb-24 md:pb-36'>
-                <div className='relative py-20 md:py-28 overflow-visible'>
+            <div className='z-10 flex flex-col py-40 md:pb-36 gap-32 md:gap-40 overflow-clip'>
+                <div className='relative overflow-visible'>
                     <AmbientGlow top='30%' left='20%' size={glowSizeSm} />
                     <AboutSection />
                 </div>
 
                 {/* Full-bleed tinted band for Sources — gradient edges for smooth transition */}
-                <div className='relative py-20 md:py-28 dark:via-muted/40 overflow-visible'>
+                <div className='relative dark:via-muted/40 overflow-visible'>
                     <AmbientGlow top='20%' left='85%' size={glowSize} />
                     <AmbientGlow top='50%' left='40%' size={glowSize} />
                     <AmbientGlow top='70%' left='15%' size={glowSize} />
                     <SourcesSection />
                 </div>
 
-                <div className='relative py-20 md:py-28 overflow-visible'>
+                <div className='relative overflow-visible'>
                     <AmbientGlow top='25%' left='75%' size={glowSizeSm} />
                     <AmbientGlow top='75%' left='20%' size={glowSizeSm} />
                     <HowItWorksSection />
                 </div>
             </div>
 
-            <div className='relative z-10'>
-                <Footer />
-            </div>
+            <Footer />
 
             <ScrollToTop containerRef={scrollRef} />
         </div>

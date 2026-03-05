@@ -15,10 +15,13 @@ import {
     SidebarTrigger,
     useSidebar,
 } from '@/components/ui/sidebar';
+import { cn } from '@/lib/utils';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { Logo } from '@/components/ui/logo';
 import { NavUser } from '@/components/navigation/NavUser';
 import { SidebarToolbar } from '@/components/navigation/SidebarToolbar';
 import { ThreadsSidebarGroup } from '@/components/threads/ThreadsSidebarGroup';
+import { AmbientGlow } from '@/components/ui/AmbientGlow';
 import { Button } from '@/components/ui/button';
 import { SquarePen } from 'lucide-react';
 import { usePathname, useRouter } from 'next/navigation';
@@ -125,6 +128,11 @@ export function AppSidebar({
 }: Readonly<{
     children: React.ReactNode;
 }>) {
+    const pathname = usePathname();
+    const isMobile = useIsMobile();
+    const isLanding = pathname === '/';
+    const glowSize = isMobile ? 300 : 800;
+
     return (
         <SidebarProvider defaultOpen={false} className='h-dvh'>
             <Sidebar collapsible='offcanvas' side='right' className='h-full'>
@@ -147,12 +155,23 @@ export function AppSidebar({
             </Sidebar>
 
             <SidebarInset className='overflow-hidden min-h-0 h-full relative'>
+                {!isLanding && (
+                    <>
+                        <AmbientGlow top='30%' left='25%' size={glowSize} className='!z-0' />
+                        <AmbientGlow top='70%' left='75%' size={glowSize} className='!z-0' />
+                    </>
+                )}
                 <div className='absolute top-3 right-4 md:top-4 md:right-5 z-30 flex items-center gap-2 md:gap-4 [&>button]:shadow-md'>
                     <HomeLogoButton />
                     <NewThreadButton />
                     <SidebarTrigger className='rounded-2xl' />
                 </div>
-                <div className='flex flex-1 min-h-0 @container/main overflow-hidden flex-col'>{children}</div>
+                <div
+                    id='main-scroll'
+                    className={cn('flex flex-1 min-h-0 @container/main flex-col overflow-y-auto overflow-x-hidden')}
+                >
+                    {children}
+                </div>
             </SidebarInset>
         </SidebarProvider>
     );

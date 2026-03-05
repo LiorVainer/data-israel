@@ -9,7 +9,7 @@ export const metadata: Metadata = {
 
 export default function PrivacyPolicyPage() {
     return (
-        <div className='overflow-auto'>
+        <div className='relative'>
             <div className='mx-auto max-w-3xl px-6 py-16 text-foreground overflow-auto'>
                 <div className='mb-12 flex flex-col items-center gap-4'>
                     <Link href='/'>

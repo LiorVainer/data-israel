@@ -14,8 +14,6 @@ import { DataIsraelLoader } from '@/components/chat/DataIsraelLoader';
 import { AlertTriangle, ChevronDown, RefreshCw, ShieldAlert } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
-import { GeometricBackground } from '@/components/ui/shape-landing-hero';
-import { AmbientGlow } from '@/components/ui/AmbientGlow';
 
 /** Loading state with spinning logo */
 function ModelsLoadingState() {
@@ -131,10 +129,7 @@ export default function AdminPage() {
     }
 
     return (
-        <div className='relative h-full w-full' dir='rtl'>
-            <AmbientGlow top='30%' left='25%' size={600} />
-            <AmbientGlow top='70%' left='75%' size={500} />
-            <GeometricBackground noShapes />
+        <div className='relative w-full' dir='rtl'>
             <div className='relative z-10 flex min-h-dvh flex-col items-center justify-center px-4 py-12'>
                 <div className='w-full max-w-2xl'>
                     <h1 className='mb-8 text-3xl font-bold'>פאנל ניהול</h1>

@@ -4,17 +4,12 @@ import * as Clerk from '@clerk/elements/common';
 import * as SignIn from '@clerk/elements/sign-in';
 import { Button } from '@/components/ui/button';
 import { Logo } from '@/components/ui/logo';
-import { AmbientGlow } from '@/components/ui/AmbientGlow';
-import { GeometricBackground } from '@/components/ui/shape-landing-hero';
 import { Loader2 } from 'lucide-react';
 import { FcGoogle } from 'react-icons/fc';
 
 export default function SignInPage() {
     return (
-        <div className='relative flex w-full min-h-dvh items-center justify-center bg-background overflow-hidden'>
-            <GeometricBackground noShapes />
-            <AmbientGlow top='30%' left='25%' size={600} />
-            <AmbientGlow top='70%' left='75%' size={500} />
+        <div className='relative flex w-full min-h-dvh items-center justify-center overflow-hidden'>
 
             <SignIn.Root>
                 <Clerk.Loading>
