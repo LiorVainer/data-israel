@@ -38,7 +38,9 @@ export function ChatThread({ id }: ChatThreadProps) {
     const { guestId } = useUser();
     const isMobile = useIsMobile();
 
-    const userId = clerkUserId ?? guestId;
+    // Wait for auth to load before resolving userId — prevents storing
+    // messages with guestId when the user is actually authenticated.
+    const userId = isAuthLoaded ? (clerkUserId ?? guestId) : null;
 
     const contextWindow = useConvexQuery(api.threads.getThreadContextWindow, { threadId: id });
     const totalTokens = contextWindow?.totalTokens ?? 0;
@@ -47,13 +49,18 @@ export function ChatThread({ id }: ChatThreadProps) {
     const [initialMessageData, , removeInitialMessage] = useSessionStorage<InitialMessageData>(INITIAL_MESSAGE_KEY);
     const startedAsNew = useRef(initialMessageData?.chatId === id || searchParams.has('new'));
 
+    // Use a ref so transport callbacks always read the latest userId
+    // without recreating the transport on every auth state change.
+    const userIdRef = useRef(userId);
+    userIdRef.current = userId;
+
     const transport = useMemo(
         () =>
             new DefaultChatTransport({
                 api: '/api/chat',
-                headers: {
-                    [USER_ID_HEADER]: userId ?? 'anonymous',
-                },
+                headers: () => ({
+                    [USER_ID_HEADER]: userIdRef.current ?? 'anonymous',
+                }),
                 prepareSendMessagesRequest({ messages }) {
                     // Only send the last user message — server reconstructs
                     // full history from Convex memory. This prevents the
@@ -65,13 +72,13 @@ export function ChatThread({ id }: ChatThreadProps) {
                             messages: lastUserMessage ? [lastUserMessage] : messages,
                             memory: {
                                 thread: id,
-                                resource: userId,
+                                resource: userIdRef.current,
                             },
                         },
                     };
                 },
             }),
-        [id, userId],
+        [id],
     );
 
     const { messages, sendMessage, setMessages, status, regenerate, stop } = useChat({
@@ -86,7 +93,7 @@ export function ChatThread({ id }: ChatThreadProps) {
     const { data: savedMessages, isFetching: isLoadingMessages } = useQuery({
         queryKey: ['threads', id, 'messages', userId],
         queryFn: () => threadService.getMessages(id, userId!),
-        enabled: !startedAsNew.current,
+        enabled: !startedAsNew.current && !!userId,
     });
 
     const didLoad = useRef(false);
@@ -116,7 +123,7 @@ export function ChatThread({ id }: ChatThreadProps) {
 
     const isStreaming = status === 'submitted' || status === 'streaming';
     const hasMessages = messages.length > 0;
-    const isLoading = isLoadingMessages && !didLoad.current;
+    const isLoading = (!userId || isLoadingMessages) && !didLoad.current;
 
     const pushSubscription = usePushSubscription(userId);
 
