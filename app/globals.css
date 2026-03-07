@@ -90,11 +90,11 @@
   --border: oklch(0.88 0.01 250);
   --input: oklch(0.88 0.01 250);
   --ring: oklch(0.55 0.18 250);
-  --chart-1: oklch(0.55 0.18 250);
-  --chart-2: oklch(0.6 0.14 220);
-  --chart-3: oklch(0.65 0.16 270);
-  --chart-4: oklch(0.7 0.12 230);
-  --chart-5: oklch(0.6 0.15 260);
+  --chart-1: oklch(0.55 0.17 255);
+  --chart-2: oklch(0.62 0.16 155);
+  --chart-3: oklch(0.55 0.18 290);
+  --chart-4: oklch(0.65 0.17 35);
+  --chart-5: oklch(0.6 0.13 195);
   /* Data source badge colors */
   --badge-datagov: oklch(0.895 0.1 87.899);
   --badge-datagov-foreground: oklch(0.35 0.1 85);
@@ -139,12 +139,12 @@
   --border: oklch(0.95 0.01 250 / 28%);
   --input: oklch(0.95 0.01 250 / 25%);
   --ring: oklch(0.55 0.15 250);
-  /* Chart colors - cool blue/cyan palette (dark mode) */
-  --chart-1: oklch(0.72 0.14 230);
-  --chart-2: oklch(0.68 0.12 200);
-  --chart-3: oklch(0.65 0.15 260);
-  --chart-4: oklch(0.7 0.1 180);
-  --chart-5: oklch(0.6 0.13 245);
+  /* Chart colors - varied modern palette (dark mode) */
+  --chart-1: oklch(0.72 0.14 255);
+  --chart-2: oklch(0.7 0.15 155);
+  --chart-3: oklch(0.68 0.16 290);
+  --chart-4: oklch(0.72 0.16 35);
+  --chart-5: oklch(0.65 0.12 195);
   /* Data source badge colors (dark mode) */
   --badge-datagov: oklch(0.45 0.12 85);
   --badge-datagov-foreground: oklch(0.9 0.08 85);

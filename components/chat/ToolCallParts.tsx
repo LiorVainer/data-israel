@@ -292,10 +292,8 @@ export function ToolCallParts({
         // Show agent delegation count if agents were used
         if (agentSteps.length > 0) {
             const isSingle = agentSteps.length === 1;
-            const label = isSingle ? 'מאגר נתונים אחד נבדק' : `${agentSteps.length} מאגרי נתונים נבדקו`;
-            const delegationSuffix = totalDelegations > agentSteps.length
-                ? ` (${totalDelegations} פעמים)`
-                : '';
+            const label = isSingle ? 'מקור נתונים אחד נבדק' : `${agentSteps.length} מקורות נתונים נבדקו`;
+            const delegationSuffix = totalDelegations > agentSteps.length ? ` (${totalDelegations} פעמים)` : '';
             return `${label}${delegationSuffix}`;
         }
 

@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Model Cost Comparison — data-israel</title>
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #12121a;
+    --surface2: #1a1a26;
+    --border: #2a2a3a;
+    --text: #e4e4ef;
+    --text2: #8888a0;
+    --accent: #6c8cff;
+    --accent2: #4c6cdf;
+    --green: #34d399;
+    --red: #f87171;
+    --orange: #fbbf24;
+    --radius: 10px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 24px;
+    direction: ltr;
+  }
+
+  .container { max-width: 1100px; margin: 0 auto; }
+
+  h1 {
+    font-size: 1.6rem;
+    font-weight: 700;
+    margin-bottom: 6px;
+    background: linear-gradient(135deg, var(--accent), #a78bfa);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .subtitle { color: var(--text2); font-size: 0.85rem; margin-bottom: 28px; }
+
+  .usage-banner {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px 20px;
+    margin-bottom: 24px;
+    display: flex;
+    gap: 32px;
+    flex-wrap: wrap;
+    font-size: 0.82rem;
+  }
+
+  .usage-stat { display: flex; flex-direction: column; gap: 2px; }
+  .usage-stat .label { color: var(--text2); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.5px; }
+  .usage-stat .value { font-weight: 600; font-size: 1rem; }
+  .usage-stat .value.highlight { color: var(--accent); }
+
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 24px; }
+  @media (max-width: 700px) { .grid { grid-template-columns: 1fr; } }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+  }
+
+  .card h2 {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text2);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 14px;
+  }
+
+  select {
+    width: 100%;
+    padding: 10px 12px;
+    background: var(--surface2);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    outline: none;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%238888a0'%3E%3Cpath d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: 12px center;
+  }
+
+  select:focus { border-color: var(--accent); }
+
+  .model-info {
+    margin-top: 12px;
+    padding: 12px;
+    background: var(--surface2);
+    border-radius: 8px;
+    font-size: 0.8rem;
+    line-height: 1.5;
+  }
+
+  .model-info .price { color: var(--accent); font-weight: 600; margin-bottom: 6px; }
+
+  .pros-cons { display: flex; flex-direction: column; gap: 4px; margin-top: 8px; }
+  .pro { color: var(--green); }
+  .con { color: var(--red); }
+  .pro::before { content: "+ "; font-weight: 700; }
+  .con::before { content: "- "; font-weight: 700; }
+
+  .results {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 24px;
+    margin-bottom: 24px;
+  }
+
+  .results h2 {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text2);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 16px;
+  }
+
+  .cost-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 20px;
+  }
+
+  @media (max-width: 600px) { .cost-grid { grid-template-columns: repeat(2, 1fr); } }
+
+  .cost-card {
+    background: var(--surface2);
+    border-radius: 8px;
+    padding: 14px;
+    text-align: center;
+  }
+
+  .cost-card .cost-label { font-size: 0.72rem; color: var(--text2); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+  .cost-card .cost-value { font-size: 1.3rem; font-weight: 700; color: var(--accent); }
+  .cost-card .cost-sub { font-size: 0.72rem; color: var(--text2); margin-top: 4px; }
+
+  .breakdown-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.82rem;
+  }
+
+  .breakdown-table th {
+    text-align: left;
+    padding: 8px 10px;
+    color: var(--text2);
+    font-weight: 500;
+    border-bottom: 1px solid var(--border);
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+  }
+
+  .breakdown-table td {
+    padding: 8px 10px;
+    border-bottom: 1px solid rgba(42,42,58,0.5);
+  }
+
+  .breakdown-table tr:last-child td { border-bottom: none; font-weight: 600; }
+
+  .bar-container { display: flex; align-items: center; gap: 8px; }
+  .bar {
+    height: 8px;
+    border-radius: 4px;
+    transition: width 0.4s ease;
+    min-width: 2px;
+  }
+  .bar.routing { background: var(--accent); }
+  .bar.datagov { background: var(--green); }
+  .bar.cbs { background: var(--orange); }
+
+  .savings-badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 0.78rem;
+    font-weight: 600;
+  }
+  .savings-badge.positive { background: rgba(52,211,153,0.15); color: var(--green); }
+  .savings-badge.negative { background: rgba(248,113,113,0.15); color: var(--red); }
+  .savings-badge.neutral { background: rgba(136,136,160,0.15); color: var(--text2); }
+
+  .presets {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 24px;
+  }
+
+  .preset-btn {
+    padding: 7px 14px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    color: var(--text2);
+    font-size: 0.78rem;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .preset-btn:hover { border-color: var(--accent); color: var(--text); }
+  .preset-btn.active { background: var(--accent2); border-color: var(--accent); color: #fff; }
+
+  .monthly-input {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 16px;
+    font-size: 0.85rem;
+  }
+
+  .monthly-input input {
+    width: 100px;
+    padding: 6px 10px;
+    background: var(--surface2);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font-size: 0.85rem;
+    outline: none;
+    text-align: center;
+  }
+
+  .monthly-input input:focus { border-color: var(--accent); }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>Model Cost Comparison</h1>
+  <p class="subtitle">Based on actual Sentry AI telemetry — last 7 days of production usage</p>
+
+  <div class="usage-banner">
+    <div class="usage-stat">
+      <span class="label">Total Calls (7d)</span>
+      <span class="value">76</span>
+    </div>
+    <div class="usage-stat">
+      <span class="label">User Messages</span>
+      <span class="value">33</span>
+    </div>
+    <div class="usage-stat">
+      <span class="label">Routing Avg Input</span>
+      <span class="value">12,471</span>
+    </div>
+    <div class="usage-stat">
+      <span class="label">DataGov Avg Input</span>
+      <span class="value highlight">36,372</span>
+    </div>
+    <div class="usage-stat">
+      <span class="label">CBS Avg Input</span>
+      <span class="value">24,154</span>
+    </div>
+    <div class="usage-stat">
+      <span class="label">Cost Share: Sub-agents</span>
+      <span class="value highlight">77.6%</span>
+    </div>
+  </div>
+
+  <div class="presets" id="presets"></div>
+
+  <div class="grid">
+    <div class="card">
+      <h2>Routing Agent Model</h2>
+      <select id="routerSelect"></select>
+      <div class="model-info" id="routerInfo"></div>
+    </div>
+    <div class="card">
+      <h2>Sub-Agent Model (DataGov + CBS)</h2>
+      <select id="subagentSelect"></select>
+      <div class="model-info" id="subagentInfo"></div>
+    </div>
+  </div>
+
+  <div class="results">
+    <h2>Cost Projection</h2>
+    <div class="monthly-input">
+      <label>Estimated monthly messages:</label>
+      <input type="number" id="monthlyMsgs" value="2000" min="1" step="100">
+    </div>
+    <div class="cost-grid" id="costGrid"></div>
+    <table class="breakdown-table">
+      <thead>
+        <tr>
+          <th>Agent</th>
+          <th>Input Tokens</th>
+          <th>Output Tokens</th>
+          <th>Cost (7d)</th>
+          <th>Share</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody id="breakdownBody"></tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+const MODELS = {
+  "qwen/qwen3-max-thinking": {
+    name: "Qwen 3 Max Thinking",
+    input: 0.39, output: 2.34, context: "262K",
+    pros: ["Deep reasoning for complex delegation", "Strong instruction following", "Good multilingual (Hebrew)"],
+    cons: ["Thinking tokens add cost", "Higher latency", "Overkill for simple tool calls"],
+  },
+  "qwen/qwen3-max": {
+    name: "Qwen 3 Max",
+    input: 0.39, output: 1.56, context: "262K",
+    pros: ["Same quality, no thinking overhead", "Optimized for RAG + tool calling", "Good Hebrew support"],
+    cons: ["Less reasoning depth than thinking variant", "Moderate pricing"],
+  },
+  "x-ai/grok-4.1-fast": {
+    name: "Grok 4.1 Fast",
+    input: 0.20, output: 0.50, context: "2M",
+    pros: ["2M context window (largest)", "Very fast responses", "Strong agentic tool calling", "Low cost"],
+    cons: ["Reasoning tokens counted separately", "Less tested for Hebrew"],
+  },
+  "google/gemini-3-flash-preview": {
+    name: "Gemini 3 Flash Preview",
+    input: 0.50, output: 3.00, context: "1M",
+    pros: ["Near-Pro reasoning quality", "Excellent tool calling", "1M context", "Google ecosystem"],
+    cons: ["High output price ($3/1M)", "Preview — may change", "Expensive for sub-agents"],
+  },
+  "google/gemini-2.5-flash": {
+    name: "Gemini 2.5 Flash",
+    input: 0.15, output: 0.60, context: "1M",
+    pros: ["Very cheap input tokens", "1M context", "Proven stable model"],
+    cons: ["Older generation", "Weaker tool calling vs 3.x", "Being superseded"],
+  },
+  "google/gemini-3.1-flash-lite-preview": {
+    name: "Gemini 3.1 Flash Lite",
+    input: 0.25, output: 1.50, context: "1M",
+    pros: ["Google's cheapest new model", "1M context", "Fast inference"],
+    cons: ["Preview status", "Lite = reduced capacity", "Less reliable tool calling"],
+  },
+  "z-ai/glm-4.7-flash": {
+    name: "GLM 4.7 Flash",
+    input: 0.06, output: 0.40, context: "202K",
+    pros: ["#1 on BFCL benchmark (70.85%)", "Extremely cheap ($0.06 input)", "Excellent function calling"],
+    cons: ["Hebrew quality untested", "Smaller context (202K)", "Newer, less community feedback"],
+  },
+  "deepseek/deepseek-v3.2": {
+    name: "DeepSeek V3.2",
+    input: 0.25, output: 0.40, context: "163K",
+    pros: ["~90% GPT-5 quality at 1/50th cost", "Proven multilingual", "Very cheap output ($0.40)", "Strong tool calling"],
+    cons: ["Smaller context (163K)", "China-based provider", "Occasional availability issues"],
+  },
+  "anthropic/claude-sonnet-4.6": {
+    name: "Claude Sonnet 4.6",
+    input: 3.00, output: 15.00, context: "1M",
+    pros: ["Best reasoning quality", "Excellent instruction following", "Top tool calling (BFCL #3)", "Great Hebrew"],
+    cons: ["Very expensive (15x current)", "Overkill for data fetching", "High output cost"],
+  },
+  "google/gemini-3.1-pro-preview": {
+    name: "Gemini 3.1 Pro Preview",
+    input: 2.00, output: 12.00, context: "1M",
+    pros: ["HLE benchmark leader", "Strong orchestration", "1M context", "Multimodal"],
+    cons: ["Expensive (5x current)", "Preview status", "Overkill for sub-agents"],
+  },
+};
+
+// Actual 7-day Sentry volumes per agent
+const VOLUMES = {
+  routing: { input: 411539, output: 21524, calls: 33 },
+  datagov: { input: 945672, output: 15926, calls: 26 },
+  cbs:     { input: 410619, output: 4350,  calls: 17 },
+};
+
+const CURRENT = { router: "qwen/qwen3-max-thinking", subagent: "qwen/qwen3-max-thinking" };
+
+const PRESETS = [
+  { label: "Current", router: "qwen/qwen3-max-thinking", sub: "qwen/qwen3-max-thinking" },
+  { label: "Budget King", router: "x-ai/grok-4.1-fast", sub: "z-ai/glm-4.7-flash" },
+  { label: "Safe Bet", router: "qwen/qwen3-max-thinking", sub: "deepseek/deepseek-v3.2" },
+  { label: "All Gemini", router: "google/gemini-3-flash-preview", sub: "google/gemini-3-flash-preview" },
+  { label: "Premium", router: "anthropic/claude-sonnet-4.6", sub: "google/gemini-3-flash-preview" },
+  { label: "All DeepSeek", router: "deepseek/deepseek-v3.2", sub: "deepseek/deepseek-v3.2" },
+  { label: "Cheapest", router: "z-ai/glm-4.7-flash", sub: "z-ai/glm-4.7-flash" },
+  { label: "Thinking + Lite", router: "qwen/qwen3-max-thinking", sub: "google/gemini-3.1-flash-lite-preview" },
+];
+
+function calcCost(modelId, inputTokens, outputTokens) {
+  const m = MODELS[modelId];
+  return (inputTokens / 1e6 * m.input) + (outputTokens / 1e6 * m.output);
+}
+
+function currentBaseline() {
+  return calcCost(CURRENT.router, VOLUMES.routing.input, VOLUMES.routing.output)
+       + calcCost(CURRENT.subagent, VOLUMES.datagov.input, VOLUMES.datagov.output)
+       + calcCost(CURRENT.subagent, VOLUMES.cbs.input, VOLUMES.cbs.output);
+}
+
+function renderModelInfo(containerId, modelId) {
+  const m = MODELS[modelId];
+  const el = document.getElementById(containerId);
+  el.innerHTML = `
+    <div class="price">$${m.input}/1M input &middot; $${m.output}/1M output &middot; ${m.context} context</div>
+    <div class="pros-cons">
+      ${m.pros.map(p => `<span class="pro">${p}</span>`).join("")}
+      ${m.cons.map(c => `<span class="con">${c}</span>`).join("")}
+    </div>
+  `;
+}
+
+function update() {
+  const routerId = document.getElementById("routerSelect").value;
+  const subId = document.getElementById("subagentSelect").value;
+  const monthlyMsgs = parseInt(document.getElementById("monthlyMsgs").value) || 2000;
+
+  renderModelInfo("routerInfo", routerId);
+  renderModelInfo("subagentInfo", subId);
+
+  const rCost = calcCost(routerId, VOLUMES.routing.input, VOLUMES.routing.output);
+  const dCost = calcCost(subId, VOLUMES.datagov.input, VOLUMES.datagov.output);
+  const cCost = calcCost(subId, VOLUMES.cbs.input, VOLUMES.cbs.output);
+  const total = rCost + dCost + cCost;
+  const baseline = currentBaseline();
+  const perMsg = total / VOLUMES.routing.calls;
+  const per1k = perMsg * 1000;
+  const monthly = perMsg * monthlyMsgs;
+  const savingsPct = ((total - baseline) / baseline * 100);
+
+  let badgeClass = "neutral";
+  let badgeText = "Same as current";
+  if (savingsPct < -1) { badgeClass = "positive"; badgeText = `${Math.abs(savingsPct).toFixed(1)}% cheaper`; }
+  else if (savingsPct > 1) { badgeClass = "negative"; badgeText = `${savingsPct.toFixed(1)}% more expensive`; }
+
+  document.getElementById("costGrid").innerHTML = `
+    <div class="cost-card">
+      <div class="cost-label">Per Message</div>
+      <div class="cost-value">$${perMsg.toFixed(4)}</div>
+      <div class="cost-sub"><span class="savings-badge ${badgeClass}">${badgeText}</span></div>
+    </div>
+    <div class="cost-card">
+      <div class="cost-label">Per 1K Messages</div>
+      <div class="cost-value">$${per1k.toFixed(2)}</div>
+    </div>
+    <div class="cost-card">
+      <div class="cost-label">Monthly (${monthlyMsgs.toLocaleString()})</div>
+      <div class="cost-value">$${monthly.toFixed(2)}</div>
+    </div>
+    <div class="cost-card">
+      <div class="cost-label">7-Day Total</div>
+      <div class="cost-value">$${total.toFixed(4)}</div>
+      <div class="cost-sub">baseline: $${baseline.toFixed(4)}</div>
+    </div>
+  `;
+
+  const maxCost = Math.max(rCost, dCost, cCost);
+  const barScale = 200;
+
+  const rows = [
+    { name: "Routing", input: VOLUMES.routing.input, output: VOLUMES.routing.output, cost: rCost, cls: "routing" },
+    { name: "DataGov", input: VOLUMES.datagov.input, output: VOLUMES.datagov.output, cost: dCost, cls: "datagov" },
+    { name: "CBS", input: VOLUMES.cbs.input, output: VOLUMES.cbs.output, cost: cCost, cls: "cbs" },
+  ];
+
+  document.getElementById("breakdownBody").innerHTML = rows.map(r => {
+    const pct = (r.cost / total * 100).toFixed(1);
+    const barW = Math.max(2, (r.cost / maxCost) * barScale);
+    return `<tr>
+      <td><strong>${r.name}</strong></td>
+      <td>${r.input.toLocaleString()}</td>
+      <td>${r.output.toLocaleString()}</td>
+      <td>$${r.cost.toFixed(4)}</td>
+      <td>${pct}%</td>
+      <td><div class="bar-container"><div class="bar ${r.cls}" style="width:${barW}px"></div></div></td>
+    </tr>`;
+  }).join("") + `<tr>
+    <td>Total</td>
+    <td>${(VOLUMES.routing.input + VOLUMES.datagov.input + VOLUMES.cbs.input).toLocaleString()}</td>
+    <td>${(VOLUMES.routing.output + VOLUMES.datagov.output + VOLUMES.cbs.output).toLocaleString()}</td>
+    <td>$${total.toFixed(4)}</td>
+    <td>100%</td>
+    <td></td>
+  </tr>`;
+
+  // Update preset buttons
+  document.querySelectorAll(".preset-btn").forEach(btn => {
+    const p = PRESETS[btn.dataset.idx];
+    btn.classList.toggle("active", p.router === routerId && p.sub === subId);
+  });
+}
+
+function init() {
+  const routerSelect = document.getElementById("routerSelect");
+  const subSelect = document.getElementById("subagentSelect");
+
+  Object.entries(MODELS).forEach(([id, m]) => {
+    const opt1 = new Option(`${m.name}  —  $${m.input}/$${m.output}`, id);
+    const opt2 = new Option(`${m.name}  —  $${m.input}/$${m.output}`, id);
+    routerSelect.add(opt1);
+    subSelect.add(opt2);
+  });
+
+  routerSelect.value = CURRENT.router;
+  subSelect.value = CURRENT.subagent;
+
+  const presetsEl = document.getElementById("presets");
+  PRESETS.forEach((p, i) => {
+    const btn = document.createElement("button");
+    btn.className = "preset-btn";
+    btn.textContent = p.label;
+    btn.dataset.idx = i;
+    btn.onclick = () => {
+      routerSelect.value = p.router;
+      subSelect.value = p.sub;
+      update();
+    };
+    presetsEl.appendChild(btn);
+  });
+
+  routerSelect.addEventListener("change", update);
+  subSelect.addEventListener("change", update);
+  document.getElementById("monthlyMsgs").addEventListener("input", update);
+
+  update();
+}
+
+init();
+</script>
+</body>
+</html>

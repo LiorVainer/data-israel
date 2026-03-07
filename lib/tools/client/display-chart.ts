@@ -37,6 +37,16 @@ export const displayBarChartInputSchema = z.object({
             .describe(
                 'Field names for value bars. MUST be simple English keys matching numeric properties in data, e.g. ["value"], ["count", "total"]. NEVER use Hebrew for field names.',
             ),
+        keyLabels: z
+            .record(z.string(), z.string())
+            .optional()
+            .describe(
+                'Hebrew display labels for each key, used in tooltip and legend. e.g. { "delays": "איחורים", "onTime": "הגעה בזמן" }. Required when keys has more than one entry.',
+            ),
+        valueFormat: z
+            .enum(['number', 'percent'])
+            .default('number')
+            .describe('How to format values. Use "percent" when data represents percentages — adds % symbol to labels and axis.'),
         layout: z.enum(['horizontal', 'vertical']).default('vertical').describe('Bar orientation'),
         groupMode: z.enum(['grouped', 'stacked']).default('grouped').describe('How to display multiple keys'),
         uniqueColors: z
@@ -73,8 +83,12 @@ Guidelines:
 - Limit data to 20 items max for readability
 
 Example data format:
-  data: [{ category: "תל אביב", value: 120 }, { category: "חיפה", value: 85 }]
-  config: { indexBy: "category", keys: ["value"] }`,
+  Single key:
+    data: [{ category: "תל אביב", value: 120 }, { category: "חיפה", value: 85 }]
+    config: { indexBy: "category", keys: ["value"] }
+  Multiple keys (MUST include keyLabels):
+    data: [{ city: "הרצליה", delays: 320, onTime: 2860 }]
+    config: { indexBy: "city", keys: ["delays", "onTime"], keyLabels: { "delays": "איחורים", "onTime": "הגעה בזמן" } }`,
     inputSchema: displayBarChartInputSchema,
     execute: async (input) => {
         return {
@@ -115,6 +129,10 @@ export const displayLineChartInputSchema = z.object({
         .max(CHART_MAX_DATA_POINTS.line)
         .describe('Array of line series with data points. All series ids and string x-values MUST be in Hebrew'),
     config: z.object({
+        valueFormat: z
+            .enum(['number', 'percent'])
+            .default('number')
+            .describe('How to format values. Use "percent" when data represents percentages — adds % symbol to labels and axis.'),
         enableArea: z.boolean().default(false).describe('Fill area under line'),
         curve: z.enum(['linear', 'monotoneX', 'step']).default('monotoneX').describe('Line interpolation'),
     }),
