@@ -205,9 +205,8 @@ async function enrichWithSubAgentData(uiMessages: UIMessage[], memory: MastraMem
 export async function GET(req: Request) {
     const { searchParams } = new URL(req.url);
     const threadId = searchParams.get('threadId');
-    const resourceId = searchParams.get('resourceId') || getUserIdFromRequest(req);
 
-    if (!threadId || !resourceId) {
+    if (!threadId) {
         return NextResponse.json([]);
     }
 
@@ -215,9 +214,11 @@ export async function GET(req: Request) {
     let response = null;
 
     try {
+        // Recall by threadId only — each thread is unique per chat.
+        // Don't filter by resourceId: auth timing can cause mismatched
+        // resourceIds between message storage and recall.
         response = await memory?.recall({
             threadId,
-            resourceId,
         });
     } catch {
         // No previous messages found
