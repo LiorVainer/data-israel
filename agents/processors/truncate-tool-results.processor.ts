@@ -61,10 +61,15 @@ function stripPartsToolData(parts: unknown[]): void {
         const p = part as Record<string, unknown>;
 
         // Handle tool-invocation parts (sub-agent tool calls)
+        // Skip agent delegation results (tool-agent-*) — they're small and
+        // contain subAgentThreadId needed by enrichWithSubAgentData on recall.
         if (p.type === 'tool-invocation') {
             const inv = p.toolInvocation as Record<string, unknown> | undefined;
             if (inv?.state === 'result' && inv.result != null && typeof inv.result === 'object') {
-                inv.result = stripToolResult(inv.result as Record<string, unknown>);
+                const toolName = inv.toolName as string | undefined;
+                if (!toolName?.startsWith('agent-')) {
+                    inv.result = stripToolResult(inv.result as Record<string, unknown>);
+                }
             }
         }
 
@@ -118,7 +123,10 @@ export class TruncateToolResultsProcessor implements Processor {
             if (Array.isArray(invocations)) {
                 for (const inv of invocations) {
                     if (inv.state === 'result' && inv.result != null && typeof inv.result === 'object') {
-                        inv.result = stripToolResult(inv.result as Record<string, unknown>);
+                        const toolName = inv.toolName as string | undefined;
+                        if (!toolName?.startsWith('agent-')) {
+                            inv.result = stripToolResult(inv.result as Record<string, unknown>);
+                        }
                     }
                 }
             }
