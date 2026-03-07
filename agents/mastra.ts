@@ -3,10 +3,13 @@
  *
  * Central entry point registering all agents for the API route.
  * Uses ConvexStore as instance-level storage — all agents inherit it automatically.
+ * Sentry observability is configured to trace agent runs, LLM calls, and tool executions.
  */
 
 import { Mastra } from '@mastra/core';
 import { ConvexStore } from '@mastra/convex';
+import { Observability, SamplingStrategyType } from '@mastra/observability';
+import { SentryExporter } from '@mastra/sentry';
 import { cbsAgent, datagovAgent, routingAgent } from './network';
 import { createRoutingAgent } from './network/routing/routing.agent';
 import { createDatagovAgent } from './network/datagov/data-gov.agent';
@@ -26,12 +29,35 @@ const storage =
           })
         : undefined;
 
+const sentryDsn = process.env.NEXT_PUBLIC_SENTRY_DSN;
+
+const observability = sentryDsn
+    ? new Observability({
+          configs: {
+              sentry: {
+                  serviceName: 'data-israel',
+                  sampling: {
+                      type: SamplingStrategyType.ALWAYS,
+                  },
+                  exporters: [
+                      new SentryExporter({
+                          dsn: sentryDsn,
+                          environment: ENV.NODE_ENV,
+                          tracesSampleRate: 1.0,
+                      }),
+                  ],
+              },
+          },
+      })
+    : undefined;
+
 /** Static default agents (backward compat) */
 export const agents = { routingAgent, cbsAgent, datagovAgent };
 
 export const mastra = new Mastra({
     agents,
     ...(storage && { storage }),
+    ...(observability && { observability }),
     scorers: MASTRA_SCORERS,
 });
 
@@ -70,6 +96,7 @@ export function getMastraWithModels(config: AgentModelConfig): Mastra {
     const newMastra = new Mastra({
         agents: { routingAgent: newRouting, cbsAgent: newCbs, datagovAgent: newDatagov },
         ...(storage && { storage }),
+        ...(observability && { observability }),
         scorers: MASTRA_SCORERS,
     });
 

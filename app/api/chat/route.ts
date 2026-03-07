@@ -23,6 +23,9 @@ import {
 } from '@/components/chat/types';
 import { clearActiveStreamId, getResumableStreamContext, setActiveStreamId } from '@/lib/redis/resumable-stream';
 import { sendPushToUser } from '@/lib/push/send-notification';
+import { stripToolResult } from '@/agents/processors/truncate-tool-results.processor';
+import { TOOL_ARGS_KEEP_FIELDS } from '@/constants/tool-result-fields';
+import { pick } from 'es-toolkit';
 
 const { CHAT } = AgentConfig;
 
@@ -81,6 +84,40 @@ function getUserIdFromRequest(req: Request): string {
  * These are streaming-only artifacts not stored in memory. On recall, we reconstruct them
  * by fetching the sub-agent's separate memory thread using subAgentThreadId.
  */
+/** Strip large data arrays from tool results to prevent UI message bloat */
+function truncateToolResult(result: Record<string, unknown>): Record<string, unknown> {
+    const truncated = { ...result };
+
+    // Strip raw record arrays (queryDatastoreResource, getCbsSeriesDataByPath, etc.)
+    if (Array.isArray(truncated.records) && truncated.records.length > 3) {
+        truncated._originalCount = (result.records as unknown[]).length;
+        truncated.records = (truncated.records as unknown[]).slice(0, 3);
+        truncated._truncated = true;
+    }
+
+    // Strip large series data arrays
+    if (Array.isArray(truncated.series)) {
+        for (const s of truncated.series as Record<string, unknown>[]) {
+            if (Array.isArray(s.observations) && s.observations.length > 5) {
+                s._originalObservations = (s.observations as unknown[]).length;
+                s.observations = (s.observations as unknown[]).slice(0, 5);
+            }
+        }
+    }
+
+    // Strip large items arrays (browseCbsCatalog, browseCbsCatalogPath)
+    if (Array.isArray(truncated.items) && truncated.items.length > 10) {
+        truncated._originalItems = (result.items as unknown[]).length;
+        truncated.items = (truncated.items as unknown[]).slice(0, 10);
+    }
+
+    return truncated;
+}
+
+function stripToolArgs(args: Record<string, unknown>): Record<string, unknown> {
+    return pick(args, [...TOOL_ARGS_KEEP_FIELDS]);
+}
+
 async function enrichWithSubAgentData(uiMessages: UIMessage[], memory: MastraMemory): Promise<void> {
     // Collect all sub-agent thread references from tool-agent-* parts
     const subAgentRefs: Array<{
@@ -153,15 +190,15 @@ async function enrichWithSubAgentData(uiMessages: UIMessage[], memory: MastraMem
                 toolCalls.push({
                     toolCallId: tp.toolCallId ?? '',
                     toolName,
-                    args: (tp.input ?? {}) as Record<string, unknown>,
+                    args: stripToolArgs((tp.input ?? {}) as Record<string, unknown>),
                 });
 
                 if (tp.state === 'output-available' && tp.output != null) {
                     toolResults.push({
                         toolCallId: tp.toolCallId ?? '',
                         toolName,
-                        args: (tp.input ?? {}) as Record<string, unknown>,
-                        result: (tp.output ?? {}) as Record<string, unknown>,
+                        args: stripToolArgs((tp.input ?? {}) as Record<string, unknown>),
+                        result: stripToolResult((tp.output ?? {}) as Record<string, unknown>),
                     });
                 }
             }
@@ -275,6 +312,19 @@ export async function POST(req: Request) {
             params: enhancedParams,
             defaultOptions: {
                 toolCallConcurrency: CHAT.TOOL_CALL_CONCURRENCY,
+                delegation: {
+                    onDelegationStart: async () => {
+                        return { modifiedMaxSteps: 15 };
+                    },
+                    onDelegationComplete: async (context) => {
+                        if (context.success && !context.result.text?.trim()) {
+                            return {
+                                feedback:
+                                    'הסוכן החזיר תוצאות כלים אך ללא טקסט מסכם. הנתונים נמצאים בתוצאות הכלים — פרש אותם ישירות וכתוב תשובה מלאה.',
+                            };
+                        }
+                    },
+                },
                 stopWhen: hasCompletedWithSuggestions,
                 onStepFinish: ({ usage, toolResults }) => {
                     // Debug: log sub-agent delegation results
@@ -366,8 +416,14 @@ export async function POST(req: Request) {
                     await streamContext.createNewResumableStream(streamId, () => sseStream);
                     await setActiveStreamId(threadId, streamId);
                 } catch (error: unknown) {
+                    // Silently handle Redis size limit errors — stream still works for the
+                    // active client, it just won't be resumable for oversized responses.
                     const message = error instanceof Error ? error.message : String(error);
-                    console.error('[resumable-stream] consumeSseStream error:', message);
+                    if (message.includes('max request size exceeded')) {
+                        console.warn('[resumable-stream] Stream too large for Redis storage, skipping resumable save');
+                    } else {
+                        console.error('[resumable-stream] consumeSseStream error:', message);
+                    }
                 }
             },
         });

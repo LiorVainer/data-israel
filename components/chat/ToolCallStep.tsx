@@ -41,6 +41,8 @@ export interface GroupedToolCall {
     resources: ToolResource[];
     /** For agent-* tools: internal tool calls made by the sub-agent */
     internalCalls?: AgentInternalToolCall[];
+    /** For agent-* tools: number of times this sub-agent was delegated to */
+    delegationCount?: number;
 }
 
 export interface ToolCallStepProps {
@@ -115,6 +117,11 @@ export function ToolCallStep({ step }: ToolCallStepProps) {
             label={
                 <span className={cn('inline-flex items-center gap-2', hasAllFailed && 'text-error')}>
                     {step.name}
+                    {(step.delegationCount ?? 0) > 1 && (
+                        <span className='rounded-full bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground'>
+                            ×{step.delegationCount}
+                        </span>
+                    )}
                     {dataSourceConfig && (
                         <a
                             href={dataSourceConfig.url}

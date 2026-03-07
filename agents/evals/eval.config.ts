@@ -61,36 +61,47 @@ const critical = (scorer: MastraScorer): ScorerEntry => ({
     sampling: { type: 'ratio' as const, rate: EVAL_CONFIG.CRITICAL_SAMPLING_RATE },
 });
 
+import { ENV } from '@/lib/env';
+
+/** Whether runtime scorers are enabled (set AI_ENABLE_SCORERS=true to enable) */
+const SCORERS_ENABLED = ENV.AI_ENABLE_SCORERS;
+
 /**
  * Shared scorer config for all agents (with sampling rates).
  * Imported by routing, datagov, and cbs agent factories.
+ * Disabled by default — set AI_ENABLE_SCORERS=true to enable.
  */
-export const AGENT_SCORERS = {
-    // Custom scorers
-    hebrewOutput: live(hebrewOutputScorer),
-    noTechLeakage: live(noTechnicalLeakageScorer),
-    toolCompliance: critical(toolComplianceScorer),
-    conciseness: live(concisenessScorer),
-    sourceAttribution: critical(sourceAttributionScorer),
-    dataFreshness: critical(dataFreshnessScorer),
-    // Built-in Mastra scorers
-    answerRelevancy: live(answerRelevancyScorer),
-    completeness: live(completenessScorer),
-    hallucination: critical(hallucinationScorer),
-};
+export const AGENT_SCORERS = SCORERS_ENABLED
+    ? {
+          // Custom scorers
+          hebrewOutput: live(hebrewOutputScorer),
+          noTechLeakage: live(noTechnicalLeakageScorer),
+          toolCompliance: critical(toolComplianceScorer),
+          conciseness: live(concisenessScorer),
+          sourceAttribution: critical(sourceAttributionScorer),
+          dataFreshness: critical(dataFreshnessScorer),
+          // Built-in Mastra scorers
+          answerRelevancy: live(answerRelevancyScorer),
+          completeness: live(completenessScorer),
+          hallucination: critical(hallucinationScorer),
+      }
+    : undefined;
 
 /**
  * Flat scorer map for Mastra instance registration.
  * Mastra({ scorers }) takes { name: scorer } without sampling config.
+ * Disabled by default — set AI_ENABLE_SCORERS=true to enable.
  */
-export const MASTRA_SCORERS = {
-    hebrewOutput: hebrewOutputScorer,
-    noTechLeakage: noTechnicalLeakageScorer,
-    toolCompliance: toolComplianceScorer,
-    conciseness: concisenessScorer,
-    sourceAttribution: sourceAttributionScorer,
-    dataFreshness: dataFreshnessScorer,
-    answerRelevancy: answerRelevancyScorer,
-    completeness: completenessScorer,
-    hallucination: hallucinationScorer,
-};
+export const MASTRA_SCORERS = SCORERS_ENABLED
+    ? {
+          hebrewOutput: hebrewOutputScorer,
+          noTechLeakage: noTechnicalLeakageScorer,
+          toolCompliance: toolComplianceScorer,
+          conciseness: concisenessScorer,
+          sourceAttribution: sourceAttributionScorer,
+          dataFreshness: dataFreshnessScorer,
+          answerRelevancy: answerRelevancyScorer,
+          completeness: completenessScorer,
+          hallucination: hallucinationScorer,
+      }
+    : undefined;

@@ -18,7 +18,7 @@ import { DATAGOV_ENDPOINTS, buildDataGovUrl } from '@/lib/api/data-gov/endpoints
 export const searchDatasetsInputSchema = z.object({
     query: z
         .string()
-        .describe('Search query - can be natural language (e.g., "health data", "transportation statistics")'),
+        .describe('Search query — use 1-2 short keywords for best results (e.g., "רכבת", "חינוך", "תחבורה"). Avoid long phrases.'),
     organization: z.string().optional().describe('Filter by organization ID'),
     tag: z.string().optional().describe('Filter by tag name'),
     limit: z.number().int().min(1).max(100).optional().describe('Number of results to return (default 10)'),
@@ -59,90 +59,121 @@ export type SearchDatasetsOutput = z.infer<typeof searchDatasetsOutputSchema>;
 // Tool Definition
 // ============================================================================
 
+/** Minimum RAG score to consider a result relevant */
+const RAG_MIN_SCORE = 0.5;
+
+/** Search CKAN API and return formatted results */
+async function searchCkan(query: string, limit: number) {
+    const result = await dataGovApi.dataset.search({
+        q: query,
+        rows: limit,
+        start: 0,
+    });
+    return {
+        count: result.count,
+        datasets: result.results.map((d) => ({
+            id: d.id,
+            title: d.title,
+            organization: d.organization?.title || 'Unknown',
+            tags: d.tags.map((t) => t.name),
+            summary: d.notes?.slice(0, 200) || '',
+        })),
+    };
+}
+
 export const searchDatasets = tool({
     description:
-        'Search for datasets on data.gov.il using semantic search. Use this when user asks about datasets related to a topic or keyword. Returns matching datasets ranked by relevance.',
+        'Search for datasets on data.gov.il. Use short 1-2 keyword queries for best results (e.g., "רכבת" not "נתוני דיוק רכבת ישראל"). Returns matching datasets ranked by relevance.',
     inputSchema: searchDatasetsInputSchema,
     execute: async ({ query, organization, tag, limit = 10, searchedResourceName }) => {
-        // Build CKAN API URL for when it's used
+        // Build CKAN API URL for reference
         const ckanApiUrl = buildDataGovUrl(DATAGOV_ENDPOINTS.dataset.search, {
             q: query,
             rows: limit,
             start: 0,
         });
 
-        try {
-            // Try Convex RAG semantic search first
-            const convexResult = await convexClient.action(api.search.searchDatasets, {
+        // Run RAG and CKAN in parallel — merge the best results from both
+        const [ragResult, ckanResult] = await Promise.allSettled([
+            convexClient.action(api.search.searchDatasets, {
                 query,
                 organization,
                 tag,
                 limit,
-            });
+            }),
+            searchCkan(query, limit),
+        ]);
 
-            if (convexResult.success && convexResult.count > 0) {
-                // Convex RAG source - no apiUrl since it's internal
-                return {
-                    success: true,
-                    count: convexResult.count,
-                    source: 'convex-rag',
-                    datasets: convexResult.datasets,
-                    searchedResourceName,
-                };
+        // Collect RAG results (only those above minimum score)
+        const ragDatasets =
+            ragResult.status === 'fulfilled' && ragResult.value.success
+                ? ragResult.value.datasets.filter(
+                      (d: { score?: number }) => (d.score ?? 0) >= RAG_MIN_SCORE,
+                  )
+                : [];
+
+        // Collect CKAN results
+        const ckanDatasets =
+            ckanResult.status === 'fulfilled' ? ckanResult.value.datasets : [];
+
+        // Merge: deduplicate by dataset ID, preferring CKAN (more complete data)
+        const seenIds = new Set<string>();
+        const merged: Array<{
+            id: string;
+            title: string;
+            organization: string;
+            tags: string[];
+            summary: string;
+        }> = [];
+
+        // CKAN results first (they have tags + summary, and ranking is better for keyword matches)
+        for (const d of ckanDatasets) {
+            if (!seenIds.has(d.id)) {
+                seenIds.add(d.id);
+                merged.push(d);
             }
+        }
 
-            // Fallback to CKAN API if Convex has no results
-            const ckanResult = await dataGovApi.dataset.search({
-                q: query,
-                rows: limit,
-                start: 0,
-            });
+        // Then RAG results that weren't in CKAN
+        for (const d of ragDatasets) {
+            const id = (d as { id?: string }).id ?? '';
+            if (id && !seenIds.has(id)) {
+                seenIds.add(id);
+                merged.push({
+                    id,
+                    title: (d as { title?: string }).title ?? '',
+                    organization: (d as { organization?: string }).organization ?? 'Unknown',
+                    tags: [],
+                    summary: (d as { matchedText?: string }).matchedText ?? '',
+                });
+            }
+        }
+
+        const finalDatasets = merged.slice(0, limit);
+
+        if (finalDatasets.length > 0) {
+            const source =
+                ckanDatasets.length > 0 && ragDatasets.length > 0
+                    ? 'ckan-api'
+                    : ckanDatasets.length > 0
+                      ? 'ckan-api'
+                      : 'convex-rag';
 
             return {
                 success: true,
-                count: ckanResult.count,
-                source: 'ckan-api',
-                datasets: ckanResult.results.map((d) => ({
-                    id: d.id,
-                    title: d.title,
-                    organization: d.organization?.title || 'Unknown',
-                    tags: d.tags.map((t) => t.name),
-                    summary: d.notes?.slice(0, 200) || '',
-                })),
+                count: finalDatasets.length,
+                source,
+                datasets: finalDatasets,
                 apiUrl: ckanApiUrl,
                 searchedResourceName,
-            };
-        } catch (error) {
-            // If Convex fails, try CKAN as fallback
-            try {
-                const ckanResult = await dataGovApi.dataset.search({
-                    q: query,
-                    rows: limit,
-                    start: 0,
-                });
-
-                return {
-                    success: true,
-                    count: ckanResult.count,
-                    source: 'ckan-api-fallback',
-                    datasets: ckanResult.results.map((d) => ({
-                        id: d.id,
-                        title: d.title,
-                        organization: d.organization?.title || 'Unknown',
-                        tags: d.tags.map((t) => t.name),
-                        summary: d.notes?.slice(0, 200) || '',
-                    })),
-                    apiUrl: ckanApiUrl,
-                    searchedResourceName,
-                };
-            } catch {
-                return {
-                    success: false,
-                    error: error instanceof Error ? error.message : String(error),
-                    apiUrl: ckanApiUrl,
-                    searchedResourceName,
-                };
-            }
+            } as const;
         }
+
+        return {
+            success: false,
+            error: 'No datasets found for query',
+            apiUrl: ckanApiUrl,
+            searchedResourceName,
+        } as const;
     },
 });

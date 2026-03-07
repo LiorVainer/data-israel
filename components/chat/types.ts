@@ -1,4 +1,5 @@
 import type { LucideIcon } from 'lucide-react';
+import type { DataSource } from '@/constants/tool-data-sources';
 
 /**
  * Re-export UI-related types from AI SDK
@@ -13,6 +14,27 @@ export type {
     FileUIPart,
     UIToolInvocation,
 } from 'ai';
+
+/**
+ * Classifies a source URL as either a portal page (human-readable)
+ * or a raw API endpoint.
+ */
+export type SourceUrlType = 'portal' | 'api';
+
+/**
+ * Extended source URL that enriches AI SDK's SourceUrlUIPart with
+ * provider metadata and URL classification for grouped display.
+ */
+export interface EnrichedSourceUrl {
+    type: 'source-url';
+    sourceId: string;
+    url: string;
+    title?: string;
+    /** Which data provider this source belongs to */
+    dataSource?: DataSource;
+    /** Whether this links to a portal page or an API endpoint */
+    urlType: SourceUrlType;
+}
 
 /**
  * Tool state values matching AI SDK's UIToolInvocation states.

@@ -89,6 +89,15 @@ export const getCbsSeriesData = tool({
 
             const { DataSet } = result;
 
+            if (!DataSet?.Series?.length) {
+                return {
+                    success: false,
+                    error: 'No series data returned for this series ID. The series may not exist or has no observations.',
+                    apiUrl,
+                    searchedResourceName,
+                };
+            }
+
             return {
                 success: true,
                 series: DataSet.Series.map((s) => ({

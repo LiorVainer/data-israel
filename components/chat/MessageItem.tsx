@@ -8,7 +8,10 @@ import { SourcesPart } from './SourcesPart';
 import { LoadingShimmer } from './LoadingShimmer';
 import { ChartError, ChartLoadingState, ChartRenderer } from './ChartRenderer';
 import { getToolStatus, isToolPart, isAgentDataPart, SourceUrlUIPart, ToolCallPart } from './types';
+import type { EnrichedSourceUrl } from './types';
 import { resolveToolSourceUrl } from '@/lib/tools/source-url-resolvers';
+import { getToolDataSource } from '@/constants/tool-data-sources';
+import { AgentsDisplayMap } from '@/constants/agents-display';
 import { CLIENT_TOOL_NAMES, SOURCE_URL_TOOL_NAMES, toToolPartTypeSet, toToolPartType } from '@/lib/tools/tool-names';
 import type { DisplayChartInput } from '@/lib/tools';
 import { UIMessage } from 'ai';
@@ -106,27 +109,32 @@ export interface MessageItemProps {
 
 export function MessageItem({ message, isLastMessage, isStreaming, onRegenerate }: MessageItemProps) {
     // Native source-url parts (from AI SDK stream protocol)
-    const nativeSourceParts = message.parts.filter((part): part is SourceUrlUIPart => part.type === 'source-url');
+    const nativeSourceParts: EnrichedSourceUrl[] = message.parts
+        .filter((part): part is SourceUrlUIPart => part.type === 'source-url')
+        .map((p) => ({ ...p, urlType: 'portal' as const }));
 
     // Source URLs from dedicated source URL tools (generateDataGovSourceUrl, generateCbsSourceUrl)
-    const dedicatedSourceParts: SourceUrlUIPart[] = [];
+    const dedicatedSourceParts: EnrichedSourceUrl[] = [];
     for (const part of message.parts) {
         if (!SOURCE_TOOL_TYPES.has(part.type) || !('state' in part)) continue;
         const toolPart = part as ToolCallPart;
         if (toolPart.state !== 'output-available') continue;
         const output = toolPart.output as { success: boolean; url: string; title?: string } | undefined;
         if (!output?.success) continue;
+        const toolName = part.type.replace('tool-', '');
         dedicatedSourceParts.push({
             type: 'source-url' as const,
             sourceId: toolPart.toolCallId ?? '',
             url: output.url,
             title: output.title,
+            dataSource: getToolDataSource(toolName),
+            urlType: 'portal' as const,
         });
     }
 
     // Auto-resolved source URLs from data tool outputs (searchDatasets, getCbsSeriesData, etc.)
     // Scans both direct tool parts AND sub-agent tool results inside data-tool-agent parts.
-    const autoSourceParts: SourceUrlUIPart[] = [];
+    const autoSourceParts: EnrichedSourceUrl[] = [];
     for (const part of message.parts) {
         // Direct tool parts (pre-delegation path)
         if (isToolPart(part) && !CLIENT_TOOL_TYPES.has(part.type)) {
@@ -136,17 +144,23 @@ export function MessageItem({ message, isLastMessage, isStreaming, onRegenerate 
             const resolved = resolveToolSourceUrl(part.type, toolPart.input, toolPart.output);
             if (!resolved) continue;
 
+            const toolName = part.type.replace('tool-', '');
             autoSourceParts.push({
                 type: 'source-url' as const,
                 sourceId: toolPart.toolCallId ?? `auto-${part.type}`,
                 url: resolved.url,
                 title: resolved.title,
+                dataSource: getToolDataSource(toolName),
+                urlType: resolved.urlType,
             });
             continue;
         }
 
         // Sub-agent tool results inside data-tool-agent parts
         if (isAgentDataPart(part)) {
+            const agentName = part.data.id;
+            const agentDs = AgentsDisplayMap[agentName as keyof typeof AgentsDisplayMap]?.dataSource;
+
             for (const toolResult of part.data.toolResults) {
                 const toolType = `tool-${toolResult.toolName}`;
                 const resolved = resolveToolSourceUrl(toolType, toolResult.args, toolResult.result);
@@ -157,6 +171,8 @@ export function MessageItem({ message, isLastMessage, isStreaming, onRegenerate 
                     sourceId: toolResult.toolCallId ?? `auto-${toolType}`,
                     url: resolved.url,
                     title: resolved.title,
+                    dataSource: agentDs ?? getToolDataSource(toolResult.toolName),
+                    urlType: resolved.urlType,
                 });
             }
         }
@@ -165,7 +181,7 @@ export function MessageItem({ message, isLastMessage, isStreaming, onRegenerate 
     // Merge all sources and deduplicate by URL or title
     const seenUrls = new Set<string>();
     const seenTitles = new Set<string>();
-    const allSources: SourceUrlUIPart[] = [];
+    const allSources: EnrichedSourceUrl[] = [];
     for (const source of [...nativeSourceParts, ...dedicatedSourceParts, ...autoSourceParts]) {
         if (seenUrls.has(source.url)) continue;
         if (source.title && seenTitles.has(source.title)) continue;

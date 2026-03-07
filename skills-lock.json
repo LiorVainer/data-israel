@@ -5,6 +5,11 @@
       "source": "mastra-ai/skills",
       "sourceType": "github",
       "computedHash": "159d6f784c7b860397461ee022c0d35e12a38f42572453ac2cfafb4efe366336"
+    },
+    "sentry-setup-ai-monitoring": {
+      "source": "getsentry/sentry-agent-skills",
+      "sourceType": "github",
+      "computedHash": "46fe09cbca41f959d464bc446b0a3b6058968635ef658203da5e540b6764a5ac"
     }
   }
 }

@@ -9,6 +9,7 @@
  * which is type-validated against the tool object key unions.
  */
 
+import type { SourceUrlType } from '@/components/chat/types';
 import { SOURCE_GENERATING_TOOL_NAMES, toToolPartTypeSet } from './tool-names';
 
 /** Set of tool-prefixed types for source-generating tools (e.g. 'tool-searchDatasets') */
@@ -17,6 +18,8 @@ const SOURCE_GENERATING_TOOL_TYPES = toToolPartTypeSet(SOURCE_GENERATING_TOOL_NA
 export interface ToolSource {
     url: string;
     title: string;
+    /** Whether this links to a portal page or an API endpoint */
+    urlType: SourceUrlType;
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -60,6 +63,7 @@ export function resolveToolSourceUrl(toolType: string, input: unknown, output: u
             return {
                 url: portalUrl,
                 title: title ?? name ?? 'מאגר מידע - data.gov.il',
+                urlType: 'portal',
             };
         }
 
@@ -72,6 +76,7 @@ export function resolveToolSourceUrl(toolType: string, input: unknown, output: u
             return {
                 url: portalUrl,
                 title: title ?? name ?? 'ארגון - data.gov.il',
+                urlType: 'portal',
             };
         }
 
@@ -80,9 +85,9 @@ export function resolveToolSourceUrl(toolType: string, input: unknown, output: u
             if (!apiUrl) return null;
             const resourceName = getResourceName(input, output);
             const query = getString(input, 'q');
-            let title = resourceName ?? 'שאילתת נתונים';
+            let title = resourceName ? `שאילתת נתונים — ${resourceName}` : 'שאילתת נתונים';
             if (query) title += ` (${query})`;
-            return { url: apiUrl, title };
+            return { url: apiUrl, title, urlType: 'api' };
         }
 
         case 'getResourceDetails': {
@@ -96,6 +101,7 @@ export function resolveToolSourceUrl(toolType: string, input: unknown, output: u
             return {
                 url,
                 title: resourceName ?? name ?? 'פרטי משאב - data.gov.il',
+                urlType: portalUrl ? 'portal' : 'api',
             };
         }
 
@@ -107,7 +113,8 @@ export function resolveToolSourceUrl(toolType: string, input: unknown, output: u
             const resourceName = getResourceName(input, output);
             return {
                 url: apiUrl,
-                title: resourceName ?? 'סדרה סטטיסטית - הלמ"ס',
+                title: resourceName ? `סדרה סטטיסטית — ${resourceName}` : 'סדרה סטטיסטית - הלמ"ס',
+                urlType: 'api',
             };
         }
 
@@ -118,7 +125,8 @@ export function resolveToolSourceUrl(toolType: string, input: unknown, output: u
             const resourceName = getResourceName(input, output);
             return {
                 url: apiUrl,
-                title: resourceName ?? 'נתוני מחירים - הלמ"ס',
+                title: resourceName ? `נתוני מחירים — ${resourceName}` : 'נתוני מחירים - הלמ"ס',
+                urlType: 'api',
             };
         }
 
@@ -128,7 +136,8 @@ export function resolveToolSourceUrl(toolType: string, input: unknown, output: u
             const resourceName = getResourceName(input, output);
             return {
                 url: apiUrl,
-                title: resourceName ? `מחשבון הצמדה: ${resourceName}` : 'מחשבון הצמדה - הלמ"ס',
+                title: resourceName ? `מחשבון הצמדה — ${resourceName}` : 'מחשבון הצמדה - הלמ"ס',
+                urlType: 'api',
             };
         }
 

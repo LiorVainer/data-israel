@@ -77,6 +77,14 @@ export const browseCbsCatalogPath = tool({
 
             const { catalogs } = result;
 
+            if (!catalogs?.catalog?.length) {
+                return {
+                    success: false,
+                    error: 'No catalog entries found for this path. Try a different path or drill into a parent category.',
+                    apiUrl,
+                };
+            }
+
             return {
                 success: true,
                 level: catalogs.level,

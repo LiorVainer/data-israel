@@ -89,6 +89,15 @@ export const browseCbsCatalog = tool({
 
             const { catalogs } = result;
 
+            if (!catalogs?.catalog?.length) {
+                return {
+                    success: false,
+                    error: 'No catalog entries found for this level/subject combination.',
+                    apiUrl,
+                    searchedResourceName,
+                };
+            }
+
             return {
                 success: true,
                 level: catalogs.level,

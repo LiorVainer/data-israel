@@ -11,6 +11,8 @@ import { DATAGOV_AGENT_CONFIG } from './config';
 import { AgentConfig } from '../../agent.config';
 import { AGENT_SCORERS } from '../../evals/eval.config';
 import { DataGovTools } from '@/lib/tools/datagov';
+import { EnsureTextOutputProcessor } from '../../processors/ensure-text-output.processor';
+import { TruncateToolResultsProcessor } from '../../processors/truncate-tool-results.processor';
 
 const { MEMORY } = AgentConfig;
 
@@ -24,6 +26,8 @@ export function createDatagovAgent(modelId: string): Agent {
         instructions: DATAGOV_AGENT_CONFIG.instructions,
         model: modelId,
         tools: DataGovTools,
+        inputProcessors: [new EnsureTextOutputProcessor()],
+        outputProcessors: [new TruncateToolResultsProcessor()],
         memory: new Memory({
             options: {
                 lastMessages: MEMORY.LAST_MESSAGES,

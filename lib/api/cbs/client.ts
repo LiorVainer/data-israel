@@ -41,8 +41,14 @@ const commonConfig = {
     },
 };
 
-/** Axios instance for CBS Series API */
-const seriesInstance = axios.create({
+/** Axios instance for CBS Series Catalog API (returns JSON by default, breaks with format=json) */
+const seriesCatalogInstance = axios.create({
+    ...commonConfig,
+    baseURL: SERIES_BASE_URL,
+});
+
+/** Axios instance for CBS Series Data API (requires format=json) */
+const seriesDataInstance = axios.create({
     ...commonConfig,
     baseURL: SERIES_BASE_URL,
     params: { format: 'json' },
@@ -67,7 +73,8 @@ const dictionaryInstance = axios.create({
 // ============================================================================
 
 /**
- * Generic GET request for CBS APIs (no response wrapper to unwrap)
+ * Generic GET request for CBS APIs (no response wrapper to unwrap).
+ * Detects HTML error pages that the CBS API sometimes returns instead of JSON.
  */
 async function cbsGet<T>(
     instance: ReturnType<typeof axios.create>,
@@ -75,6 +82,10 @@ async function cbsGet<T>(
     params?: Record<string, unknown>,
 ): Promise<T> {
     const response = await instance.get<T>(endpoint, { params });
+    // CBS API sometimes returns HTML error pages with status 200
+    if (typeof response.data === 'string' && (response.data as string).includes('<html')) {
+        throw new Error('CBS API returned an error page instead of data. The requested path may be invalid.');
+    }
     return response.data;
 }
 
@@ -95,7 +106,7 @@ export const cbsApi = {
          * Level 1 = top categories, each subsequent level drills deeper
          */
         catalog: async (params: CbsCatalogLevelParams) => {
-            return cbsGet<CbsCatalogResponse>(seriesInstance, '/catalog/level', {
+            return cbsGet<CbsCatalogResponse>(seriesCatalogInstance, '/catalog/level', {
                 id: params.id,
                 subject: params.subject,
                 lang: params.lang,
@@ -108,7 +119,7 @@ export const cbsApi = {
          * Browse catalog by specific path (L1,L2,L3,L4,L5)
          */
         catalogByPath: async (params: CbsCatalogPathParams) => {
-            return cbsGet<CbsCatalogResponse>(seriesInstance, '/catalog/path', {
+            return cbsGet<CbsCatalogResponse>(seriesCatalogInstance, '/catalog/path', {
                 id: params.id,
                 lang: params.lang,
                 page: params.page,
@@ -120,7 +131,7 @@ export const cbsApi = {
          * Get time series data by series ID(s)
          */
         data: async (params: CbsSeriesDataParams) => {
-            return cbsGet<CbsSeriesDataResponse>(seriesInstance, '/data/list', {
+            return cbsGet<CbsSeriesDataResponse>(seriesDataInstance, '/data/list', {
                 id: params.id,
                 startPeriod: params.startPeriod,
                 endPeriod: params.endPeriod,
@@ -137,7 +148,7 @@ export const cbsApi = {
          * Get time series data by catalog path (e.g., "2,1,1,2,379")
          */
         dataByPath: async (params: CbsSeriesDataParams) => {
-            return cbsGet<CbsSeriesDataResponse>(seriesInstance, '/data/path', {
+            return cbsGet<CbsSeriesDataResponse>(seriesDataInstance, '/data/path', {
                 id: params.id,
                 startPeriod: params.startPeriod,
                 endPeriod: params.endPeriod,
