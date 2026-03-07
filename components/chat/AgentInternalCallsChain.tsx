@@ -101,33 +101,39 @@ export function AgentInternalCallsChain({ calls, isAgentActive }: AgentInternalC
 
     const groups = useMemo(() => groupInternalCalls(calls, isAgentActive), [calls, isAgentActive]);
 
-    // Derive header counts from deduplicated group totals
+    // Derive header counts from group totals
     const completedCount = groups.reduce((sum, g) => sum + g.completedCount, 0);
     const failedCount = groups.reduce((sum, g) => sum + g.failedCount, 0);
     const activeCount = groups.reduce((sum, g) => sum + g.activeCount, 0);
+    // Total raw calls for the header (sum of all calls across groups, not deduplicated)
+    const totalRawCalls = groups.reduce((sum, g) => sum + g.calls.length, 0);
     const totalCount = completedCount + failedCount + activeCount;
 
+    // Count completed groups (tool types), not individual resources
+    const completedGroups = groups.filter((g) => g.completedCount > 0 && g.activeCount === 0).length;
+    const activeGroups = groups.filter((g) => g.activeCount > 0).length;
+    const failedGroups = groups.filter((g) => g.failedCount > 0 && g.completedCount === 0).length;
+
     const getHeaderContent = () => {
-        if (activeCount > 0) {
+        if (activeGroups > 0) {
             return (
                 <span className='inline-flex items-center gap-1.5'>
                     <DataIsraelLoader size={12} />
-                    <span>{completedCount > 0 ? `${completedCount} פעולות הושלמו` : 'בפעולה...'}</span>
+                    <span>{completedGroups > 0 ? `${completedGroups} פעולות הושלמו` : 'בפעולה...'}</span>
                 </span>
             );
         }
-        if (failedCount > 0 && completedCount === 0) {
-            return <span className='text-error'>{failedCount} פעולות נכשלו</span>;
+        if (failedGroups > 0 && completedGroups === 0) {
+            return <span className='text-error'>{failedGroups} פעולות נכשלו</span>;
         }
-        if (failedCount > 0) {
+        if (failedGroups > 0) {
             return (
                 <span>
-                    {completedCount} פעולות הושלמו
-                    {/*<span className='text-error mr-1'> ({failedCount} שגיאות)</span>*/}
+                    {completedGroups} פעולות הושלמו
                 </span>
             );
         }
-        return `${totalCount} פעולות הושלמו`;
+        return `${completedGroups} פעולות הושלמו`;
     };
 
     return (
@@ -138,8 +144,8 @@ export function AgentInternalCallsChain({ calls, isAgentActive }: AgentInternalC
                     const status = getGroupStatus(group);
                     const hasAllFailed = group.failedCount > 0 && group.completedCount === 0;
 
-                    // Collect chips: deduplicate by searchedResourceName, keeping best status
-                    const chipMap = new Map<string, { key: string; label: string; className: string | undefined }>();
+                    // Collect chips: deduplicate by searchedResourceName, keeping best status + call count
+                    const chipMap = new Map<string, { key: string; label: string; className: string | undefined; count: number }>();
                     for (const c of group.calls) {
                         if (!c.searchedResourceName) continue;
                         const label = c.searchedResourceName;
@@ -151,8 +157,14 @@ export function AgentInternalCallsChain({ calls, isAgentActive }: AgentInternalC
                                   ? 'bg-emerald-100/40 text-success dark:bg-emerald-700/10'
                                   : undefined;
                         // Prefer success (emerald) > active (undefined) > failed (muted)
-                        if (!existing || (className?.includes('emerald') && !existing.className?.includes('emerald'))) {
-                            chipMap.set(label, { key: c.toolCallId, label, className });
+                        if (!existing) {
+                            chipMap.set(label, { key: c.toolCallId, label, className, count: 1 });
+                        } else {
+                            existing.count++;
+                            if (className?.includes('emerald') && !existing.className?.includes('emerald')) {
+                                existing.key = c.toolCallId;
+                                existing.className = className;
+                            }
                         }
                     }
                     const chips = Array.from(chipMap.values());
@@ -177,6 +189,11 @@ export function AgentInternalCallsChain({ calls, isAgentActive }: AgentInternalC
                                     {chips.map((chip) => (
                                         <ChainOfThoughtSearchResult key={chip.key} className={chip.className}>
                                             <span className='max-w-[200px] truncate text-[10px]'>{chip.label}</span>
+                                            {chip.count > 1 && (
+                                                <span className='mr-0.5 rounded-full bg-muted px-1 text-[9px] font-medium text-muted-foreground'>
+                                                    ×{chip.count}
+                                                </span>
+                                            )}
                                         </ChainOfThoughtSearchResult>
                                     ))}
                                 </ChainOfThoughtSearchResults>

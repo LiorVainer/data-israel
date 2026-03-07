@@ -110,9 +110,10 @@ export const indexDataset = action({
         organizationTitle: v.optional(v.string()),
     },
     handler: async (ctx, { ckanId, title, notes, tags, organizationId, organizationTitle }) => {
-        // Build searchable text from title, notes, and tags
-        // Tags are included in text for semantic search
-        const searchableText = [title, notes || '', ...tags].filter(Boolean).join(' ');
+        // Build searchable text: title + notes + unique tags (deduplicated, max 5)
+        // Limit tags to avoid keyword-stuffing that distorts embeddings
+        const uniqueTags = [...new Set(tags)].slice(0, 5);
+        const searchableText = [title, notes || '', ...uniqueTags].filter(Boolean).join(' ');
 
         // Build filter values - RAG requires ALL defined filters to be provided
         // Use empty string as default when no value is available
@@ -207,8 +208,9 @@ export const batchIndexDatasets = action({
 
         for (const dataset of datasets) {
             try {
-                // Tags are included in text for semantic search
-                const searchableText = [dataset.title, dataset.notes || '', ...dataset.tags].filter(Boolean).join(' ');
+                // Unique tags only (max 5) to avoid keyword-stuffing that distorts embeddings
+                const uniqueTags = [...new Set(dataset.tags)].slice(0, 5);
+                const searchableText = [dataset.title, dataset.notes || '', ...uniqueTags].filter(Boolean).join(' ');
 
                 // RAG requires ALL defined filters to be provided
                 const filterValues: Array<{

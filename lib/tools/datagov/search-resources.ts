@@ -60,9 +60,12 @@ export type SearchResourcesOutput = z.infer<typeof searchResourcesOutputSchema>;
 // Tool Definition
 // ============================================================================
 
+/** Minimum RAG score to consider a result relevant */
+const RAG_MIN_SCORE = 0.5;
+
 export const searchResources = tool({
     description:
-        'Search for resources (files) using semantic search. Use when user wants to find specific file types or resources across datasets.',
+        'Search for resources (files) on data.gov.il. Use short 1-2 keyword queries for best results. Returns matching resources ranked by relevance.',
     inputSchema: searchResourcesInputSchema,
     execute: async ({ query, datasetId, format, limit = 10, searchedResourceName }) => {
         // Build CKAN query format for URL construction
@@ -72,78 +75,89 @@ export const searchResources = tool({
             limit,
         });
 
-        try {
-            // Try Convex RAG semantic search first
-            const convexResult = await convexClient.action(api.search.searchResources, {
+        // Run RAG and CKAN in parallel
+        const [ragResult, ckanResult] = await Promise.allSettled([
+            convexClient.action(api.search.searchResources, {
                 query,
                 datasetId,
                 format,
                 limit,
-            });
+            }),
+            dataGovApi.resource.search({ query: ckanQuery, limit }),
+        ]);
 
-            if (convexResult.success && convexResult.count > 0) {
-                // Convex RAG results don't have an apiUrl since they're from local vector DB
-                return {
-                    success: true,
-                    count: convexResult.count,
-                    source: 'convex-rag',
-                    resources: convexResult.resources,
-                    searchedResourceName,
-                };
-            }
+        // Collect RAG results above score threshold
+        const ragResources =
+            ragResult.status === 'fulfilled' && ragResult.value.success
+                ? ragResult.value.resources.filter(
+                      (r: { score?: number }) => (r.score ?? 0) >= RAG_MIN_SCORE,
+                  )
+                : [];
 
-            // Fallback to CKAN API if Convex has no results
-            const result = await dataGovApi.resource.search({
-                query: ckanQuery,
-                limit,
-            });
+        // Collect CKAN results
+        const ckanResources =
+            ckanResult.status === 'fulfilled'
+                ? ckanResult.value.results.map((r) => ({
+                      id: r.id,
+                      name: r.name || '',
+                      url: r.url,
+                      format: r.format,
+                      description: r.description || '',
+                      datasetId: r.package_id || '',
+                  }))
+                : [];
 
-            return {
-                success: true,
-                count: result.count,
-                source: 'ckan-api',
-                resources: result.results.map((r) => ({
-                    id: r.id,
-                    name: r.name,
-                    url: r.url,
-                    format: r.format,
-                    description: r.description,
-                    datasetId: r.package_id,
-                })),
-                apiUrl,
-                searchedResourceName,
-            };
-        } catch (error) {
-            // If Convex fails, try CKAN as fallback
-            try {
-                const result = await dataGovApi.resource.search({
-                    query: ckanQuery,
-                    limit,
-                });
+        // Merge: deduplicate by resource ID, CKAN first
+        const seenIds = new Set<string>();
+        const merged: Array<{
+            id: string;
+            name: string;
+            url: string;
+            format: string;
+            description: string;
+            datasetId: string;
+        }> = [];
 
-                return {
-                    success: true,
-                    count: result.count,
-                    source: 'ckan-api-fallback',
-                    resources: result.results.map((r) => ({
-                        id: r.id,
-                        name: r.name,
-                        url: r.url,
-                        format: r.format,
-                        description: r.description,
-                        datasetId: r.package_id,
-                    })),
-                    apiUrl,
-                    searchedResourceName,
-                };
-            } catch {
-                return {
-                    success: false,
-                    error: error instanceof Error ? error.message : String(error),
-                    apiUrl,
-                    searchedResourceName,
-                };
+        for (const r of ckanResources) {
+            if (!seenIds.has(r.id)) {
+                seenIds.add(r.id);
+                merged.push(r);
             }
         }
+
+        for (const r of ragResources) {
+            const id = (r as { id?: string }).id ?? '';
+            if (id && !seenIds.has(id)) {
+                seenIds.add(id);
+                merged.push({
+                    id,
+                    name: (r as { name?: string }).name ?? '',
+                    url: '',
+                    format: '',
+                    description: (r as { matchedText?: string }).matchedText ?? '',
+                    datasetId: (r as { datasetId?: string }).datasetId ?? '',
+                });
+            }
+        }
+
+        const finalResources = merged.slice(0, limit);
+
+        if (finalResources.length > 0) {
+            return {
+                success: true,
+                count: finalResources.length,
+                source: ckanResources.length > 0 ? 'ckan-api' : 'convex-rag',
+                resources: finalResources,
+                apiUrl,
+                searchedResourceName,
+            } as const;
+        }
+
+        return {
+            success: false,
+            error: 'No resources found for query',
+            apiUrl,
+            searchedResourceName,
+        } as const;
     },
 });

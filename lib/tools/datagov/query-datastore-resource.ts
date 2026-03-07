@@ -6,8 +6,10 @@
 
 import { tool } from 'ai';
 import { z } from 'zod';
+import { QUERY_MAX_FIELDS } from '@/constants/tool-result-fields';
 import { dataGovApi } from '@/lib/api/data-gov/client';
 import { buildDatastoreSearchUrl } from '@/lib/api/data-gov/endpoints';
+import { convexClient, api } from '@/lib/convex/client';
 
 // ============================================================================
 // Schemas (Single Source of Truth)
@@ -28,7 +30,7 @@ export const queryDatastoreResourceInputSchema = z.object({
         .describe(
             'Enable partial/prefix matching for Hebrew text search. When true, searches for words starting with the query (e.g., "ירו" matches "ירושלים"). Useful for Hebrew autocomplete.',
         ),
-    limit: z.number().int().min(1).max(1000).optional().describe('Number of records to return (default 100, max 1000)'),
+    limit: z.number().int().min(1).max(50).optional().describe('Number of records to return (default 20, max 50)'),
     offset: z.number().int().min(0).optional().describe('Starting offset for pagination (default 0)'),
     sort: z.string().optional().describe('Sort order (e.g., "population desc" or "name asc")'),
     searchedResourceName: z
@@ -39,6 +41,8 @@ export const queryDatastoreResourceInputSchema = z.object({
 export const queryDatastoreResourceOutputSchema = z.discriminatedUnion('success', [
     z.object({
         success: z.literal(true),
+        /** Dataset description (Hebrew) explaining what the fields mean — use this to interpret field names */
+        datasetDescription: z.string().optional(),
         fields: z.array(
             z.object({
                 name: z.string(),
@@ -71,7 +75,7 @@ export const queryDatastoreResource = tool({
     description:
         'Query tabular data within a DataStore resource. Use when user wants to see actual data rows, filter data by column values, or explore the contents of a resource. Supports pagination, filtering, sorting, and partial word search for Hebrew.',
     inputSchema: queryDatastoreResourceInputSchema,
-    execute: async ({ resource_id, filters, q, partialMatch, limit = 100, offset = 0, sort, searchedResourceName }) => {
+    execute: async ({ resource_id, filters, q, partialMatch, limit = 20, offset = 0, sort, searchedResourceName }) => {
         // Format query for partial matching if enabled
         const searchQuery = q && partialMatch ? `${q}:*` : q;
 
@@ -86,19 +90,33 @@ export const queryDatastoreResource = tool({
         });
 
         try {
-            const result = await dataGovApi.datastore.search({
-                resource_id,
-                filters,
-                q: searchQuery,
-                plain: partialMatch ? false : undefined,
-                limit,
-                offset,
-                sort,
-            });
+            // Fetch data and dataset description in parallel
+            const [result, resourceDoc] = await Promise.all([
+                dataGovApi.datastore.search({
+                    resource_id,
+                    filters,
+                    q: searchQuery,
+                    plain: partialMatch ? false : undefined,
+                    limit,
+                    offset,
+                    sort,
+                }),
+                convexClient.query(api.resources.getByCkanId, { ckanId: resource_id }).catch(() => null),
+            ]);
+
+            // Lookup dataset notes (explains field names in Hebrew) — single lightweight query
+            let datasetDescription: string | undefined;
+            if (resourceDoc?.datasetCkanId) {
+                const dataset = await convexClient
+                    .query(api.datasets.getByCkanId, { ckanId: resourceDoc.datasetCkanId })
+                    .catch(() => null);
+                datasetDescription = dataset?.notes?.slice(0, 500) ?? undefined;
+            }
 
             return {
                 success: true,
-                fields: result.fields.map((f) => ({
+                datasetDescription,
+                fields: result.fields.slice(0, QUERY_MAX_FIELDS).map((f) => ({
                     name: f.id,
                     type: f.type,
                 })),

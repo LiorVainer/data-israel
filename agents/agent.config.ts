@@ -61,22 +61,28 @@ export const AgentConfig = {
     /** Available models for selection */
     AVAILABLE_MODELS: [
         {
-            id: 'google/gemini-3-flash-preview',
-            name: 'Gemini 3 Flash Preview',
-            provider: 'Google',
-            providerSlug: 'google',
-        },
-        {
             id: 'x-ai/grok-4.1-fast',
             name: 'Grok 4.1 Fast',
             provider: 'xAI',
             providerSlug: 'xai',
+            inputPrice: 0.2,
+            outputPrice: 0.5,
+        },
+        {
+            id: 'google/gemini-3-flash-preview',
+            name: 'Gemini 3 Flash Preview',
+            provider: 'Google',
+            providerSlug: 'google',
+            inputPrice: 0.5,
+            outputPrice: 3.0,
         },
         {
             id: 'z-ai/glm-4.7-flash',
             name: 'GLM 4.7 Flash',
             provider: 'Zhipu AI',
             providerSlug: 'zhipuai',
+            inputPrice: 0.06,
+            outputPrice: 0.4,
         },
     ] satisfies AvailableModel[],
 

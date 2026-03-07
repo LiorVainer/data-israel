@@ -1,6 +1,15 @@
 'use client';
 
-import { Building2Icon, CarIcon, HomeIcon, TrendingUpIcon } from 'lucide-react';
+import {
+    Building2Icon,
+    HomeIcon,
+    PackageIcon,
+    PlaneIcon,
+    ShieldAlertIcon,
+    TrainFrontIcon,
+    TrendingUpIcon,
+    WindIcon,
+} from 'lucide-react';
 import type { ComponentType, SVGProps } from 'react';
 import { AiDisclaimer } from '@/components/ui/AiDisclaimer';
 
@@ -13,23 +22,43 @@ interface PromptCard {
 const PROMPT_CARDS: PromptCard[] = [
     {
         label: 'מחירים ומדדים',
-        prompt: 'איך השתנה יוקר המחיה בישראל בעשור האחרון? אילו סעיפים התייקרו ביותר?',
+        prompt: 'איך השתנה סל יוקר המחיה בישראל בעשור האחרון, ואילו סעיפים התייקרו הכי הרבה?',
         icon: TrendingUpIcon,
     },
     {
-        label: 'דירוג יישובים',
-        prompt: 'אילו יישובים מדורגים גבוה במדד הסוציו־אקונומי ומה מאפיין אותם?',
+        label: 'רכבת ישראל',
+        prompt: 'מה אחוז הדיוק של רכבת ישראל בחודשים האחרונים, ובאילו תחנות יש הכי הרבה איחורים?',
+        icon: TrainFrontIcon,
+    },
+    {
+        label: 'בנייה ודיור',
+        prompt: 'מה מגמת התחלות הבנייה בישראל בשנים האחרונות, ובאילו אזורים הבנייה הכי פעילה?',
         icon: Building2Icon,
     },
     {
-        label: 'רכבים חשמליים',
-        prompt: 'איך השתנה מספר הרכבים החשמליים בישראל ב-5 השנים האחרונות לעומת רכבי בנזין?',
-        icon: CarIcon,
+        label: 'מחירי דירות',
+        prompt: 'איך השתנה מדד מחירי הדירות בישראל בשנה האחרונה, ומה המגמה לעומת מדד המחירים לצרכן?',
+        icon: HomeIcon,
     },
     {
-        label: 'מחירי דיור',
-        prompt: 'באילו ערים במרכז יש את היחס הכי טוב בין שכר ממוצע למחירי דירות 3 חדרים?',
-        icon: HomeIcon,
+        label: 'טיסות מנתבג',
+        prompt: 'אילו יעדים מופעלים היום משדה התעופה בן גוריון, ואילו חברות תעופה פועלות?',
+        icon: PlaneIcon,
+    },
+    {
+        label: 'תאונות דרכים',
+        prompt: 'מה המגמה בתאונות דרכים עם נפגעים בישראל לפי סוג דרך וחומרת התאונה?',
+        icon: ShieldAlertIcon,
+    },
+    {
+        label: 'סחר חוץ',
+        prompt: 'מה הגירעון המסחרי של ישראל, ואילו קבוצות סחורות מובילות ביבוא וביצוא?',
+        icon: PackageIcon,
+    },
+    {
+        label: 'איכות אוויר',
+        prompt: 'מה מצב איכות האוויר היום באזורים השונים בישראל?',
+        icon: WindIcon,
     },
 ];
 
@@ -46,7 +75,7 @@ export function EmptyConversation({ onClick }: EmptyConversationProps) {
             </div>
 
             <div className='min-h-0 overflow-y-auto'>
-                <div className='grid grid-cols-1 sm:grid-cols-2 gap-3 w-full max-w-2xl'>
+                <div className='grid grid-cols-1 md:grid-cols-4 gap-3 md:gap-4 w-full'>
                     {PROMPT_CARDS.map((card) => (
                         <button
                             key={card.label}

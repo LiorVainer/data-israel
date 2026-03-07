@@ -7,6 +7,7 @@
 
 import { tool } from 'ai';
 import { z } from 'zod';
+import { CHART_MAX_DATA_POINTS } from '@/constants/tool-result-fields';
 
 // ============================================================================
 // Bar Chart Tool
@@ -21,6 +22,7 @@ export const displayBarChartInputSchema = z.object({
         ),
     data: z
         .array(z.record(z.string(), z.union([z.string(), z.number()])))
+        .max(CHART_MAX_DATA_POINTS.bar)
         .describe(
             'Array of objects with a category field and numeric value fields. Category VALUES (the labels shown on the axis) MUST be in Hebrew. Field NAMES (keys) MUST be simple English identifiers like "category", "value", "count" — NEVER Hebrew or special characters. NEVER include an "index" property (reserved by the chart library).',
         ),
@@ -110,6 +112,7 @@ export const displayLineChartInputSchema = z.object({
                     .describe('Data points for this series'),
             }),
         )
+        .max(CHART_MAX_DATA_POINTS.line)
         .describe('Array of line series with data points. All series ids and string x-values MUST be in Hebrew'),
     config: z.object({
         enableArea: z.boolean().default(false).describe('Fill area under line'),
@@ -178,6 +181,7 @@ export const displayPieChartInputSchema = z.object({
                 value: z.number().describe('Numeric value for slice'),
             }),
         )
+        .max(CHART_MAX_DATA_POINTS.pie)
         .describe('Array of pie slices with id, label, and value. All ids and labels MUST be in Hebrew'),
     config: z.object({
         innerRadius: z.number().min(0).max(0.9).default(0).describe('Inner radius for donut chart (0 = full pie)'),

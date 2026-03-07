@@ -99,6 +99,15 @@ export const getCbsSeriesDataByPath = tool({
 
             const { DataSet } = result;
 
+            if (!DataSet?.Series?.length) {
+                return {
+                    success: false,
+                    error: 'No series data returned for this path. The path may be a category, not a leaf series — try drilling deeper.',
+                    apiUrl,
+                    searchedResourceName,
+                };
+            }
+
             return {
                 success: true,
                 series: DataSet.Series.map((s) => ({

@@ -16,6 +16,7 @@ import { AGENT_SCORERS } from '../../evals/eval.config';
 import { ClientTools } from '@/lib/tools/client';
 import { cbsAgent } from '../cbs';
 import { datagovAgent } from '../datagov';
+import { TruncateToolResultsProcessor } from '../../processors/truncate-tool-results.processor';
 import { ENV } from '@/lib/env';
 
 const { MEMORY } = AgentConfig;
@@ -59,6 +60,7 @@ export function createRoutingAgent(modelId: string, subAgents: Record<string, Ag
             ...ClientTools,
         },
         scorers: AGENT_SCORERS,
+        outputProcessors: [new TruncateToolResultsProcessor()],
     });
 }
 

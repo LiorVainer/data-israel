@@ -60,17 +60,24 @@ export interface AgentInternalToolCall {
     isComplete: boolean;
 }
 
+/** Aggregated internal calls for a sub-agent across all delegations */
+interface AgentInternalCallsData {
+    calls: AgentInternalToolCall[];
+    /** Number of times this sub-agent was delegated to (data-tool-agent parts with finishReason) */
+    delegationCount: number;
+}
+
 /**
  * Scans all message parts for `data-tool-agent` parts and builds a map
- * from agent name to its internal tool calls.
+ * from agent name to its merged internal tool calls + delegation count.
  *
  * `data-tool-agent` parts are emitted by Mastra's handleChatStream with agents.
- * They contain the sub-agent's toolCalls/toolResults/steps data.
- * Multiple parts may exist for the same agent (streaming updates) —
- * we keep the one with the most toolResults (the final "finished" one).
+ * Multiple parts may exist for the same agent — some are streaming updates (no finishReason),
+ * others are final "finished" parts (with finishReason). We merge all tool calls across
+ * delegations (deduplicating by toolCallId) and count completed delegations.
  */
-function buildAgentInternalCallsMap(allParts: UIMessage['parts']): Map<string, AgentInternalToolCall[]> {
-    const map = new Map<string, AgentInternalToolCall[]>();
+function buildAgentInternalCallsMap(allParts: UIMessage['parts']): Map<string, AgentInternalCallsData> {
+    const map = new Map<string, AgentInternalCallsData>();
 
     for (const part of allParts) {
         if (!isAgentDataPart(part)) continue;
@@ -83,7 +90,6 @@ function buildAgentInternalCallsMap(allParts: UIMessage['parts']): Map<string, A
         const completedIds = new Set(data.toolResults.map((tr) => tr.toolCallId));
 
         const calls: AgentInternalToolCall[] = data.toolCalls.map((tc) => {
-            // Find the matching result for this tool call
             const matchingResult = data.toolResults.find((tr) => tr.toolCallId === tc.toolCallId);
             const result = matchingResult?.result;
 
@@ -98,10 +104,26 @@ function buildAgentInternalCallsMap(allParts: UIMessage['parts']): Map<string, A
             };
         });
 
-        // Keep the part with the most tool calls (final "finished" state has all data)
+        const isCompletedDelegation = !!data.finishReason;
+
         const existing = map.get(agentName);
-        if (!existing || calls.length > existing.length) {
-            map.set(agentName, calls);
+        if (!existing) {
+            map.set(agentName, {
+                calls,
+                delegationCount: isCompletedDelegation ? 1 : 0,
+            });
+        } else {
+            // Merge calls, deduplicating by toolCallId
+            const seenIds = new Set(existing.calls.map((c) => c.toolCallId));
+            for (const call of calls) {
+                if (!seenIds.has(call.toolCallId)) {
+                    existing.calls.push(call);
+                    seenIds.add(call.toolCallId);
+                }
+            }
+            if (isCompletedDelegation) {
+                existing.delegationCount++;
+            }
         }
     }
 
@@ -154,7 +176,7 @@ function calculateStats(toolParts: ReadonlyArray<{ part: ToolCallPart; index: nu
  */
 function groupToolCalls(
     toolParts: ReadonlyArray<{ part: ToolCallPart; index: number }>,
-    agentCallsMap: Map<string, AgentInternalToolCall[]>,
+    agentCallsMap: Map<string, AgentInternalCallsData>,
 ): GroupedToolCall[] {
     const groups = new Map<string, GroupedToolCall>();
 
@@ -170,7 +192,8 @@ function groupToolCalls(
 
         // Look up internal tool calls for sub-agent tools from data-tool-agent parts
         const agentName = toolKey.startsWith('agent-') ? toolKey.replace('agent-', '') : undefined;
-        const internalCalls = agentName ? agentCallsMap.get(agentName) : undefined;
+        const agentData = agentName ? agentCallsMap.get(agentName) : undefined;
+        const internalCalls = agentData?.calls;
 
         const existing = groups.get(toolKey);
 
@@ -204,6 +227,7 @@ function groupToolCalls(
                 isActive,
                 resources: resource ? [resource] : [],
                 internalCalls: internalCalls?.length ? internalCalls : undefined,
+                delegationCount: agentData?.delegationCount,
             });
         }
     }
@@ -250,7 +274,11 @@ export function ToolCallParts({
     const stats = useMemo(() => calculateStats(toolParts), [toolParts]);
     const groupedTools = useMemo(() => groupToolCalls(toolParts, agentCallsMap), [toolParts, agentCallsMap]);
 
-    // Build header text - show only succeeded count
+    // Count agent delegations for the header
+    const agentSteps = groupedTools.filter((g) => g.toolKey.startsWith('agent-'));
+    const totalDelegations = agentSteps.reduce((sum, g) => sum + (g.delegationCount ?? 1), 0);
+
+    // Build header text
     const getHeaderContent = () => {
         // Still processing
         if (isProcessing && stats.active > 0) {
@@ -261,7 +289,17 @@ export function ToolCallParts({
             );
         }
 
-        // All done - show only succeeded count
+        // Show agent delegation count if agents were used
+        if (agentSteps.length > 0) {
+            const isSingle = agentSteps.length === 1;
+            const label = isSingle ? 'מאגר נתונים אחד נבדק' : `${agentSteps.length} מאגרי נתונים נבדקו`;
+            const delegationSuffix = totalDelegations > agentSteps.length
+                ? ` (${totalDelegations} פעמים)`
+                : '';
+            return `${label}${delegationSuffix}`;
+        }
+
+        // No agents — show tool count
         if (stats.failed > 0) {
             return (
                 <span>
