@@ -157,8 +157,8 @@ export function AppSidebar({
             <SidebarInset className='overflow-hidden min-h-0 h-full relative'>
                 {!isLanding && (
                     <>
-                        <AmbientGlow top='30%' left='25%' size={glowSize} className='!z-0' />
-                        <AmbientGlow top='70%' left='75%' size={glowSize} className='!z-0' />
+                        <AmbientGlow top='15%' left='15%' size={glowSize} className='!z-0' />
+                        <AmbientGlow top='80%' left='85%' size={glowSize} className='!z-0' />
                     </>
                 )}
                 <div className='absolute top-3 right-4 md:top-4 md:right-5 z-30 flex items-center gap-2 md:gap-4 [&>button]:shadow-md'>
