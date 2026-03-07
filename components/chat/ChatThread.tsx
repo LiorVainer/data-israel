@@ -55,10 +55,14 @@ export function ChatThread({ id }: ChatThreadProps) {
                     [USER_ID_HEADER]: userId ?? 'anonymous',
                 },
                 prepareSendMessagesRequest({ messages }) {
+                    // Only send the last user message — server reconstructs
+                    // full history from Convex memory. This prevents the
+                    // request body from growing unboundedly with tool results.
+                    const lastUserMessage = messages.filter((m) => m.role === 'user').at(-1);
                     return {
                         body: {
                             id,
-                            messages,
+                            messages: lastUserMessage ? [lastUserMessage] : messages,
                             memory: {
                                 thread: id,
                                 resource: userId,

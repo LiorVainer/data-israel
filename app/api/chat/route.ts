@@ -78,46 +78,16 @@ function getUserIdFromRequest(req: Request): string {
     return CHAT.DEFAULT_RESOURCE_ID;
 }
 
+function stripToolArgs(args: Record<string, unknown>): Record<string, unknown> {
+    return pick(args, [...TOOL_ARGS_KEEP_FIELDS]);
+}
+
 /**
  * Reconstructs data-tool-agent parts from sub-agent memory threads.
  * During live streaming, Mastra emits data-tool-agent parts with sub-agent tool call details.
  * These are streaming-only artifacts not stored in memory. On recall, we reconstruct them
  * by fetching the sub-agent's separate memory thread using subAgentThreadId.
  */
-/** Strip large data arrays from tool results to prevent UI message bloat */
-function truncateToolResult(result: Record<string, unknown>): Record<string, unknown> {
-    const truncated = { ...result };
-
-    // Strip raw record arrays (queryDatastoreResource, getCbsSeriesDataByPath, etc.)
-    if (Array.isArray(truncated.records) && truncated.records.length > 3) {
-        truncated._originalCount = (result.records as unknown[]).length;
-        truncated.records = (truncated.records as unknown[]).slice(0, 3);
-        truncated._truncated = true;
-    }
-
-    // Strip large series data arrays
-    if (Array.isArray(truncated.series)) {
-        for (const s of truncated.series as Record<string, unknown>[]) {
-            if (Array.isArray(s.observations) && s.observations.length > 5) {
-                s._originalObservations = (s.observations as unknown[]).length;
-                s.observations = (s.observations as unknown[]).slice(0, 5);
-            }
-        }
-    }
-
-    // Strip large items arrays (browseCbsCatalog, browseCbsCatalogPath)
-    if (Array.isArray(truncated.items) && truncated.items.length > 10) {
-        truncated._originalItems = (result.items as unknown[]).length;
-        truncated.items = (truncated.items as unknown[]).slice(0, 10);
-    }
-
-    return truncated;
-}
-
-function stripToolArgs(args: Record<string, unknown>): Record<string, unknown> {
-    return pick(args, [...TOOL_ARGS_KEEP_FIELDS]);
-}
-
 async function enrichWithSubAgentData(uiMessages: UIMessage[], memory: MastraMemory): Promise<void> {
     // Collect all sub-agent thread references from tool-agent-* parts
     const subAgentRefs: Array<{
@@ -257,7 +227,12 @@ export async function GET(req: Request) {
 
     // Enrich with sub-agent internal tool call data (two-pass recall)
     if (memory) {
-        await enrichWithSubAgentData(uiMessages, memory);
+        try {
+            await enrichWithSubAgentData(uiMessages, memory);
+        } catch (e) {
+            console.error('[chat GET] enrichWithSubAgentData failed:', e);
+            // Return messages without sub-agent enrichment rather than failing entirely
+        }
     }
 
     return NextResponse.json(uiMessages);
