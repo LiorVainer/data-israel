@@ -13,6 +13,7 @@ import { Conversation, ConversationContent, ConversationScrollButton } from '@/c
 import { MessageItem } from '@/components/chat/MessageItem';
 import { InputSection } from '@/components/chat/InputSection';
 import { Suggestions } from './Suggestions';
+import { extractSuggestions } from './extract-suggestions';
 import { EmptyConversation } from './EmptyConversation';
 import { MessageListSkeleton } from '@/components/chat/MessageListSkeleton';
 import { LoadingShimmer } from '@/components/chat/LoadingShimmer';
@@ -128,28 +129,10 @@ export function ChatThread({ id }: ChatThreadProps) {
     const pushSubscription = usePushSubscription(userId);
 
     const lastAssistantMessage = messages.filter((m) => m.role === 'assistant').at(-1);
-    const { suggestions: suggestionsFromTool, loading: suggestionsLoading } = useMemo(() => {
-        if (!lastAssistantMessage) return { suggestions: undefined, loading: false };
-
-        const suggestPart = lastAssistantMessage.parts.find((p) => p.type === 'tool-suggestFollowUps' && 'state' in p);
-
-        if (!suggestPart || !('state' in suggestPart)) return { suggestions: undefined, loading: false };
-
-        const state = suggestPart.state as string;
-
-        // Tool is still being called — show skeleton
-        if (state === 'input-streaming' || state === 'input-available') {
-            return { suggestions: undefined, loading: true };
-        }
-
-        // Tool finished — extract suggestions from input
-        if (state === 'output-available' && 'input' in suggestPart) {
-            const input = suggestPart.input as { suggestions: string[] };
-            return { suggestions: input.suggestions, loading: false };
-        }
-
-        return { suggestions: undefined, loading: false };
-    }, [lastAssistantMessage]);
+    const { suggestions: suggestionsFromTool, loading: suggestionsLoading } = useMemo(
+        () => extractSuggestions(lastAssistantMessage),
+        [lastAssistantMessage],
+    );
 
     console.log({ messages });
 
@@ -193,7 +176,11 @@ export function ChatThread({ id }: ChatThreadProps) {
                                 />
                             </div>
                         )}
-                        <InputSection onSubmit={handleSend} status={status} onStop={stop} />
+                        <InputSection
+                            onSubmit={handleSend}
+                            status={startedAsNew.current && !hasMessages ? undefined : status}
+                            onStop={stop}
+                        />
                         <NotificationPrompt
                             isSupported={pushSubscription.isSupported}
                             isSubscribed={pushSubscription.isSubscribed}

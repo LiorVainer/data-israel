@@ -14,6 +14,7 @@ import { AgentConfig } from '@/agents/agent.config';
 import { api, convexMutation } from '@/lib/convex/client';
 import { resolveModelConfig } from './resolve-model-config';
 import type { MastraMemory } from '@mastra/core/memory';
+import type { Mastra } from '@mastra/core';
 import {
     type AgentDataPart,
     type AgentDataToolCall,
@@ -80,6 +81,59 @@ function getUserIdFromRequest(req: Request): string {
 
 function stripToolArgs(args: Record<string, unknown>): Record<string, unknown> {
     return pick(args, [...TOOL_ARGS_KEEP_FIELDS]);
+}
+
+/**
+ * Pre-saves the user message to memory before streaming begins.
+ *
+ * Mastra's `savePerStep` only accumulates messages in-memory without flushing
+ * to storage, and the final `executeOnFinish` is gated by `!abortSignal.aborted`.
+ * If the user refreshes mid-stream, abort fires and the user message is lost.
+ *
+ * This workaround eagerly persists the user message. Convex's `batchInsert`
+ * is an upsert by ID, so when `executeOnFinish` later saves the same message
+ * on normal completion, it simply patches the existing record — no duplicates.
+ */
+async function preSaveUserMessage(
+    mastraInstance: Mastra,
+    messages: UIMessage[],
+    threadId: string,
+    resourceId: string,
+): Promise<void> {
+    const lastUserMsg = [...messages].reverse().find((m) => m.role === 'user');
+    if (!lastUserMsg) return;
+
+    const textParts = lastUserMsg.parts
+        ?.filter((p): p is { type: 'text'; text: string } => p.type === 'text')
+        .map((p) => p.text)
+        .join('\n');
+
+    if (!textParts) return;
+
+    const memory = await mastraInstance.getAgentById('routingAgent').getMemory();
+    if (!memory) return;
+
+    // Ensure thread exists before saving the message
+    const existingThread = await memory.getThreadById({ threadId });
+    if (!existingThread) {
+        await memory.createThread({ threadId, resourceId });
+    }
+
+    await memory.saveMessages({
+        messages: [
+            {
+                id: lastUserMsg.id,
+                role: 'user' as const,
+                createdAt: new Date(),
+                threadId,
+                resourceId,
+                content: {
+                    format: 2,
+                    parts: [{ type: 'text' as const, text: textParts }],
+                },
+            },
+        ],
+    });
 }
 
 /**
@@ -281,6 +335,17 @@ export async function POST(req: Request) {
             reasoningTokens: 0,
             cachedInputTokens: 0,
         };
+
+        // Pre-save user message so it survives page refresh during streaming.
+        // Mastra's executeOnFinish (which saves all messages) is gated by !abortSignal.aborted,
+        // so on refresh the user message would otherwise be lost.
+        if (threadId && memoryConfig.resource) {
+            try {
+                await preSaveUserMessage(dynamicMastra, params.messages, threadId, memoryConfig.resource);
+            } catch (e) {
+                console.warn('[chat POST] preSaveUserMessage failed:', e);
+            }
+        }
 
         const stream = await handleChatStream<AppUIMessage>({
             mastra: dynamicMastra,
