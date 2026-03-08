@@ -43,6 +43,11 @@ const ACTIVE_STREAM_KEY_PREFIX = 'stream:active';
  * Creates a Redis client from REDIS_URL with proper error handling.
  * Attaches an 'error' event handler to prevent uncaught exceptions
  * when Upstash closes idle TCP connections.
+ *
+ * The reconnect strategy allows up to 5 retries with exponential backoff
+ * (starting at 500ms). On permanent failure the client is destroyed via
+ * {@link destroyClients} to stop background reconnection loops that would
+ * otherwise flood the event loop and cause stack overflows.
  */
 function createManagedRedisClient(): RedisClientType | null {
     const redisUrl = process.env.REDIS_URL || process.env.KV_URL;
@@ -56,9 +61,10 @@ function createManagedRedisClient(): RedisClientType | null {
             reconnectStrategy: (retries: number) => {
                 if (retries > 5) {
                     console.error('[redis/resumable-stream] Max reconnection attempts reached');
-                    return new Error('Max reconnection attempts reached');
+                    return false as unknown as Error; // stop reconnecting
                 }
-                return Math.min(retries * 200, 2000);
+                // Min 500ms to avoid tight retry loops on instant failures (e.g. ENOTFOUND)
+                return Math.max(500, Math.min(retries * 500, 3000));
             },
         },
     }) as RedisClientType;
@@ -77,6 +83,25 @@ let publisherClient: RedisClientType | null = null;
 let subscriberClient: RedisClientType | null = null;
 let connectPromise: Promise<void> | null = null;
 let connectionFailed = false;
+
+/**
+ * Forcibly destroy Redis TCP clients so they stop background reconnection loops.
+ * Without this, orphaned clients keep emitting error events that flood the
+ * event loop and eventually cause "Maximum call stack size exceeded".
+ */
+function destroyClients(pub: RedisClientType | null, sub: RedisClientType | null): void {
+    for (const client of [pub, sub]) {
+        if (!client) continue;
+        try {
+            client.removeAllListeners();
+            void client.quit().catch(() => {
+                client.disconnect().catch(() => {});
+            });
+        } catch {
+            // Best-effort cleanup
+        }
+    }
+}
 
 /**
  * Lazily creates and connects Redis pub/sub clients (singleton).
@@ -101,16 +126,19 @@ async function ensureConnectedClients(): Promise<{
                 connectionFailed = true;
                 return;
             }
-            await Promise.all([pub.connect(), sub.connect()]);
-            publisherClient = pub;
-            subscriberClient = sub;
-        })().catch((err: unknown) => {
-            const message = err instanceof Error ? err.message : String(err);
-            console.error('[redis/resumable-stream] Failed to connect Redis clients:', message);
-            connectionFailed = true;
-            publisherClient = null;
-            subscriberClient = null;
-        });
+            try {
+                await Promise.all([pub.connect(), sub.connect()]);
+                publisherClient = pub;
+                subscriberClient = sub;
+            } catch (err: unknown) {
+                const message = err instanceof Error ? err.message : String(err);
+                console.error('[redis/resumable-stream] Failed to connect Redis clients:', message);
+                connectionFailed = true;
+                destroyClients(pub, sub);
+                publisherClient = null;
+                subscriberClient = null;
+            }
+        })();
     }
 
     await connectPromise;

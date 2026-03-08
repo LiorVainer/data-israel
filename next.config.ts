@@ -3,6 +3,9 @@ import { withSentryConfig } from '@sentry/nextjs';
 
 const nextConfig: NextConfig = {
     serverExternalPackages: ['@mastra/core', '@mastra/memory', '@mastra/ai-sdk', '@mastra/convex'],
+    experimental: {
+        proxyClientMaxBodySize: '25mb',
+    },
     async headers() {
         return [
             {

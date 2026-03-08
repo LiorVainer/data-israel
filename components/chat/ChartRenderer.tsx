@@ -8,10 +8,10 @@ import { Shimmer } from '@/components/ai-elements/shimmer';
 import { useTheme } from 'next-themes';
 import { useIsMobile } from '@/hooks/use-mobile';
 
-/** Chart colors from globals.css — professional palette that adapts to light/dark theme */
+/** Modern chart palette — varied hues for visual distinction */
 const CHART_COLORS = ['var(--chart-1)', 'var(--chart-2)', 'var(--chart-3)', 'var(--chart-4)', 'var(--chart-5)'];
 
-/** Responsive chart margins — tighter on mobile to maximize chart area */
+/** Responsive chart margins */
 const CHART_MARGINS = {
     mobile: { top: 10, right: 0, bottom: 50, left: 20 },
     desktop: { top: 20, right: 20, bottom: 60, left: 80 },
@@ -23,14 +23,11 @@ const PIE_MARGINS = {
 } as const;
 
 /**
- * Nivo theme that adapts to the app's light/dark mode using CSS variables from globals.css.
- * Tooltip container uses CSS var() directly (it's a DOM element).
- * SVG elements (axis, grid) need resolved values, so we read computed styles.
+ * Nivo theme — adapts to light/dark via CSS variables.
+ * Grid lines are subtle, tooltip is styled to match the app.
  */
 function useNivoTheme() {
     const { resolvedTheme } = useTheme();
-    // Dependency on resolvedTheme ensures re-render on theme change.
-    // We still use CSS vars so colors stay in sync with globals.css.
     void resolvedTheme;
 
     return {
@@ -40,27 +37,31 @@ function useNivoTheme() {
         },
         axis: {
             ticks: {
-                text: { fill: 'var(--muted-foreground)' },
-                line: { stroke: 'var(--border)' },
+                text: { fill: 'var(--muted-foreground)', fontSize: 11 },
+                line: { stroke: 'transparent' },
             },
             legend: {
-                text: { fill: 'var(--foreground)' },
+                text: { fill: 'var(--foreground)', fontWeight: 600 },
+            },
+            domain: {
+                line: { stroke: 'transparent' },
             },
         },
         grid: {
-            line: { stroke: 'var(--border)' },
+            line: { stroke: 'var(--border)', strokeDasharray: '4 4' },
         },
         crosshair: {
-            line: { stroke: 'var(--muted-foreground)', strokeWidth: 1 },
+            line: { stroke: 'var(--muted-foreground)', strokeWidth: 1, strokeDasharray: '4 4' },
         },
         tooltip: {
             container: {
                 background: 'var(--popover)',
                 color: 'var(--popover-foreground)',
                 fontSize: 12,
-                borderRadius: '8px',
+                borderRadius: '10px',
                 border: '1px solid var(--border)',
-                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+                boxShadow: '0 8px 24px rgba(0, 0, 0, 0.12)',
+                padding: '8px 12px',
             },
         },
     };
@@ -107,10 +108,21 @@ interface BarChartRendererProps {
 }
 
 function BarChartRenderer({ data, config, title }: BarChartRendererProps) {
-    const { indexBy, keys, layout = 'vertical', groupMode = 'grouped', uniqueColors = true } = config;
+    const {
+        indexBy,
+        keys,
+        keyLabels,
+        valueFormat = 'number',
+        layout = 'vertical',
+        groupMode = 'grouped',
+        uniqueColors = true,
+    } = config;
     const nivoTheme = useNivoTheme();
     const isMobile = useIsMobile();
     const margin = isMobile ? CHART_MARGINS.mobile : CHART_MARGINS.desktop;
+    const isMultiKey = keys.length > 1;
+    const labelFor = (key: string) => keyLabels?.[key] ?? key;
+    const isPct = valueFormat === 'percent';
 
     return (
         <div className='w-full' dir='rtl'>
@@ -123,31 +135,59 @@ function BarChartRenderer({ data, config, title }: BarChartRendererProps) {
                     layout={layout}
                     groupMode={groupMode}
                     margin={margin}
-                    padding={0.3}
+                    padding={0.25}
                     valueScale={{ type: 'linear' }}
                     indexScale={{ type: 'band', round: true }}
                     colors={CHART_COLORS}
-                    colorBy={uniqueColors && keys.length === 1 ? 'indexValue' : 'id'}
+                    colorBy={uniqueColors && !isMultiKey ? 'indexValue' : 'id'}
                     theme={nivoTheme}
-                    borderRadius={4}
-                    borderWidth={1}
-                    borderColor={{ from: 'color', modifiers: [['darker', 0.2]] }}
+                    borderRadius={6}
+                    borderWidth={0}
                     axisBottom={{
-                        tickSize: 5,
-                        tickPadding: 5,
+                        tickSize: 0,
+                        tickPadding: 8,
                         tickRotation: -45,
                     }}
                     axisLeft={{
-                        tickSize: 5,
-                        tickPadding: 5,
+                        tickSize: 0,
+                        tickPadding: 8,
                         tickRotation: 0,
                     }}
-                    tooltipLabel={(datum) => String(datum.indexValue)}
+                    enableGridX={false}
+                    tooltipLabel={(datum) =>
+                        isMultiKey ? `${datum.indexValue} — ${labelFor(String(datum.id))}` : String(datum.indexValue)
+                    }
+                    legends={
+                        isMultiKey
+                            ? [
+                                  {
+                                      dataFrom: 'keys',
+                                      data: keys.map((key, i) => ({
+                                          id: key,
+                                          label: labelFor(key),
+                                          color: CHART_COLORS[i % CHART_COLORS.length],
+                                      })),
+                                      anchor: 'top-right',
+                                      direction: 'column',
+                                      translateX: 0,
+                                      translateY: -10,
+                                      itemsSpacing: 2,
+                                      itemWidth: 100,
+                                      itemHeight: 20,
+                                      itemDirection: 'right-to-left',
+                                      symbolSize: 12,
+                                      symbolShape: 'circle',
+                                  },
+                              ]
+                            : undefined
+                    }
                     enableLabel={true}
+                    label={(d) => (isPct ? `${d.value}%` : String(d.value ?? ''))}
                     labelSkipWidth={16}
                     labelSkipHeight={16}
-                    labelTextColor={{ from: 'color', modifiers: [['darker', 1.6]] }}
+                    labelTextColor='#ffffff'
                     animate={true}
+                    motionConfig='gentle'
                     role='img'
                     ariaLabel={title || 'Bar chart'}
                 />
@@ -167,10 +207,11 @@ interface LineChartRendererProps {
 }
 
 function LineChartRenderer({ data, config, title }: LineChartRendererProps) {
-    const { enableArea = false, curve = 'monotoneX' } = config;
+    const { valueFormat = 'number', enableArea = false, curve = 'monotoneX' } = config;
     const nivoTheme = useNivoTheme();
     const isMobile = useIsMobile();
     const margin = isMobile ? CHART_MARGINS.mobile : CHART_MARGINS.desktop;
+    const isPct = valueFormat === 'percent';
 
     return (
         <div className='w-full' dir='rtl'>
@@ -183,27 +224,34 @@ function LineChartRenderer({ data, config, title }: LineChartRendererProps) {
                     yScale={{ type: 'linear', min: 'auto', max: 'auto', stacked: false }}
                     curve={curve}
                     colors={CHART_COLORS}
+                    lineWidth={3}
                     theme={nivoTheme}
                     axisBottom={{
-                        tickSize: 5,
-                        tickPadding: 5,
+                        tickSize: 0,
+                        tickPadding: 8,
                         tickRotation: -45,
                     }}
                     axisLeft={{
-                        tickSize: 5,
-                        tickPadding: 5,
+                        tickSize: 0,
+                        tickPadding: 8,
                         tickRotation: 0,
+                        format: isPct ? (v) => `${v}%` : undefined,
                     }}
+                    enableGridX={false}
                     enablePoints={true}
                     pointSize={8}
-                    pointColor={{ theme: 'background' }}
-                    pointBorderWidth={2}
-                    pointBorderColor={{ from: 'serieColor' }}
+                    pointColor={{ from: 'color' }}
+                    pointBorderWidth={0}
+                    enablePointLabel={true}
+                    pointLabel={(d) => (isPct ? `${d.y}%` : String(d.y ?? ''))}
+                    pointLabelYOffset={-14}
                     enableArea={enableArea}
-                    areaOpacity={0.15}
+                    areaOpacity={0.1}
+                    areaBlendMode='normal'
                     useMesh={true}
                     enableSlices='x'
                     animate={true}
+                    motionConfig='gentle'
                     role='img'
                     ariaLabel={title || 'Line chart'}
                 />
@@ -236,22 +284,23 @@ function PieChartRenderer({ data, config, title }: PieChartRendererProps) {
                     data={data}
                     margin={margin}
                     innerRadius={innerRadius}
-                    padAngle={0.7}
-                    cornerRadius={3}
+                    padAngle={1}
+                    cornerRadius={4}
                     activeOuterRadiusOffset={8}
+                    activeInnerRadiusOffset={4}
                     colors={CHART_COLORS}
                     theme={nivoTheme}
-                    borderWidth={1}
-                    borderColor={{ from: 'color', modifiers: [['darker', 0.2]] }}
+                    borderWidth={0}
                     arcLinkLabelsSkipAngle={10}
                     arcLinkLabelsTextColor='var(--foreground)'
-                    arcLinkLabelsThickness={2}
+                    arcLinkLabelsThickness={1.5}
                     arcLinkLabelsColor={{ from: 'color' }}
                     arcLabelsSkipAngle={10}
-                    arcLabelsTextColor={{ from: 'color', modifiers: [['darker', 2]] }}
+                    arcLabelsTextColor='#ffffff'
                     enableArcLabels={true}
                     enableArcLinkLabels={true}
                     animate={true}
+                    motionConfig='gentle'
                     role='img'
                 />
             </div>

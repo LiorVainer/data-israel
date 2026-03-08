@@ -14,6 +14,7 @@ import { AgentConfig } from '@/agents/agent.config';
 import { api, convexMutation } from '@/lib/convex/client';
 import { resolveModelConfig } from './resolve-model-config';
 import type { MastraMemory } from '@mastra/core/memory';
+import type { Mastra } from '@mastra/core';
 import {
     type AgentDataPart,
     type AgentDataToolCall,
@@ -78,46 +79,69 @@ function getUserIdFromRequest(req: Request): string {
     return CHAT.DEFAULT_RESOURCE_ID;
 }
 
+function stripToolArgs(args: Record<string, unknown>): Record<string, unknown> {
+    return pick(args, [...TOOL_ARGS_KEEP_FIELDS]);
+}
+
+/**
+ * Pre-saves the user message to memory before streaming begins.
+ *
+ * Mastra's `savePerStep` only accumulates messages in-memory without flushing
+ * to storage, and the final `executeOnFinish` is gated by `!abortSignal.aborted`.
+ * If the user refreshes mid-stream, abort fires and the user message is lost.
+ *
+ * This workaround eagerly persists the user message. Convex's `batchInsert`
+ * is an upsert by ID, so when `executeOnFinish` later saves the same message
+ * on normal completion, it simply patches the existing record — no duplicates.
+ */
+async function preSaveUserMessage(
+    mastraInstance: Mastra,
+    messages: UIMessage[],
+    threadId: string,
+    resourceId: string,
+): Promise<void> {
+    const lastUserMsg = [...messages].reverse().find((m) => m.role === 'user');
+    if (!lastUserMsg) return;
+
+    const textParts = lastUserMsg.parts
+        ?.filter((p): p is { type: 'text'; text: string } => p.type === 'text')
+        .map((p) => p.text)
+        .join('\n');
+
+    if (!textParts) return;
+
+    const memory = await mastraInstance.getAgentById('routingAgent').getMemory();
+    if (!memory) return;
+
+    // Ensure thread exists before saving the message
+    const existingThread = await memory.getThreadById({ threadId });
+    if (!existingThread) {
+        await memory.createThread({ threadId, resourceId });
+    }
+
+    await memory.saveMessages({
+        messages: [
+            {
+                id: lastUserMsg.id,
+                role: 'user' as const,
+                createdAt: new Date(),
+                threadId,
+                resourceId,
+                content: {
+                    format: 2,
+                    parts: [{ type: 'text' as const, text: textParts }],
+                },
+            },
+        ],
+    });
+}
+
 /**
  * Reconstructs data-tool-agent parts from sub-agent memory threads.
  * During live streaming, Mastra emits data-tool-agent parts with sub-agent tool call details.
  * These are streaming-only artifacts not stored in memory. On recall, we reconstruct them
  * by fetching the sub-agent's separate memory thread using subAgentThreadId.
  */
-/** Strip large data arrays from tool results to prevent UI message bloat */
-function truncateToolResult(result: Record<string, unknown>): Record<string, unknown> {
-    const truncated = { ...result };
-
-    // Strip raw record arrays (queryDatastoreResource, getCbsSeriesDataByPath, etc.)
-    if (Array.isArray(truncated.records) && truncated.records.length > 3) {
-        truncated._originalCount = (result.records as unknown[]).length;
-        truncated.records = (truncated.records as unknown[]).slice(0, 3);
-        truncated._truncated = true;
-    }
-
-    // Strip large series data arrays
-    if (Array.isArray(truncated.series)) {
-        for (const s of truncated.series as Record<string, unknown>[]) {
-            if (Array.isArray(s.observations) && s.observations.length > 5) {
-                s._originalObservations = (s.observations as unknown[]).length;
-                s.observations = (s.observations as unknown[]).slice(0, 5);
-            }
-        }
-    }
-
-    // Strip large items arrays (browseCbsCatalog, browseCbsCatalogPath)
-    if (Array.isArray(truncated.items) && truncated.items.length > 10) {
-        truncated._originalItems = (result.items as unknown[]).length;
-        truncated.items = (truncated.items as unknown[]).slice(0, 10);
-    }
-
-    return truncated;
-}
-
-function stripToolArgs(args: Record<string, unknown>): Record<string, unknown> {
-    return pick(args, [...TOOL_ARGS_KEEP_FIELDS]);
-}
-
 async function enrichWithSubAgentData(uiMessages: UIMessage[], memory: MastraMemory): Promise<void> {
     // Collect all sub-agent thread references from tool-agent-* parts
     const subAgentRefs: Array<{
@@ -235,6 +259,7 @@ async function enrichWithSubAgentData(uiMessages: UIMessage[], memory: MastraMem
 export async function GET(req: Request) {
     const { searchParams } = new URL(req.url);
     const threadId = searchParams.get('threadId');
+
     const resourceId = searchParams.get('resourceId') || getUserIdFromRequest(req);
 
     if (!threadId || !resourceId) {
@@ -257,7 +282,12 @@ export async function GET(req: Request) {
 
     // Enrich with sub-agent internal tool call data (two-pass recall)
     if (memory) {
-        await enrichWithSubAgentData(uiMessages, memory);
+        try {
+            await enrichWithSubAgentData(uiMessages, memory);
+        } catch (e) {
+            console.error('[chat GET] enrichWithSubAgentData failed:', e);
+            // Return messages without sub-agent enrichment rather than failing entirely
+        }
     }
 
     return NextResponse.json(uiMessages);
@@ -305,6 +335,17 @@ export async function POST(req: Request) {
             reasoningTokens: 0,
             cachedInputTokens: 0,
         };
+
+        // Pre-save user message so it survives page refresh during streaming.
+        // Mastra's executeOnFinish (which saves all messages) is gated by !abortSignal.aborted,
+        // so on refresh the user message would otherwise be lost.
+        if (threadId && memoryConfig.resource) {
+            try {
+                await preSaveUserMessage(dynamicMastra, params.messages, threadId, memoryConfig.resource);
+            } catch (e) {
+                console.warn('[chat POST] preSaveUserMessage failed:', e);
+            }
+        }
 
         const stream = await handleChatStream<AppUIMessage>({
             mastra: dynamicMastra,
