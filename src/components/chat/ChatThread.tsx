@@ -87,6 +87,9 @@ export function ChatThread({ id }: ChatThreadProps) {
         messages: [] as UIMessage[],
         transport,
         resume: true,
+        onError: (error) => {
+            console.error('[ChatThread] useChat error:', error.message);
+        },
     });
 
     const isNewConversation = startedAsNew.current && !messages.length;
