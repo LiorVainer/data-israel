@@ -167,11 +167,11 @@ function BarChartRenderer({ data, config, title }: BarChartRendererProps) {
                                           label: labelFor(key),
                                           color: CHART_COLORS[i % CHART_COLORS.length],
                                       })),
-                                      anchor: 'top-right',
-                                      direction: 'column',
+                                      anchor: isMobile ? 'bottom' : 'top-right',
+                                      direction: isMobile ? 'row' : 'column',
                                       translateX: 0,
-                                      translateY: -10,
-                                      itemsSpacing: 2,
+                                      translateY: isMobile ? 50 : -10,
+                                      itemsSpacing: isMobile ? 4 : 2,
                                       itemWidth: 100,
                                       itemHeight: 20,
                                       itemDirection: 'right-to-left',
@@ -274,7 +274,9 @@ function PieChartRenderer({ data, config, title }: PieChartRendererProps) {
     const { innerRadius = 0 } = config;
     const nivoTheme = useNivoTheme();
     const isMobile = useIsMobile();
-    const margin = isMobile ? PIE_MARGINS.mobile : PIE_MARGINS.desktop;
+    const margin = isMobile
+        ? { top: 10, right: 10, bottom: 60, left: 10 }
+        : PIE_MARGINS.desktop;
 
     return (
         <div className='w-full' dir='rtl'>
@@ -298,7 +300,24 @@ function PieChartRenderer({ data, config, title }: PieChartRendererProps) {
                     arcLabelsSkipAngle={10}
                     arcLabelsTextColor='#ffffff'
                     enableArcLabels={true}
-                    enableArcLinkLabels={true}
+                    enableArcLinkLabels={!isMobile}
+                    legends={
+                        isMobile
+                            ? [
+                                  {
+                                      anchor: 'bottom',
+                                      direction: 'row',
+                                      translateY: 50,
+                                      itemsSpacing: 4,
+                                      itemWidth: 80,
+                                      itemHeight: 18,
+                                      itemDirection: 'right-to-left',
+                                      symbolSize: 10,
+                                      symbolShape: 'circle',
+                                  },
+                              ]
+                            : undefined
+                    }
                     animate={true}
                     motionConfig='gentle'
                     role='img'
