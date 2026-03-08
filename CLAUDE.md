@@ -78,105 +78,106 @@ If any command fails, fix the issues before proceeding.
 
 ### Project Structure
 ```
-app/                          # Next.js App Router
-├── layout.tsx                # Root layout (Hebrew RTL, Geist fonts)
-├── page.tsx                  # Landing page (hero, about, sources, how-it-works, footer)
-├── (main)/chat/[id]/
-│   ├── page.tsx              # Client component — useParams + ChatThread (no Suspense flash)
-│   └── loading.tsx           # Skeleton fallback (only for server-side navigation)
-├── api/chat/route.ts         # Streaming API (handleChatStream → routingAgent)
-└── globals.css               # Tailwind global styles + global scrollbar styling
+src/                              # Application source code
+├── app/                          # Next.js App Router
+│   ├── layout.tsx                # Root layout (Hebrew RTL, Geist fonts)
+│   ├── page.tsx                  # Landing page (hero, about, sources, how-it-works, footer)
+│   ├── (main)/chat/[id]/
+│   │   ├── page.tsx              # Client component — useParams + ChatThread (no Suspense flash)
+│   │   └── loading.tsx           # Skeleton fallback (only for server-side navigation)
+│   ├── api/chat/route.ts         # Streaming API (handleChatStream → routingAgent)
+│   └── globals.css               # Tailwind global styles + global scrollbar styling
+│
+├── agents/                       # Mastra agent network
+│   ├── mastra.ts                 # Mastra instance (ConvexStore instance-level storage)
+│   ├── agent.config.ts           # Model config, display limits
+│   ├── types.ts                  # Agent network type definitions
+│   ├── processors/               # Output processing pipeline
+│   │   ├── tool-result-summarizer.processor.ts
+│   │   ├── text-output.processor.ts
+│   │   └── response-length-validator.processor.ts
+│   └── network/
+│       ├── model.ts              # Model ID factory (getMastraModelId, getAiSdkModelId)
+│       ├── routing/              # Routing agent (orchestrator, delegates to sub-agents)
+│       ├── datagov/              # DataGov sub-agent (16 tools, data.gov.il CKAN API)
+│       └── cbs/                  # CBS sub-agent (9 tools, Central Bureau of Statistics)
+│
+├── constants/                    # Application constants
+│   ├── agents-display.ts         # Agent display configurations
+│   ├── chat.ts                   # Chat constants
+│   ├── datagov-urls.ts           # data.gov.il URL patterns
+│   ├── prompts.ts                # AI system prompts
+│   ├── tool-data-sources.ts      # Tool → data source mappings
+│   └── tool-translations.tsx     # Hebrew tool name translations
+│
+├── context/                      # React context providers
+│   ├── ConvexClientProvider.tsx   # Convex client wrapper
+│   ├── QueryClientProvider.tsx    # TanStack Query provider
+│   ├── ThemeProvider.tsx          # Theme (dark/light) provider
+│   └── UserContext.tsx            # User session context
+│
+├── hooks/                        # Custom React hooks
+│   ├── use-guest-session.ts      # Guest session management
+│   ├── use-mobile.ts             # Mobile breakpoint detection
+│   ├── use-threads-data.ts       # Thread listing/management
+│   └── ...                       # Additional utility hooks
+│
+├── services/                     # Service layer
+│   └── thread.service.ts         # Thread CRUD operations
+│
+├── scripts/                      # Data sync utilities
+│   ├── fetch-all-datasets.ts     # Fetch all datasets from data.gov.il
+│   └── sync-to-convex.ts         # Sync datasets to Convex
+│
+├── lib/
+│   ├── tools/
+│   │   ├── datagov/              # 16 data.gov.il tools (search, details, schema, etc.)
+│   │   ├── cbs/                  # 9 CBS tools (catalog, series, prices, localities)
+│   │   └── client/               # 3 client-side chart tools (bar, line, pie)
+│   ├── api/
+│   │   ├── data-gov/             # CKAN API client (data.gov.il)
+│   │   └── cbs/                  # CBS API client
+│   ├── redis/                    # Redis/Upstash rate limiting & caching
+│   └── convex/                   # Convex client utilities
+│
+├── components/
+│   ├── navigation/
+│   │   ├── AppSidebar.tsx        # Sidebar layout wrapper (HomeLogoButton, NewThreadButton, SidebarTrigger)
+│   │   ├── NavUser.tsx           # User profile in sidebar footer
+│   │   └── SidebarToolbar.tsx    # "New chat" button inside sidebar
+│   ├── chat/
+│   │   ├── ChatThread.tsx        # Main chat client component (useChat, message hydration, ?new param handling)
+│   │   ├── EmptyConversation.tsx # Empty state with prompt cards (fixed header, scrollable suggestions)
+│   │   ├── HeroSection.tsx       # Landing hero with CTA buttons
+│   │   ├── MessageItem.tsx       # Message renderer (source URL dedup by URL + title)
+│   │   └── Suggestions.tsx       # Follow-up suggestion chips (horizontal scroll mobile, vertical desktop)
+│   ├── threads/                  # Thread list and management components
+│   ├── landing/
+│   │   ├── AboutSection.tsx      # About section
+│   │   ├── SourcesSection.tsx    # Data sources section (replaced StatsSection)
+│   │   ├── HowItWorksSection.tsx # How-it-works steps
+│   │   ├── ExampleOutputsSection.tsx
+│   │   └── Footer.tsx            # Footer with copyright
+│   ├── ai-elements/              # AI UI elements (DO NOT modify unless instructed)
+│   └── ui/                       # shadcn/ui primitives (DO NOT modify unless instructed)
+│
+├── instrumentation.ts            # Next.js instrumentation (Sentry)
+└── proxy.ts                      # Proxy configuration
 
-agents/                       # Mastra agent network
-├── mastra.ts                 # Mastra instance (ConvexStore instance-level storage)
-├── agent.config.ts           # Model config, display limits
-├── types.ts                  # Agent network type definitions
-├── processors/               # Output processing pipeline
-│   ├── tool-result-summarizer.processor.ts
-│   ├── text-output.processor.ts
-│   └── response-length-validator.processor.ts
-└── network/
-    ├── model.ts              # Model ID factory (getMastraModelId, getAiSdkModelId)
-    ├── routing/              # Routing agent (orchestrator, delegates to sub-agents)
-    ├── datagov/              # DataGov sub-agent (16 tools, data.gov.il CKAN API)
-    └── cbs/                  # CBS sub-agent (9 tools, Central Bureau of Statistics)
+convex/                           # Convex backend (root level)
+├── convex.config.ts              # RAG component registration
+├── schema.ts                     # Dataset/resource tables + Mastra memory tables
+├── mastra/storage.ts             # Mastra storage handler
+├── datasets.ts                   # Dataset CRUD operations
+├── resources.ts                  # Resource CRUD operations
+├── search.ts                     # RAG semantic search actions
+└── rag.ts                        # RAG config (OpenRouter embeddings)
 
-constants/                    # Application constants
-├── agents-display.ts         # Agent display configurations
-├── chat.ts                   # Chat constants
-├── datagov-urls.ts           # data.gov.il URL patterns
-├── prompts.ts                # AI system prompts
-├── tool-data-sources.ts      # Tool → data source mappings
-└── tool-translations.tsx     # Hebrew tool name translations
-
-context/                      # React context providers
-├── ConvexClientProvider.tsx   # Convex client wrapper
-├── QueryClientProvider.tsx    # TanStack Query provider
-├── ThemeProvider.tsx          # Theme (dark/light) provider
-└── UserContext.tsx            # User session context
-
-hooks/                        # Custom React hooks
-├── use-guest-session.ts      # Guest session management
-├── use-mobile.ts             # Mobile breakpoint detection
-├── use-threads-data.ts       # Thread listing/management
-└── ...                       # Additional utility hooks
-
-services/                     # Service layer
-└── thread.service.ts         # Thread CRUD operations
-
-scripts/                      # Data sync utilities
-├── fetch-all-datasets.ts     # Fetch all datasets from data.gov.il
-└── sync-to-convex.ts         # Sync datasets to Convex
-
-lib/
-├── tools/
-│   ├── datagov/              # 16 data.gov.il tools (search, details, schema, etc.)
-│   ├── cbs/                  # 9 CBS tools (catalog, series, prices, localities)
-│   └── client/               # 3 client-side chart tools (bar, line, pie)
-├── api/
-│   ├── data-gov/             # CKAN API client (data.gov.il)
-│   └── cbs/                  # CBS API client
-├── redis/                    # Redis/Upstash rate limiting & caching
-└── convex/                   # Convex client utilities
-
-convex/                       # Convex backend
-├── convex.config.ts          # RAG component registration
-├── schema.ts                 # Dataset/resource tables + Mastra memory tables
-├── mastra/storage.ts         # Mastra storage handler
-├── datasets.ts               # Dataset CRUD operations
-├── resources.ts              # Resource CRUD operations
-├── search.ts                 # RAG semantic search actions
-└── rag.ts                    # RAG config (OpenRouter embeddings)
-
-components/
-├── navigation/
-│   ├── AppSidebar.tsx        # Sidebar layout wrapper (HomeLogoButton, NewThreadButton, SidebarTrigger)
-│   ├── NavUser.tsx           # User profile in sidebar footer
-│   └── SidebarToolbar.tsx    # "New chat" button inside sidebar
-├── chat/
-│   ├── ChatThread.tsx        # Main chat client component (useChat, message hydration, ?new param handling)
-│   ├── EmptyConversation.tsx # Empty state with prompt cards (fixed header, scrollable suggestions)
-│   ├── HeroSection.tsx       # Landing hero with CTA buttons
-│   ├── MessageItem.tsx       # Message renderer (source URL dedup by URL + title)
-│   └── Suggestions.tsx       # Follow-up suggestion chips (horizontal scroll mobile, vertical desktop)
-├── threads/                  # Thread list and management components
-├── landing/
-│   ├── AboutSection.tsx      # About section
-│   ├── SourcesSection.tsx    # Data sources section (replaced StatsSection)
-│   ├── HowItWorksSection.tsx # How-it-works steps
-│   ├── ExampleOutputsSection.tsx
-│   └── Footer.tsx            # Footer with copyright
-├── ai-elements/              # AI UI elements (DO NOT modify unless instructed)
-└── ui/                       # shadcn/ui primitives (DO NOT modify unless instructed)
-
-spec/
-└── project.spec.md           # Authoritative specification
-
-openspec/                     # OpenSpec workflow
-├── AGENTS.md                 # Proposal-driven development instructions
-├── project.md                # Project conventions
-├── specs/                    # Current capability specs
-└── changes/                  # Active change proposals
+openspec/                         # OpenSpec workflow (root level)
+├── AGENTS.md                     # Proposal-driven development instructions
+├── project.md                    # Project conventions
+├── specs/                        # Current capability specs
+└── changes/                      # Active change proposals
 ```
 
 ### Agent Network Flow
@@ -248,7 +249,7 @@ The `data-tool-agent` parts are **not stored in memory** — they are streaming 
 2. Dedicated source URL tools (`generateDataGovSourceUrl`, `generateCbsSourceUrl`)
 3. Auto-resolved from data tool outputs via `resolveToolSourceUrl()` (scans both direct tools and sub-agent results inside `data-tool-agent` parts)
 
-Key types in `components/chat/types.ts`:
+Key types in `src/components/chat/types.ts`:
 - `AgentDataPart` / `isAgentDataPart()` — typed shape and guard for `data-tool-agent` parts
 - `ToolCallPart` / `getToolStatus()` — tool state handling (active/complete)
 - `SourceUrlUIPart` — unified source URL shape
@@ -272,9 +273,9 @@ Key types in `components/chat/types.ts`:
 
 ### Integrations
 
-- **Authentication**: Clerk (sign-in/sign-up flows, user context via `UserContext.tsx`)
-- **Error tracking**: Sentry (client/server/edge configs in root, `instrumentation.ts` for Next.js)
-- **Rate limiting/caching**: Redis via Upstash (`lib/redis/`)
+- **Authentication**: Clerk (sign-in/sign-up flows, user context via `src/context/UserContext.tsx`)
+- **Error tracking**: Sentry (client/server/edge configs in root, `src/instrumentation.ts` for Next.js)
+- **Rate limiting/caching**: Redis via Upstash (`src/lib/redis/`)
 - **Code formatting**: Prettier (`.prettierrc`), shadcn config (`components.json`)
 
 ### Environment Variables
@@ -295,10 +296,12 @@ Key env vars (see `.env.example` for base set):
 | `SENTRY_AUTH_TOKEN` | Sentry source maps upload |
 
 ### Path Aliases
-The project uses `@/*` to reference files from the root:
+The project uses `@/*` to reference files from the `src/` directory:
 ```typescript
-import { Component } from "@/app/component"
+import { Component } from "@/app/component"  // resolves to src/app/component
+import { api } from "@/convex/_generated/api"  // resolves to convex/_generated/api (root)
 ```
+**Exception:** `@/convex/*` maps to `./convex/*` (root level) since Convex stays at root.
 
 ### Font System
 The project uses Geist font family (Geist Sans + Geist Mono) loaded via `next/font/google` with CSS variables:
@@ -355,7 +358,7 @@ This project uses OpenSpec for specification-driven development. When working on
 
 1. **Check for existing specs**: Read `openspec/AGENTS.md` first
 2. **Create proposals**: Use OpenSpec workflow for new capabilities
-3. **Reference the spec**: `spec/project.spec.md` is the authoritative source for agent design
+3. **Reference the spec**: `openspec/specs/` is the authoritative source for agent design
 4. **Validate changes**: Run `openspec validate --strict` before implementation
 5. When Implementing, always give each major task (e.g 1.0 - 2.0) to a separate subagent.
 6. When implementing, always follow the tasks in the relevant `tasks.md` file.

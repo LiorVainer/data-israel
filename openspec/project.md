@@ -22,7 +22,7 @@ Build a **Next.js application** that allows users to chat with an AI agent about
 - **TypeScript strict mode**: All strict checks enabled
 - **Minimize type assertions**: Avoid `as` casts unless absolutely necessary
 - **No `any` types**: Use `unknown` or proper types instead
-- **Path aliases**: Use `@/*` to reference files from root
+- **Path aliases**: Use `@/*` to reference files from `src/`
 - **Naming conventions**:
   - camelCase for variables, functions, and methods
   - PascalCase for types, interfaces, and classes
@@ -33,10 +33,10 @@ Build a **Next.js application** that allows users to chat with an AI agent about
 - **Tool-first agent architecture**: AI agent must use explicit tools, not hallucination
 - **Zod-first validation**: All inputs/outputs validated with Zod schemas
 - **Separation of concerns**:
-  - `lib/tools/` - AI SDK tool definitions
-  - `lib/api/data-gov/` - API client utilities
-  - `agents/` - ToolLoopAgent instances
-  - `app/api/` - API routes for streaming
+  - `src/lib/tools/` - AI SDK tool definitions
+  - `src/lib/api/data-gov/` - API client utilities
+  - `src/agents/` - ToolLoopAgent instances
+  - `src/app/api/` - API routes for streaming
 - **AI SDK v6 patterns**:
   - Use `tool()` helper for tool definitions
   - Use `ToolLoopAgent` for multi-step orchestration
