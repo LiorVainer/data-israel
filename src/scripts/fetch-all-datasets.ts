@@ -11,13 +11,10 @@ import { dataGovApi } from '../lib/api/data-gov/client';
 import { Dataset } from '../lib/api/data-gov/types';
 import * as fs from 'fs';
 import * as path from 'path';
+import { sleep } from '@/lib/utils/sleep';
 
 const BATCH_SIZE = 50; // Process datasets in batches to avoid overwhelming the API
 const DELAY_BETWEEN_BATCHES_MS = 1000; // Wait between batches
-
-async function sleep(ms: number): Promise<void> {
-    return new Promise((resolve) => setTimeout(resolve, ms));
-}
 
 async function fetchAllDatasets(): Promise<void> {
     console.log('🚀 Starting dataset fetch...\n');

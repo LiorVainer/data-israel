@@ -13,6 +13,7 @@ import { AgentConfig } from '../../agent.config';
 import { AGENT_SCORERS } from '../../evals/eval.config';
 import { CbsTools } from '@/lib/tools/cbs';
 import { EnsureTextOutputProcessor } from '../../processors/ensure-text-output.processor';
+import { FailedToolCallGuardProcessor } from '../../processors/failed-tool-call-guard.processor';
 import { TruncateToolResultsProcessor } from '../../processors/truncate-tool-results.processor';
 
 const { MEMORY } = AgentConfig;
@@ -27,7 +28,7 @@ export function createCbsAgent(modelId: string): Agent {
         instructions: CBS_AGENT_CONFIG.instructions,
         model: modelId,
         tools: CbsTools,
-        inputProcessors: [new EnsureTextOutputProcessor()],
+        inputProcessors: [new FailedToolCallGuardProcessor(), new EnsureTextOutputProcessor()],
         outputProcessors: [new TruncateToolResultsProcessor()],
         memory: new Memory({
             options: {

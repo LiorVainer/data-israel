@@ -5,9 +5,17 @@
  * - Series: Statistical time series catalog and data
  * - Price Index: CPI and price index data
  * - Dictionary: Geographic and classification lookups
+ *
+ * Includes:
+ * - Retry with exponential backoff for transient 5xx errors
+ * - Concurrency limiter (p-limit) to avoid overwhelming CBS servers
+ * - XML fallback detection (CBS sometimes returns XML even when JSON is requested)
  */
 
-import axios from 'axios';
+import axios, { type AxiosInstance } from 'axios';
+import pLimit from 'p-limit';
+import { parseStringPromise } from 'xml2js';
+import { sleep } from '@/lib/utils/sleep';
 import type {
     CbsCatalogLevelParams,
     CbsCatalogPathParams,
@@ -51,42 +59,118 @@ const seriesCatalogInstance = axios.create({
 const seriesDataInstance = axios.create({
     ...commonConfig,
     baseURL: SERIES_BASE_URL,
-    params: { format: 'json' },
+    params: { format: 'json', download: 'false' },
 });
 
 /** Axios instance for CBS Price Index API */
 const priceIndexInstance = axios.create({
     ...commonConfig,
     baseURL: PRICE_INDEX_BASE_URL,
-    params: { format: 'json' },
+    params: { format: 'json', download: 'false' },
 });
 
 /** Axios instance for CBS Dictionary API */
 const dictionaryInstance = axios.create({
     ...commonConfig,
     baseURL: DICTIONARY_BASE_URL,
-    params: { format: 'json' },
+    params: { format: 'json', download: 'false' },
 });
+
+// ============================================================================
+// Concurrency Limiter
+// ============================================================================
+
+/** Max 5 concurrent CBS API requests (matches israel-statistics-mcp pattern) */
+const cbsLimit = pLimit(5);
 
 // ============================================================================
 // Generic Helpers
 // ============================================================================
 
+/** Status codes worth retrying (transient server errors) */
+const RETRYABLE_STATUS_CODES = new Set([500, 502, 503, 504]);
+
+/** Max retry attempts for transient CBS API errors */
+const MAX_RETRIES = 3;
+
+/** Base delay in ms for exponential backoff */
+const BASE_DELAY_MS = 1000;
+
+/** Detect if a string response is XML (CBS sometimes returns XML instead of JSON) */
+function isXmlContent(text: string): boolean {
+    const trimmed = text.trimStart();
+    return trimmed.startsWith('<?xml') || (trimmed.startsWith('<') && !trimmed.startsWith('<html'));
+}
+
 /**
- * Generic GET request for CBS APIs (no response wrapper to unwrap).
- * Detects HTML error pages that the CBS API sometimes returns instead of JSON.
+ * Parse an XML string using xml2js with the same config as israel-statistics-mcp.
+ * Returns the parsed object or throws if parsing fails.
  */
-async function cbsGet<T>(
-    instance: ReturnType<typeof axios.create>,
+async function parseXml<T>(xml: string): Promise<T> {
+    return parseStringPromise(xml, {
+        explicitArray: true,
+        ignoreAttrs: false,
+        mergeAttrs: true,
+    }) as Promise<T>;
+}
+
+/**
+ * Generic GET request for CBS APIs with:
+ * - Concurrency limiting (max 5 concurrent requests via p-limit)
+ * - Retry with exponential backoff for 5xx errors and timeouts
+ * - XML fallback detection and parsing
+ * - HTML error page detection
+ */
+function cbsGet<T>(
+    instance: AxiosInstance,
     endpoint: string,
     params?: Record<string, unknown>,
 ): Promise<T> {
-    const response = await instance.get<T>(endpoint, { params });
-    // CBS API sometimes returns HTML error pages with status 200
-    if (typeof response.data === 'string' && (response.data as string).includes('<html')) {
-        throw new Error('CBS API returned an error page instead of data. The requested path may be invalid.');
+    return cbsLimit(() => cbsGetWithRetry<T>(instance, endpoint, params));
+}
+
+async function cbsGetWithRetry<T>(
+    instance: AxiosInstance,
+    endpoint: string,
+    params?: Record<string, unknown>,
+): Promise<T> {
+    let lastError: Error | undefined;
+
+    for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+        try {
+            const response = await instance.get<T>(endpoint, { params });
+            const data = response.data;
+
+            if (typeof data === 'string') {
+                if (data.includes('<html')) {
+                    throw new Error(
+                        'CBS API returned an error page instead of data. The requested path may be invalid.',
+                    );
+                }
+                if (isXmlContent(data)) {
+                    return await parseXml<T>(data);
+                }
+            }
+
+            return data;
+        } catch (error) {
+            lastError = error instanceof Error ? error : new Error(String(error));
+
+            const status = axios.isAxiosError(error) ? error.response?.status : undefined;
+            const isRetryable = status !== undefined && RETRYABLE_STATUS_CODES.has(status);
+            const isTimeout = axios.isAxiosError(error) && error.code === 'ECONNABORTED';
+
+            if ((isRetryable || isTimeout) && attempt < MAX_RETRIES) {
+                await sleep(BASE_DELAY_MS * Math.pow(2, attempt)); // 1s, 2s, 4s
+                continue;
+            }
+
+            throw lastError;
+        }
     }
-    return response.data;
+
+    // Unreachable, but satisfies TypeScript
+    throw lastError ?? new Error('CBS API request failed after retries');
 }
 
 // ============================================================================

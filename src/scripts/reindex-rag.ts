@@ -10,16 +10,13 @@
 
 import { ConvexHttpClient } from 'convex/browser';
 import { api } from '@/convex/_generated/api';
+import { sleep } from '@/lib/utils/sleep';
 
 const CONVEX_URL = process.env.NEXT_PUBLIC_CONVEX_URL || 'https://dynamic-egret-97.eu-west-1.convex.cloud';
 const BATCH_SIZE = 10;
 const DELAY_BETWEEN_BATCHES_MS = 3000;
 
 const convex = new ConvexHttpClient(CONVEX_URL);
-
-async function sleep(ms: number): Promise<void> {
-    return new Promise((resolve) => setTimeout(resolve, ms));
-}
 
 async function reindexDatasets(): Promise<void> {
     console.log('Starting RAG re-index...\n');
