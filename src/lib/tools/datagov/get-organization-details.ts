@@ -4,7 +4,7 @@
  * AI SDK tool for retrieving details about a specific organization
  */
 
-import { tool } from 'ai';
+import { createTool } from '@mastra/core/tools';
 import { z } from 'zod';
 import { dataGovApi } from '@/lib/api/data-gov/client';
 import { buildDataGovUrl, DATAGOV_ENDPOINTS } from '@/lib/api/data-gov/endpoints';
@@ -54,7 +54,8 @@ export type GetOrganizationDetailsOutput = z.infer<typeof getOrganizationDetails
 // Tool Definition
 // ============================================================================
 
-export const getOrganizationDetails = tool({
+export const getOrganizationDetails = createTool({
+    id: 'getOrganizationDetails',
     description:
         'Get detailed information about a specific organization. Use when user wants to know about a government body or organization that publishes data.',
     inputSchema: getOrganizationDetailsInputSchema,

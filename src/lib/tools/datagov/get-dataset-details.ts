@@ -4,7 +4,7 @@
  * AI SDK tool for retrieving full metadata for a specific dataset
  */
 
-import { tool } from 'ai';
+import { createTool } from '@mastra/core/tools';
 import { z } from 'zod';
 import { dataGovApi } from '@/lib/api/data-gov/client';
 import { buildDataGovUrl, DATAGOV_ENDPOINTS } from '@/lib/api/data-gov/endpoints';
@@ -73,7 +73,8 @@ export type GetDatasetDetailsOutput = z.infer<typeof getDatasetDetailsOutputSche
 // Tool Definition
 // ============================================================================
 
-export const getDatasetDetails = tool({
+export const getDatasetDetails = createTool({
+    id: 'getDatasetDetails',
     description:
         'Get full details for a specific dataset by ID. Use when user wants detailed information about a dataset, including resources and metadata.',
     inputSchema: getDatasetDetailsInputSchema,

@@ -10,10 +10,13 @@ import { ModelSelectorLogo } from '@/components/ai-elements/model-selector';
 import { ModelPickerDialog } from '@/components/admin/ModelPickerDialog';
 import { ModelPriceDisplay } from '@/components/admin/ModelPriceDisplay';
 import { ConfirmModelChangeDialog } from '@/components/admin/ConfirmModelChangeDialog';
+import { AnalyticsDashboard } from '@/components/admin/AnalyticsDashboard';
 import { DataIsraelLoader } from '@/components/chat/DataIsraelLoader';
 import { AlertTriangle, ChevronDown, RefreshCw, ShieldAlert } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { DirectionProvider } from '@/components/ui/direction';
 
 /** Loading state with spinning logo */
 function ModelsLoadingState() {
@@ -131,72 +134,89 @@ export default function AdminPage() {
     return (
         <div className='relative w-full' dir='rtl'>
             <div className='relative z-10 flex min-h-dvh flex-col items-center justify-center px-4 py-12'>
-                <div className='w-full max-w-2xl'>
+                <div className='w-full max-w-5xl'>
                     <h1 className='mb-8 text-3xl font-bold'>פאנל ניהול</h1>
-                    <p className='text-muted-foreground mb-8'>
-                        בחר את המודל עבור כל סוכן. שינויים נכנסים לתוקף מיידית.
-                    </p>
+                    <DirectionProvider dir='rtl'>
+                    <Tabs defaultValue='models'>
+                        <TabsList className='mb-6'>
+                            <TabsTrigger value='models'>מודלים</TabsTrigger>
+                            <TabsTrigger value='analytics'>אנליטקות</TabsTrigger>
+                        </TabsList>
 
-                    {isModelsLoading ? (
-                        <ModelsLoadingState />
-                    ) : modelsError ? (
-                        <ModelsErrorState error={modelsError} onRetry={() => refetch()} />
-                    ) : (
-                        <div className='space-y-6'>
-                            {AGENT_CONFIGS.map((agent) => {
-                                const modelId = selectedModels[agent.id];
-                                const modelData = getModelDisplay(modelId, models);
+                        {/* Models Tab */}
+                        <TabsContent value='models'>
+                            <p className='text-muted-foreground mb-8'>
+                                בחר את המודל עבור כל סוכן. שינויים נכנסים לתוקף מיידית.
+                            </p>
 
-                                return (
-                                    <div
-                                        key={agent.id}
-                                        className='bg-background/80 rounded-lg border p-4 backdrop-blur-sm'
-                                    >
-                                        <h2 className='mb-3 flex items-center gap-2 text-lg font-semibold'>
-                                            <agent.icon className='size-5' />
-                                            {agent.label}
-                                        </h2>
-                                        <Button
-                                            dir='ltr'
-                                            variant='outline'
-                                            className='h-auto w-full flex-col items-start gap-0 px-3 py-2.5 !font-normal'
-                                            onClick={() => setOpenDialog(agent.id)}
-                                        >
-                                            <span className='flex w-full items-center gap-1.5'>
-                                                <ModelSelectorLogo
-                                                    provider={modelData.providerSlug}
-                                                    className='shrink-0'
+                            {isModelsLoading ? (
+                                <ModelsLoadingState />
+                            ) : modelsError ? (
+                                <ModelsErrorState error={modelsError} onRetry={() => refetch()} />
+                            ) : (
+                                <div className='space-y-6'>
+                                    {AGENT_CONFIGS.map((agent) => {
+                                        const modelId = selectedModels[agent.id];
+                                        const modelData = getModelDisplay(modelId, models);
+
+                                        return (
+                                            <div
+                                                key={agent.id}
+                                                className='bg-background/80 rounded-lg border p-4 backdrop-blur-sm'
+                                            >
+                                                <h2 className='mb-3 flex items-center gap-2 text-lg font-semibold'>
+                                                    <agent.icon className='size-5' />
+                                                    {agent.label}
+                                                </h2>
+                                                <Button
+                                                    dir='ltr'
+                                                    variant='outline'
+                                                    className='h-auto w-full flex-col items-start gap-0 px-3 py-2.5 !font-normal'
+                                                    onClick={() => setOpenDialog(agent.id)}
+                                                >
+                                                    <span className='flex w-full items-center gap-1.5'>
+                                                        <ModelSelectorLogo
+                                                            provider={modelData.providerSlug}
+                                                            className='shrink-0'
+                                                        />
+                                                        <span className='min-w-0 truncate'>{modelData.name}</span>
+                                                        <ChevronDown className='ml-auto size-4 shrink-0 opacity-50' />
+                                                    </span>
+                                                    <ModelPriceDisplay
+                                                        inputPrice={modelData.inputPrice}
+                                                        outputPrice={modelData.outputPrice}
+                                                        className='mt-1'
+                                                    />
+                                                </Button>
+                                                <ModelPickerDialog
+                                                    open={openDialog === agent.id}
+                                                    onOpenChange={(open) => setOpenDialog(open ? agent.id : null)}
+                                                    models={models}
+                                                    selectedModelId={modelId}
+                                                    onSelect={(id) => handleModelPicked(agent.id, id)}
+                                                    title={`Select model — ${agent.dialogTitle}`}
+                                                    showPrices
                                                 />
-                                                <span className='min-w-0 truncate'>{modelData.name}</span>
-                                                <ChevronDown className='ml-auto size-4 shrink-0 opacity-50' />
-                                            </span>
-                                            <ModelPriceDisplay
-                                                inputPrice={modelData.inputPrice}
-                                                outputPrice={modelData.outputPrice}
-                                                className='mt-1'
-                                            />
-                                        </Button>
-                                        <ModelPickerDialog
-                                            open={openDialog === agent.id}
-                                            onOpenChange={(open) => setOpenDialog(open ? agent.id : null)}
-                                            models={models}
-                                            selectedModelId={modelId}
-                                            onSelect={(id) => handleModelPicked(agent.id, id)}
-                                            title={`Select model — ${agent.dialogTitle}`}
-                                            showPrices
-                                        />
-                                    </div>
-                                );
-                            })}
-                        </div>
-                    )}
-                    <ConfirmModelChangeDialog
-                        pendingChange={pendingChange}
-                        selectedModels={selectedModels}
-                        models={models}
-                        onConfirm={handleConfirmChange}
-                        onCancel={() => setPendingChange(null)}
-                    />
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            )}
+                            <ConfirmModelChangeDialog
+                                pendingChange={pendingChange}
+                                selectedModels={selectedModels}
+                                models={models}
+                                onConfirm={handleConfirmChange}
+                                onCancel={() => setPendingChange(null)}
+                            />
+                        </TabsContent>
+
+                        {/* Analytics Tab */}
+                        <TabsContent value='analytics'>
+                            <AnalyticsDashboard />
+                        </TabsContent>
+                    </Tabs>
+                    </DirectionProvider>
                 </div>
             </div>
         </div>

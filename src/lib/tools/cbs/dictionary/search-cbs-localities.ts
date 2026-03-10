@@ -4,7 +4,7 @@
  * AI SDK tool for searching Israeli localities from the CBS dictionary
  */
 
-import { tool } from 'ai';
+import { createTool } from '@mastra/core/tools';
 import { z } from 'zod';
 import { cbsApi } from '@/lib/api/cbs/client';
 import { buildDictionaryUrl } from '@/lib/api/cbs/endpoints';
@@ -62,7 +62,8 @@ export type SearchCbsLocalitiesOutput = z.infer<typeof searchCbsLocalitiesOutput
 // Tool Definition
 // ============================================================================
 
-export const searchCbsLocalities = tool({
+export const searchCbsLocalities = createTool({
+    id: 'searchCbsLocalities',
     description:
         'Search Israeli localities (cities, towns, villages) from the CBS dictionary. Returns name, district, region, population, and other demographic data. Use for questions about Israeli cities and settlements.',
     inputSchema: searchCbsLocalitiesInputSchema,

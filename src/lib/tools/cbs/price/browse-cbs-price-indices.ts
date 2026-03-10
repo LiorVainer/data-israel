@@ -4,7 +4,7 @@
  * AI SDK tool for browsing CBS price index catalog (chapters, topics, index codes)
  */
 
-import { tool } from 'ai';
+import { createTool } from '@mastra/core/tools';
 import { z } from 'zod';
 import { cbsApi } from '@/lib/api/cbs/client';
 import { buildPriceIndexUrl, CBS_PRICE_INDEX_PATHS } from '@/lib/api/cbs/endpoints';
@@ -59,7 +59,8 @@ export type BrowseCbsPriceIndicesOutput = z.infer<typeof browseCbsPriceIndicesOu
 // Tool Definition
 // ============================================================================
 
-export const browseCbsPriceIndices = tool({
+export const browseCbsPriceIndices = createTool({
+    id: 'browseCbsPriceIndices',
     description:
         'Browse CBS price index catalog. Start with mode "chapters" to see main categories (CPI, housing, food, etc.), then "topics" to drill into a chapter, then "indices" to get specific index codes. Use index codes with getCbsPriceData.',
     inputSchema: browseCbsPriceIndicesInputSchema,

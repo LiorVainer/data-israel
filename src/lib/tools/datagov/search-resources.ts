@@ -5,7 +5,7 @@
  * Falls back to CKAN API if Convex is unavailable or empty
  */
 
-import { tool } from 'ai';
+import { createTool } from '@mastra/core/tools';
 import { z } from 'zod';
 import { convexClient, api } from '@/lib/convex/client';
 import { dataGovApi } from '@/lib/api/data-gov/client';
@@ -63,7 +63,8 @@ export type SearchResourcesOutput = z.infer<typeof searchResourcesOutputSchema>;
 /** Minimum RAG score to consider a result relevant */
 const RAG_MIN_SCORE = 0.5;
 
-export const searchResources = tool({
+export const searchResources = createTool({
+    id: 'searchResources',
     description:
         'Search for resources (files) on data.gov.il. Use short 1-2 keyword queries for best results. Returns matching resources ranked by relevance.',
     inputSchema: searchResourcesInputSchema,

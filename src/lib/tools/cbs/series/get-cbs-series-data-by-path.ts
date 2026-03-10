@@ -4,7 +4,7 @@
  * AI SDK tool for retrieving CBS time series data by catalog path
  */
 
-import { tool } from 'ai';
+import { createTool } from '@mastra/core/tools';
 import { z } from 'zod';
 import { cbsApi } from '@/lib/api/cbs/client';
 import { buildSeriesUrl, CBS_SERIES_PATHS } from '@/lib/api/cbs/endpoints';
@@ -70,7 +70,8 @@ export type GetCbsSeriesDataByPathOutput = z.infer<typeof getCbsSeriesDataByPath
 // Tool Definition
 // ============================================================================
 
-export const getCbsSeriesDataByPath = tool({
+export const getCbsSeriesDataByPath = createTool({
+    id: 'getCbsSeriesDataByPath',
     description:
         'Get CBS time series data for all series under a specific catalog path. Returns multiple series with their observations. Use after browsing the catalog to find a path. Supports date range filtering.',
     inputSchema: getCbsSeriesDataByPathInputSchema,

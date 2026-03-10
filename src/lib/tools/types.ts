@@ -5,11 +5,23 @@
  * The ToolIOMap is auto-derived from tool objects — no manual synchronization needed.
  */
 
-import type { InferToolInput, InferToolOutput } from 'ai';
+import type { Tool } from '@mastra/core/tools';
 import type { ClientTools } from './client';
 import type { DataGovTools } from './datagov';
 import type { CbsTools } from './cbs';
 import type { agents } from '@/agents/mastra';
+
+// ============================================================================
+// Mastra Tool Type Inference Utilities
+// ============================================================================
+
+/** Extract the input type from a Mastra Tool instance */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type InferMastraToolInput<T> = T extends Tool<infer TIn, any, any, any, any, any, any> ? TIn : never;
+
+/** Extract the output type from a Mastra Tool instance */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type InferMastraToolOutput<T> = T extends Tool<any, infer TOut, any, any, any, any, any> ? TOut : never;
 
 // ============================================================================
 // Individual Type Re-exports
@@ -92,11 +104,11 @@ export type { GenerateCbsSourceUrlInput, GenerateCbsSourceUrlOutput } from './cb
 /** All tool objects combined — source of truth for tool names and schemas */
 type AllToolObjects = typeof ClientTools & typeof DataGovTools & typeof CbsTools;
 
-/** ToolIOMap for regular tools: input/output inferred from Zod schemas */
+/** ToolIOMap for regular tools: input/output inferred from Mastra Tool generics */
 type DerivedToolIOMap = {
     [K in keyof AllToolObjects]: {
-        input: InferToolInput<AllToolObjects[K]>;
-        output: InferToolOutput<AllToolObjects[K]>;
+        input: InferMastraToolInput<AllToolObjects[K]>;
+        output: InferMastraToolOutput<AllToolObjects[K]>;
     };
 };
 

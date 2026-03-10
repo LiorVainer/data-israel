@@ -4,7 +4,7 @@
  * AI SDK tool for listing dataset publishers and categories (groups)
  */
 
-import { tool } from 'ai';
+import { createTool } from '@mastra/core/tools';
 import { z } from 'zod';
 import { dataGovApi } from '@/lib/api/data-gov/client';
 import { DATAGOV_ENDPOINTS, buildDataGovUrl } from '@/lib/api/data-gov/endpoints';
@@ -45,7 +45,8 @@ export type ListGroupsOutput = z.infer<typeof listGroupsOutputSchema>;
 // Tool Definition
 // ============================================================================
 
-export const listGroups = tool({
+export const listGroups = createTool({
+    id: 'listGroups',
     description:
         'List dataset publishers and categories (groups). Use when user asks which organizations publish data or what categories are available.',
     inputSchema: listGroupsInputSchema,

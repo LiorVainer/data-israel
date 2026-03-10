@@ -4,7 +4,7 @@
  * AI SDK tool for retrieving the metadata schema for datasets
  */
 
-import { tool } from 'ai';
+import { createTool } from '@mastra/core/tools';
 import { z } from 'zod';
 import { dataGovApi } from '@/lib/api/data-gov/client';
 import { DATAGOV_ENDPOINTS, buildDataGovUrl } from '@/lib/api/data-gov/endpoints';
@@ -62,7 +62,8 @@ export type GetDatasetSchemaOutput = z.infer<typeof getDatasetSchemaOutputSchema
 // Tool Definition
 // ============================================================================
 
-export const getDatasetSchema = tool({
+export const getDatasetSchema = createTool({
+    id: 'getDatasetSchema',
     description:
         'Get the metadata schema for a dataset type. Use when user asks about the structure or fields available in datasets.',
     inputSchema: getDatasetSchemaInputSchema,

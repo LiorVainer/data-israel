@@ -4,7 +4,7 @@
  * AI SDK tool for browsing the CBS statistical catalog using a specific hierarchical path
  */
 
-import { tool } from 'ai';
+import { createTool } from '@mastra/core/tools';
 import { z } from 'zod';
 import { cbsApi } from '@/lib/api/cbs/client';
 import { CBS_SERIES_PATHS, buildSeriesUrl } from '@/lib/api/cbs/endpoints';
@@ -54,7 +54,8 @@ export type BrowseCbsCatalogPathOutput = z.infer<typeof browseCbsCatalogPathOutp
 // Tool Definition
 // ============================================================================
 
-export const browseCbsCatalogPath = tool({
+export const browseCbsCatalogPath = createTool({
+    id: 'browseCbsCatalogPath',
     description:
         'Browse the CBS catalog by a specific hierarchical path (e.g., "2,1,1,2,379"). Use this after discovering categories with browse-cbs-catalog to navigate directly to a known location in the catalog tree.',
     inputSchema: browseCbsCatalogPathInputSchema,

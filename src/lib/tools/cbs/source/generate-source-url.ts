@@ -5,7 +5,7 @@
  * so users can view the statistical data source directly.
  */
 
-import { tool } from 'ai';
+import { createTool } from '@mastra/core/tools';
 import { z } from 'zod';
 import {
     buildSeriesUrl,
@@ -38,7 +38,8 @@ export const generateCbsSourceUrlOutputSchema = z.discriminatedUnion('success', 
 export type GenerateCbsSourceUrlInput = z.infer<typeof generateCbsSourceUrlInputSchema>;
 export type GenerateCbsSourceUrlOutput = z.infer<typeof generateCbsSourceUrlOutputSchema>;
 
-export const generateCbsSourceUrl = tool({
+export const generateCbsSourceUrl = createTool({
+    id: 'generateCbsSourceUrl',
     description: 'Generate a CBS source URL so users can view the statistical data source.',
     inputSchema: generateCbsSourceUrlInputSchema,
     execute: async ({ sourceType, seriesId, indexId, query, title }) => {

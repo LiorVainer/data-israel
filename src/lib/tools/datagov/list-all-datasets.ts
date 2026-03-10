@@ -4,7 +4,7 @@
  * AI SDK tool for getting all dataset IDs on data.gov.il
  */
 
-import { tool } from 'ai';
+import { createTool } from '@mastra/core/tools';
 import { z } from 'zod';
 import { dataGovApi } from '@/lib/api/data-gov/client';
 import { DATAGOV_ENDPOINTS, buildDataGovUrl } from '@/lib/api/data-gov/endpoints';
@@ -42,7 +42,8 @@ export type ListAllDatasetsOutput = z.infer<typeof listAllDatasetsOutputSchema>;
 // Tool Definition
 // ============================================================================
 
-export const listAllDatasets = tool({
+export const listAllDatasets = createTool({
+    id: 'listAllDatasets',
     description:
         'Get a list of all dataset IDs (names) available on data.gov.il. Use when user needs a complete list of datasets or wants to know the total count.',
     inputSchema: listAllDatasetsInputSchema,

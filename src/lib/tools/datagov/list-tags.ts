@@ -4,7 +4,7 @@
  * AI SDK tool for listing all tags (keywords) used in datasets
  */
 
-import { tool } from 'ai';
+import { createTool } from '@mastra/core/tools';
 import { z } from 'zod';
 import { dataGovApi } from '@/lib/api/data-gov/client';
 import { DATAGOV_ENDPOINTS, buildDataGovUrl } from '@/lib/api/data-gov/endpoints';
@@ -43,7 +43,8 @@ export type ListTagsOutput = z.infer<typeof listTagsOutputSchema>;
 // Tool Definition
 // ============================================================================
 
-export const listTags = tool({
+export const listTags = createTool({
+    id: 'listTags',
     description:
         'List all tags (keywords) used in datasets. Use when user wants to explore available topics or search for tags.',
     inputSchema: listTagsInputSchema,

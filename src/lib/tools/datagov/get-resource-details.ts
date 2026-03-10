@@ -4,7 +4,7 @@
  * AI SDK tool for retrieving metadata about a specific resource
  */
 
-import { tool } from 'ai';
+import { createTool } from '@mastra/core/tools';
 import { z } from 'zod';
 import { dataGovApi } from '@/lib/api/data-gov/client';
 import { buildDataGovUrl, DATAGOV_ENDPOINTS } from '@/lib/api/data-gov/endpoints';
@@ -58,7 +58,8 @@ export type GetResourceDetailsOutput = z.infer<typeof getResourceDetailsOutputSc
 // Tool Definition
 // ============================================================================
 
-export const getResourceDetails = tool({
+export const getResourceDetails = createTool({
+    id: 'getResourceDetails',
     description:
         'Get detailed metadata for a specific resource (file). Use when user wants full information about a downloadable resource.',
     inputSchema: getResourceDetailsInputSchema,

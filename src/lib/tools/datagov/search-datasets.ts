@@ -5,7 +5,7 @@
  * Falls back to CKAN API if Convex is unavailable or empty
  */
 
-import { tool } from 'ai';
+import { createTool } from '@mastra/core/tools';
 import { z } from 'zod';
 import { convexClient, api } from '@/lib/convex/client';
 import { dataGovApi } from '@/lib/api/data-gov/client';
@@ -81,7 +81,8 @@ async function searchCkan(query: string, limit: number) {
     };
 }
 
-export const searchDatasets = tool({
+export const searchDatasets = createTool({
+    id: 'searchDatasets',
     description:
         'Search for datasets on data.gov.il. Use short 1-2 keyword queries for best results (e.g., "רכבת" not "נתוני דיוק רכבת ישראל"). Returns matching datasets ranked by relevance.',
     inputSchema: searchDatasetsInputSchema,

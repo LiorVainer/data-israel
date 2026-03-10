@@ -4,7 +4,7 @@
  * AI SDK tool for listing available dataset licenses
  */
 
-import { tool } from 'ai';
+import { createTool } from '@mastra/core/tools';
 import { z } from 'zod';
 import { dataGovApi } from '@/lib/api/data-gov/client';
 import { DATAGOV_ENDPOINTS, buildDataGovUrl } from '@/lib/api/data-gov/endpoints';
@@ -43,7 +43,8 @@ export type ListLicensesOutput = z.infer<typeof listLicensesOutputSchema>;
 // Tool Definition
 // ============================================================================
 
-export const listLicenses = tool({
+export const listLicenses = createTool({
+    id: 'listLicenses',
     description:
         'Get the list of licenses available for datasets on data.gov.il. Use when user asks about data licenses or usage rights.',
     inputSchema: listLicensesInputSchema,

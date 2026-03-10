@@ -4,7 +4,7 @@
  * AI SDK tool for querying tabular data within a DataStore resource
  */
 
-import { tool } from 'ai';
+import { createTool } from '@mastra/core/tools';
 import { z } from 'zod';
 import { QUERY_MAX_FIELDS } from '@/constants/tool-result-fields';
 import { dataGovApi } from '@/lib/api/data-gov/client';
@@ -71,7 +71,8 @@ export type QueryDatastoreResourceOutput = z.infer<typeof queryDatastoreResource
 // Tool Definition
 // ============================================================================
 
-export const queryDatastoreResource = tool({
+export const queryDatastoreResource = createTool({
+    id: 'queryDatastoreResource',
     description:
         'Query tabular data within a DataStore resource. Use when user wants to see actual data rows, filter data by column values, or explore the contents of a resource. Supports pagination, filtering, sorting, and partial word search for Hebrew.',
     inputSchema: queryDatastoreResourceInputSchema,

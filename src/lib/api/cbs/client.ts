@@ -16,6 +16,7 @@ import axios, { type AxiosInstance } from 'axios';
 import pLimit from 'p-limit';
 import { parseStringPromise } from 'xml2js';
 import { sleep } from '@/lib/utils/sleep';
+import { CBS_SERIES_BASE_URL, CBS_PRICE_INDEX_BASE_URL, CBS_DICTIONARY_BASE_URL } from './endpoints';
 import type {
     CbsCatalogLevelParams,
     CbsCatalogPathParams,
@@ -38,10 +39,6 @@ import type {
 // Axios Instances
 // ============================================================================
 
-const SERIES_BASE_URL = 'https://apis.cbs.gov.il/series';
-const PRICE_INDEX_BASE_URL = 'https://api.cbs.gov.il/index';
-const DICTIONARY_BASE_URL = 'https://api.cbs.gov.il/dictionary';
-
 const commonConfig = {
     timeout: 15000,
     headers: {
@@ -52,27 +49,27 @@ const commonConfig = {
 /** Axios instance for CBS Series Catalog API (returns JSON by default, breaks with format=json) */
 const seriesCatalogInstance = axios.create({
     ...commonConfig,
-    baseURL: SERIES_BASE_URL,
+    baseURL: CBS_SERIES_BASE_URL,
 });
 
 /** Axios instance for CBS Series Data API (requires format=json) */
 const seriesDataInstance = axios.create({
     ...commonConfig,
-    baseURL: SERIES_BASE_URL,
+    baseURL: CBS_SERIES_BASE_URL,
     params: { format: 'json', download: 'false' },
 });
 
 /** Axios instance for CBS Price Index API */
 const priceIndexInstance = axios.create({
     ...commonConfig,
-    baseURL: PRICE_INDEX_BASE_URL,
+    baseURL: CBS_PRICE_INDEX_BASE_URL,
     params: { format: 'json', download: 'false' },
 });
 
 /** Axios instance for CBS Dictionary API */
 const dictionaryInstance = axios.create({
     ...commonConfig,
-    baseURL: DICTIONARY_BASE_URL,
+    baseURL: CBS_DICTIONARY_BASE_URL,
     params: { format: 'json', download: 'false' },
 });
 

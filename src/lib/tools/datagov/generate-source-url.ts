@@ -5,7 +5,7 @@
  * directly on data.gov.il in their browser.
  */
 
-import { tool } from 'ai';
+import { createTool } from '@mastra/core/tools';
 import { z } from 'zod';
 import { buildDatasetPortalUrl, buildResourcePortalUrl } from '@/constants/datagov-urls';
 
@@ -31,7 +31,8 @@ export const generateDataGovSourceUrlOutputSchema = z.discriminatedUnion('succes
 export type GenerateDataGovSourceUrlInput = z.infer<typeof generateDataGovSourceUrlInputSchema>;
 export type GenerateDataGovSourceUrlOutput = z.infer<typeof generateDataGovSourceUrlOutputSchema>;
 
-export const generateDataGovSourceUrl = tool({
+export const generateDataGovSourceUrl = createTool({
+    id: 'generateDataGovSourceUrl',
     description: 'Generate a clickable data.gov.il portal URL so users can view dataset data in a browser table.',
     inputSchema: generateDataGovSourceUrlInputSchema,
     execute: async ({ orgName, datasetName, resourceId, title }) => {

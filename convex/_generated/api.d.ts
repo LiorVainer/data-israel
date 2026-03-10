@@ -9,6 +9,7 @@
  */
 
 import type * as aiModels from "../aiModels.js";
+import type * as analytics from "../analytics.js";
 import type * as datasets from "../datasets.js";
 import type * as guests from "../guests.js";
 import type * as http from "../http.js";
@@ -30,6 +31,7 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   aiModels: typeof aiModels;
+  analytics: typeof analytics;
   datasets: typeof datasets;
   guests: typeof guests;
   http: typeof http;

@@ -5,7 +5,7 @@
  * Each tool has its own schema specific to that chart type.
  */
 
-import { tool } from 'ai';
+import { createTool } from '@mastra/core/tools';
 import { z } from 'zod';
 import { CHART_MAX_DATA_POINTS } from '@/constants/tool-result-fields';
 
@@ -67,7 +67,8 @@ export const displayBarChartOutputSchema = z.object({
 export type DisplayBarChartInput = z.infer<typeof displayBarChartInputSchema>;
 export type DisplayBarChartOutput = z.infer<typeof displayBarChartOutputSchema>;
 
-export const displayBarChart = tool({
+export const displayBarChart = createTool({
+    id: 'displayBarChart',
     description: `Display data as a bar chart for comparing values across categories.
 
 Use bar charts for:
@@ -148,7 +149,8 @@ export const displayLineChartOutputSchema = z.object({
 export type DisplayLineChartInput = z.infer<typeof displayLineChartInputSchema>;
 export type DisplayLineChartOutput = z.infer<typeof displayLineChartOutputSchema>;
 
-export const displayLineChart = tool({
+export const displayLineChart = createTool({
+    id: 'displayLineChart',
     description: `Display data as a line chart for showing trends over time or sequences.
 
 Use line charts for:
@@ -216,7 +218,8 @@ export const displayPieChartOutputSchema = z.object({
 export type DisplayPieChartInput = z.infer<typeof displayPieChartInputSchema>;
 export type DisplayPieChartOutput = z.infer<typeof displayPieChartOutputSchema>;
 
-export const displayPieChart = tool({
+export const displayPieChart = createTool({
+    id: 'displayPieChart',
     description: `Display data as a pie chart for showing part-of-whole distributions.
 
 Use pie charts for:

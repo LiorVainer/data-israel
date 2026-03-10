@@ -4,7 +4,7 @@
  * AI SDK tool for retrieving activity stream of a dataset
  */
 
-import { tool } from 'ai';
+import { createTool } from '@mastra/core/tools';
 import { z } from 'zod';
 import { dataGovApi } from '@/lib/api/data-gov/client';
 import { buildDataGovUrl, DATAGOV_ENDPOINTS } from '@/lib/api/data-gov/endpoints';
@@ -49,7 +49,8 @@ export type GetDatasetActivityOutput = z.infer<typeof getDatasetActivityOutputSc
 // Tool Definition
 // ============================================================================
 
-export const getDatasetActivity = tool({
+export const getDatasetActivity = createTool({
+    id: 'getDatasetActivity',
     description:
         'Get the activity stream (change history) of a specific dataset. Use when user wants to know about updates, modifications, or history of a dataset.',
     inputSchema: getDatasetActivityInputSchema,

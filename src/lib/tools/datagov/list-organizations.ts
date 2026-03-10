@@ -4,7 +4,7 @@
  * AI SDK tool for listing all organizations on data.gov.il
  */
 
-import { tool } from 'ai';
+import { createTool } from '@mastra/core/tools';
 import { z } from 'zod';
 import { dataGovApi } from '@/lib/api/data-gov/client';
 import { DATAGOV_ENDPOINTS, buildDataGovUrl } from '@/lib/api/data-gov/endpoints';
@@ -42,7 +42,8 @@ export type ListOrganizationsOutput = z.infer<typeof listOrganizationsOutputSche
 // Tool Definition
 // ============================================================================
 
-export const listOrganizations = tool({
+export const listOrganizations = createTool({
+    id: 'listOrganizations',
     description:
         'Get a list of all organization names on data.gov.il. Use when user asks which government bodies or organizations publish data.',
     inputSchema: listOrganizationsInputSchema,

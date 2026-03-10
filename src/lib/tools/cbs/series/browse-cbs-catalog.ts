@@ -4,7 +4,7 @@
  * AI SDK tool for browsing the CBS statistical catalog hierarchy
  */
 
-import { tool } from 'ai';
+import { createTool } from '@mastra/core/tools';
 import { z } from 'zod';
 import { cbsApi } from '@/lib/api/cbs/client';
 import { CBS_SERIES_PATHS, buildSeriesUrl } from '@/lib/api/cbs/endpoints';
@@ -64,7 +64,8 @@ export type BrowseCbsCatalogOutput = z.infer<typeof browseCbsCatalogOutputSchema
 // Tool Definition
 // ============================================================================
 
-export const browseCbsCatalog = tool({
+export const browseCbsCatalog = createTool({
+    id: 'browseCbsCatalog',
     description:
         'Browse the CBS (Central Bureau of Statistics) statistical catalog hierarchy. Start with level 1 to see top-level categories (e.g., population, economy, education), then drill into subcategories with higher levels. Use this to discover what statistical data series are available.',
     inputSchema: browseCbsCatalogInputSchema,

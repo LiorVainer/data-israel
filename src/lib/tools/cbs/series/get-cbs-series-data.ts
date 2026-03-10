@@ -4,7 +4,7 @@
  * AI SDK tool for retrieving CBS time series data by series ID
  */
 
-import { tool } from 'ai';
+import { createTool } from '@mastra/core/tools';
 import { z } from 'zod';
 import { cbsApi } from '@/lib/api/cbs/client';
 import { buildSeriesUrl, CBS_SERIES_PATHS } from '@/lib/api/cbs/endpoints';
@@ -64,7 +64,8 @@ export type GetCbsSeriesDataOutput = z.infer<typeof getCbsSeriesDataOutputSchema
 // Tool Definition
 // ============================================================================
 
-export const getCbsSeriesData = tool({
+export const getCbsSeriesData = createTool({
+    id: 'getCbsSeriesData',
     description:
         'Get CBS time series data points for a specific series ID. Returns historical values with dates. Use after browsing the catalog to find a series code. Supports date range filtering and fetching latest N entries.',
     inputSchema: getCbsSeriesDataInputSchema,

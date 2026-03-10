@@ -4,7 +4,7 @@
  * AI SDK tool for retrieving CKAN system status and version information
  */
 
-import { tool } from 'ai';
+import { createTool } from '@mastra/core/tools';
 import { z } from 'zod';
 import { dataGovApi } from '@/lib/api/data-gov/client';
 import { DATAGOV_ENDPOINTS, buildDataGovUrl } from '@/lib/api/data-gov/endpoints';
@@ -41,7 +41,8 @@ export type GetStatusOutput = z.infer<typeof getStatusOutputSchema>;
 // Tool Definition
 // ============================================================================
 
-export const getStatus = tool({
+export const getStatus = createTool({
+    id: 'getStatus',
     description:
         'Get the CKAN version and list of installed extensions. Use when user asks about the data portal capabilities or system information.',
     inputSchema: getStatusInputSchema,

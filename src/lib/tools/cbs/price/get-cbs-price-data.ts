@@ -4,7 +4,7 @@
  * AI SDK tool for retrieving CBS price index values
  */
 
-import { tool } from 'ai';
+import { createTool } from '@mastra/core/tools';
 import { z } from 'zod';
 import { cbsApi } from '@/lib/api/cbs/client';
 import { buildPriceIndexUrl, CBS_PRICE_INDEX_PATHS } from '@/lib/api/cbs/endpoints';
@@ -66,7 +66,8 @@ export type GetCbsPriceDataOutput = z.infer<typeof getCbsPriceDataOutputSchema>;
 // Tool Definition
 // ============================================================================
 
-export const getCbsPriceData = tool({
+export const getCbsPriceData = createTool({
+    id: 'getCbsPriceData',
     description:
         'Get CBS price index values over time. Returns historical index values with dates and percentage changes. Use after browsing price indices to get an index code.',
     inputSchema: getCbsPriceDataInputSchema,

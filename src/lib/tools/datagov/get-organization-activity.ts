@@ -4,7 +4,7 @@
  * AI SDK tool for retrieving activity stream of an organization
  */
 
-import { tool } from 'ai';
+import { createTool } from '@mastra/core/tools';
 import { z } from 'zod';
 import { dataGovApi } from '@/lib/api/data-gov/client';
 import { buildDataGovUrl, DATAGOV_ENDPOINTS } from '@/lib/api/data-gov/endpoints';
@@ -51,7 +51,8 @@ export type GetOrganizationActivityOutput = z.infer<typeof getOrganizationActivi
 // Tool Definition
 // ============================================================================
 
-export const getOrganizationActivity = tool({
+export const getOrganizationActivity = createTool({
+    id: 'getOrganizationActivity',
     description:
         'Get the activity stream (change history) of a specific organization. Use when user wants to know about recent updates or activities by an organization.',
     inputSchema: getOrganizationActivityInputSchema,

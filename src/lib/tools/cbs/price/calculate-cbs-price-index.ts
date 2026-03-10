@@ -4,7 +4,7 @@
  * AI SDK tool for CPI/index-based adjustment calculations
  */
 
-import { tool } from 'ai';
+import { createTool } from '@mastra/core/tools';
 import { z } from 'zod';
 import { cbsApi } from '@/lib/api/cbs/client';
 import { buildCalculatorUrl } from '@/lib/api/cbs/endpoints';
@@ -53,7 +53,8 @@ export type CalculateCbsPriceIndexOutput = z.infer<typeof calculateCbsPriceIndex
 // Tool Definition
 // ============================================================================
 
-export const calculateCbsPriceIndex = tool({
+export const calculateCbsPriceIndex = createTool({
+    id: 'calculateCbsPriceIndex',
     description:
         'Calculate CPI/price index adjustment between two dates. Use to answer questions like "how much would 100,000 NIS from 2015 be worth today?" or "what is the inflation rate between two dates?"',
     inputSchema: calculateCbsPriceIndexInputSchema,

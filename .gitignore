@@ -53,3 +53,5 @@ mastra.db-wal
 /.clerk/
 
 certificates
+
+.mastra
