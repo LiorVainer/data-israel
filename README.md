@@ -24,8 +24,8 @@ This is not "just another AI chat". The agent:
 
 - **Connects live** to data.gov.il and CBS APIs -- every answer comes from real API calls, not hallucination
 - **Multi-agent network** with specialized sub-agents that autonomously search, cross-reference, and summarize data
-- **Transparent reasoning** -- see exactly which tools each agent calls, with live progress and colored status chips
-- **Context window tracking** -- a usage bar per thread shows how much context has been consumed
+- **Transparent reasoning** - see exactly which tools each agent calls, with live progress and colored status chips
+- **Context window tracking** - a usage bar per thread shows how much context has been consumed
 - **Preserves conversation history** so you can compare, revisit, and go deeper
 - **Supports Google sign-in** for a continuous personal experience
 - **Speaks Hebrew natively** with full RTL interface
