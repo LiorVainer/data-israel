@@ -24,7 +24,6 @@ const LINKS = [
 export function ContactSection() {
     return (
         <section className='w-full max-w-4xl mx-auto px-4'>
-            <div className='mx-auto mb-24 h-px w-2/3 bg-border/30' />
             <motion.div
                 initial={{ opacity: 0, y: 15 }}
                 whileInView={{ opacity: 1, y: 0 }}

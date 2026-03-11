@@ -41,10 +41,10 @@ export default function Home() {
                     target='_blank'
                     rel='noopener noreferrer'
                     dir='ltr'
-                    className='absolute top-4 left-4 z-20 text-muted-foreground hover:text-foreground transition-colors'
+                    className='absolute top-4 left-4 md:top-5 md:left-5 z-20 text-muted-foreground hover:text-foreground transition-colors'
                     aria-label='GitHub'
                 >
-                    <Github className='w-6 h-6' />
+                    <Github className='size-5' />
                 </a>
                 {/* Hero glows */}
                 <AmbientGlow top='15%' left='15%' size={glowSize} />
@@ -88,7 +88,7 @@ export default function Home() {
             </div>
 
             {/* Below-the-fold sections — reduced top padding for smooth hero→about flow */}
-            <div className='z-10 flex flex-col py-40 md:pb-36 gap-32 md:gap-40 overflow-clip'>
+            <div className='z-10 flex flex-col pt-40 pb-16 md:pb-40 gap-32 md:gap-40 overflow-clip'>
                 <div className='relative overflow-visible'>
                     <AmbientGlow top='30%' left='20%' size={glowSizeSm} />
                     <AboutSection />

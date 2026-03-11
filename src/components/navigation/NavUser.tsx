@@ -115,7 +115,7 @@ export function NavUser() {
                                     {/*    חשבון*/}
                                     {/*</DropdownMenuItem>*/}
                                     {isAdmin && (
-                                        <DropdownMenuItem className='cursor-pointer' asChild>
+                                        <DropdownMenuItem className='cursor-pointer' asChild onClick={closeSidebar}>
                                             <Link href='/admin'>
                                                 <Settings />
                                                 פאנל ניהול
