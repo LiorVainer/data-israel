@@ -4,12 +4,13 @@ import { useCallback, useRef } from 'react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
-import { ChevronDown } from 'lucide-react';
+import { ChevronDown, Github } from 'lucide-react';
 import { StarsBackground } from '@/components/animate-ui/components/backgrounds/stars';
 import { HeroSection } from '@/components/chat/HeroSection';
 import { SourcesSection } from '@/components/landing/SourcesSection';
 import { HowItWorksSection } from '@/components/landing/HowItWorksSection';
 import { AboutSection } from '@/components/landing/AboutSection';
+import { ContactSection } from '@/components/landing/ContactSection';
 import { Footer } from '@/components/landing/Footer';
 import { ScrollToTop } from '@/components/ui/ScrollToTop';
 import { AmbientGlow } from '@/components/ui/AmbientGlow';
@@ -33,6 +34,18 @@ export default function Home() {
 
     return (
         <div ref={scrollRef} className='h-full w-full overflow-y-auto overflow-x-clip'>
+            {/* GitHub link — top left corner */}
+            <a
+                href='https://github.com/LiorVainer/data-israel'
+                target='_blank'
+                rel='noopener noreferrer'
+                dir='ltr'
+                className='fixed top-4 left-4 z-50 rounded-full border border-border/40 bg-card/60 backdrop-blur-sm p-2.5 text-muted-foreground hover:text-foreground hover:border-primary/30 transition-colors'
+                aria-label='GitHub'
+            >
+                <Github className='w-5 h-5' />
+            </a>
+
             <div className='relative flex min-h-dvh flex-col items-center justify-center px-4 md:px-0'>
                 {/* Hero glows */}
                 <AmbientGlow top='15%' left='15%' size={glowSize} />
@@ -95,6 +108,12 @@ export default function Home() {
                     <AmbientGlow top='75%' left='20%' size={glowSizeSm} />
                     <HowItWorksSection />
                 </div>
+            </div>
+
+            {/* Contact section */}
+            <div className='relative overflow-visible pb-32'>
+                <AmbientGlow top='50%' left='50%' size={glowSizeSm} />
+                <ContactSection />
             </div>
 
             <Footer />
