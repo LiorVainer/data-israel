@@ -73,8 +73,8 @@ function DashboardSkeleton({ isMobile }: { isMobile: boolean }) {
             {/* KPI cards skeleton */}
             <section>
                 <Skeleton className='mb-3 h-4 w-28' />
-                <div className={`grid ${isMobile ? 'grid-cols-2 gap-2' : 'grid-cols-4 gap-4'}`}>
-                    {Array.from({ length: 4 }).map((_, i) => (
+                <div className={`grid ${isMobile ? 'grid-cols-2 gap-2' : 'grid-cols-5 gap-4'}`}>
+                    {Array.from({ length: 5 }).map((_, i) => (
                         <div key={i} className='rounded-lg border bg-card p-4'>
                             <Skeleton className='mb-2 h-3 w-20' />
                             <Skeleton className='h-7 w-16' />
@@ -162,8 +162,9 @@ export function AnalyticsDashboard() {
                     {/* Section A: Top-level KPI row */}
                     <section aria-label='מדדים עיקריים'>
                         <h2 className='mb-3 text-sm font-medium text-muted-foreground'>מדדים עיקריים</h2>
-                        <div className={`grid ${isMobile ? 'grid-cols-2 gap-2' : 'grid-cols-4 gap-4'}`}>
+                        <div className={`grid ${isMobile ? 'grid-cols-2 gap-2' : 'grid-cols-5 gap-4'}`}>
                             <StatCard label='סה״כ שיחות' value={stats.totalThreads} />
+                            <StatCard label='שיחות ריקות' value={stats.emptyThreads} />
                             <StatCard label='סה״כ הודעות' value={stats.totalMessages} />
                             <StatCard label='משתמשים פעילים' value={stats.uniqueActiveUsers} />
                             <StatCard label='ממוצע הודעות לשיחה' value={stats.avgMessagesPerThread.toFixed(1)} />

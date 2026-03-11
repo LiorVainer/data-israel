@@ -110,6 +110,7 @@ function isMainThread(thread: Record<string, unknown>): boolean {
 
 export interface OverviewStats {
     totalThreads: number;
+    emptyThreads: number;
     totalMessages: number;
     uniqueActiveUsers: number;
     totalRegisteredUsers: number;
@@ -142,12 +143,13 @@ export const getOverviewStats = query({
                 : await ctx.db.query('mastra_threads').collect();
 
         const threads = allThreads.filter(isMainThread);
+        const totalThreads = threads.length;
 
         // --- Count messages from thread_usage (lightweight) instead of mastra_messages ---
         // mastra_messages has huge content fields that exceed Convex's 16MB read limit.
         // thread_usage has one small record per agent turn ≈ one user message.
-        // Only count threads that have at least 1 message (skip abandoned/empty threads).
         let totalMessages = 0;
+        let emptyThreads = 0;
         const messagesByResourceId = new Map<string, number>();
         const activeThreads: typeof threads = [];
 
@@ -162,13 +164,13 @@ export const getOverviewStats = query({
                 totalMessages += turnCount;
                 const prev = messagesByResourceId.get(thread.resourceId) ?? 0;
                 messagesByResourceId.set(thread.resourceId, prev + turnCount);
+            } else {
+                emptyThreads++;
             }
         }
 
-        const totalThreads = activeThreads.length;
-
-        // --- Unique active users (distinct resourceId across active threads) ---
-        const activeResourceIds = new Set(activeThreads.map((t) => t.resourceId));
+        // --- Unique active users (distinct resourceId across ALL threads, including empty) ---
+        const activeResourceIds = new Set(threads.map((t) => t.resourceId));
         const uniqueActiveUsers = activeResourceIds.size;
 
         // --- Total registered users & guests (all-time counts) ---
@@ -235,10 +237,12 @@ export const getOverviewStats = query({
             registeredActiveIds.size > 0 ? Math.round((registeredMsgSum / registeredActiveIds.size) * 10) / 10 : 0;
         const avgMessagesPerGuest =
             guestActiveIds.size > 0 ? Math.round((guestMsgSum / guestActiveIds.size) * 10) / 10 : 0;
-        const avgMessagesPerThread = totalThreads > 0 ? Math.round((totalMessages / totalThreads) * 10) / 10 : 0;
+        const activeThreadCount = activeThreads.length;
+        const avgMessagesPerThread = activeThreadCount > 0 ? Math.round((totalMessages / activeThreadCount) * 10) / 10 : 0;
 
         return {
             totalThreads,
+            emptyThreads,
             totalMessages,
             uniqueActiveUsers,
             totalRegisteredUsers,
