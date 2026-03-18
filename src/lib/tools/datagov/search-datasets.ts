@@ -18,13 +18,17 @@ import { DATAGOV_ENDPOINTS, buildDataGovUrl } from '@/lib/api/data-gov/endpoints
 export const searchDatasetsInputSchema = z.object({
     query: z
         .string()
-        .describe('Search query — use 1-2 short keywords for best results (e.g., "רכבת", "חינוך", "תחבורה"). Avoid long phrases.'),
+        .describe(
+            'Search query — use 1-2 short keywords for best results (e.g., "רכבת", "חינוך", "תחבורה"). Avoid long phrases.',
+        ),
     organization: z.string().optional().describe('Filter by organization ID'),
     tag: z.string().optional().describe('Filter by tag name'),
     limit: z.number().int().min(1).max(100).optional().describe('Number of results to return (default 10)'),
     searchedResourceName: z
         .string()
-        .describe('Hebrew label describing what is being searched (e.g., "מאגרי תחבורה", "נתוני בריאות"). Shown in UI as chip label.'),
+        .describe(
+            'Hebrew label describing what is being searched (e.g., "מאגרי תחבורה", "נתוני בריאות"). Shown in UI as chip label.',
+        ),
 });
 
 export const searchDatasetsOutputSchema = z.discriminatedUnion('success', [
@@ -69,9 +73,11 @@ async function searchCkan(query: string, limit: number) {
         rows: limit,
         start: 0,
     });
+    // Defensive: API may return malformed response without results array
+    const results = Array.isArray(result?.results) ? result.results : [];
     return {
-        count: result.count,
-        datasets: result.results.map((d) => ({
+        count: result?.count ?? 0,
+        datasets: results.map((d) => ({
             id: d.id,
             title: d.title,
             organization: d.organization?.title || 'Unknown',
@@ -108,14 +114,11 @@ export const searchDatasets = createTool({
         // Collect RAG results (only those above minimum score)
         const ragDatasets =
             ragResult.status === 'fulfilled' && ragResult.value.success
-                ? ragResult.value.datasets.filter(
-                      (d: { score?: number }) => (d.score ?? 0) >= RAG_MIN_SCORE,
-                  )
+                ? ragResult.value.datasets.filter((d: { score?: number }) => (d.score ?? 0) >= RAG_MIN_SCORE)
                 : [];
 
         // Collect CKAN results
-        const ckanDatasets =
-            ckanResult.status === 'fulfilled' ? ckanResult.value.datasets : [];
+        const ckanDatasets = ckanResult.status === 'fulfilled' ? ckanResult.value.datasets : [];
 
         // Merge: deduplicate by dataset ID, preferring CKAN (more complete data)
         const seenIds = new Set<string>();

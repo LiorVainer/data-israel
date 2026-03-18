@@ -454,7 +454,20 @@ export async function POST(req: Request) {
                     if (!streamContext || !threadId) return;
 
                     const streamId = generateId();
-                    await streamContext.createNewResumableStream(streamId, () => sseStream);
+                    // Wrap in Promise to catch Redis-level rejections (e.g. max request size)
+                    // that fire inside the redis client before our try/catch can intercept.
+                    await Promise.resolve(streamContext.createNewResumableStream(streamId, () => sseStream)).catch(
+                        (err: unknown) => {
+                            const msg = err instanceof Error ? err.message : String(err);
+                            if (msg.includes('max request size exceeded')) {
+                                console.warn(
+                                    '[resumable-stream] Stream too large for Redis storage, skipping resumable save',
+                                );
+                            } else {
+                                throw err;
+                            }
+                        },
+                    );
                     await setActiveStreamId(threadId, streamId);
                 } catch (error: unknown) {
                     // Silently handle Redis size limit errors — stream still works for the

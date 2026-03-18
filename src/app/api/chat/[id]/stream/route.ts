@@ -10,7 +10,10 @@
 
 import { UI_MESSAGE_STREAM_HEADERS } from 'ai';
 import { after } from 'next/server';
-import { getResumableStreamContext, getActiveStreamId } from '@/lib/redis/resumable-stream';
+import { getResumableStreamContext, getActiveStreamId, clearActiveStreamId } from '@/lib/redis/resumable-stream';
+
+/** Max time to wait for stream resume before returning 204 (15 seconds). */
+const RESUME_TIMEOUT_MS = 15_000;
 
 export async function GET(_req: Request, { params }: { params: Promise<{ id: string }> }) {
     const { id } = await params;
@@ -26,8 +29,16 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
         return new Response(null, { status: 204 });
     }
 
-    const stream = await streamContext.resumeExistingStream(activeStreamId);
+    // Wrap resumeExistingStream with a timeout to prevent hanging when
+    // the stream data has expired in Redis but the active stream ID still exists.
+    const stream = await Promise.race([
+        streamContext.resumeExistingStream(activeStreamId),
+        new Promise<null>((resolve) => setTimeout(() => resolve(null), RESUME_TIMEOUT_MS)),
+    ]);
+
     if (!stream) {
+        // Clean up stale active stream ID so subsequent requests don't retry
+        void clearActiveStreamId(id);
         return new Response(null, { status: 204 });
     }
 

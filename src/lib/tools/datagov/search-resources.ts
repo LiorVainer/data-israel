@@ -24,7 +24,9 @@ export const searchResourcesInputSchema = z.object({
     limit: z.number().int().min(1).max(100).optional().describe('Maximum number of resources to return (default 10)'),
     searchedResourceName: z
         .string()
-        .describe('Hebrew label describing what is being searched (e.g., "קבצי CSV", "נתוני חינוך"). Shown in UI as chip label.'),
+        .describe(
+            'Hebrew label describing what is being searched (e.g., "קבצי CSV", "נתוני חינוך"). Shown in UI as chip label.',
+        ),
 });
 
 export const searchResourcesOutputSchema = z.discriminatedUnion('success', [
@@ -90,14 +92,12 @@ export const searchResources = createTool({
         // Collect RAG results above score threshold
         const ragResources =
             ragResult.status === 'fulfilled' && ragResult.value.success
-                ? ragResult.value.resources.filter(
-                      (r: { score?: number }) => (r.score ?? 0) >= RAG_MIN_SCORE,
-                  )
+                ? ragResult.value.resources.filter((r: { score?: number }) => (r.score ?? 0) >= RAG_MIN_SCORE)
                 : [];
 
-        // Collect CKAN results
+        // Collect CKAN results (defensive: API may return malformed response without results array)
         const ckanResources =
-            ckanResult.status === 'fulfilled'
+            ckanResult.status === 'fulfilled' && Array.isArray(ckanResult.value?.results)
                 ? ckanResult.value.results.map((r) => ({
                       id: r.id,
                       name: r.name || '',
