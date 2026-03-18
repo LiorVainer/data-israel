@@ -14,6 +14,7 @@ import { ContactSection } from '@/components/landing/ContactSection';
 import { Footer } from '@/components/landing/Footer';
 import { ScrollToTop } from '@/components/ui/ScrollToTop';
 import { AmbientGlow } from '@/components/ui/AmbientGlow';
+import { SiteNotices } from '@/components/SiteNotices';
 
 export default function Home() {
     const router = useRouter();
@@ -34,6 +35,8 @@ export default function Home() {
 
     return (
         <div ref={scrollRef} className='h-full w-full overflow-y-auto overflow-x-clip'>
+            <SiteNotices />
+
             <div className='relative flex min-h-dvh flex-col items-center justify-center px-4 md:px-0'>
                 {/* GitHub link — top left corner */}
                 <a
@@ -41,10 +44,10 @@ export default function Home() {
                     target='_blank'
                     rel='noopener noreferrer'
                     dir='ltr'
-                    className='absolute top-4 left-4 md:top-5 md:left-5 z-20 text-muted-foreground hover:text-foreground transition-colors'
+                    className='absolute top-[16px] left-4 md:top-[20px] md:left-5 z-20 text-muted-foreground hover:text-foreground transition-colors'
                     aria-label='GitHub'
                 >
-                    <Github className='size-5' />
+                    <Github className='h-5 md:w-5' />
                 </a>
                 {/* Hero glows */}
                 <AmbientGlow top='15%' left='15%' size={glowSize} />
@@ -73,6 +76,16 @@ export default function Home() {
                         pointerEvents={false}
                     />
                 </div>
+
+                {/* Beta label pinned to top of hero viewport */}
+                <motion.span
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 1.2, duration: 0.6 }}
+                    className='absolute top-8 left-1/2 -translate-x-1/2 z-10 text-sm text-muted-foreground select-none'
+                >
+                    BETA
+                </motion.span>
 
                 {/* "Learn more" pinned to bottom of hero viewport */}
                 <motion.button
