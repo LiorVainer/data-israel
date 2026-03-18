@@ -7,6 +7,8 @@ import { UserProvider } from '@/context/UserContext';
 import { ThemeProvider } from '@/context/ThemeProvider';
 import { AppSidebar } from '@/components/navigation/AppSidebar';
 import { Toaster } from '@/components/ui/sonner';
+import { Analytics } from '@vercel/analytics/next';
+import { SpeedInsights } from '@vercel/speed-insights/next';
 
 import './globals.css';
 
@@ -88,6 +90,8 @@ export default function RootLayout({
                             </ConvexClientProvider>
                         </QueryClientProvider>
                         <Toaster />
+                        <Analytics />
+                        <SpeedInsights />
                     </ThemeProvider>
                 </ClerkProvider>
             </body>
