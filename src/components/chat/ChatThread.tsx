@@ -123,14 +123,17 @@ export function ChatThread({ id }: ChatThreadProps) {
     }, [id, initialMessageData, removeInitialMessage, sendMessage, isAuthLoaded]);
 
     // Show login prompt toast after first assistant response for guest users
+    const loginPromptShown = useRef(false);
     useEffect(() => {
+        if (loginPromptShown.current) return;
         if (clerkUserId) return; // already logged in
 
         const hasAssistantMessage = messages.some(
             (m) => m.role === 'assistant' && m.parts.find((p) => p.type === 'text' && !!p.text.trim()),
         );
-        if (!hasAssistantMessage || messages.length > 2) return;
+        if (!hasAssistantMessage && messages.length > 2) return;
 
+        loginPromptShown.current = true;
         toast.custom(
             (t) => (
                 <div
