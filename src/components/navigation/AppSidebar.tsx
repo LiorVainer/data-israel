@@ -120,6 +120,34 @@ function NewThreadButton() {
 }
 
 /**
+ * Feedback link in the sidebar footer. Closes sidebar on mobile when clicked.
+ * Must be rendered inside SidebarProvider.
+ */
+function FeedbackLink() {
+    const router = useRouter();
+    const { isMobile, setOpenMobile } = useSidebar();
+
+    const handleClick = (e: React.MouseEvent) => {
+        e.preventDefault();
+        if (isMobile) setOpenMobile(false);
+        router.push('/feedback');
+    };
+
+    return (
+        <SidebarMenu>
+            <SidebarMenuItem>
+                <SidebarMenuButton asChild tooltip='משוב'>
+                    <Link href='/feedback' onClick={handleClick}>
+                        <MessageSquareText />
+                        <span>שלחו משוב</span>
+                    </Link>
+                </SidebarMenuButton>
+            </SidebarMenuItem>
+        </SidebarMenu>
+    );
+}
+
+/**
  * AppSidebar component wraps the main application layout with a collapsible sidebar.
  * Provides navigation, thread list, and user profile sections.
  * Supports RTL layout for Hebrew interface.
@@ -149,16 +177,7 @@ export function AppSidebar({
                 </SidebarContent>
 
                 <SidebarFooter>
-                    <SidebarMenu>
-                        <SidebarMenuItem>
-                            <SidebarMenuButton asChild tooltip='משוב'>
-                                <Link href='/feedback'>
-                                    <MessageSquareText />
-                                    <span>שלחו משוב</span>
-                                </Link>
-                            </SidebarMenuButton>
-                        </SidebarMenuItem>
-                    </SidebarMenu>
+                    <FeedbackLink />
                     <NavUser />
                 </SidebarFooter>
 

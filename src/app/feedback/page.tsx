@@ -40,7 +40,7 @@ export default function FeedbackPage() {
     }
 
     return (
-        <div className='flex flex-1 items-center justify-center p-4 md:p-8'>
+        <div className='flex flex-1 items-center pt-14 md:pt-0 justify-center p-4 md:p-8'>
             <Card className='w-full max-w-lg'>
                 <CardHeader className='text-center'>
                     <CardTitle className='text-2xl'>שלחו לנו משוב</CardTitle>
@@ -55,7 +55,15 @@ export default function FeedbackPage() {
 
                         <div className='flex flex-col gap-1.5'>
                             <Label htmlFor='email'>אימייל</Label>
-                            <Input id='email' name='email' type='email' required placeholder='example@mail.com' dir='ltr' className='text-left' />
+                            <Input
+                                id='email'
+                                name='email'
+                                type='email'
+                                required
+                                placeholder='example@mail.com'
+                                dir='ltr'
+                                className='text-left'
+                            />
                         </div>
 
                         <div className='flex flex-col gap-1.5'>

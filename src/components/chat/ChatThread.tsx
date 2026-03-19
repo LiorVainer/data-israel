@@ -27,6 +27,8 @@ import { usePushSubscription } from '@/hooks/use-push-subscription';
 import { NotificationPrompt } from '@/components/chat/NotificationPrompt';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { toast } from 'sonner';
+import { useRouter } from 'next/navigation';
+import { LogIn, X } from 'lucide-react';
 
 /** Header name for passing user ID to API */
 const USER_ID_HEADER = 'x-user-id';
@@ -35,10 +37,13 @@ interface ChatThreadProps {
     id: string;
 }
 
+const LOGIN_PROMPT_KEY = 'login-prompt-dismissed';
+
 export function ChatThread({ id }: ChatThreadProps) {
     const { userId: clerkUserId, isLoaded: isAuthLoaded } = useAuth();
     const { guestId } = useUser();
     const isMobile = useIsMobile();
+    const router = useRouter();
 
     // Wait for auth to load before resolving userId — prevents storing
     // messages with guestId when the user is actually authenticated.
@@ -116,6 +121,55 @@ export function ChatThread({ id }: ChatThreadProps) {
         removeInitialMessage();
         void sendMessage({ text: initialMessageData.text });
     }, [id, initialMessageData, removeInitialMessage, sendMessage, isAuthLoaded]);
+
+    // Show login prompt toast after first assistant response for guest users
+    const loginPromptShown = useRef(false);
+    useEffect(() => {
+        if (loginPromptShown.current) return;
+        if (clerkUserId) return; // already logged in
+
+        const hasAssistantMessage = messages.some(
+            (m) => m.role === 'assistant' && m.parts.find((p) => p.type === 'text' && !!p.text.trim()),
+        );
+        if (!hasAssistantMessage) return;
+
+        loginPromptShown.current = true;
+        toast.custom(
+            (t) => (
+                <div
+                    dir='rtl'
+                    className='flex items-start gap-3 rounded-lg border bg-card p-4 text-card-foreground shadow-lg max-w-sm'
+                >
+                    <LogIn className='mt-0.5 h-5 w-5 shrink-0 text-primary' />
+                    <div className='flex-1 space-y-2'>
+                        <p className='text-sm font-medium'>שמרו על השיחות שלכם</p>
+                        <p className='text-xs text-muted-foreground'>
+                            התחברו עם חשבון Google כדי לשמור היסטוריית שיחות וליהנות מפיצ&apos;רים נוספים בעתיד.
+                        </p>
+                        <button
+                            onClick={() => {
+                                toast.dismiss(t);
+                                router.push('/sign-in');
+                            }}
+                            className='mt-1 rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:bg-primary/90 transition-colors'
+                        >
+                            התחברות עם Google
+                        </button>
+                    </div>
+                    <button
+                        onClick={() => {
+                            toast.dismiss(t);
+                        }}
+                        className='shrink-0 rounded-sm p-0.5 text-muted-foreground hover:text-foreground transition-colors'
+                        aria-label='סגור'
+                    >
+                        <X className='h-4 w-4' />
+                    </button>
+                </div>
+            ),
+            { duration: Infinity },
+        );
+    }, [messages, clerkUserId, router]);
 
     const handleSend = useCallback(
         (text: string) => {
