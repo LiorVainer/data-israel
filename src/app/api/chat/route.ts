@@ -6,11 +6,11 @@
 
 import { createUIMessageStreamResponse, generateId, StopCondition, UIMessage } from 'ai';
 import { after, NextResponse } from 'next/server';
-import { mastra, getMastraWithModels } from '@/agents/mastra';
+import { getMastraWithModels, mastra } from '@/agents/mastra';
 import { handleChatStream } from '@mastra/ai-sdk';
 import { toAISdkV5Messages } from '@mastra/ai-sdk/ui';
 import { AppUIMessage } from '@/agents/types';
-import { AgentConfig, OPENROUTER_PROVIDER_OPTIONS } from '@/agents/agent.config';
+import { AgentConfig } from '@/agents/agent.config';
 import { api, convexMutation } from '@/lib/convex/client';
 import { resolveModelConfig } from './resolve-model-config';
 import type { MastraMemory } from '@mastra/core/memory';
@@ -352,7 +352,6 @@ export async function POST(req: Request) {
             agentId: 'routingAgent',
             params: enhancedParams,
             defaultOptions: {
-                providerOptions: OPENROUTER_PROVIDER_OPTIONS,
                 toolCallConcurrency: CHAT.TOOL_CALL_CONCURRENCY,
                 delegation: {
                     onDelegationStart: async () => {
