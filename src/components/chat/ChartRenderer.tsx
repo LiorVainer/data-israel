@@ -4,7 +4,7 @@ import { ResponsiveBar } from '@nivo/bar';
 import { ResponsiveLine } from '@nivo/line';
 import type { LineCustomSvgLayerProps } from '@nivo/line';
 import { ResponsivePie } from '@nivo/pie';
-import type { DisplayBarChartInput, DisplayChartInput, DisplayLineChartInput, DisplayPieChartInput } from '@/lib/tools';
+import type { DisplayBarChartInput, DisplayChartInput, DisplayLineChartInput, DisplayPieChartInput } from '@/lib/tools/client/display-chart';
 import { Shimmer } from '@/components/ai-elements/shimmer';
 import { useTheme } from 'next-themes';
 import { useIsMobile } from '@/hooks/use-mobile';

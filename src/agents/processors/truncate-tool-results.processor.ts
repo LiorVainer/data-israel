@@ -10,11 +10,28 @@
 import type { Processor } from '@mastra/core/processors';
 import type { MastraDBMessage } from '@mastra/core/agent/message-list';
 import { pick } from 'es-toolkit';
-import {
-    TOOL_RESULT_KEEP_FIELDS,
-    TOOL_RESULT_KEEP_NESTED,
-    TOOL_ARGS_KEEP_FIELDS,
-} from '@/constants/tool-result-fields';
+/** Scalar fields preserved from tool result objects */
+export const TOOL_RESULT_KEEP_FIELDS = [
+    'success',
+    'error',
+    'searchedResourceName',
+    'apiUrl',
+    'portalUrl',
+    'total',
+] as const;
+
+/** Nested object fields — only these sub-keys are preserved */
+export const TOOL_RESULT_KEEP_NESTED = {
+    dataset: ['title', 'name'] as const,
+    organization: ['title', 'name'] as const,
+    resource: ['name'] as const,
+} satisfies Record<string, readonly string[]>;
+
+/** Fields preserved from tool call args (inputs) */
+export const TOOL_ARGS_KEEP_FIELDS = [
+    'searchedResourceName',
+    'q',
+] as const;
 
 /**
  * Strip a tool result to only UI-required fields.

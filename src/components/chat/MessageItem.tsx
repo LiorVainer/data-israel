@@ -9,11 +9,16 @@ import { LoadingShimmer } from './LoadingShimmer';
 import { ChartError, ChartLoadingState, ChartRenderer } from './ChartRenderer';
 import { getToolStatus, isToolPart, isAgentDataPart, SourceUrlUIPart, ToolCallPart } from './types';
 import type { EnrichedSourceUrl } from './types';
-import { resolveToolSourceUrl } from '@/lib/tools/source-url-resolvers';
-import { getToolDataSource } from '@/constants/tool-data-sources';
-import { AgentsDisplayMap } from '@/constants/agents-display';
-import { CLIENT_TOOL_NAMES, SOURCE_URL_TOOL_NAMES, toToolPartTypeSet, toToolPartType } from '@/lib/tools/tool-names';
-import type { DisplayChartInput } from '@/lib/tools';
+import {
+    resolveToolSourceUrl,
+    getToolDataSource,
+    AgentsDisplayMap,
+    CLIENT_TOOL_NAMES,
+    SOURCE_URL_TOOL_NAMES,
+    toToolPartTypeSet,
+    toToolPartType,
+} from '@/data-sources/registry';
+import type { DisplayChartInput } from '@/lib/tools/client/display-chart';
 import { UIMessage } from 'ai';
 
 /**

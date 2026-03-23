@@ -9,7 +9,7 @@
 
 import { ConvexHttpClient } from 'convex/browser';
 import { api } from '@/convex/_generated/api';
-import { dataGovApi } from '@/lib/api/data-gov/client';
+import { dataGovApi } from '@/data-sources/datagov/api/datagov.client';
 import type { Id } from '@/convex/_generated/dataModel';
 import { sleep } from '@/lib/utils/sleep';
 

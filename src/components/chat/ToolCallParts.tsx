@@ -24,17 +24,15 @@ function getString(obj: unknown, key: string): string | undefined {
  * Extracts a ToolResource from a tool call's input and output.
  *
  * Resolves a display name from (in priority order):
- *   1. output.searchedResourceName
- *   2. input.searchedResourceName
- *   3. input.query / input.q  (search tools)
- *   4. input.path             (catalog-by-path tools)
- *   5. output nested titles   (dataset.title, organization.title)
+ *   1. input.searchedResourceName (input-only field)
+ *   2. input.query / input.q  (search tools)
+ *   3. input.path             (catalog-by-path tools)
+ *   4. output nested titles   (dataset.title, organization.title)
  */
 function extractToolResource(input: unknown, output: unknown): ToolResource | null {
     const apiUrl = getString(output, 'apiUrl');
 
     const name =
-        getString(output, 'searchedResourceName') ??
         getString(input, 'searchedResourceName') ??
         getString(input, 'query') ??
         getString(input, 'q') ??

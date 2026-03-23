@@ -2,7 +2,7 @@
 
 import { useMemo } from 'react';
 import { Sources, SourcesContent, SourcesTrigger } from '@/components/ai-elements/sources';
-import { DATA_SOURCE_CONFIG, type DataSource } from '@/constants/tool-data-sources';
+import { DATA_SOURCE_CONFIG, type DataSource } from '@/data-sources/registry';
 import { ChevronDownIcon, CodeIcon, ExternalLinkIcon, GlobeIcon } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { cn } from '@/lib/utils';

@@ -1,6 +1,6 @@
 'use client';
 
-import { DATA_SOURCE_CONFIG } from '@/constants/tool-data-sources';
+import { DATA_SOURCE_CONFIG } from '@/data-sources/registry';
 
 export function Footer() {
     const year = new Date().getFullYear();

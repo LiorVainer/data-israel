@@ -1,5 +1,5 @@
 import type { AvailableModel } from '@/agents/agent.config';
-import { AgentsDisplayMap } from './agents-display';
+import { AgentsDisplayMap } from '@/data-sources/registry';
 
 /** Agent configuration for the admin panel */
 export const AGENT_CONFIGS = [

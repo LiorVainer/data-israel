@@ -2,13 +2,12 @@ import type { UIMessage } from 'ai';
 import type { Tool } from '@mastra/core/tools';
 import { agents } from './mastra';
 import type { ClientTools } from '@/lib/tools/client';
-import type { DataGovTools } from '@/lib/tools/datagov';
-import type { CbsTools } from '@/lib/tools/cbs';
+import type { allDataSourceTools } from '@/data-sources/registry';
 
 export type AgentName = keyof typeof agents;
 
 /** Combined tools object type matching the routing agent's tools config */
-type AllTools = typeof ClientTools & typeof DataGovTools & typeof CbsTools;
+type AllTools = typeof ClientTools & typeof allDataSourceTools;
 
 /** Extract input type from a Mastra Tool */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

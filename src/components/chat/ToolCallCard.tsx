@@ -3,8 +3,7 @@
 import { Card, CardContent, CardTitle } from '@/components/ui/card';
 import { CheckCircle2Icon, Loader2Icon, SearchIcon, XCircleIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import type { ToolInput, ToolName, ToolOutput } from '@/lib/tools/types';
-import { type ToolTranslation, toolTranslations } from '@/constants/tool-translations';
+import { getAllTranslations } from '@/data-sources/registry';
 
 type ToolState =
     | 'input-streaming'
@@ -61,53 +60,43 @@ function getStateLabel(state: ToolCallCardProps['part']['state']): string {
     }
 }
 
-/**
- * Type guard to check if a string is a valid tool name
- */
-function isValidToolName(key: string): key is ToolName {
-    return key in toolTranslations;
+/** Lazy-initialized translations cache */
+let _translations: ReturnType<typeof getAllTranslations> | null = null;
+
+function getTranslations() {
+    if (!_translations) {
+        _translations = getAllTranslations();
+    }
+    return _translations;
 }
 
 /**
- * Get typed tool translation for a given tool key
- */
-function getToolMeta<T extends ToolName>(key: T): ToolTranslation<T> | undefined {
-    return toolTranslations[key] as ToolTranslation<T> | undefined;
-}
-
-/**
- * Format input description with proper typing
+ * Format input description
  */
 function formatInputDescription(toolKey: string, input: unknown): string | null {
-    if (!isValidToolName(toolKey) || input === undefined) {
-        return null;
-    }
-    const meta = getToolMeta(toolKey);
-    if (!meta) return null;
-    // We know the input matches the tool's expected type based on runtime behavior
-    return meta.formatInput(input as ToolInput<typeof toolKey>) ?? null;
+    const translations = getTranslations();
+    const meta = translations[toolKey];
+    if (!meta || input === undefined) return null;
+    return meta.formatInput(input) ?? null;
 }
 
 /**
- * Format output description with proper typing
+ * Format output description
  */
 function formatOutputDescription(toolKey: string, output: unknown): string | undefined {
-    if (!isValidToolName(toolKey) || output === undefined) {
-        return undefined;
-    }
-    const meta = getToolMeta(toolKey);
-    if (!meta) return undefined;
-    // We know the output matches the tool's expected type based on runtime behavior
-    return meta.formatOutput(output as ToolOutput<typeof toolKey>);
+    const translations = getTranslations();
+    const meta = translations[toolKey];
+    if (!meta || output === undefined) return undefined;
+    return meta.formatOutput(output) ?? undefined;
 }
 
 export function ToolCallCard({ part }: ToolCallCardProps) {
     const toolKey = part.type.replace('tool-', '');
-    const isKnownTool = isValidToolName(toolKey);
-    const toolMeta = isKnownTool ? toolTranslations[toolKey] : undefined;
+    const translations = getTranslations();
+    const toolMeta = translations[toolKey];
 
     const toolName = toolMeta?.name || toolKey;
-    const toolIcon = toolMeta?.icon || <SearchIcon className='h-4 w-4' />;
+    const IconComponent = toolMeta?.icon || SearchIcon;
 
     const hasInput = part.input !== undefined;
     const hasOutput = part.state === 'output-available' && part.output !== undefined;
@@ -125,7 +114,9 @@ export function ToolCallCard({ part }: ToolCallCardProps) {
                 <div className='flex items-center justify-between w-full'>
                     <div className='flex items-center gap-2'>
                         {getStateIcon(part.state)}
-                        <span className='text-muted-foreground'>{toolIcon}</span>
+                        <span className='text-muted-foreground'>
+                            <IconComponent className='h-4 w-4' />
+                        </span>
                         <CardTitle className='text-sm font-medium'>{toolName}</CardTitle>
                         <span className='text-xs text-muted-foreground'>{getStateLabel(part.state)}</span>
                     </div>

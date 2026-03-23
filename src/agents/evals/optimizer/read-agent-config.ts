@@ -5,14 +5,14 @@
  * can retrieve the current system prompt for revision.
  */
 
-import { ROUTING_CONFIG } from '../../network/routing/config';
-import { DATAGOV_AGENT_CONFIG } from '../../network/datagov/config';
-import { CBS_AGENT_CONFIG } from '../../network/cbs/config';
+import { ROUTING_CONFIG } from '../../routing/config';
+import { DATAGOV_AGENT_INSTRUCTIONS } from '@/data-sources/datagov/datagov.agent';
+import { CBS_AGENT_INSTRUCTIONS } from '@/data-sources/cbs/cbs.agent';
 
 const AGENT_CONFIGS: Record<string, { instructions: string }> = {
     routingAgent: ROUTING_CONFIG,
-    datagovAgent: DATAGOV_AGENT_CONFIG,
-    cbsAgent: CBS_AGENT_CONFIG,
+    datagovAgent: { instructions: DATAGOV_AGENT_INSTRUCTIONS },
+    cbsAgent: { instructions: CBS_AGENT_INSTRUCTIONS },
 };
 
 export function getAgentPrompt(agentId: string): string {

@@ -1,5 +1,5 @@
 import type { LucideIcon } from 'lucide-react';
-import type { DataSource } from '@/constants/tool-data-sources';
+import type { DataSource } from '@/data-sources/registry';
 
 /**
  * Re-export UI-related types from AI SDK

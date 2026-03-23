@@ -10,10 +10,9 @@ import { Mastra } from '@mastra/core';
 import { ConvexStore } from '@mastra/convex';
 import { Observability, SamplingStrategyType } from '@mastra/observability';
 import { SentryExporter } from '@mastra/sentry';
-import { cbsAgent, datagovAgent, routingAgent } from './network';
-import { createRoutingAgent } from './network/routing/routing.agent';
-import { createDatagovAgent } from './network/datagov/data-gov.agent';
-import { createCbsAgent } from './network/cbs/cbs.agent';
+import { routingAgent, createRoutingAgent } from './routing/routing.agent';
+import { dataSourceAgents } from '@/data-sources/registry.server';
+import type { DataSourceId } from '@/data-sources/registry';
 import { MASTRA_SCORERS } from './evals/eval.config';
 import { ENV } from '@/lib/env';
 
@@ -51,8 +50,12 @@ const observability = sentryDsn
       })
     : undefined;
 
-/** Static default agents (backward compat) */
-export const agents = { routingAgent, cbsAgent, datagovAgent };
+/** Static default agents (backward compat) — explicit keys for AgentName derivation */
+export const agents = {
+    routingAgent,
+    cbsAgent: dataSourceAgents.cbsAgent.createAgent(`openrouter/${ENV.AI_DEFAULT_MODEL_ID}`),
+    datagovAgent: dataSourceAgents.datagovAgent.createAgent(`openrouter/${ENV.AI_DEFAULT_MODEL_ID}`),
+};
 
 export const mastra = new Mastra({
     agents,
@@ -64,8 +67,7 @@ export const mastra = new Mastra({
 /** Per-agent model configuration (all values are OpenRouter model IDs like 'google/gemini-3-flash-preview') */
 export interface AgentModelConfig {
     routing: string;
-    datagov: string;
-    cbs: string;
+    [key: string]: string;
 }
 
 // Cache: single entry (last config -> last Mastra instance)
@@ -86,15 +88,19 @@ export function getMastraWithModels(config: AgentModelConfig): Mastra {
 
     console.log({ config });
 
-    const newDatagov = createDatagovAgent(`openrouter/${config.datagov}`);
-    const newCbs = createCbsAgent(`openrouter/${config.cbs}`);
-    const newRouting = createRoutingAgent(`openrouter/${config.routing}`, {
-        datagovAgent: newDatagov,
-        cbsAgent: newCbs,
-    });
+    // Build sub-agents from registry with per-source model overrides
+    const subAgents: Record<string, ReturnType<(typeof dataSourceAgents)['cbsAgent']['createAgent']>> = {};
+    for (const [agentId, agentDef] of Object.entries(dataSourceAgents)) {
+        // Look up model by data source ID (e.g., 'cbs', 'datagov') or fall back to routing model
+        const dsId = agentId.replace('Agent', '') as DataSourceId;
+        const modelId = config[dsId] ?? config.routing;
+        subAgents[agentId] = agentDef.createAgent(`openrouter/${modelId}`);
+    }
+
+    const newRouting = createRoutingAgent(`openrouter/${config.routing}`, subAgents);
 
     const newMastra = new Mastra({
-        agents: { routingAgent: newRouting, cbsAgent: newCbs, datagovAgent: newDatagov },
+        agents: { routingAgent: newRouting, ...subAgents },
         ...(storage && { storage }),
         ...(observability && { observability }),
         scorers: MASTRA_SCORERS,

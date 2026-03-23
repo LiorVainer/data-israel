@@ -4,7 +4,7 @@ import Image from 'next/image';
 import { motion } from 'framer-motion';
 import { BarChart3, Building2, Calendar, Database, FolderOpen, Layers } from 'lucide-react';
 import type { ReactNode } from 'react';
-import { DATA_SOURCE_CONFIG } from '@/constants/tool-data-sources';
+import { DATA_SOURCE_CONFIG } from '@/data-sources/registry';
 
 interface StatProps {
     icon: ReactNode;

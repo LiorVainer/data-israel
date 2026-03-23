@@ -8,7 +8,7 @@ import {
 import { cn } from '@/lib/utils';
 import { DataIsraelLoader } from './DataIsraelLoader';
 import { AgentInternalCallsChain } from './AgentInternalCallsChain';
-import { getToolDataSourceConfig } from '../../constants/tool-data-sources';
+import { getToolDataSourceConfig } from '@/data-sources/registry';
 import { getToolInfo } from './MessageToolCalls';
 import type { AgentInternalToolCall } from './ToolCallParts';
 import type { LucideIcon } from 'lucide-react';

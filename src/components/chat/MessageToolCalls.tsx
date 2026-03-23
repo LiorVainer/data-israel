@@ -2,22 +2,8 @@
 
 import { useState } from 'react';
 import {
-    ActivityIcon,
-    BarChart2Icon,
-    BuildingIcon,
-    DatabaseIcon,
-    FileIcon,
-    FileTextIcon,
-    FolderIcon,
-    LineChartIcon,
-    LinkIcon,
-    ListIcon,
     type LucideIcon,
-    PieChartIcon,
-    ScrollTextIcon,
     SearchIcon,
-    ServerIcon,
-    TagIcon,
 } from 'lucide-react';
 import {
     ChainOfThought,
@@ -26,55 +12,29 @@ import {
     ChainOfThoughtStep,
 } from '@/components/ai-elements/chain-of-thought';
 import { Shimmer } from '@/components/ai-elements/shimmer';
-import { toolTranslations } from '@/constants/tool-translations';
-import { AgentsDisplayMap } from '@/constants/agents-display';
-import type { ToolName } from '@/lib/tools/types';
+import { getAllTranslations } from '@/data-sources/registry';
 import type { StepStatus, ToolCallPart, ToolInfo } from './types';
 import { getToolStatus } from './types';
 
-/**
- * Map tool names to their LucideIcon components for ChainOfThoughtStep
- */
-const toolIconMap: Partial<Record<ToolName, LucideIcon>> = {
-    searchDatasets: SearchIcon,
-    getDatasetDetails: FileTextIcon,
-    listGroups: FolderIcon,
-    listTags: TagIcon,
-    queryDatastoreResource: DatabaseIcon,
-    getDatasetActivity: ActivityIcon,
-    getDatasetSchema: ScrollTextIcon,
-    getOrganizationActivity: ActivityIcon,
-    getOrganizationDetails: BuildingIcon,
-    getResourceDetails: FileIcon,
-    getStatus: ServerIcon,
-    listAllDatasets: ListIcon,
-    listLicenses: ScrollTextIcon,
-    listOrganizations: BuildingIcon,
-    searchResources: SearchIcon,
-    displayBarChart: BarChart2Icon,
-    displayLineChart: LineChartIcon,
-    displayPieChart: PieChartIcon,
-    browseCbsCatalog: DatabaseIcon,
-    getCbsSeriesData: BarChart2Icon,
-    browseCbsPriceIndices: LineChartIcon,
-    getCbsPriceData: LineChartIcon,
-    calculateCbsPriceIndex: ActivityIcon,
-    searchCbsLocalities: SearchIcon,
-    generateDataGovSourceUrl: LinkIcon,
-    generateCbsSourceUrl: LinkIcon,
-    'agent-datagovAgent': AgentsDisplayMap.datagovAgent.icon,
-    'agent-cbsAgent': AgentsDisplayMap.cbsAgent.icon,
-};
+/** Lazy-initialized translations cache */
+let _translations: Record<string, { name: string; icon: LucideIcon; formatInput: (input: unknown) => string | undefined; formatOutput: (output: unknown) => string | undefined }> | null = null;
+
+function getTranslations() {
+    if (!_translations) {
+        _translations = getAllTranslations();
+    }
+    return _translations;
+}
 
 /**
  * Get tool info from translations
  */
 export function getToolInfo(toolKey: string): ToolInfo {
-    const meta = toolKey in toolTranslations ? toolTranslations[toolKey as ToolName] : null;
-    const icon = (toolKey in toolIconMap ? toolIconMap[toolKey as ToolName] : undefined) ?? SearchIcon;
+    const translations = getTranslations();
+    const meta = translations[toolKey];
     return {
         name: meta?.name ?? toolKey,
-        icon,
+        icon: meta?.icon ?? SearchIcon,
     };
 }
 
@@ -83,12 +43,8 @@ export function getToolInfo(toolKey: string): ToolInfo {
  */
 export function getToolDescription(part: ToolCallPart): string | undefined {
     const toolKey = part.type.replace('tool-', '');
-    const meta =
-        toolKey in toolTranslations
-            ? (toolTranslations[toolKey as ToolName] as
-                  | { formatInput: (input: unknown) => string | undefined; formatOutput: (output: unknown) => string }
-                  | undefined)
-            : null;
+    const translations = getTranslations();
+    const meta = translations[toolKey] ?? null;
 
     if (!meta) return undefined;
 
@@ -111,12 +67,8 @@ type ToolIO = { input?: string; output?: string };
 
 export function getToolIO(part: ToolCallPart): ToolIO | undefined {
     const toolKey = part.type.replace('tool-', '');
-    const meta =
-        toolKey in toolTranslations
-            ? (toolTranslations[toolKey as ToolName] as
-                  | { formatInput: (input: unknown) => string | undefined; formatOutput: (output: unknown) => string }
-                  | undefined)
-            : null;
+    const translations = getTranslations();
+    const meta = translations[toolKey] ?? null;
 
     if (!meta) return undefined;
 

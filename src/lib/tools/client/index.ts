@@ -5,10 +5,10 @@
  * and the suggest follow-ups tool
  */
 
-export { displayBarChart, displayLineChart, displayPieChart } from './display-chart';
-export { suggestFollowUps } from './suggest-follow-ups';
-import { displayBarChart, displayLineChart, displayPieChart } from './display-chart';
-import { suggestFollowUps } from './suggest-follow-ups';
+export { displayBarChart, displayLineChart, displayPieChart } from './display-chart.tool';
+export { suggestFollowUps } from './suggest-follow-ups.tool';
+import { displayBarChart, displayLineChart, displayPieChart } from './display-chart.tool';
+import { suggestFollowUps } from './suggest-follow-ups.tool';
 
 /** Union of all client-side tool names, derived from the ClientTools object */
 export type ClientToolName = keyof typeof ClientTools;

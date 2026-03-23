@@ -7,8 +7,8 @@
  * Usage: npx tsx scripts/fetch-all-datasets.ts
  */
 
-import { dataGovApi } from '../lib/api/data-gov/client';
-import { Dataset } from '../lib/api/data-gov/types';
+import { dataGovApi } from '@/data-sources/datagov/api/datagov.client';
+import type { Dataset } from '@/data-sources/datagov/api/datagov.types';
 import * as fs from 'fs';
 import * as path from 'path';
 import { sleep } from '@/lib/utils/sleep';

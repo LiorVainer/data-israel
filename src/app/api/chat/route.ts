@@ -24,8 +24,7 @@ import {
 } from '@/components/chat/types';
 import { clearActiveStreamId, getResumableStreamContext, setActiveStreamId } from '@/lib/redis/resumable-stream';
 import { sendPushToUser } from '@/lib/push/send-notification';
-import { stripToolResult } from '@/agents/processors/truncate-tool-results.processor';
-import { TOOL_ARGS_KEEP_FIELDS } from '@/constants/tool-result-fields';
+import { stripToolResult, TOOL_ARGS_KEEP_FIELDS } from '@/agents/processors/truncate-tool-results.processor';
 import { pick } from 'es-toolkit';
 
 const { CHAT } = AgentConfig;
