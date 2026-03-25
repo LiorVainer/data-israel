@@ -53,7 +53,11 @@ export function SourceCard({ source }: SourceCardProps) {
                             <div className='flex items-center justify-center w-9 h-9 rounded-lg bg-primary/10 text-primary'>
                                 <stat.icon className='w-4 h-4' />
                             </div>
-                            <span className='text-lg font-bold tabular-nums text-foreground'>{stat.value}</span>
+                            <span
+                                className={`font-bold text-foreground ${stat.value.length > 4 ? 'text-xs' : 'text-lg tabular-nums'}`}
+                            >
+                                {stat.value}
+                            </span>
                             <span className='text-xs text-muted-foreground'>{stat.label}</span>
                         </div>
                     ))}

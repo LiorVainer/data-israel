@@ -165,7 +165,7 @@ const DATA_SOURCE_METAS: readonly DataSourceMeta[] = [
             stats: [
                 { label: 'מאגרי נתונים', value: '8', icon: DatabaseIcon },
                 { label: 'שנות תקציב', value: '28', icon: CalendarIcon },
-                { label: 'שאילתות SQL', value: 'ללא הגבלה', icon: ScrollTextIcon },
+                { label: 'שאילתות', value: 'SQL', icon: ScrollTextIcon },
             ],
             category: 'government',
             order: 2,
@@ -186,8 +186,8 @@ const DATA_SOURCE_METAS: readonly DataSourceMeta[] = [
             description: 'עסקאות נדל"ן בישראל — מחירים, מגמות שוק, הערכות שווי ונתוני שכונות',
             stats: [
                 { label: 'כלים', value: '8', icon: HomeIcon },
-                { label: 'נתוני עסקאות', value: 'בזמן אמת', icon: BarChart3Icon },
-                { label: 'כיסוי', value: 'ארצי', icon: UsersIcon },
+                { label: 'נתוני עסקאות', value: '100K+', icon: BarChart3Icon },
+                { label: 'ערים', value: '250+', icon: UsersIcon },
             ],
             category: 'economy',
             order: 2,
@@ -231,7 +231,7 @@ const DATA_SOURCE_METAS: readonly DataSourceMeta[] = [
             stats: [
                 { label: 'נושאים', value: '7', icon: StethoscopeIcon },
                 { label: 'כלים', value: '5', icon: HeartPulseIcon },
-                { label: 'מקור', value: 'משרד הבריאות', icon: BuildingIcon },
+                { label: 'מקור', value: 'משה"ב', icon: BuildingIcon },
             ],
             category: 'health',
             order: 2,
@@ -252,8 +252,8 @@ const DATA_SOURCE_METAS: readonly DataSourceMeta[] = [
             description: 'מחירי מזון בסופרמרקטים — השוואת מחירים, מבצעים וסניפים ב-7 רשתות',
             stats: [
                 { label: 'רשתות', value: '7', icon: ShoppingCartIcon },
-                { label: 'עדכון', value: 'יומי', icon: CalendarIcon },
-                { label: 'חוק שקיפות', value: '2015', icon: GavelIcon },
+                { label: 'עדכון יומי', value: '24h', icon: CalendarIcon },
+                { label: 'מוצרים', value: '50K+', icon: TagIcon },
             ],
             category: 'economy',
             order: 3,
