@@ -2,17 +2,28 @@ import Image from 'next/image';
 import { ExternalLink } from 'lucide-react';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import type { LandingConfig, DataSourceConfig } from '@/data-sources/types';
+import type { AgentDisplayInfo } from '@/data-sources/types';
 
 interface SourceCardProps {
     source: {
         id: string;
         landing: LandingConfig;
         badge: DataSourceConfig;
+        display: AgentDisplayInfo;
     };
 }
 
+/** Known logo files in /public */
+const LOGO_FILES = new Set(['datagov-logo.svg', 'cbs-logo.svg']);
+
+function hasLogoFile(logo: string): boolean {
+    const filename = logo.replace(/^\//, '');
+    return LOGO_FILES.has(filename);
+}
+
 export function SourceCard({ source }: SourceCardProps) {
-    const { landing, badge } = source;
+    const { landing, badge, display } = source;
+    const DisplayIcon = display.icon;
 
     return (
         <Card className='group relative overflow-hidden transition-shadow hover:shadow-md'>
@@ -23,7 +34,14 @@ export function SourceCard({ source }: SourceCardProps) {
                     rel='noopener noreferrer'
                     className='hover:opacity-70 transition-opacity'
                 >
-                    <Image src={landing.logo} alt={badge.nameLabel} width={120} height={50} />
+                    {hasLogoFile(landing.logo) ? (
+                        <Image src={landing.logo} alt={badge.nameLabel} width={120} height={50} />
+                    ) : (
+                        <div className='flex flex-col items-center gap-2'>
+                            <DisplayIcon className='w-10 h-10 text-primary' />
+                            <span className='text-sm font-semibold text-foreground'>{badge.nameLabel}</span>
+                        </div>
+                    )}
                 </a>
                 <p className='text-sm text-muted-foreground text-center leading-relaxed'>{landing.description}</p>
             </CardHeader>

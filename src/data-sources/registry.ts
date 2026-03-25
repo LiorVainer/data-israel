@@ -31,6 +31,17 @@ import {
     TrendingUpIcon,
     LayersIcon,
     CalendarIcon,
+    LandmarkIcon,
+    GavelIcon,
+    HomeIcon,
+    PillIcon,
+    HeartPulseIcon,
+    ShoppingCartIcon,
+    ScrollTextIcon,
+    UsersIcon,
+    BarChart3Icon,
+    StethoscopeIcon,
+    TagIcon,
 } from 'lucide-react';
 
 // Client-safe imports — tools, translations, display, resolvers (no Agent dependency)
@@ -62,6 +73,10 @@ import { healthDisplayLabel, healthDisplayIcon, healthBadgeConfig } from './heal
 import { GroceryTools, grocerySourceResolvers } from './grocery/tools';
 import { groceryTranslations } from './grocery/grocery.translations';
 import { groceryDisplayLabel, groceryDisplayIcon, groceryBadgeConfig } from './grocery/grocery.display';
+
+import { KnessetTools, knessetSourceResolvers } from './knesset/tools';
+import { knessetTranslations } from './knesset/knesset.translations';
+import { knessetDisplayLabel, knessetDisplayIcon, knessetBadgeConfig } from './knesset/knesset.display';
 
 import { clientTranslations } from '@/lib/tools/client/translations';
 
@@ -144,6 +159,17 @@ const DATA_SOURCE_METAS: readonly DataSourceMeta[] = [
         sourceResolvers: budgetSourceResolvers as Record<string, ToolSourceResolver>,
         translations: budgetTranslations as Record<string, ToolTranslation>,
         resourceExtractors: {},
+        landing: {
+            logo: '/budget-logo.svg',
+            description: 'תקציב המדינה — הוצאות, הכנסות, התקשרויות, תמיכות ומכרזים (1997-2025)',
+            stats: [
+                { label: 'מאגרי נתונים', value: '8', icon: DatabaseIcon },
+                { label: 'שנות תקציב', value: '28', icon: CalendarIcon },
+                { label: 'שאילתות SQL', value: 'ללא הגבלה', icon: ScrollTextIcon },
+            ],
+            category: 'government',
+            order: 2,
+        },
     },
     {
         id: 'nadlan',
@@ -155,6 +181,17 @@ const DATA_SOURCE_METAS: readonly DataSourceMeta[] = [
         sourceResolvers: nadlanSourceResolvers as Record<string, ToolSourceResolver>,
         translations: nadlanTranslations as Record<string, ToolTranslation>,
         resourceExtractors: {},
+        landing: {
+            logo: '/nadlan-logo.svg',
+            description: 'עסקאות נדל"ן בישראל — מחירים, מגמות שוק, הערכות שווי ונתוני שכונות',
+            stats: [
+                { label: 'כלים', value: '8', icon: HomeIcon },
+                { label: 'נתוני עסקאות', value: 'בזמן אמת', icon: BarChart3Icon },
+                { label: 'כיסוי', value: 'ארצי', icon: UsersIcon },
+            ],
+            category: 'economy',
+            order: 2,
+        },
     },
     {
         id: 'drugs',
@@ -166,6 +203,17 @@ const DATA_SOURCE_METAS: readonly DataSourceMeta[] = [
         sourceResolvers: drugsSourceResolvers as Record<string, ToolSourceResolver>,
         translations: drugsTranslations as Record<string, ToolTranslation>,
         resourceExtractors: {},
+        landing: {
+            logo: '/drugs-logo.svg',
+            description: 'מאגר התרופות של משרד הבריאות — תרופות, חלופות גנריות, סל בריאות וקופות חולים',
+            stats: [
+                { label: 'קטגוריות ATC', value: '1,172', icon: PillIcon },
+                { label: 'כלים', value: '8', icon: TagIcon },
+                { label: 'שפות', value: '4', icon: UsersIcon },
+            ],
+            category: 'health',
+            order: 1,
+        },
     },
     {
         id: 'health',
@@ -177,6 +225,17 @@ const DATA_SOURCE_METAS: readonly DataSourceMeta[] = [
         sourceResolvers: healthSourceResolvers as Record<string, ToolSourceResolver>,
         translations: healthTranslations as Record<string, ToolTranslation>,
         resourceExtractors: {},
+        landing: {
+            logo: '/health-logo.svg',
+            description: 'דשבורד הבריאות של משרד הבריאות — קופות חולים, איכות שירות, בדיקות ילדים ועוד',
+            stats: [
+                { label: 'נושאים', value: '7', icon: StethoscopeIcon },
+                { label: 'כלים', value: '5', icon: HeartPulseIcon },
+                { label: 'מקור', value: 'משרד הבריאות', icon: BuildingIcon },
+            ],
+            category: 'health',
+            order: 2,
+        },
     },
     {
         id: 'grocery',
@@ -188,6 +247,38 @@ const DATA_SOURCE_METAS: readonly DataSourceMeta[] = [
         sourceResolvers: grocerySourceResolvers as Record<string, ToolSourceResolver>,
         translations: groceryTranslations as Record<string, ToolTranslation>,
         resourceExtractors: {},
+        landing: {
+            logo: '/grocery-logo.svg',
+            description: 'מחירי מזון בסופרמרקטים — השוואת מחירים, מבצעים וסניפים ב-7 רשתות',
+            stats: [
+                { label: 'רשתות', value: '7', icon: ShoppingCartIcon },
+                { label: 'עדכון', value: 'יומי', icon: CalendarIcon },
+                { label: 'חוק שקיפות', value: '2015', icon: GavelIcon },
+            ],
+            category: 'economy',
+            order: 3,
+        },
+    },
+    {
+        id: 'knesset',
+        agentId: 'knessetAgent',
+        display: { label: knessetDisplayLabel, icon: knessetDisplayIcon, badge: knessetBadgeConfig },
+        routingHint: 'נתוני הכנסת — הצעות חוק, ועדות כנסת, חברי כנסת, ותהליכי חקיקה מה-API הפתוח של הכנסת',
+        tools: KnessetTools,
+        sourceResolvers: knessetSourceResolvers as Record<string, ToolSourceResolver>,
+        translations: knessetTranslations as Record<string, ToolTranslation>,
+        resourceExtractors: {},
+        landing: {
+            logo: '/knesset-logo.svg',
+            description: 'הכנסת — הצעות חוק, ועדות, חברי כנסת ותהליכי חקיקה',
+            stats: [
+                { label: 'כלים', value: '7', icon: GavelIcon },
+                { label: 'כנסות', value: '25', icon: LandmarkIcon },
+                { label: 'נתונים', value: 'OData', icon: DatabaseIcon },
+            ],
+            category: 'government',
+            order: 3,
+        },
     },
 ] as const;
 
@@ -204,6 +295,7 @@ export const allDataSourceTools = {
     ...DrugsTools,
     ...HealthTools,
     ...GroceryTools,
+    ...KnessetTools,
 } as const;
 
 // ============================================================================
@@ -226,6 +318,7 @@ export function getDataSourcesWithLanding() {
             id: meta.id,
             landing: meta.landing,
             badge: meta.display.badge,
+            display: { label: meta.display.label, icon: meta.display.icon },
         }),
     );
 }
@@ -406,6 +499,7 @@ export const SOURCE_URL_TOOL_NAMES = [
     'generateNadlanSourceUrl',
     'generateDrugsSourceUrl',
     'generateHealthSourceUrl',
+    'generateKnessetSourceUrl',
 ] as const;
 
 /** Client-side tools (charts, suggestions) — not part of any data source */
