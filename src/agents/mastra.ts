@@ -7,10 +7,13 @@
  */
 
 import { Mastra } from '@mastra/core';
+import type { Agent } from '@mastra/core/agent';
 import { ConvexStore } from '@mastra/convex';
 import { Observability, SamplingStrategyType } from '@mastra/observability';
 import { SentryExporter } from '@mastra/sentry';
 import { routingAgent, createRoutingAgent } from './routing/routing.agent';
+import { createCbsAgent } from '@/data-sources/cbs';
+import { createDatagovAgent } from '@/data-sources/datagov';
 import { dataSourceAgents } from '@/data-sources/registry.server';
 import type { DataSourceId } from '@/data-sources/registry';
 import { MASTRA_SCORERS } from './evals/eval.config';
@@ -50,11 +53,12 @@ const observability = sentryDsn
       })
     : undefined;
 
-/** Static default agents (backward compat) — explicit keys for AgentName derivation */
+/** Static default agents (backward compat) — explicit keys for AgentName derivation.
+ *  Uses direct sync imports (not registry) because registry.createAgent may be async for MCP sources. */
 export const agents = {
     routingAgent,
-    cbsAgent: dataSourceAgents.cbsAgent.createAgent(`openrouter/${ENV.AI_DEFAULT_MODEL_ID}`),
-    datagovAgent: dataSourceAgents.datagovAgent.createAgent(`openrouter/${ENV.AI_DEFAULT_MODEL_ID}`),
+    cbsAgent: createCbsAgent(`openrouter/${ENV.AI_DEFAULT_MODEL_ID}`),
+    datagovAgent: createDatagovAgent(`openrouter/${ENV.AI_DEFAULT_MODEL_ID}`),
 };
 
 export const mastra = new Mastra({
@@ -78,8 +82,10 @@ let cachedMastra: Mastra | null = null;
  * Creates (or returns cached) Mastra instance with the specified per-agent models.
  * Model IDs should be OpenRouter format (e.g., 'google/gemini-3-flash-preview').
  * The function prefixes them with 'openrouter/' for Mastra's model format.
+ *
+ * Async because some data sources (e.g., BudgetKey MCP) require async tool loading.
  */
-export function getMastraWithModels(config: AgentModelConfig): Mastra {
+export async function getMastraWithModels(config: AgentModelConfig): Promise<Mastra> {
     const configKey = JSON.stringify(config);
 
     if (cachedConfigKey === configKey && cachedMastra) {
@@ -89,13 +95,16 @@ export function getMastraWithModels(config: AgentModelConfig): Mastra {
     console.log({ config });
 
     // Build sub-agents from registry with per-source model overrides
-    const subAgents: Record<string, ReturnType<(typeof dataSourceAgents)['cbsAgent']['createAgent']>> = {};
-    for (const [agentId, agentDef] of Object.entries(dataSourceAgents)) {
-        // Look up model by data source ID (e.g., 'cbs', 'datagov') or fall back to routing model
-        const dsId = agentId.replace('Agent', '') as DataSourceId;
-        const modelId = config[dsId] ?? config.routing;
-        subAgents[agentId] = agentDef.createAgent(`openrouter/${modelId}`);
-    }
+    // Some agent factories are async (MCP-based sources), so we await all of them
+    const subAgentEntries = await Promise.all(
+        Object.entries(dataSourceAgents).map(async ([agentId, agentDef]) => {
+            const dsId = agentId.replace('Agent', '') as DataSourceId;
+            const modelId = config[dsId] ?? config.routing;
+            const agent = await agentDef.createAgent(`openrouter/${modelId}`);
+            return [agentId, agent] as const;
+        }),
+    );
+    const subAgents: Record<string, Agent> = Object.fromEntries(subAgentEntries);
 
     const newRouting = createRoutingAgent(`openrouter/${config.routing}`, subAgents);
 

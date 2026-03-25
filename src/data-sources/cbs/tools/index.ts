@@ -69,3 +69,51 @@ export const cbsSourceResolvers: Partial<Record<CbsToolName, ToolSourceResolver>
     getCbsPriceData: getCbsPriceDataResolver,
     calculateCbsPriceIndex: calculateCbsPriceIndexResolver,
 };
+
+// ============================================================================
+// Resource extractors for ChainOfThought UI chips
+// ============================================================================
+
+import type { ToolResourceExtractor } from '@/data-sources/types';
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+    return typeof value === 'object' && value !== null;
+}
+
+function getString(obj: unknown, key: string): string | undefined {
+    if (!isRecord(obj)) return undefined;
+    const val = obj[key];
+    return typeof val === 'string' && val.length > 0 ? val : undefined;
+}
+
+/** Extractor for catalog browsing — uses `path` from input */
+const catalogPathExtractor: ToolResourceExtractor = (input) => {
+    const name = getString(input, 'path');
+    return name ? { name } : null;
+};
+
+/** Extractor for tools with `searchedResourceName` input */
+const resourceNameExtractor: ToolResourceExtractor = (input, output) => {
+    const name = getString(input, 'searchedResourceName');
+    const url = getString(output, 'apiUrl');
+    if (!name && !url) return null;
+    return { name, url: url ?? undefined };
+};
+
+/** Extractor for search tools that use `query` or `q` input fields */
+const searchExtractor: ToolResourceExtractor = (input) => {
+    const name = getString(input, 'query') ?? getString(input, 'q');
+    return name ? { name } : null;
+};
+
+/** Resource extractors for CBS tools */
+export const cbsResourceExtractors: Partial<Record<CbsToolName, ToolResourceExtractor>> = {
+    browseCbsCatalog: searchExtractor,
+    browseCbsCatalogPath: catalogPathExtractor,
+    getCbsSeriesData: resourceNameExtractor,
+    getCbsSeriesDataByPath: catalogPathExtractor,
+    browseCbsPriceIndices: searchExtractor,
+    getCbsPriceData: resourceNameExtractor,
+    calculateCbsPriceIndex: resourceNameExtractor,
+    searchCbsLocalities: searchExtractor,
+};

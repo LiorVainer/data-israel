@@ -32,6 +32,18 @@ vi.mock('@mastra/core/agent', () => {
     return { Agent: MockAgent };
 });
 
+vi.mock('@mastra/core/processors', () => ({
+    PromptInjectionDetector: class {
+        constructor() {}
+    },
+    UnicodeNormalizer: class {
+        constructor() {}
+    },
+    SystemPromptScrubber: class {
+        constructor() {}
+    },
+}));
+
 vi.mock('@mastra/memory', () => {
     class MockMemory {
         _isMemory = true;
@@ -49,10 +61,58 @@ vi.mock('@mastra/convex', () => {
     return { ConvexStore: MockConvexStore, ConvexVector: MockConvexVector };
 });
 
+vi.mock('@mastra/observability', () => ({
+    Observability: class {
+        constructor() {}
+    },
+    SamplingStrategyType: { ALWAYS: 'always' },
+}));
+
+vi.mock('@mastra/sentry', () => ({
+    SentryExporter: class {
+        constructor() {}
+    },
+}));
+
 vi.mock('@openrouter/ai-sdk-provider', () => ({
     openrouter: {
         textEmbeddingModel: vi.fn().mockReturnValue('mock-embedder'),
     },
+}));
+
+vi.mock('@mastra/mcp', () => ({
+    MCPClient: class MockMCPClient {
+        constructor() {}
+        async listTools() {
+            return {};
+        }
+        async disconnect() {}
+    },
+}));
+
+vi.mock('@mastra/core/evals', () => {
+    const createChainable = (): Record<string, unknown> => {
+        const proxy: Record<string, unknown> = new Proxy(
+            {},
+            {
+                get: () => vi.fn(() => proxy),
+            },
+        );
+        return proxy;
+    };
+    return {
+        createScorer: vi.fn(() => createChainable()),
+    };
+});
+
+vi.mock('@mastra/evals/scorers/prebuilt', () => ({
+    createAnswerRelevancyScorer: vi.fn(() => ({})),
+    createCompletenessScorer: vi.fn(() => ({})),
+    createHallucinationScorer: vi.fn(() => ({})),
+}));
+
+vi.mock('@mastra/evals/scorers/utils', () => ({
+    extractToolResults: vi.fn(),
 }));
 
 vi.mock('@/lib/env', () => ({
@@ -64,49 +124,8 @@ vi.mock('@/lib/env', () => ({
         AI_TOOL_CALL_CONCURRENCY: 10,
         NEXT_PUBLIC_CONVEX_URL: undefined,
         CONVEX_ADMIN_KEY: undefined,
+        NODE_ENV: 'test',
     },
-}));
-
-vi.mock('@/lib/tools/datagov', () => ({ DataGovTools: {} }));
-vi.mock('@/lib/tools/cbs', () => ({ CbsTools: {} }));
-vi.mock('@/lib/tools/client', () => ({ ClientTools: {} }));
-
-// Mock agent config modules
-vi.mock('../network/datagov/config', () => ({
-    DATAGOV_AGENT_CONFIG: { name: 'test-datagov', instructions: 'test' },
-}));
-vi.mock('../network/cbs/config', () => ({
-    CBS_AGENT_CONFIG: { name: 'test-cbs', instructions: 'test' },
-}));
-vi.mock('../network/routing/config', () => ({
-    ROUTING_CONFIG: { name: 'test-routing', instructions: 'test' },
-}));
-
-// Mock the static agent instances (they run at module init in the real files)
-vi.mock('../network', () => ({
-    routingAgent: { _isAgent: true, id: 'routingAgent' },
-    datagovAgent: { _isAgent: true, id: 'datagovAgent' },
-    cbsAgent: { _isAgent: true, id: 'cbsAgent' },
-}));
-
-// Mock the factory functions
-vi.mock('../network/routing/routing.agent', () => ({
-    createRoutingAgent: vi.fn().mockImplementation(() => ({
-        _isAgent: true,
-        id: 'routingAgent',
-    })),
-}));
-vi.mock('../network/datagov/data-gov.agent', () => ({
-    createDatagovAgent: vi.fn().mockImplementation(() => ({
-        _isAgent: true,
-        id: 'datagovAgent',
-    })),
-}));
-vi.mock('../network/cbs/cbs.agent', () => ({
-    createCbsAgent: vi.fn().mockImplementation(() => ({
-        _isAgent: true,
-        id: 'cbsAgent',
-    })),
 }));
 
 import { getMastraWithModels, type AgentModelConfig } from '../mastra';
@@ -119,28 +138,25 @@ describe('getMastraWithModels', () => {
     };
 
     beforeEach(() => {
-        // Reset module-level cache by importing a fresh module on each test.
-        // Since vi.resetModules() is heavy, we rely on distinct config objects
-        // for the "creates new instance" test.
         vi.clearAllMocks();
     });
 
-    it('returns a Mastra instance', () => {
-        const result = getMastraWithModels(config);
+    it('returns a Mastra instance', async () => {
+        const result = await getMastraWithModels(config);
         expect(result).toBeDefined();
         expect(result).toHaveProperty('_isMastra', true);
     });
 
-    it('caches instance for same config', () => {
-        const first = getMastraWithModels(config);
-        const second = getMastraWithModels(config);
+    it('caches instance for same config', async () => {
+        const first = await getMastraWithModels(config);
+        const second = await getMastraWithModels(config);
         expect(first).toBe(second); // Same reference
     });
 
-    it('creates new instance on config change', () => {
-        const first = getMastraWithModels(config);
+    it('creates new instance on config change', async () => {
+        const first = await getMastraWithModels(config);
         const changed: AgentModelConfig = { ...config, routing: 'test/new-routing' };
-        const second = getMastraWithModels(changed);
+        const second = await getMastraWithModels(changed);
         expect(first).not.toBe(second); // Different reference
     });
 });

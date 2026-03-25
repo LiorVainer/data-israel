@@ -50,6 +50,16 @@
   --color-badge-datagov-foreground: var(--badge-datagov-foreground);
   --color-badge-cbs: var(--badge-cbs);
   --color-badge-cbs-foreground: var(--badge-cbs-foreground);
+  --color-badge-budget: var(--badge-budget);
+  --color-badge-budget-foreground: var(--badge-budget-foreground);
+  --color-badge-nadlan: var(--badge-nadlan);
+  --color-badge-nadlan-foreground: var(--badge-nadlan-foreground);
+  --color-badge-drugs: var(--badge-drugs);
+  --color-badge-drugs-foreground: var(--badge-drugs-foreground);
+  --color-badge-health: var(--badge-health);
+  --color-badge-health-foreground: var(--badge-health-foreground);
+  --color-badge-grocery: var(--badge-grocery);
+  --color-badge-grocery-foreground: var(--badge-grocery-foreground);
   /* Semantic status colors */
   --color-success: var(--success);
   --color-error: var(--error);
@@ -100,6 +110,16 @@
   --badge-datagov-foreground: oklch(0.35 0.1 85);
   --badge-cbs: oklch(0.896 0.059 62.816);
   --badge-cbs-foreground: oklch(0.35 0.1 55);
+  --badge-budget: oklch(0.88 0.08 155);
+  --badge-budget-foreground: oklch(0.3 0.1 155);
+  --badge-nadlan: oklch(0.895 0.08 160);
+  --badge-nadlan-foreground: oklch(0.35 0.1 155);
+  --badge-drugs: oklch(0.88 0.08 160);
+  --badge-drugs-foreground: oklch(0.3 0.08 160);
+  --badge-health: oklch(0.88 0.09 15);
+  --badge-health-foreground: oklch(0.35 0.1 15);
+  --badge-grocery: oklch(0.88 0.1 155);
+  --badge-grocery-foreground: oklch(0.3 0.1 155);
   /* Semantic status colors */
   --success: oklch(0.508 0.118 165.612); /* emerald-700 */
   --error: oklch(0.505 0.213 27.518);   /* red-700 */
@@ -150,6 +170,16 @@
   --badge-datagov-foreground: oklch(0.9 0.08 85);
   --badge-cbs: oklch(0.45 0.12 55);
   --badge-cbs-foreground: oklch(0.9 0.08 55);
+  --badge-budget: oklch(0.4 0.1 155);
+  --badge-budget-foreground: oklch(0.9 0.07 155);
+  --badge-nadlan: oklch(0.45 0.1 160);
+  --badge-nadlan-foreground: oklch(0.9 0.08 160);
+  --badge-drugs: oklch(0.4 0.08 160);
+  --badge-drugs-foreground: oklch(0.9 0.07 160);
+  --badge-health: oklch(0.42 0.09 15);
+  --badge-health-foreground: oklch(0.9 0.08 15);
+  --badge-grocery: oklch(0.4 0.12 155);
+  --badge-grocery-foreground: oklch(0.9 0.08 155);
   --action: oklch(0.78 0.14 64.119);
   --action-dark: oklch(0.6 0.15 55);
   --action-tint: oklch(0.25 0.03 51);

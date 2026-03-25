@@ -1,70 +1,23 @@
 'use client';
 
-import Image from 'next/image';
 import { motion } from 'framer-motion';
-import { BarChart3, Building2, Calendar, Database, FolderOpen, Layers } from 'lucide-react';
-import type { ReactNode } from 'react';
-import { DATA_SOURCE_CONFIG } from '@/data-sources/registry';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { LANDING_CATEGORIES, type LandingCategory } from '@/data-sources/types';
+import { getDataSourcesWithLanding } from '@/data-sources/registry';
+import { SourceCard } from './SourceCard';
 
-interface StatProps {
-    icon: ReactNode;
-    value: string;
-    label: string;
-}
+type LandingSource = ReturnType<typeof getDataSourcesWithLanding>[number];
 
-function StatCard({ icon, value, label }: StatProps) {
-    return (
-        <div className='flex flex-col items-center gap-3 rounded-2xl border border-border/40 bg-background/70 backdrop-blur-sm px-6 py-6 md:py-8 shadow-sm'>
-            <div className='flex items-center justify-center w-12 h-12 rounded-xl bg-primary-tint text-primary'>
-                {icon}
-            </div>
-            <span className='text-3xl md:text-4xl font-bold text-foreground tabular-nums'>{value}</span>
-            <span className='text-sm md:text-base text-muted-foreground text-center'>{label}</span>
-        </div>
-    );
-}
+const sortedCategories = (
+    Object.entries(LANDING_CATEGORIES) as [LandingCategory, (typeof LANDING_CATEGORIES)[LandingCategory]][]
+).sort(([, a], [, b]) => a.order - b.order);
 
-interface SourceBlockProps {
-    href: string;
-    logoSrc: string;
-    logoAlt: string;
-    logoWidth: number;
-    logoHeight: number;
-    description: string;
-    stats: StatProps[];
-    delay: number;
-}
+const sources = getDataSourcesWithLanding();
 
-function SourceBlock({ href, logoSrc, logoAlt, logoWidth, logoHeight, description, stats, delay }: SourceBlockProps) {
-    return (
-        <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: '-50px' }}
-            transition={{ duration: 0.6, delay, ease: 'easeOut' }}
-            className='flex flex-col items-center gap-12'
-        >
-            <div className='flex flex-col items-center gap-6 w-full'>
-                <a
-                    href={href}
-                    target='_blank'
-                    rel='noopener noreferrer'
-                    className='hover:opacity-70 transition-opacity'
-                >
-                    <Image src={logoSrc} alt={logoAlt} width={logoWidth} height={logoHeight} />
-                </a>
-                <p className='text-sm md:text-base text-muted-foreground text-center leading-relaxed max-w-md'>
-                    {description}
-                </p>
-            </div>
-            <div className='grid grid-cols-1 sm:grid-cols-3 gap-6 md:gap-3 w-full'>
-                {stats.map((stat) => (
-                    <StatCard key={stat.label} icon={stat.icon} value={stat.value} label={stat.label} />
-                ))}
-            </div>
-        </motion.div>
-    );
-}
+const sourcesByCategory: Partial<Record<LandingCategory, LandingSource[]>> = Object.groupBy(
+    sources,
+    (s) => s.landing.category,
+);
 
 export function SourcesSection() {
     return (
@@ -79,39 +32,34 @@ export function SourcesSection() {
                 מקורות המידע
             </motion.h2>
 
-            <div className='flex flex-col gap-16 md:gap-24'>
-                <SourceBlock
-                    href={DATA_SOURCE_CONFIG.datagov.url}
-                    logoSrc='/datagov-logo.svg'
-                    logoAlt='data.gov.il'
-                    logoWidth={150}
-                    logoHeight={65}
-                    description='הפורטל הלאומי לנתונים פתוחים של ממשלת ישראל —
-מאגרי מידע ממשרדי ממשלה, רשויות וגופים ציבוריים.'
-                    delay={0}
-                    stats={[
-                        { icon: <Database className='w-6 h-6' />, value: '1,100+', label: 'מאגרי מידע' },
-                        { icon: <Building2 className='w-6 h-6' />, value: '60+', label: 'גופים מפרסמים' },
-                        { icon: <FolderOpen className='w-6 h-6' />, value: '3,500+', label: 'קבצי נתונים' },
-                    ]}
-                />
+            <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: '-50px' }}
+                transition={{ duration: 0.6, ease: 'easeOut' }}
+            >
+                <Tabs defaultValue={sortedCategories[0]?.[0]} dir='rtl'>
+                    <TabsList className='w-full justify-center mb-8'>
+                        {sortedCategories.map(([id, cat]) => (
+                            <TabsTrigger key={id} value={id}>
+                                {cat.label}
+                            </TabsTrigger>
+                        ))}
+                    </TabsList>
 
-                <SourceBlock
-                    href={DATA_SOURCE_CONFIG.cbs.url}
-                    logoSrc='/cbs-logo.svg'
-                    logoAlt='הלמ"ס'
-                    logoWidth={150}
-                    logoHeight={75}
-                    description='הגוף הרשמי לסטטיסטיקה של מדינת ישראל —
-מדדי מחירים, דמוגרפיה, נתוני יישובים ועוד.'
-                    delay={0.15}
-                    stats={[
-                        { icon: <BarChart3 className='w-6 h-6' />, value: '95,000+', label: 'סדרות סטטיסטיות' },
-                        { icon: <Layers className='w-6 h-6' />, value: '35', label: 'תחומי מידע' },
-                        { icon: <Calendar className='w-6 h-6' />, value: '75+', label: 'שנות נתונים' },
-                    ]}
-                />
-            </div>
+                    {sortedCategories.map(([catId]) => (
+                        <TabsContent key={catId} value={catId}>
+                            <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'>
+                                {(sourcesByCategory[catId] ?? [])
+                                    .sort((a, b) => a.landing.order - b.landing.order)
+                                    .map((source) => (
+                                        <SourceCard key={source.id} source={source} />
+                                    ))}
+                            </div>
+                        </TabsContent>
+                    ))}
+                </Tabs>
+            </motion.div>
         </section>
     );
 }

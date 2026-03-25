@@ -1,0 +1,169 @@
+/**
+ * Get Valuation Comparables Tool
+ *
+ * Finds comparable property transactions near an address for valuation purposes.
+ * Focuses on similar properties (by area range) and calculates estimated value.
+ */
+
+import { createTool } from '@mastra/core/tools';
+import { z } from 'zod';
+import { nadlanApi } from '../api/nadlan.client';
+import { buildGovmapPortalUrl } from '../api/nadlan.endpoints';
+import { commonToolInput, toolOutputSchema } from '@/data-sources/types';
+import type { ToolSourceResolver } from '@/data-sources/types';
+
+// ============================================================================
+// Helpers
+// ============================================================================
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+    return typeof value === 'object' && value !== null;
+}
+
+function getString(obj: unknown, key: string): string | undefined {
+    if (!isRecord(obj)) return undefined;
+    const val = obj[key];
+    return typeof val === 'string' ? val : undefined;
+}
+
+// ============================================================================
+// Schemas
+// ============================================================================
+
+export const getValuationComparablesInputSchema = z.object({
+    address: z.string().describe('Israeli address to find comparable properties for'),
+    targetAreaSqm: z
+        .number()
+        .min(10)
+        .max(1000)
+        .optional()
+        .describe('Target property area in sqm for filtering (optional)'),
+    radiusMeters: z.number().int().min(10).max(5000).optional().describe('Search radius in meters (default: 200)'),
+    yearsBack: z.number().int().min(1).max(5).optional().describe('How many years back (default: 2)'),
+    dealType: z
+        .union([z.literal(1), z.literal(2)])
+        .optional()
+        .describe('1=first hand, 2=second hand (default: 2)'),
+    ...commonToolInput,
+});
+
+export const getValuationComparablesOutputSchema = toolOutputSchema({
+    address: z.string(),
+    targetAreaSqm: z.number().optional(),
+    comparableCount: z.number(),
+    estimatedValuePerSqm: z.number().optional().describe('Estimated value per sqm in NIS based on comparables'),
+    estimatedTotalValue: z.number().optional().describe('Estimated total value in NIS (if targetAreaSqm provided)'),
+    comparables: z.array(
+        z.object({
+            id: z.number(),
+            dealAmount: z.number().describe('Price in NIS'),
+            dealDate: z.string(),
+            assetArea: z.number().optional().describe('Area in sqm'),
+            pricePerSqm: z.number().optional().describe('Price per sqm in NIS'),
+            settlementName: z.string().optional(),
+            streetName: z.string().optional(),
+            houseNumber: z.string().optional(),
+            assetType: z.string().optional(),
+            rooms: z.number().optional(),
+        }),
+    ),
+});
+
+// ============================================================================
+// Tool Definition
+// ============================================================================
+
+export const getNadlanValuationComparables = createTool({
+    id: 'getNadlanValuationComparables',
+    description:
+        'Find comparable property transactions for valuation purposes. Returns similar properties near the address with estimated value per sqm. Optionally filter by target area to get more relevant comparables.',
+    inputSchema: getValuationComparablesInputSchema,
+    outputSchema: getValuationComparablesOutputSchema,
+    execute: async ({ address, targetAreaSqm, radiusMeters = 200, yearsBack = 2, dealType = 2 }) => {
+        const portalUrl = buildGovmapPortalUrl();
+
+        try {
+            const result = await nadlanApi.findRecentDealsForAddress(address, yearsBack, radiusMeters, 200, dealType);
+
+            if (!result.deals.length) {
+                return {
+                    success: false as const,
+                    error: `לא נמצאו עסקאות השוואה ליד "${address}"`,
+                    portalUrl,
+                };
+            }
+
+            // Filter to deals with valid area and price
+            let comparables = result.deals.filter(
+                (d) => d.assetArea && d.assetArea > 0 && d.pricePerSqm && d.pricePerSqm > 0,
+            );
+
+            // If target area specified, filter to +/- 30% range
+            if (targetAreaSqm) {
+                const minArea = targetAreaSqm * 0.7;
+                const maxArea = targetAreaSqm * 1.3;
+                const filtered = comparables.filter(
+                    (d) => d.assetArea !== undefined && d.assetArea >= minArea && d.assetArea <= maxArea,
+                );
+                // Use filtered if we have enough, otherwise keep all
+                if (filtered.length >= 3) {
+                    comparables = filtered;
+                }
+            }
+
+            // Sort by date (most recent first) and limit to 20
+            comparables.sort((a, b) => b.dealDate.localeCompare(a.dealDate));
+            comparables = comparables.slice(0, 20);
+
+            // Renumber
+            comparables = comparables.map((d, idx) => ({ ...d, id: idx + 1 }));
+
+            // Calculate estimated value
+            const ppsqmValues = comparables
+                .map((d) => d.pricePerSqm)
+                .filter((p): p is number => p !== undefined && p > 0);
+
+            const estimatedValuePerSqm =
+                ppsqmValues.length > 0
+                    ? Math.round(ppsqmValues.reduce((a, b) => a + b, 0) / ppsqmValues.length)
+                    : undefined;
+
+            const estimatedTotalValue =
+                estimatedValuePerSqm && targetAreaSqm ? Math.round(estimatedValuePerSqm * targetAreaSqm) : undefined;
+
+            return {
+                success: true as const,
+                address,
+                targetAreaSqm,
+                comparableCount: comparables.length,
+                estimatedValuePerSqm,
+                estimatedTotalValue,
+                comparables,
+                portalUrl: result.searchCoordinates
+                    ? buildGovmapPortalUrl(result.searchCoordinates.longitude, result.searchCoordinates.latitude)
+                    : portalUrl,
+            };
+        } catch (error) {
+            return {
+                success: false as const,
+                error: error instanceof Error ? error.message : String(error),
+                portalUrl,
+            };
+        }
+    },
+});
+
+// ============================================================================
+// Source URL Resolver
+// ============================================================================
+
+export const resolveSourceUrl: ToolSourceResolver = (_input, output) => {
+    const portalUrl = getString(output, 'portalUrl');
+    if (!portalUrl) return null;
+    const name = getString(_input, 'searchedResourceName');
+    return {
+        url: portalUrl,
+        title: name ? `הערכת שווי — ${name}` : 'הערכת שווי — govmap.gov.il',
+        urlType: 'portal',
+    };
+};

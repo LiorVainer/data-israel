@@ -15,10 +15,11 @@ export {
 } from './tool-schemas';
 
 // Display types
-export type { DataSource, DataSourceConfig, AgentDisplayInfo } from './display.types';
+export { LANDING_CATEGORIES } from './display.types';
+export type { DataSource, DataSourceConfig, AgentDisplayInfo, LandingCategory, LandingConfig } from './display.types';
 
 // Tool types
-export type { ToolSource, ToolSourceResolver, ToolTranslation } from './tool.types';
+export type { ToolSource, ToolSourceResolver, ToolResourceExtractor, ToolTranslation } from './tool.types';
 
 // Data source definition
 export type { DataSourceDefinition } from './data-source.types';

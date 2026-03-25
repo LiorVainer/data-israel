@@ -8,13 +8,19 @@ Self-contained data source modules. Each folder provides everything needed: API 
 src/data-sources/
 ├── types/                          # Shared types & Zod schema fragments
 │   ├── data-source.types.ts        # DataSourceDefinition<TTools> interface
-│   ├── tool.types.ts               # ToolSourceResolver, ToolTranslation, ToolIOMap
+│   ├── tool.types.ts               # ToolSourceResolver, ToolTranslation, ToolResourceExtractor
 │   ├── tool-schemas.ts             # commonToolInput, externalUrls, toolOutputSchema()
-│   ├── display.types.ts            # AgentDisplayInfo, DataSource, DataSourceConfig
+│   ├── display.types.ts            # AgentDisplayInfo, DataSource, DataSourceConfig, LANDING_CATEGORIES
 │   └── index.ts                    # Re-exports
-├── registry.ts                     # Collects all sources, exports aggregated tools/agents/translations
-├── cbs/                            # CBS data source
-└── datagov/                        # DataGov data source
+├── registry.ts                     # Client-safe aggregation (tools, translations, resolvers, extractors)
+├── registry.server.ts              # Server-only agent references (@mastra/core/agent)
+├── cbs/                            # CBS data source (9 tools)
+├── datagov/                        # DataGov data source (16 tools)
+├── budget/                         # BudgetKey data source (3 MCP tools)
+├── nadlan/                         # Nadlan real estate data source (8 tools)
+├── drugs/                          # Israel Drugs data source (8 tools)
+├── health/                         # IL Health data source (5 tools)
+└── grocery/                        # Grocery Prices data source (5 tools)
 ```
 
 ## Per-Source Folder Structure
@@ -75,6 +81,8 @@ export const resolveSourceUrl: ToolSourceResolver = (input, output) => {
 
 ### Step 4: Create translations with LucideIcon
 
+`ToolTranslation` requires only `name` + `icon`. The optional `formatInput`/`formatOutput` fields are legacy and not used by the rendering pipeline.
+
 ```typescript
 // {source}.translations.tsx
 import { SearchIcon } from 'lucide-react';
@@ -84,8 +92,6 @@ export const translations: Partial<Record<ToolName, ToolTranslation>> = {
   myTool: {
     name: 'Hebrew name',
     icon: SearchIcon,       // LucideIcon component, NOT <SearchIcon />
-    formatInput: (input) => '...',
-    formatOutput: (output) => '...',
   },
 };
 ```
@@ -165,6 +171,71 @@ describe('{Source} data source contract', () => {
 
 **Every new data source MUST have these contract tests.** They ensure the `DataSourceDefinition` interface is properly satisfied and prevent regressions.
 
+## MCPClient Pattern (Budget Source)
+
+The budget source connects to a hosted MCP endpoint instead of defining custom Mastra tools. Tools are auto-discovered at agent creation time via `MCPClient.listTools()`.
+
+```
+src/data-sources/budget/
+├── budget.mcp.ts              # MCPClient instance (url: https://next.obudget.org/mcp)
+├── budget.agent.ts            # Async agent factory (await listTools() → new Agent)
+├── budget.tools.ts            # Static tool name record (BudgetToolName type + BudgetToolNames)
+├── budget.display.ts          # AgentDisplayInfo + badge config
+├── budget.translations.tsx    # Hebrew tool translations
+├── budget.source-resolvers.ts # Source URL resolvers
+└── index.ts                   # Exports BudgetDataSource (no `satisfies` — tools are placeholders)
+```
+
+Key differences from standard sources:
+- `createAgent` returns `Promise<Agent>` (async) — the `DataSourceDefinition.agent.createAgent` type is `(modelId: string) => Agent | Promise<Agent>`
+- `tools` record contains placeholder values (`true`) for client-side registry key mapping — actual Tool objects come from MCP at runtime
+- No `satisfies DataSourceDefinition<...>` — type safety for keys is enforced by the `BudgetToolName` type instead
+
+## Landing Page Config
+
+`DataSourceDefinition` has an optional `landing` field for landing page display:
+
+```typescript
+landing?: {
+  logo: string;              // Path to SVG in /public
+  description: string;       // Hebrew one-liner
+  stats: { label: string; value: string; icon: LucideIcon }[];
+  category: LandingCategory; // 'government' | 'economy' | 'health'
+  order: number;             // Sort within category
+}
+```
+
+Categories are defined in `display.types.ts` as `LANDING_CATEGORIES`:
+- `government` — "ממשל ותקציב" (order 1)
+- `economy` — "כלכלה ונדל\"ן" (order 2)
+- `health` — "בריאות" (order 3)
+
+## Resource Extractors
+
+Per-source `resourceExtractors` on `DataSourceDefinition` provide chip labels for ChainOfThought UI. Each extractor receives a tool's `(input, output)` and returns `{ name?: string; url?: string } | null`.
+
+```typescript
+resourceExtractors?: Partial<Record<keyof TTools & string, ToolResourceExtractor>>;
+```
+
+The registry aggregates all extractors via `getAllResourceExtractors()`. Sources that don't need custom extraction can omit the field (defaults to `{}`).
+
+## Simplified ToolTranslation
+
+The `ToolTranslation` interface requires only two fields:
+
+```typescript
+interface ToolTranslation {
+  name: string;       // Hebrew display name
+  icon: LucideIcon;   // Icon component for ChainOfThought UI
+  // Optional legacy fields (not used by rendering pipeline):
+  formatInput?: (input: unknown) => string | undefined;
+  formatOutput?: (output: unknown) => string | undefined;
+}
+```
+
+The `formatInput`/`formatOutput` fields are optional and no longer used by the UI. New data sources should only provide `name` and `icon`.
+
 ## Key Conventions
 
 - `searchedResourceName` is **input-only** — never echo it in output schemas
@@ -173,3 +244,5 @@ describe('{Source} data source contract', () => {
 - Source URL resolvers are per-tool (co-located), not a central switch
 - `DataSourceDefinition` is generic over `TTools` — keys in `sourceResolvers` and `translations` are type-checked
 - `routingHint` is auto-injected into the routing agent's system prompt via `buildRoutingHints()`
+- `DataSource` type union: `'cbs' | 'datagov' | 'budget' | 'knesset' | 'nadlan' | 'drugs' | 'health' | 'grocery'`
+- Registry is split: `registry.ts` (client-safe) and `registry.server.ts` (server-only agent refs)

@@ -11,7 +11,10 @@ if (existsSync(envPath)) {
         const eqIdx = trimmed.indexOf('=');
         if (eqIdx === -1) continue;
         const key = trimmed.slice(0, eqIdx).trim();
-        const value = trimmed.slice(eqIdx + 1).trim().replace(/^["']|["']$/g, '');
+        const value = trimmed
+            .slice(eqIdx + 1)
+            .trim()
+            .replace(/^["']|["']$/g, '');
         if (!process.env[key]) {
             process.env[key] = value;
         }
@@ -28,7 +31,7 @@ export default defineConfig({
     test: {
         environment: 'node',
         include: ['**/__tests__/**/*.test.ts', '**/__tests__/**/*.test.tsx'],
-        exclude: ['node_modules', '.next', 'mcp-ref', 'components-ref'],
+        exclude: ['node_modules', '.next', 'mcp-ref', 'components-ref', '.claude/worktrees'],
         passWithNoTests: true,
     },
 });

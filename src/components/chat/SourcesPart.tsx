@@ -30,6 +30,42 @@ const PROVIDER_DISPLAY: Record<GroupKey, { nameLabel: string; summaryLabel: stri
         borderClass: 'border-r-badge-cbs',
         tintClass: 'bg-badge-cbs/10 text-badge-cbs-foreground',
     },
+    budget: {
+        nameLabel: 'תקציב המדינה — מפתח התקציב',
+        summaryLabel: DATA_SOURCE_CONFIG.budget.nameLabel,
+        borderClass: 'border-r-badge-budget',
+        tintClass: 'bg-badge-budget/10 text-badge-budget-foreground',
+    },
+    nadlan: {
+        nameLabel: 'עסקאות נדל"ן — govmap.gov.il',
+        summaryLabel: DATA_SOURCE_CONFIG.nadlan.nameLabel,
+        borderClass: 'border-r-badge-nadlan',
+        tintClass: 'bg-badge-nadlan/10 text-badge-nadlan-foreground',
+    },
+    drugs: {
+        nameLabel: 'מאגר התרופות — משרד הבריאות',
+        summaryLabel: DATA_SOURCE_CONFIG.drugs.nameLabel,
+        borderClass: 'border-r-badge-drugs',
+        tintClass: 'bg-badge-drugs/10 text-badge-drugs-foreground',
+    },
+    health: {
+        nameLabel: 'נתוני בריאות — משרד הבריאות',
+        summaryLabel: DATA_SOURCE_CONFIG.health.nameLabel,
+        borderClass: 'border-r-badge-health',
+        tintClass: 'bg-badge-health/10 text-badge-health-foreground',
+    },
+    grocery: {
+        nameLabel: 'מחירי מזון — סופרמרקטים',
+        summaryLabel: DATA_SOURCE_CONFIG.grocery.nameLabel,
+        borderClass: 'border-r-badge-grocery',
+        tintClass: 'bg-badge-grocery/10 text-badge-grocery-foreground',
+    },
+    knesset: {
+        nameLabel: 'הכנסת — פרוטוקולים וחקיקה',
+        summaryLabel: 'כנסת',
+        borderClass: 'border-r-muted-foreground/40',
+        tintClass: 'bg-muted/30 text-muted-foreground',
+    },
     other: {
         nameLabel: 'מקורות נוספים',
         summaryLabel: 'אחר',
@@ -39,7 +75,7 @@ const PROVIDER_DISPLAY: Record<GroupKey, { nameLabel: string; summaryLabel: stri
 };
 
 /** Ordered keys for rendering sections */
-const PROVIDER_ORDER: GroupKey[] = ['datagov', 'cbs', 'other'];
+const PROVIDER_ORDER: GroupKey[] = ['datagov', 'cbs', 'budget', 'nadlan', 'drugs', 'health', 'grocery', 'other'];
 
 export interface SourcesPartProps {
     sources: EnrichedSourceUrl[];
@@ -50,6 +86,12 @@ export function SourcesPart({ sources }: SourcesPartProps) {
         const groups: Record<GroupKey, ProviderGroup> = {
             datagov: { portal: [], api: [] },
             cbs: { portal: [], api: [] },
+            budget: { portal: [], api: [] },
+            nadlan: { portal: [], api: [] },
+            drugs: { portal: [], api: [] },
+            health: { portal: [], api: [] },
+            grocery: { portal: [], api: [] },
+            knesset: { portal: [], api: [] },
             other: { portal: [], api: [] },
         };
         for (const s of sources) {

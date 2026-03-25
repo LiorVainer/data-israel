@@ -82,3 +82,68 @@ export const datagovSourceResolvers: Partial<Record<DataGovToolName, ToolSourceR
     getResourceDetails: getResourceDetailsResolver,
     queryDatastoreResource: queryDatastoreResourceResolver,
 };
+
+// ============================================================================
+// Resource extractors for ChainOfThought UI chips
+// ============================================================================
+
+import type { ToolResourceExtractor } from '@/data-sources/types';
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+    return typeof value === 'object' && value !== null;
+}
+
+function getString(obj: unknown, key: string): string | undefined {
+    if (!isRecord(obj)) return undefined;
+    const val = obj[key];
+    return typeof val === 'string' && val.length > 0 ? val : undefined;
+}
+
+/** Extractor for search tools that use `query` or `q` input fields */
+const searchExtractor: ToolResourceExtractor = (input) => {
+    const name = getString(input, 'query') ?? getString(input, 'q');
+    return name ? { name } : null;
+};
+
+/** Extractor for tools with `searchedResourceName` input field */
+const resourceNameExtractor: ToolResourceExtractor = (input, output) => {
+    const name = getString(input, 'searchedResourceName');
+    const url = getString(output, 'apiUrl');
+    if (!name && !url) return null;
+    return { name, url: url ?? undefined };
+};
+
+/** Extractor for dataset detail tools — uses dataset.title from output */
+const datasetDetailExtractor: ToolResourceExtractor = (input, output) => {
+    const resourceName = getString(input, 'searchedResourceName');
+    const datasetTitle = getString(isRecord(output) ? output.dataset : undefined, 'title');
+    const name = resourceName ?? datasetTitle;
+    const url = getString(output, 'apiUrl');
+    if (!name && !url) return null;
+    return { name, url: url ?? undefined };
+};
+
+/** Extractor for organization detail tools — uses organization.title from output */
+const organizationDetailExtractor: ToolResourceExtractor = (input, output) => {
+    const resourceName = getString(input, 'searchedResourceName');
+    const orgTitle = getString(isRecord(output) ? output.organization : undefined, 'title');
+    const name = resourceName ?? orgTitle;
+    const url = getString(output, 'apiUrl');
+    if (!name && !url) return null;
+    return { name, url: url ?? undefined };
+};
+
+/** Resource extractors for DataGov tools */
+export const datagovResourceExtractors: Partial<Record<DataGovToolName, ToolResourceExtractor>> = {
+    searchDatasets: searchExtractor,
+    listAllDatasets: searchExtractor,
+    getDatasetDetails: datasetDetailExtractor,
+    getDatasetActivity: resourceNameExtractor,
+    getDatasetSchema: resourceNameExtractor,
+    listOrganizations: searchExtractor,
+    getOrganizationDetails: organizationDetailExtractor,
+    getOrganizationActivity: resourceNameExtractor,
+    searchResources: searchExtractor,
+    getResourceDetails: resourceNameExtractor,
+    queryDatastoreResource: resourceNameExtractor,
+};

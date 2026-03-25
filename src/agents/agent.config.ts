@@ -38,6 +38,16 @@ export const AgentConfig = {
         DATAGOV_ID: ENV.AI_DATAGOV_MODEL_ID ?? ENV.AI_DEFAULT_MODEL_ID,
         /** CBS agent model ID (falls back to DEFAULT_ID) */
         CBS_ID: ENV.AI_CBS_MODEL_ID ?? ENV.AI_DEFAULT_MODEL_ID,
+        /** Budget agent model ID (falls back to DEFAULT_ID) */
+        BUDGET_ID: ENV.AI_BUDGET_MODEL_ID ?? ENV.AI_DEFAULT_MODEL_ID,
+        /** Nadlan agent model ID (falls back to DEFAULT_ID) */
+        NADLAN_ID: ENV.AI_NADLAN_MODEL_ID ?? ENV.AI_DEFAULT_MODEL_ID,
+        /** Drugs agent model ID (falls back to DEFAULT_ID) */
+        DRUGS_ID: ENV.AI_DRUGS_MODEL_ID ?? ENV.AI_DEFAULT_MODEL_ID,
+        /** Health agent model ID (falls back to DEFAULT_ID) */
+        HEALTH_ID: ENV.AI_HEALTH_MODEL_ID ?? ENV.AI_DEFAULT_MODEL_ID,
+        /** Grocery agent model ID (falls back to DEFAULT_ID) */
+        GROCERY_ID: ENV.AI_GROCERY_MODEL_ID ?? ENV.AI_DEFAULT_MODEL_ID,
     },
 
     /** Memory configuration for all agents */

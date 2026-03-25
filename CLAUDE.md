@@ -25,7 +25,7 @@ Keep this managed block so 'openspec update' can refresh the instructions.
 
 ## Project Overview
 
-This is an **Israeli Open Data AI Agent** built with Next.js 16 and designed to chat with users about Israeli open data from data.gov.il and the Central Bureau of Statistics (CBS). The project uses:
+This is an **Israeli Open Data AI Agent** built with Next.js 16 and designed to chat with users about Israeli open data from 8 government and public sources (data.gov.il, CBS, BudgetKey, Nadlan, Israel Drugs, IL Health, Grocery Prices, and Knesset). The project uses:
 - **Next.js 16.1.1** with App Router architecture
 - **React 19.2.3** with Server Components
 - **TypeScript 5** with strict type checking
@@ -37,9 +37,6 @@ This is an **Israeli Open Data AI Agent** built with Next.js 16 and designed to 
 The agent architecture is **tool-first**: rather than hallucinating dataset information, it queries external APIs through explicit, Zod-validated tools. All UI text is in **Hebrew (RTL)**.
 
 ## Development Commands
-
-### use pnpm to install dependencies, already installed in the environment
-### Dont Change the `ui/` and `ai-elements/` folders files unless instructed.
 
 ### Running the Application
 ```bash
@@ -56,23 +53,9 @@ npm run vibecheck  # Run vibecheck code quality analyzer
 tsc                # Type-check without emitting
 ```
 
-## ⚠️ CRITICAL: Post-Tool Call Verification
+## Post-Change Verification
 
-**After EVERY tool call that modifies code, you MUST run the following commands in sequence:**
-
-```bash
-npm run build     # Verify the build succeeds
-npm run lint      # Check for linting issues
-npm run vibecheck # Run code quality checks
-```
-
-**Do not skip this step.** These commands ensure:
-- ✅ The build compiles successfully
-- ✅ No ESLint violations were introduced
-- ✅ Code quality standards are maintained
-- ✅ No TypeScript errors exist
-
-If any command fails, fix the issues before proceeding.
+Hooks auto-run ESLint --fix per edit and a quality gate (tsc + vibecheck + tests) on Stop. For major changes, also run: `npm run build`
 
 ## Architecture
 
@@ -98,9 +81,19 @@ src/                              # Application source code
 │   │   └── response-length-validator.processor.ts
 │   └── network/
 │       ├── model.ts              # Model ID factory (getMastraModelId, getAiSdkModelId)
-│       ├── routing/              # Routing agent (orchestrator, delegates to sub-agents)
-│       ├── datagov/              # DataGov sub-agent (16 tools, data.gov.il CKAN API)
-│       └── cbs/                  # CBS sub-agent (9 tools, Central Bureau of Statistics)
+│       └── routing/              # Routing agent (orchestrator, delegates to sub-agents)
+│
+├── data-sources/                 # Self-contained data source modules
+│   ├── types/                    # Shared types (DataSourceDefinition, ToolTranslation, etc.)
+│   ├── registry.ts               # Client-safe aggregation (tools, translations, resolvers)
+│   ├── registry.server.ts        # Server-only agent references (@mastra/core/agent)
+│   ├── cbs/                      # CBS (9 tools, Central Bureau of Statistics)
+│   ├── datagov/                  # DataGov (16 tools, data.gov.il CKAN API)
+│   ├── budget/                   # BudgetKey (3 MCP tools, state budget 1997-2025)
+│   ├── nadlan/                   # Nadlan (8 tools, real estate transactions)
+│   ├── drugs/                    # Drugs (8 tools, pharmaceutical database)
+│   ├── health/                   # Health (5 tools, MOH dashboards)
+│   └── grocery/                  # Grocery (5 tools, supermarket prices)
 │
 ├── constants/                    # Application constants
 │   ├── agents-display.ts         # Agent display configurations
@@ -131,12 +124,7 @@ src/                              # Application source code
 │
 ├── lib/
 │   ├── tools/
-│   │   ├── datagov/              # 16 data.gov.il tools (search, details, schema, etc.)
-│   │   ├── cbs/                  # 9 CBS tools (catalog, series, prices, localities)
-│   │   └── client/               # 3 client-side chart tools (bar, line, pie)
-│   ├── api/
-│   │   ├── data-gov/             # CKAN API client (data.gov.il)
-│   │   └── cbs/                  # CBS API client
+│   │   └── client/               # 4 client-side tools (bar, line, pie charts + suggestions)
 │   ├── redis/                    # Redis/Upstash rate limiting & caching
 │   └── convex/                   # Convex client utilities
 │
@@ -182,7 +170,7 @@ openspec/                         # OpenSpec workflow (root level)
 
 ### Agent Network Flow
 
-The routing agent **delegates** to specialized sub-agents via Mastra's agent network (`agents: { datagovAgent, cbsAgent }`). Sub-agents run as tool calls (`tool-agent-datagovAgent`, `tool-agent-cbsAgent`) with their own memory threads.
+The routing agent **delegates** to specialized sub-agents via Mastra's agent network. Sub-agents run as tool calls (`tool-agent-<agentId>`) with their own memory threads.
 
 ```
 User (/) → submit message → crypto.randomUUID() → /chat/:id?new
@@ -193,31 +181,36 @@ User (/) → submit message → crypto.randomUUID() → /chat/:id?new
                                               POST /api/chat
                                               handleChatStream(mastra, 'routingAgent', params)
                                                         ↓
-                                              ┌─── Routing Agent (סוכן ניתוב) ───┐
-                                              │  Client Tools (4) + Agent Delegation │
-                                              │  Memory: Convex Vector + Storage  │
-                                              │  Decides intent → delegates       │
-                                              └───────────────────────────────────┘
+                                    ┌─── Routing Agent (סוכן ניתוב) ───┐
+                                    │  Client Tools (4) + 7 Sub-Agents │
+                                    │  Memory: Convex Vector + Storage │
+                                    │  Decides intent → delegates      │
+                                    └──────────────────────────────────┘
                                                         ↓
-                              ┌──────────────────────────┼──────────────────────┐
-                              ↓                          ↓                      ↓
-                    datagovAgent (sub-agent)     cbsAgent (sub-agent)    Client Tools (direct)
-                    16 tools + own memory        9 tools + own memory    Charts + suggestFollowUps
-                    data.gov.il CKAN             CBS Statistics
-                    ↓                            ↓
-                    Stores results in            Stores results in
-                    separate Convex thread       separate Convex thread
-                              ↓                          ↓
-                              └──────── Final Hebrew response ────────→ Stream to UI
+         ┌──────────┬──────────┬──────────┬──────────┬──────────┬──────────┬──────────┐
+         ↓          ↓          ↓          ↓          ↓          ↓          ↓          ↓
+     datagov     cbs       budget     nadlan     drugs      health    grocery    Client
+     Agent       Agent     Agent      Agent      Agent      Agent     Agent      Tools
+     16 tools    9 tools   3 MCP      8 tools    8 tools    5 tools   5 tools    charts+
+     CKAN API    CBS API   BudgetKey  GovMap     MOH Drug   MOH Dash  XML feeds  suggestions
+         ↓          ↓          ↓          ↓          ↓          ↓          ↓
+     Own Convex memory thread per sub-agent (linked via subAgentThreadId)
+         ↓
+     Final Hebrew response → Stream to UI
 ```
 
 ### Agents
 
 | Agent | Hebrew Name | Tools | Role |
 |-------|-------------|-------|------|
-| `routingAgent` | סוכן ניתוב | 4 direct + 2 sub-agents | Orchestrator — delegates to sub-agents, manages memory, creates charts |
+| `routingAgent` | סוכן ניתוב | 4 direct + 7 sub-agents | Orchestrator — delegates to sub-agents, manages memory, creates charts |
 | `datagovAgent` | סוכן data.gov.il | 16 | Israeli open data search (CKAN API) — runs as sub-agent |
 | `cbsAgent` | סוכן הלמ"ס | 9 | Central Bureau of Statistics (series, prices, localities) — runs as sub-agent |
+| `budgetAgent` | סוכן תקציב המדינה | 3 (MCP) | State budget via BudgetKey MCP endpoint (1997-2025) — runs as sub-agent |
+| `nadlanAgent` | סוכן נדל"ן | 8 | Real estate transactions via GovMap API — runs as sub-agent |
+| `drugsAgent` | סוכן תרופות | 8 | Pharmaceutical database (Ministry of Health) — runs as sub-agent |
+| `healthAgent` | סוכן בריאות | 5 | Public health dashboards (Ministry of Health) — runs as sub-agent |
+| `groceryAgent` | סוכן מחירי מזון | 5 | Supermarket price transparency (XML feeds) — runs as sub-agent |
 
 ### Streaming Architecture (handleChatStream)
 
@@ -328,9 +321,9 @@ The agent uses **Mastra 1.1** with AI SDK v6 tools. Key implementation details:
 
 - **Framework**: Mastra agent network with `handleChatStream` for streaming
 - **Model**: OpenRouter provider, default `google/gemini-3-flash-preview`
-- **Architecture**: Routing agent delegates to sub-agents (`datagovAgent`, `cbsAgent`) via `agents: {}` — not direct tool registration
-- **Routing agent tools**: 4 direct (displayBarChart, displayLineChart, displayPieChart, suggestFollowUps) + 2 sub-agents
-- **Sub-agent tools**: DataGov (16 tools), CBS (9 tools) — each with own memory thread
+- **Architecture**: Routing agent delegates to 7 sub-agents via `agents: {}` — not direct tool registration
+- **Routing agent tools**: 4 direct (displayBarChart, displayLineChart, displayPieChart, suggestFollowUps) + 7 sub-agents
+- **Sub-agent tools**: DataGov (16), CBS (9), Budget (3 MCP), Nadlan (8), Drugs (8), Health (5), Grocery (5) — each with own memory thread
 - **Processors**: `ToolResultSummarizerProcessor` converts raw API results to Hebrew summaries
 - **Memory**: Persistent threads via `@mastra/convex` (ConvexStore + ConvexVector). Sub-agents store results in separate threads linked via `subAgentThreadId`
 - **Two-pass recall**: `GET /api/chat` fetches routing agent thread, then sub-agent threads to reconstruct internal tool call data for UI
@@ -339,18 +332,13 @@ The agent uses **Mastra 1.1** with AI SDK v6 tools. Key implementation details:
 ### Data Sources
 - **data.gov.il**: CKAN API at `https://data.gov.il/api/3` (datasets, organizations, groups, tags, resources, DataStore)
 - **CBS (הלמ"ס)**: Statistical series, price indices, CPI calculations, locality dictionary
+- **BudgetKey**: MCP endpoint at `https://next.obudget.org/mcp` (state budget, contracts, tenders, entities, revenues)
+- **Nadlan**: REST API at `https://www.govmap.gov.il/api/` (real estate transactions, price trends, valuations)
+- **Israel Drugs**: REST API at `https://israeldrugs.health.gov.il/GovServiceList/IDRServer` (drug registry, generics, health basket)
+- **IL Health**: REST API at `https://datadashboard.health.gov.il/api` (public health dashboards, HMO data, service quality)
+- **Grocery Prices**: XML feeds from supermarket chains (Shufersal, Rami Levy, Yochananof, Victory, Osher Ad, Tiv Taam)
+- **Knesset** *(planned)*: OData at `http://knesset.gov.il/Odata/ParliamentInfo.svc` (bills, committees, members)
 - **Convex RAG**: Semantic search over synced datasets (OpenRouter embeddings)
-
-## Code Review Checklist
-
-Before committing changes:
-- [ ] Run `npm run build` to verify build succeeds
-- [ ] Run `npm run lint` to check for linting issues
-- [ ] Run `npm run vibecheck` for code quality validation
-- [ ] Test in browser at `localhost:3000`
-- [ ] Verify type assertions (`as`) are necessary
-- [ ] Ensure no `any` types were added
-- [ ] Check that Server Components don't use client-only hooks
 
 ## OpenSpec Workflow
 

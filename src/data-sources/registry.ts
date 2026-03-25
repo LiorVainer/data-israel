@@ -14,17 +14,54 @@
  * registry.server.ts to avoid pulling Node.js-only Mastra code into the browser bundle.
  */
 
-import type { ToolTranslation, ToolSourceResolver, DataSourceConfig, AgentDisplayInfo, DataSource } from './types';
-import { ActivityIcon } from 'lucide-react';
+import type {
+    ToolTranslation,
+    ToolSourceResolver,
+    ToolResourceExtractor,
+    DataSourceConfig,
+    AgentDisplayInfo,
+    DataSource,
+    LandingConfig,
+} from './types';
+import {
+    ActivityIcon,
+    DatabaseIcon,
+    BuildingIcon,
+    FileIcon,
+    TrendingUpIcon,
+    LayersIcon,
+    CalendarIcon,
+} from 'lucide-react';
 
 // Client-safe imports — tools, translations, display, resolvers (no Agent dependency)
-import { CbsTools, cbsSourceResolvers } from './cbs/tools';
+import { CbsTools, cbsSourceResolvers, cbsResourceExtractors } from './cbs/tools';
 import { cbsTranslations } from './cbs/cbs.translations';
 import { cbsDisplayLabel, cbsDisplayIcon, cbsBadgeConfig } from './cbs/cbs.display';
 
-import { DataGovTools, datagovSourceResolvers } from './datagov/tools';
+import { DataGovTools, datagovSourceResolvers, datagovResourceExtractors } from './datagov/tools';
 import { datagovTranslations } from './datagov/datagov.translations';
 import { datagovAgentDisplay, datagovBadgeConfig } from './datagov/datagov.display';
+
+import { BudgetToolNames } from './budget/budget.tools';
+import { budgetTranslations } from './budget/budget.translations';
+import { budgetDisplayLabel, budgetDisplayIcon, budgetBadgeConfig } from './budget/budget.display';
+import { budgetSourceResolvers } from './budget/budget.source-resolvers';
+
+import { NadlanTools, nadlanSourceResolvers } from './nadlan/tools';
+import { nadlanTranslations } from './nadlan/nadlan.translations';
+import { nadlanDisplayLabel, nadlanDisplayIcon, nadlanBadgeConfig } from './nadlan/nadlan.display';
+
+import { DrugsTools, drugsSourceResolvers } from './drugs/tools';
+import { drugsTranslations } from './drugs/drugs.translations';
+import { drugsDisplayLabel, drugsDisplayIcon, drugsBadgeConfig } from './drugs/drugs.display';
+
+import { HealthTools, healthSourceResolvers } from './health/tools';
+import { healthTranslations } from './health/health.translations';
+import { healthDisplayLabel, healthDisplayIcon, healthBadgeConfig } from './health/health.display';
+
+import { GroceryTools, grocerySourceResolvers } from './grocery/tools';
+import { groceryTranslations } from './grocery/grocery.translations';
+import { groceryDisplayLabel, groceryDisplayIcon, groceryBadgeConfig } from './grocery/grocery.display';
 
 import { clientTranslations } from '@/lib/tools/client/translations';
 
@@ -47,6 +84,9 @@ interface DataSourceMeta {
     tools: Record<string, unknown>;
     sourceResolvers: Record<string, ToolSourceResolver>;
     translations: Record<string, ToolTranslation>;
+    resourceExtractors: Record<string, ToolResourceExtractor>;
+    /** Optional landing page display config */
+    landing?: LandingConfig;
 }
 
 const DATA_SOURCE_METAS: readonly DataSourceMeta[] = [
@@ -59,6 +99,18 @@ const DATA_SOURCE_METAS: readonly DataSourceMeta[] = [
         tools: CbsTools,
         sourceResolvers: cbsSourceResolvers as Record<string, ToolSourceResolver>,
         translations: cbsTranslations as Record<string, ToolTranslation>,
+        resourceExtractors: cbsResourceExtractors as Record<string, ToolResourceExtractor>,
+        landing: {
+            logo: '/cbs-logo.svg',
+            description: 'הלשכה המרכזית לסטטיסטיקה — סדרות סטטיסטיות, מדדי מחירים ונתוני אוכלוסין',
+            stats: [
+                { label: 'סדרות', value: '2,000+', icon: TrendingUpIcon },
+                { label: 'נושאים', value: '30+', icon: LayersIcon },
+                { label: 'שנות נתונים', value: '75+', icon: CalendarIcon },
+            ],
+            category: 'economy',
+            order: 1,
+        },
     },
     {
         id: 'datagov',
@@ -69,6 +121,73 @@ const DATA_SOURCE_METAS: readonly DataSourceMeta[] = [
         tools: DataGovTools,
         sourceResolvers: datagovSourceResolvers as Record<string, ToolSourceResolver>,
         translations: datagovTranslations as Record<string, ToolTranslation>,
+        resourceExtractors: datagovResourceExtractors as Record<string, ToolResourceExtractor>,
+        landing: {
+            logo: '/datagov-logo.svg',
+            description: 'פורטל הנתונים הפתוחים של ממשלת ישראל — מאגרי מידע, ארגונים וקבצים',
+            stats: [
+                { label: 'מאגרי מידע', value: '1,500+', icon: DatabaseIcon },
+                { label: 'ארגונים', value: '80+', icon: BuildingIcon },
+                { label: 'קבצים', value: '10,000+', icon: FileIcon },
+            ],
+            category: 'government',
+            order: 1,
+        },
+    },
+    {
+        id: 'budget',
+        agentId: 'budgetAgent',
+        display: { label: budgetDisplayLabel, icon: budgetDisplayIcon, badge: budgetBadgeConfig },
+        routingHint:
+            'נתוני תקציב המדינה של ישראל מפרויקט מפתח התקציב — ספר התקציב (הוצאות מתוכננות ומבוצעות 1997-2025), תוכניות תמיכה תקציביות, התקשרויות רכש ממשלתיות, מכרזים, ישויות (חברות, עמותות, רשויות), הכנסות המדינה, ובקשות לשינויי תקציב.',
+        tools: BudgetToolNames as Record<string, unknown>,
+        sourceResolvers: budgetSourceResolvers as Record<string, ToolSourceResolver>,
+        translations: budgetTranslations as Record<string, ToolTranslation>,
+        resourceExtractors: {},
+    },
+    {
+        id: 'nadlan',
+        agentId: 'nadlanAgent',
+        display: { label: nadlanDisplayLabel, icon: nadlanDisplayIcon, badge: nadlanBadgeConfig },
+        routingHint:
+            'נתוני עסקאות נדל"ן בישראל ממערכת govmap — חיפוש עסקאות לפי כתובת, מחירים למ"ר, מגמות שוק, הערכת שווי נכסים, והשוואת שכונות ורחובות',
+        tools: NadlanTools,
+        sourceResolvers: nadlanSourceResolvers as Record<string, ToolSourceResolver>,
+        translations: nadlanTranslations as Record<string, ToolTranslation>,
+        resourceExtractors: {},
+    },
+    {
+        id: 'drugs',
+        agentId: 'drugsAgent',
+        display: { label: drugsDisplayLabel, icon: drugsDisplayIcon, badge: drugsBadgeConfig },
+        routingHint:
+            'מאגר התרופות של משרד הבריאות — חיפוש תרופות לפי שם, סימפטום, חומר פעיל או קוד ATC, פרטי תרופה מקיפים, חלופות גנריות, סל בריאות ומחירים',
+        tools: DrugsTools,
+        sourceResolvers: drugsSourceResolvers as Record<string, ToolSourceResolver>,
+        translations: drugsTranslations as Record<string, ToolTranslation>,
+        resourceExtractors: {},
+    },
+    {
+        id: 'health',
+        agentId: 'healthAgent',
+        display: { label: healthDisplayLabel, icon: healthDisplayIcon, badge: healthBadgeConfig },
+        routingHint:
+            'נתוני בריאות ציבורית ממשרד הבריאות — נפגעי מלחמה, שירותי רפואה, איכות חופים, מבוטחי קופות חולים, חיסוני ילדים, בדיקות התפתחותיות ואיכות שירות',
+        tools: HealthTools,
+        sourceResolvers: healthSourceResolvers as Record<string, ToolSourceResolver>,
+        translations: healthTranslations as Record<string, ToolTranslation>,
+        resourceExtractors: {},
+    },
+    {
+        id: 'grocery',
+        agentId: 'groceryAgent',
+        display: { label: groceryDisplayLabel, icon: groceryDisplayIcon, badge: groceryBadgeConfig },
+        routingHint:
+            'מחירי מזון בסופרמרקטים — חיפוש מוצרים לפי ברקוד או שם, השוואת מחירים בין רשתות (שופרסל, רמי לוי, יוחננוף, ויקטורי, אושר עד, טיב טעם), סניפים, ומבצעים. נתונים לפי חוק שקיפות מחירים 2015.',
+        tools: GroceryTools,
+        sourceResolvers: grocerySourceResolvers as Record<string, ToolSourceResolver>,
+        translations: groceryTranslations as Record<string, ToolTranslation>,
+        resourceExtractors: {},
     },
 ] as const;
 
@@ -80,6 +199,11 @@ const DATA_SOURCE_METAS: readonly DataSourceMeta[] = [
 export const allDataSourceTools = {
     ...CbsTools,
     ...DataGovTools,
+    ...BudgetToolNames,
+    ...NadlanTools,
+    ...DrugsTools,
+    ...HealthTools,
+    ...GroceryTools,
 } as const;
 
 // ============================================================================
@@ -90,6 +214,21 @@ export const allDataSourceTools = {
 export const DATA_SOURCE_CONFIG: Record<DataSourceId, DataSourceConfig> = Object.fromEntries(
     DATA_SOURCE_METAS.map((ds) => [ds.id, ds.display.badge]),
 ) as Record<DataSourceId, DataSourceConfig>;
+
+// ============================================================================
+// Landing Page Data
+// ============================================================================
+
+/** Return data sources that have a full landing page config (logo, description, stats). */
+export function getDataSourcesWithLanding() {
+    return DATA_SOURCE_METAS.filter((meta): meta is DataSourceMeta & { landing: LandingConfig } => !!meta.landing).map(
+        (meta) => ({
+            id: meta.id,
+            landing: meta.landing,
+            badge: meta.display.badge,
+        }),
+    );
+}
 
 // ============================================================================
 // Agent Display Map
@@ -154,7 +293,11 @@ for (const ds of DATA_SOURCE_METAS) {
  * Resolve a source URL from a tool's part type, input, and output.
  * Returns null if no resolver exists for the tool or if the resolver returns null.
  */
-export function resolveToolSourceUrl(toolType: string, input: unknown, output: unknown): ReturnType<ToolSourceResolver> {
+export function resolveToolSourceUrl(
+    toolType: string,
+    input: unknown,
+    output: unknown,
+): ReturnType<ToolSourceResolver> {
     const resolver = resolverMap.get(toolType);
     if (!resolver) return null;
     return resolver(input, output);
@@ -208,6 +351,29 @@ export function getAllTranslations(): Record<string, ToolTranslation> {
 }
 
 // ============================================================================
+// Resource Extractors
+// ============================================================================
+
+/**
+ * Get all tool resource extractors — merges per-source extractors into a
+ * single record keyed by tool name. Used by ChainOfThought UI to extract
+ * display resource chips from tool inputs/outputs.
+ */
+export function getAllResourceExtractors(): Record<string, ToolResourceExtractor> {
+    const result: Record<string, ToolResourceExtractor> = {};
+
+    for (const ds of DATA_SOURCE_METAS) {
+        for (const [toolName, extractor] of Object.entries(ds.resourceExtractors)) {
+            if (extractor) {
+                result[toolName] = extractor;
+            }
+        }
+    }
+
+    return result;
+}
+
+// ============================================================================
 // Routing Hints
 // ============================================================================
 
@@ -237,6 +403,9 @@ export function toToolPartTypeSet(names: readonly string[]): Set<string> {
 export const SOURCE_URL_TOOL_NAMES = [
     'generateDataGovSourceUrl',
     'generateCbsSourceUrl',
+    'generateNadlanSourceUrl',
+    'generateDrugsSourceUrl',
+    'generateHealthSourceUrl',
 ] as const;
 
 /** Client-side tools (charts, suggestions) — not part of any data source */

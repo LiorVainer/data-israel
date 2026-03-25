@@ -9,7 +9,7 @@ import { cn } from '@/lib/utils';
 import { DataIsraelLoader } from './DataIsraelLoader';
 import { AgentInternalCallsChain } from './AgentInternalCallsChain';
 import { getToolDataSourceConfig } from '@/data-sources/registry';
-import { getToolInfo } from './MessageToolCalls';
+import { getToolInfo } from '@/lib/utils/tool-info';
 import type { AgentInternalToolCall } from './ToolCallParts';
 import type { LucideIcon } from 'lucide-react';
 import type { StepStatus } from './types';

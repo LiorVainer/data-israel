@@ -11,7 +11,7 @@ import {
 } from '@/components/ai-elements/chain-of-thought';
 import { DataIsraelLoader } from './DataIsraelLoader';
 import { LoadingShimmer } from './LoadingShimmer';
-import { getToolInfo } from './MessageToolCalls';
+import { getToolInfo } from '@/lib/utils/tool-info';
 import { useAutoOpen } from './use-auto-open';
 import type { AgentInternalToolCall } from './ToolCallParts';
 import type { LucideIcon } from 'lucide-react';

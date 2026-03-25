@@ -7,8 +7,22 @@ import { useAutoOpen } from './use-auto-open';
 import type { UIMessage } from 'ai';
 import type { ToolCallPart } from './types';
 import { getToolStatus, isAgentDataPart } from './types';
-import { getToolInfo } from './MessageToolCalls';
+import { getToolInfo } from '@/lib/utils/tool-info';
 import { type GroupedToolCall, ToolCallStep, type ToolResource } from './ToolCallStep';
+import { getAllResourceExtractors } from '@/data-sources/registry';
+
+/** Cached per-source resource extractors — populated once on first use */
+let _cachedExtractors: Record<
+    string,
+    (input: unknown, output: unknown) => { name?: string; url?: string } | null
+> | null = null;
+
+function getResourceExtractors() {
+    if (!_cachedExtractors) {
+        _cachedExtractors = getAllResourceExtractors();
+    }
+    return _cachedExtractors;
+}
 
 function isRecord(value: unknown): value is Record<string, unknown> {
     return typeof value === 'object' && value !== null;
@@ -23,13 +37,26 @@ function getString(obj: unknown, key: string): string | undefined {
 /**
  * Extracts a ToolResource from a tool call's input and output.
  *
- * Resolves a display name from (in priority order):
+ * First tries a per-source extractor (registered via DataSourceDefinition.resourceExtractors).
+ * Falls back to generic extraction logic:
  *   1. input.searchedResourceName (input-only field)
  *   2. input.query / input.q  (search tools)
  *   3. input.path             (catalog-by-path tools)
  *   4. output nested titles   (dataset.title, organization.title)
  */
-function extractToolResource(input: unknown, output: unknown): ToolResource | null {
+function extractToolResource(toolKey: string, input: unknown, output: unknown): ToolResource | null {
+    // Try per-source extractor first
+    const extractor = getResourceExtractors()[toolKey];
+    if (extractor) {
+        const result = extractor(input, output);
+        if (result) {
+            return { url: result.url ?? '', name: result.name };
+        }
+        // Extractor returned null — skip the generic fallback for this tool
+        // (the source explicitly declared no resource could be extracted)
+    }
+
+    // Generic fallback for tools without a per-source extractor
     const apiUrl = getString(output, 'apiUrl');
 
     const name =
@@ -186,7 +213,7 @@ function groupToolCalls(
         const isCompleted = status === 'complete' && !isFailed;
 
         // Extract resource from tool input + output
-        const resource = extractToolResource(part.input, part.output);
+        const resource = extractToolResource(toolKey, part.input, part.output);
 
         // Look up internal tool calls for sub-agent tools from data-tool-agent parts
         const agentName = toolKey.startsWith('agent-') ? toolKey.replace('agent-', '') : undefined;

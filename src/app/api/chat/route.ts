@@ -298,7 +298,7 @@ export async function POST(req: Request) {
 
         // Resolve per-agent model config (Convex → env vars → defaults)
         const modelConfig = await resolveModelConfig();
-        const dynamicMastra = getMastraWithModels(modelConfig);
+        const dynamicMastra = await getMastraWithModels(modelConfig);
 
         // Get user ID from header or use the one provided in the body
         const userId = getUserIdFromRequest(req);
