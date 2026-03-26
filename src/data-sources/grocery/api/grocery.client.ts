@@ -119,8 +119,8 @@ function parseFeedIndexHtml(html: string, chainId: ChainId): FeedFileEntry[] {
     const entries: FeedFileEntry[] = [];
     const baseUrl = CHAIN_FEEDS[chainId].baseUrl;
 
-    // Match href attributes pointing to .gz files
-    const linkRegex = /href=["']([^"']*\.gz)["']/gi;
+    // Match href attributes pointing to .gz files (may have query params like ?sv=... after .gz)
+    const linkRegex = /href=["']([^"']*\.gz[^"']*)["']/gi;
     let match: RegExpExecArray | null;
 
     while ((match = linkRegex.exec(html)) !== null) {
@@ -130,7 +130,7 @@ function parseFeedIndexHtml(html: string, chainId: ChainId): FeedFileEntry[] {
         // Determine feed type from filename
         let feedType = 'unknown';
         const lowerName = fileName.toLowerCase();
-        if (lowerName.includes('pricefull') || lowerName.includes('prices')) {
+        if (lowerName.includes('pricefull') || lowerName.includes('prices') || lowerName.includes('/price')) {
             feedType = 'PricesFull';
         } else if (lowerName.includes('store') || lowerName.includes('branch')) {
             feedType = 'Stores';
