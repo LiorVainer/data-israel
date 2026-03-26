@@ -36,6 +36,26 @@ export const LANDING_CATEGORIES = {
 /** Valid landing page category */
 export type LandingCategory = keyof typeof LANDING_CATEGORIES;
 
+/** A single example prompt for the empty conversation */
+export interface SuggestionPrompt {
+    /** Hebrew short label (e.g., "מחירי דירות") */
+    label: string;
+    /** Full Hebrew prompt text */
+    prompt: string;
+    /** Card icon */
+    icon: LucideIcon;
+}
+
+/** Suggestions config for a data source */
+export interface SuggestionsConfig {
+    /** Override icon for the source in suggestions UI */
+    icon?: LucideIcon;
+    /** Optional accent color class (e.g., 'text-blue-500') */
+    color?: string;
+    /** 2-4 example prompts */
+    prompts: SuggestionPrompt[];
+}
+
 /** Landing page display config for a data source */
 export interface LandingConfig {
     /** Path to logo SVG in /public */

@@ -111,7 +111,22 @@ export const MyDataSource = {
 } satisfies DataSourceDefinition<typeof MySourceTools>;
 ```
 
-### Step 6: Register in registry
+### Step 6: Add suggestions (optional but recommended)
+
+Add a `suggestions` config to your `DataSourceDefinition` with 2-4 Hebrew example prompts. These appear in the empty conversation UI, grouped by landing category tabs.
+
+```typescript
+suggestions: {
+  prompts: [
+    { label: 'Short Hebrew label', prompt: 'Full Hebrew prompt text', icon: SearchIcon },
+    { label: 'Another label', prompt: 'Another prompt', icon: DatabaseIcon },
+  ],
+},
+```
+
+The suggestions are automatically picked up by `getDataSourcesWithSuggestions()` in the registry and displayed in `EmptyConversation` under the source's landing category tab (requires `landing` config to be set).
+
+### Step 7: Register in registry
 
 Add one import + spread in `src/data-sources/registry.ts`. The registry auto-wires:
 - Agent into `dataSourceAgents`
@@ -119,8 +134,9 @@ Add one import + spread in `src/data-sources/registry.ts`. The registry auto-wir
 - Translations (+ auto-generated `agent-*` entry) into `getAllTranslations()`
 - Source resolvers into `resolveToolSourceUrl()`
 - Routing hint into `buildRoutingHints()` (injected into routing agent prompt)
+- Suggestions into `getDataSourcesWithSuggestions()` (for empty conversation UI)
 
-### Step 7: Write contract tests (REQUIRED)
+### Step 8: Write contract tests (REQUIRED)
 
 Create `{source}/__tests__/{source}-data-source.test.ts` with these checks:
 

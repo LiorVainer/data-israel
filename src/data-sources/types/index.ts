@@ -16,7 +16,15 @@ export {
 
 // Display types
 export { LANDING_CATEGORIES } from './display.types';
-export type { DataSource, DataSourceConfig, AgentDisplayInfo, LandingCategory, LandingConfig } from './display.types';
+export type {
+    DataSource,
+    DataSourceConfig,
+    AgentDisplayInfo,
+    LandingCategory,
+    LandingConfig,
+    SuggestionPrompt,
+    SuggestionsConfig,
+} from './display.types';
 
 // Tool types
 export type { ToolSource, ToolSourceResolver, ToolResourceExtractor, ToolTranslation } from './tool.types';

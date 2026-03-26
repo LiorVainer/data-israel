@@ -22,6 +22,7 @@ import type {
     AgentDisplayInfo,
     DataSource,
     LandingConfig,
+    SuggestionsConfig,
 } from './types';
 import {
     ActivityIcon,
@@ -42,6 +43,8 @@ import {
     BarChart3Icon,
     StethoscopeIcon,
     TagIcon,
+    SearchIcon,
+    ShieldCheckIcon,
 } from 'lucide-react';
 
 // Client-safe imports — tools, translations, display, resolvers (no Agent dependency)
@@ -102,6 +105,8 @@ interface DataSourceMeta {
     resourceExtractors: Record<string, ToolResourceExtractor>;
     /** Optional landing page display config */
     landing?: LandingConfig;
+    /** Optional example prompts for empty conversation */
+    suggestions?: SuggestionsConfig;
 }
 
 const DATA_SOURCE_METAS: readonly DataSourceMeta[] = [
@@ -126,6 +131,16 @@ const DATA_SOURCE_METAS: readonly DataSourceMeta[] = [
             category: 'economy',
             order: 1,
         },
+        suggestions: {
+            prompts: [
+                {
+                    label: 'מדד המחירים לצרכן',
+                    prompt: 'איך השתנה מדד המחירים לצרכן בשנה האחרונה?',
+                    icon: TrendingUpIcon,
+                },
+                { label: 'אוכלוסייה לפי יישוב', prompt: 'מה נתוני האוכלוסייה העדכניים לפי יישוב?', icon: UsersIcon },
+            ],
+        },
     },
     {
         id: 'datagov',
@@ -147,6 +162,16 @@ const DATA_SOURCE_METAS: readonly DataSourceMeta[] = [
             ],
             category: 'government',
             order: 1,
+        },
+        suggestions: {
+            prompts: [
+                { label: 'מאגרים על תחבורה', prompt: 'אילו מאגרי מידע פתוחים יש על תחבורה ותשתיות?', icon: SearchIcon },
+                {
+                    label: 'ארגונים מפרסמים',
+                    prompt: 'מה הארגונים הממשלתיים שמפרסמים הכי הרבה מאגרים?',
+                    icon: BuildingIcon,
+                },
+            ],
         },
     },
     {
@@ -170,6 +195,12 @@ const DATA_SOURCE_METAS: readonly DataSourceMeta[] = [
             category: 'government',
             order: 2,
         },
+        suggestions: {
+            prompts: [
+                { label: 'תקציב משרד החינוך', prompt: 'כמה תקציב הוקצה למשרד החינוך ב-2025?', icon: LandmarkIcon },
+                { label: 'התקשרויות רכש', prompt: 'אילו התקשרויות רכש ביצע משרד הביטחון?', icon: ScrollTextIcon },
+            ],
+        },
     },
     {
         id: 'nadlan',
@@ -191,6 +222,12 @@ const DATA_SOURCE_METAS: readonly DataSourceMeta[] = [
             ],
             category: 'economy',
             order: 2,
+        },
+        suggestions: {
+            prompts: [
+                { label: 'מחירי דירות בת"א', prompt: 'מה מחירי הדירות בתל אביב בשנה האחרונה?', icon: HomeIcon },
+                { label: 'השוואת ערים', prompt: 'השווה מחירי נדל"ן בין רמת גן לגבעתיים', icon: BarChart3Icon },
+            ],
         },
     },
     {
@@ -214,6 +251,12 @@ const DATA_SOURCE_METAS: readonly DataSourceMeta[] = [
             category: 'health',
             order: 1,
         },
+        suggestions: {
+            prompts: [
+                { label: 'חלופות גנריות', prompt: 'מהן החלופות הגנריות לאקמול?', icon: PillIcon },
+                { label: 'סל בריאות', prompt: 'אילו תרופות מכוסות בסל הבריאות לסוכרת?', icon: HeartPulseIcon },
+            ],
+        },
     },
     {
         id: 'health',
@@ -235,6 +278,16 @@ const DATA_SOURCE_METAS: readonly DataSourceMeta[] = [
             ],
             category: 'health',
             order: 2,
+        },
+        suggestions: {
+            prompts: [
+                {
+                    label: 'איכות שירות בתי חולים',
+                    prompt: 'מה איכות השירות בבתי החולים בישראל?',
+                    icon: StethoscopeIcon,
+                },
+                { label: 'חיסוני ילדים', prompt: 'מה שיעור חיסוני הילדים לפי קופת חולים?', icon: ShieldCheckIcon },
+            ],
         },
     },
     {
@@ -258,6 +311,16 @@ const DATA_SOURCE_METAS: readonly DataSourceMeta[] = [
             category: 'economy',
             order: 3,
         },
+        suggestions: {
+            prompts: [
+                {
+                    label: 'השוואת מחירי חלב',
+                    prompt: 'כמה עולה חלב תנובה 3% בשופרסל לעומת רמי לוי?',
+                    icon: ShoppingCartIcon,
+                },
+                { label: 'סל קניות בסיסי', prompt: 'השווה מחירי סל קניות בסיסי בין הרשתות', icon: TagIcon },
+            ],
+        },
     },
     {
         id: 'knesset',
@@ -278,6 +341,12 @@ const DATA_SOURCE_METAS: readonly DataSourceMeta[] = [
             ],
             category: 'government',
             order: 3,
+        },
+        suggestions: {
+            prompts: [
+                { label: 'הצעות חוק', prompt: 'אילו הצעות חוק עברו בכנסת ה-25?', icon: GavelIcon },
+                { label: 'ועדת הכספים', prompt: 'מי חברי ועדת הכספים של הכנסת?', icon: UsersIcon },
+            ],
         },
     },
 ] as const;
@@ -321,6 +390,26 @@ export function getDataSourcesWithLanding() {
             display: { label: meta.display.label, icon: meta.display.icon },
         }),
     );
+}
+
+// ============================================================================
+// Suggestions Data
+// ============================================================================
+
+/** Return data sources that have suggestion prompts and a landing config (for category grouping). */
+export function getDataSourcesWithSuggestions() {
+    return DATA_SOURCE_METAS.filter(
+        (meta): meta is DataSourceMeta & { suggestions: SuggestionsConfig; landing: LandingConfig } =>
+            !!meta.suggestions?.prompts.length && !!meta.landing,
+    ).map((meta) => ({
+        id: meta.id,
+        label: meta.display.label,
+        icon: meta.suggestions.icon ?? meta.display.icon,
+        color: meta.suggestions.color,
+        badge: meta.display.badge,
+        category: meta.landing.category,
+        prompts: meta.suggestions.prompts,
+    }));
 }
 
 // ============================================================================

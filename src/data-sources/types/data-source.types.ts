@@ -9,7 +9,7 @@ import type { Agent } from '@mastra/core/agent';
 import type { Tool } from '@mastra/core/tools';
 import type { LucideIcon } from 'lucide-react';
 import type { ToolResourceExtractor, ToolSourceResolver, ToolTranslation } from './tool.types';
-import type { DataSourceConfig, LandingConfig } from './display.types';
+import type { DataSourceConfig, LandingConfig, SuggestionsConfig } from './display.types';
 
 export interface DataSourceDefinition<TTools extends Record<string, Tool<any, any, any, any, any, any, any>>> {
     /** Unique key — 'cbs' | 'datagov' | future sources */
@@ -59,4 +59,7 @@ export interface DataSourceDefinition<TTools extends Record<string, Tool<any, an
 
     /** Optional landing page display config */
     landing?: LandingConfig;
+
+    /** Optional example prompts for empty conversation */
+    suggestions?: SuggestionsConfig;
 }
