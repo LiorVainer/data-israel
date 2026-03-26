@@ -39,16 +39,16 @@ export function SourcesSection() {
                 transition={{ duration: 0.6, ease: 'easeOut' }}
             >
                 <Tabs defaultValue={sortedCategories[0]?.[0]} dir='rtl'>
-                    <TabsList className='w-full justify-center mb-8'>
+                    <TabsList className='w-full justify-start md:justify-center mb-8 overflow-x-auto flex-nowrap'>
                         {sortedCategories.map(([id, cat]) => (
-                            <TabsTrigger key={id} value={id}>
+                            <TabsTrigger key={id} value={id} className='shrink-0'>
                                 {cat.label}
                             </TabsTrigger>
                         ))}
                     </TabsList>
 
                     {sortedCategories.map(([catId]) => (
-                        <TabsContent key={catId} value={catId}>
+                        <TabsContent key={catId} value={catId} className='min-h-[420px]'>
                             <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'>
                                 {(sourcesByCategory[catId] ?? [])
                                     .sort((a, b) => a.landing.order - b.landing.order)

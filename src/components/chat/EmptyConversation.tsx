@@ -62,9 +62,9 @@ export function EmptyConversation({ onClick }: EmptyConversationProps) {
             </div>
 
             <Tabs defaultValue={sortedCategories[0]?.[0]} dir='rtl' className='w-full px-4'>
-                <TabsList className='w-full justify-center mb-4'>
+                <TabsList className='w-full justify-start md:justify-center mb-4 overflow-x-auto flex-nowrap'>
                     {sortedCategories.map(([id, cat]) => (
-                        <TabsTrigger key={id} value={id}>
+                        <TabsTrigger key={id} value={id} className='shrink-0'>
                             {cat.label}
                         </TabsTrigger>
                     ))}
@@ -73,7 +73,7 @@ export function EmptyConversation({ onClick }: EmptyConversationProps) {
                 {sortedCategories.map(([catId]) => {
                     const cards = suggestionsByCategory[catId];
                     return (
-                        <TabsContent key={catId} value={catId}>
+                        <TabsContent key={catId} value={catId} className='min-h-[280px]'>
                             <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4'>
                                 {cards.map((card) => (
                                     <button
