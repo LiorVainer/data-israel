@@ -53,15 +53,19 @@ interface EmptyConversationProps {
 export function EmptyConversation({ onClick }: EmptyConversationProps) {
     return (
         <div
-            className='flex flex-col gap-4 md:gap-8 h-full items-center justify-center w-full max-w-4xl mx-auto'
+            className='flex flex-col gap-4 md:gap-8 h-full items-center w-full max-w-4xl mx-auto overflow-hidden'
             dir='rtl'
         >
-            <div className='shrink-0 text-right space-y-2 self-start px-4'>
+            <div className='shrink-0 text-right space-y-2 self-start px-4 pt-4 md:pt-8'>
                 <h2 className='text-xl md:text-2xl font-semibold text-foreground/90'>איזה נתון תרצה לבדוק?</h2>
                 <p className='text-sm text-muted-foreground'>שאלו שאלה על נתונים ציבוריים של ישראל.</p>
             </div>
 
-            <Tabs defaultValue={sortedCategories[0]?.[0]} dir='rtl' className='w-full px-4'>
+            <Tabs
+                defaultValue={sortedCategories[0]?.[0]}
+                dir='rtl'
+                className='w-full px-4 min-h-0 flex-1 overflow-y-auto'
+            >
                 <TabsList className='w-full justify-start md:justify-center mb-4 overflow-x-auto flex-nowrap'>
                     {sortedCategories.map(([id, cat]) => (
                         <TabsTrigger key={id} value={id} className='shrink-0'>
