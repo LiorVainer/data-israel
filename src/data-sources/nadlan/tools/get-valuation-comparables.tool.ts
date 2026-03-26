@@ -31,7 +31,11 @@ function getString(obj: unknown, key: string): string | undefined {
 // ============================================================================
 
 export const getValuationComparablesInputSchema = z.object({
-    address: z.string().describe('Israeli address to find comparable properties for'),
+    address: z
+        .string()
+        .describe(
+            'Full Israeli address in Hebrew including street name, house number, and city (e.g. "סוקולוב 38 חולון"). A city name alone will not return useful results.',
+        ),
     targetAreaSqm: z
         .number()
         .min(10)
@@ -76,7 +80,7 @@ export const getValuationComparablesOutputSchema = toolOutputSchema({
 export const getNadlanValuationComparables = createTool({
     id: 'getNadlanValuationComparables',
     description:
-        'Find comparable property transactions for valuation purposes. Returns similar properties near the address with estimated value per sqm. Optionally filter by target area to get more relevant comparables.',
+        'Find comparable property transactions for valuation purposes. Provide a FULL Hebrew address (street + number + city). Internally performs autocomplete, polygon discovery, and deal fetching. Returns similar properties near the address with estimated value per sqm. Optionally filter by target area to get more relevant comparables.',
     inputSchema: getValuationComparablesInputSchema,
     outputSchema: getValuationComparablesOutputSchema,
     execute: async ({ address, targetAreaSqm, radiusMeters = 200, yearsBack = 2, dealType = 2 }) => {

@@ -60,7 +60,7 @@ export const browseSymptoms = createTool({
                 prescription: false,
             });
 
-            const categories = (hierarchyResult.results ?? []).map((cat) => ({
+            const categories = (hierarchyResult ?? []).map((cat) => ({
                 categoryName: cat.bySymptomMain,
                 symptoms: (cat.list ?? []).map((s) => ({
                     symptomId: s.bySymptomSecond,

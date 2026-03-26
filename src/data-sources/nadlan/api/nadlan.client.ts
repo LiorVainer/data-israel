@@ -30,6 +30,7 @@ const govmapInstance: AxiosInstance = axios.create({
     headers: {
         'Content-Type': 'application/json',
         Accept: 'application/json',
+        'User-Agent': 'NadlanMCP/1.0.0',
     },
 });
 

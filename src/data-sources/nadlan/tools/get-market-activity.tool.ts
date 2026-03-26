@@ -31,7 +31,11 @@ function getString(obj: unknown, key: string): string | undefined {
 // ============================================================================
 
 export const getMarketActivityInputSchema = z.object({
-    address: z.string().describe('Israeli address to analyze market activity around'),
+    address: z
+        .string()
+        .describe(
+            'Full Israeli address in Hebrew including street name, house number, and city (e.g. "סוקולוב 38 חולון"). A city name alone will not return useful results.',
+        ),
     yearsBack: z.number().int().min(1).max(10).optional().describe('Years of data to analyze (default: 3)'),
     radiusMeters: z.number().int().min(10).max(5000).optional().describe('Search radius in meters (default: 100)'),
     dealType: z
@@ -80,7 +84,7 @@ export const getMarketActivityOutputSchema = toolOutputSchema({
 export const getNadlanMarketActivity = createTool({
     id: 'getNadlanMarketActivity',
     description:
-        'Analyze real estate market trends and activity for an area. Returns yearly price trends, transaction volumes, and property type breakdown. No individual deals — just aggregated analysis.',
+        'Analyze real estate market trends and activity for an area. Provide a FULL Hebrew address (street + number + city). Internally performs autocomplete, polygon discovery, and deal fetching. Returns yearly price trends, transaction volumes, and property type breakdown. No individual deals — just aggregated analysis.',
     inputSchema: getMarketActivityInputSchema,
     outputSchema: getMarketActivityOutputSchema,
     execute: async ({ address, yearsBack = 3, radiusMeters = 100, dealType = 2 }) => {

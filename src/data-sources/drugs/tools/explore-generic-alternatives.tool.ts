@@ -55,7 +55,7 @@ export const exploreGenericAlternatives = createTool({
         'Search for generic alternatives and similar medications by active ingredient, ATC therapeutic code, or administration route. At least one search criterion is required.',
     inputSchema: exploreGenericAlternativesInputSchema,
     outputSchema: exploreGenericAlternativesOutputSchema,
-    execute: async ({ activeIngredient, atcCode, administrationRouteId, prescription, healthServices, page }) => {
+    execute: async ({ activeIngredient, atcCode, administrationRouteId, page }) => {
         const apiUrl = buildDrugsUrl(DRUGS_PATHS.SEARCH_GENERIC);
 
         if (!activeIngredient && !atcCode && !administrationRouteId) {
@@ -68,12 +68,11 @@ export const exploreGenericAlternatives = createTool({
 
         try {
             const result = await drugsApi.search.generic({
-                activeIngredient,
-                atc: atcCode,
-                matanId: administrationRouteId,
-                prescription: prescription ?? false,
-                healthServices: healthServices ?? false,
+                val: activeIngredient ?? '',
+                atcId: atcCode ?? null,
+                matanId: administrationRouteId ?? null,
                 pageIndex: page ?? 1,
+                orderBy: 0,
             });
 
             if (!result.results?.length) {

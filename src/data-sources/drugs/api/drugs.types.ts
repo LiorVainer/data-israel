@@ -27,22 +27,22 @@ export interface DrugsSearchByNameRequest {
 
 /** Search by symptom request */
 export interface DrugsSearchBySymptomRequest {
-    bySymptomMain: string;
-    bySymptomSecond: number;
+    primarySymp: string;
+    secondarySymp: string;
     prescription: boolean;
     healthServices: boolean;
     pageIndex: number;
+    orderBy: number;
 }
 
 /** Generic (advanced) search request */
 export interface DrugsSearchGenericRequest {
-    activeIngredient?: string;
-    atc?: string;
-    matanId?: number;
-    packageId?: number;
-    prescription: boolean;
-    healthServices: boolean;
+    val: string;
+    atcId?: string | null;
+    matanId?: number | null;
+    packageId?: number | null;
     pageIndex: number;
+    orderBy: number;
 }
 
 /** Get specific drug request */
@@ -155,10 +155,8 @@ export interface DrugSymptomItem {
     bySymptomName: string;
 }
 
-/** Symptom hierarchy response */
-export interface DrugsSymptomHierarchyResponse {
-    results: DrugSymptomCategory[];
-}
+/** Symptom hierarchy response — the API returns the array directly */
+export type DrugsSymptomHierarchyResponse = DrugSymptomCategory[];
 
 /** Popular symptom entry */
 export interface DrugPopularSymptom {

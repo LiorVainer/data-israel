@@ -15,7 +15,11 @@ import { toolOutputSchema } from '@/data-sources/types';
 // ============================================================================
 
 export const autocompleteAddressInputSchema = z.object({
-    searchText: z.string().describe('Partial or full Israeli address to search for (Hebrew or English)'),
+    searchText: z
+        .string()
+        .describe(
+            'Full Israeli address in Hebrew including street name, house number, and city (e.g. "סוקולוב 38 חולון"). A city name alone will not return address results.',
+        ),
 });
 
 export const autocompleteAddressOutputSchema = toolOutputSchema({
@@ -39,7 +43,7 @@ export const autocompleteAddressOutputSchema = toolOutputSchema({
 export const autocompleteNadlanAddress = createTool({
     id: 'autocompleteNadlanAddress',
     description:
-        'Search and autocomplete Israeli addresses. Returns matching addresses with coordinates. Use this first to resolve an address before searching for deals.',
+        'Search and autocomplete Israeli addresses. Provide a FULL Hebrew address (street + number + city, e.g. "סוקולוב 38 חולון") — a city name alone will not return useful results. Returns matching addresses with ITM coordinates for subsequent deal lookups.',
     inputSchema: autocompleteAddressInputSchema,
     outputSchema: autocompleteAddressOutputSchema,
     execute: async ({ searchText }) => {

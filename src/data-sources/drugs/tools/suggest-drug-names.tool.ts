@@ -46,7 +46,7 @@ export const suggestDrugNames = createTool({
             const result = await drugsApi.search.autocomplete({
                 val: query,
                 isSearchTradeName: searchType === 'active_ingredients' ? '0' : '1',
-                isSearchTradeMarkiv: searchType === 'trade_names' ? '0' : '1',
+                isSearchTradeMarkiv: searchType === 'active_ingredients' ? '1' : '0',
             });
 
             const suggestions = result.results ?? [];

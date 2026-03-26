@@ -75,7 +75,11 @@ const statisticsSchema = z.object({
 });
 
 export const findRecentDealsInputSchema = z.object({
-    address: z.string().describe('Israeli address to search for deals (Hebrew or English)'),
+    address: z
+        .string()
+        .describe(
+            'Full Israeli address in Hebrew including street name, house number, and city (e.g. "סוקולוב 38 חולון"). A city name alone will not return useful results.',
+        ),
     yearsBack: z.number().int().min(1).max(10).optional().describe('How many years back to search (default: 2)'),
     radiusMeters: z.number().int().min(10).max(5000).optional().describe('Search radius in meters (default: 50)'),
     maxDeals: z.number().int().min(1).max(200).optional().describe('Maximum deals to return (default: 100)'),
@@ -115,7 +119,7 @@ export type FindRecentDealsOutput = z.infer<typeof findRecentDealsOutputSchema>;
 export const findRecentNadlanDeals = createTool({
     id: 'findRecentNadlanDeals',
     description:
-        'Find recent real estate deals near an Israeli address. Returns deal details including price (NIS), area (sqm), price per sqm, property type, and market statistics. This is the main tool for property transaction research.',
+        'Find recent real estate deals near an Israeli address. Internally performs a multi-step flow: (1) autocomplete the address to get ITM coordinates, (2) discover nearby street polygons, (3) fetch deals from those polygons. Provide a FULL Hebrew address (street + number + city). Returns deal details including price (NIS), area (sqm), price per sqm, property type, and market statistics. This is the main tool for property transaction research.',
     inputSchema: findRecentDealsInputSchema,
     outputSchema: findRecentDealsOutputSchema,
     execute: async ({ address, yearsBack = 2, radiusMeters = 50, maxDeals = 100, dealType = 2 }) => {

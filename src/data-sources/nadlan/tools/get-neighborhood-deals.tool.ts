@@ -30,7 +30,11 @@ function getString(obj: unknown, key: string): string | undefined {
 // ============================================================================
 
 export const getNeighborhoodDealsInputSchema = z.object({
-    polygonId: z.string().describe('Polygon ID of the neighborhood'),
+    polygonId: z
+        .string()
+        .describe(
+            'Neighborhood polygon ID obtained from the deals-by-radius endpoint (via findRecentNadlanDeals). The autocomplete endpoint does NOT return polygon IDs.',
+        ),
     limit: z.number().int().min(1).max(500).optional().describe('Max deals to return (default: 100)'),
     dealType: z
         .union([z.literal(1), z.literal(2)])
@@ -81,7 +85,7 @@ export const getNeighborhoodDealsOutputSchema = toolOutputSchema({
 export const getNeighborhoodNadlanDeals = createTool({
     id: 'getNeighborhoodNadlanDeals',
     description:
-        'Get real estate deals for a specific neighborhood polygon. Use a polygon ID obtained from findRecentNadlanDeals or autocomplete results.',
+        'Get real estate deals for a specific neighborhood polygon. Requires a polygon_id from the deals-by-radius endpoint (returned internally by findRecentNadlanDeals). dealType: 1=new/first-hand, 2=used/second-hand (default 2).',
     inputSchema: getNeighborhoodDealsInputSchema,
     outputSchema: getNeighborhoodDealsOutputSchema,
     execute: async ({ polygonId, limit = 100, dealType = 2 }) => {

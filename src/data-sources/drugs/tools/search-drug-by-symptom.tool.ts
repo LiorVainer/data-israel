@@ -15,8 +15,8 @@ import { commonToolInput, toolOutputSchema } from '@/data-sources/types';
 // ============================================================================
 
 export const searchDrugBySymptomInputSchema = z.object({
-    symptomCategory: z.string().describe('Primary symptom category name (Hebrew, from browseSymptoms results)'),
-    symptomId: z.number().int().describe('Secondary symptom ID (from browseSymptoms results)'),
+    symptomCategory: z.string().describe('Primary symptom category ID (Hebrew, from browseSymptoms categoryName)'),
+    symptomId: z.number().int().describe('Secondary symptom ID (from browseSymptoms symptomId)'),
     prescription: z.boolean().optional().default(false).describe('Filter: false = all drugs, true = OTC only'),
     healthServices: z.boolean().optional().default(false).describe('Filter by health basket inclusion'),
     page: z.number().int().min(1).optional().default(1).describe('Page number (starts at 1)'),
@@ -54,11 +54,12 @@ export const searchDrugBySymptom = createTool({
 
         try {
             const result = await drugsApi.search.bySymptom({
-                bySymptomMain: symptomCategory,
-                bySymptomSecond: symptomId,
+                primarySymp: symptomCategory,
+                secondarySymp: String(symptomId),
                 prescription: prescription ?? false,
                 healthServices: healthServices ?? false,
                 pageIndex: page ?? 1,
+                orderBy: 0,
             });
 
             if (!result.results?.length) {
