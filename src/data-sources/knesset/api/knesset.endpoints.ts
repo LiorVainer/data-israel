@@ -2,7 +2,7 @@
  * Knesset OData API Endpoint Definitions
  *
  * Provides typed constants and URL builders for the Knesset Parliament OData API.
- * Base URL: http://knesset.gov.il/Odata/ParliamentInfo.svc
+ * Base URL: https://knesset.gov.il/Odata/ParliamentInfo.svc
  *
  * No authentication required. Format: OData JSON.
  */
@@ -12,7 +12,7 @@
 // ============================================================================
 
 /** Base URL for Knesset OData API */
-export const KNESSET_BASE_URL = 'http://knesset.gov.il/Odata/ParliamentInfo.svc';
+export const KNESSET_BASE_URL = 'https://knesset.gov.il/Odata/ParliamentInfo.svc';
 
 // ============================================================================
 // Entity Path Constants
@@ -85,7 +85,7 @@ export function buildKnessetUrl(entityPath: string, params?: ODataParams): strin
  *
  * @example
  * buildEntityByIdUrl('/KNS_Bill', 12345)
- * // Returns: "http://knesset.gov.il/Odata/ParliamentInfo.svc/KNS_Bill(12345)"
+ * // Returns: "https://knesset.gov.il/Odata/ParliamentInfo.svc/KNS_Bill(12345)"
  */
 export function buildEntityByIdUrl(entityBase: string, id: number, params?: ODataParams): string {
     return buildKnessetUrl(`${entityBase}(${id})`, params);
