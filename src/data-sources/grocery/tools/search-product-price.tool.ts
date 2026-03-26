@@ -38,6 +38,7 @@ const groceryItemSchema = z.object({
     price: z.number().describe('Price in ILS (includes 18% VAT)'),
     unitPrice: z.number().describe('Price per unit of measure in ILS'),
     allowDiscount: z.boolean(),
+    isWeighted: z.boolean().describe('Whether item is sold by weight (price is per kg)'),
     priceUpdateDate: z.string(),
 });
 

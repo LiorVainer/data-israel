@@ -28,6 +28,7 @@ export interface RawPriceItem {
     UnitOfMeasurePrice?: string;
     UnitMeasurePrice?: string;
     AllowDiscount?: string;
+    bIsWeighted?: string;
     ItemStatus?: string;
     ItemId?: string;
     PriceUpdateDate?: string;
@@ -88,6 +89,8 @@ export interface GroceryItem {
     unitPrice: number;
     /** Whether discounts are allowed */
     allowDiscount: boolean;
+    /** Whether item is sold by weight (price is per kg) vs fixed quantity */
+    isWeighted: boolean;
     /** Last price update date */
     priceUpdateDate: string;
 }

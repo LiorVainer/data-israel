@@ -91,6 +91,7 @@ export function normalizePriceItem(raw: RawPriceItem): GroceryItem {
         price: num(raw.ItemPrice),
         unitPrice: num(raw.UnitOfMeasurePrice ?? raw.UnitMeasurePrice),
         allowDiscount: raw.AllowDiscount === '1' || raw.AllowDiscount === 'true',
+        isWeighted: raw.bIsWeighted === '1' || raw.bIsWeighted === 'true',
         priceUpdateDate: str(raw, 'PriceUpdateDate'),
     };
 }
