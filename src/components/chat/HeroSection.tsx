@@ -5,7 +5,8 @@ import { HeroSubtitle, HeroTitle } from '@/components/ui/shape-landing-hero';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Logo } from '@/components/ui/logo';
 import { CTAButton } from '@/components/cta-button';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Heart } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 const fadeUpVariants = {
     hidden: { opacity: 0, y: 30 },
@@ -47,20 +48,36 @@ export function HeroSection({ onStartConversation, onScrollToAbout }: HeroSectio
                         <HeroSubtitle>כל תשובה מבוססת על מקור רשמי.</HeroSubtitle>
                     </div>
                 </div>
-                {onStartConversation && (
-                    <motion.div
-                        initial={{ opacity: 0, scale: 0.95 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        transition={{ delay: 0.8, duration: 0.5 }}
-                    >
+                <motion.div
+                    className='flex flex-col sm:flex-row items-center gap-4'
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: 0.8, duration: 0.5 }}
+                >
+                    {onStartConversation && (
                         <CTAButton onClick={onStartConversation}>
                             <span className='flex items-center font-bold gap-3 justify-between'>
                                 התחילו לשאול
                                 <ArrowLeft className='w-4 h-4' />
                             </span>
                         </CTAButton>
-                    </motion.div>
-                )}
+                    )}
+                    <Button
+                        variant='outline'
+                        size='lg'
+                        asChild
+                        className='rounded-full px-9 py-3.5 h-auto font-bold text-base'
+                    >
+                        <a
+                            href='https://www.bitpay.co.il/app/me/D7F8C813-B55F-C14F-C5D8-1381C6D038DDD06D'
+                            target='_blank'
+                            rel='noopener noreferrer'
+                        >
+                            לתמיכה במיזם
+                            <Heart className='w-4 h-4' />
+                        </a>
+                    </Button>
+                </motion.div>
             </div>
         </div>
     );

@@ -62,17 +62,17 @@ export function AboutSection() {
                 transition={{ duration: 0.5 }}
                 className='flex flex-col items-center gap-4 mb-12 text-center'
             >
-                <h2 className='text-2xl md:text-3xl font-bold text-foreground'>על המערכת</h2>
+                <h2 className='text-2xl md:text-3xl font-bold text-foreground'>על המיזם</h2>
                 <p className='text-base md:text-lg text-muted-foreground leading-relaxed max-w-2xl'>
                     למדינת ישראל מאגרי מידע ציבוריים רחבים — סטטיסטיקה, מחירים, אוכלוסייה, תחבורה ועוד. המידע קיים, אך
                     אינו תמיד נגיש או פשוט להבנה.
                 </p>
                 <p className='text-base md:text-lg text-muted-foreground leading-relaxed max-w-2xl'>
-                    <strong className='text-foreground'>דאטה ישראל</strong> נוצרה כדי לחבר בין שאלות יומיומיות למאגרי
+                    <strong className='text-foreground'>דאטה ישראל</strong> נוצר כדי לחבר בין שאלות יומיומיות למאגרי
                     המידע הציבוריים של ישראל, באמצעות בינה מלאכותית.
                 </p>
                 <p className='text-base md:text-lg text-muted-foreground leading-relaxed max-w-2xl'>
-                    המערכת עושה שימוש בבינה מלאכותית כדי לנתח נתונים ממקורות רשמיים כגון data.gov.il והלמ״ס, ולהציג
+                    המיזם עושה שימוש בבינה מלאכותית כדי לנתח נתונים ממקורות רשמיים כגון data.gov.il והלמ״ס, ולהציג
                     תשובות מבוססות נתונים — כולל טבלאות, גרפים וקישורים למקור.
                 </p>
                 <p className='text-base md:text-lg text-foreground font-medium leading-relaxed max-w-2xl'>
