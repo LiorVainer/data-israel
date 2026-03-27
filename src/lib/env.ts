@@ -19,6 +19,7 @@ export const EnvSchema = z.object({
     AI_HEALTH_MODEL_ID: z.string().optional(),
     AI_GROCERY_MODEL_ID: z.string().default('google/gemini-2.5-flash-lite'),
     AI_KNESSET_MODEL_ID: z.string().optional(),
+    AI_SHUFERSAL_MODEL_ID: z.string().optional(),
     AI_ENABLE_SCORERS: z.preprocess((val) => val === 'true' || val === '1', z.boolean()).default(false),
     AI_MAX_STEPS: z.coerce.number().int().min(1).default(25),
     AI_TOOL_CALL_CONCURRENCY: z.coerce.number().int().min(1).default(10),

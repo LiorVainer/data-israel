@@ -7,7 +7,16 @@
 
 import { AgentConfig } from './agent.config';
 
-export type SubAgentId = 'datagov' | 'cbs' | 'budget' | 'nadlan' | 'drugs' | 'health' | 'grocery' | 'knesset';
+export type SubAgentId =
+    | 'datagov'
+    | 'cbs'
+    | 'budget'
+    | 'nadlan'
+    | 'drugs'
+    | 'health'
+    | 'grocery'
+    | 'knesset'
+    | 'shufersal';
 
 const getModelIdForAgent = (agentId?: SubAgentId): string => {
     if (!agentId) return AgentConfig.MODEL.DEFAULT_ID;
@@ -29,6 +38,8 @@ const getModelIdForAgent = (agentId?: SubAgentId): string => {
             return AgentConfig.MODEL.GROCERY_ID;
         case 'knesset':
             return AgentConfig.MODEL.KNESSET_ID;
+        case 'shufersal':
+            return AgentConfig.MODEL.SHUFERSAL_ID;
     }
 };
 

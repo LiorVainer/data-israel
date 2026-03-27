@@ -69,6 +69,18 @@ const PROVIDER_DISPLAY: Record<
         borderClass: 'border-r-badge-knesset',
         tintClass: 'bg-badge-knesset/10 text-badge-knesset-foreground',
     },
+    shufersal: {
+        nameLabel: 'שופרסל — מחירי מוצרים',
+        summaryLabel: 'שופרסל',
+        borderClass: 'border-r-badge-shufersal',
+        tintClass: 'bg-badge-shufersal/10 text-badge-shufersal-foreground',
+    },
+    'rami-levy': {
+        nameLabel: 'רמי לוי — מחירי מוצרים',
+        summaryLabel: 'רמי לוי',
+        borderClass: 'border-r-badge-rami-levy',
+        tintClass: 'bg-badge-rami-levy/10 text-badge-rami-levy-foreground',
+    },
     other: {
         nameLabel: 'מקורות נוספים',
         summaryLabel: 'אחר',
@@ -87,6 +99,8 @@ const PROVIDER_ORDER: GroupKey[] = [
     'drugs',
     'health',
     'grocery',
+    'shufersal',
+    'rami-levy',
     'other',
 ];
 
@@ -105,6 +119,8 @@ export function SourcesPart({ sources }: SourcesPartProps) {
             health: { portal: [], api: [] },
             grocery: { portal: [], api: [] },
             knesset: { portal: [], api: [] },
+            shufersal: { portal: [], api: [] },
+            'rami-levy': { portal: [], api: [] },
             other: { portal: [], api: [] },
         };
         for (const s of sources) {

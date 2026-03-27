@@ -81,6 +81,14 @@ import { KnessetTools, knessetSourceResolvers } from './knesset/tools';
 import { knessetTranslations } from './knesset/knesset.translations';
 import { knessetDisplayLabel, knessetDisplayIcon, knessetBadgeConfig } from './knesset/knesset.display';
 
+import { ShufersalTools, shufersalSourceResolvers } from './shufersal/tools';
+import { shufersalTranslations } from './shufersal/shufersal.translations';
+import { shufersalDisplayLabel, shufersalDisplayIcon, shufersalBadgeConfig } from './shufersal/shufersal.display';
+
+import { RamiLevyTools, ramiLevySourceResolvers } from './rami-levy/tools';
+import { ramiLevyTranslations } from './rami-levy/rami-levy.translations';
+import { ramiLevyDisplayLabel, ramiLevyDisplayIcon, ramiLevyBadgeConfig } from './rami-levy/rami-levy.display';
+
 import { clientTranslations } from '@/lib/tools/client/translations';
 
 // ============================================================================
@@ -349,6 +357,38 @@ const DATA_SOURCE_METAS: readonly DataSourceMeta[] = [
             ],
         },
     },
+    {
+        id: 'shufersal',
+        agentId: 'shufersalAgent',
+        display: { label: shufersalDisplayLabel, icon: shufersalDisplayIcon, badge: shufersalBadgeConfig },
+        routingHint:
+            'מוצרים ומחירים בשופרסל — חיפוש מוצרים לפי שם או ברקוד, מחירים בשקלים, יצרנים ומותגים באתר שופרסל אונליין',
+        tools: ShufersalTools,
+        sourceResolvers: shufersalSourceResolvers as Record<string, ToolSourceResolver>,
+        translations: shufersalTranslations as Record<string, ToolTranslation>,
+        resourceExtractors: {},
+        landing: {
+            logo: '/shufersal-logo.svg',
+            description: 'שופרסל אונליין — חיפוש מוצרים, מחירים, יצרנים ומותגים ברשת הגדולה בישראל',
+            stats: [
+                { label: 'מוצרים', value: '30K+', icon: ShoppingCartIcon },
+                { label: 'עדכון', value: 'יומי', icon: CalendarIcon },
+                { label: 'כלים', value: '2', icon: TagIcon },
+            ],
+            category: 'economy',
+            order: 4,
+        },
+        suggestions: {
+            prompts: [
+                {
+                    label: 'חיפוש מוצר בשופרסל',
+                    prompt: 'כמה עולה חלב תנובה 3% בשופרסל?',
+                    icon: ShoppingCartIcon,
+                },
+                { label: 'מוצרי שופרסל', prompt: 'חפש לי שמן זית בשופרסל אונליין', icon: SearchIcon },
+            ],
+        },
+    },
 ] as const;
 
 // ============================================================================
@@ -365,6 +405,7 @@ export const allDataSourceTools = {
     ...HealthTools,
     ...GroceryTools,
     ...KnessetTools,
+    ...ShufersalTools,
 } as const;
 
 // ============================================================================
@@ -589,6 +630,7 @@ export const SOURCE_URL_TOOL_NAMES = [
     'generateDrugsSourceUrl',
     'generateHealthSourceUrl',
     'generateKnessetSourceUrl',
+    'generateShufersalSourceUrl',
 ] as const;
 
 /** Client-side tools (charts, suggestions) — not part of any data source */

@@ -7,7 +7,17 @@
 import type { LucideIcon } from 'lucide-react';
 
 /** Data source identifier */
-export type DataSource = 'cbs' | 'datagov' | 'budget' | 'knesset' | 'nadlan' | 'drugs' | 'health' | 'grocery';
+export type DataSource =
+    | 'cbs'
+    | 'datagov'
+    | 'budget'
+    | 'knesset'
+    | 'nadlan'
+    | 'drugs'
+    | 'health'
+    | 'grocery'
+    | 'shufersal'
+    | 'rami-levy';
 
 /** Badge configuration for data source attribution */
 export interface DataSourceConfig {

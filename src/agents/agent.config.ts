@@ -50,6 +50,8 @@ export const AgentConfig = {
         GROCERY_ID: ENV.AI_GROCERY_MODEL_ID ?? ENV.AI_DEFAULT_MODEL_ID,
         /** Knesset agent model ID (falls back to DEFAULT_ID) */
         KNESSET_ID: ENV.AI_KNESSET_MODEL_ID ?? ENV.AI_DEFAULT_MODEL_ID,
+        /** Shufersal agent model ID (falls back to DEFAULT_ID) */
+        SHUFERSAL_ID: ENV.AI_SHUFERSAL_MODEL_ID ?? ENV.AI_DEFAULT_MODEL_ID,
     },
 
     /** Memory configuration for all agents */
