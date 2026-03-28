@@ -15,12 +15,12 @@ export {
 } from './tool-schemas';
 
 // Display types
-export { LANDING_CATEGORIES } from './display.types';
+export { DATA_SOURCES_CATEGORIES } from './display.types';
 export type {
     DataSource,
     DataSourceConfig,
     AgentDisplayInfo,
-    LandingCategory,
+    DataSourceCategory,
     LandingConfig,
     SuggestionPrompt,
     SuggestionsConfig,

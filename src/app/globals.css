@@ -9,8 +9,8 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: "Geist", "Geist Fallback", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "Geist Mono", "Geist Mono Fallback", ui-monospace, monospace;
   --color-action: var(--action);
   --color-action-dark: var(--action-dark);
   --color-action-tint: var(--action-tint);
@@ -164,7 +164,7 @@
   --accent: oklch(0.60 0.14 245);
   --accent-foreground: oklch(0.95 0.01 250);
   --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(0.95 0.01 250 / 28%);
+  --border: oklch(0.8 0.01 250 / 28%);
   --input: oklch(0.95 0.01 250 / 25%);
   --ring: oklch(0.55 0.15 250);
   /* Chart colors - varied modern palette (dark mode) */

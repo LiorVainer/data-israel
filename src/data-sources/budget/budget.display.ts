@@ -8,7 +8,7 @@ import { LandmarkIcon } from 'lucide-react';
 import type { DataSourceConfig } from '@/data-sources/types';
 
 /** BudgetKey agent display label (Hebrew) */
-export const budgetDisplayLabel = 'סוכן תקציב המדינה';
+export const budgetDisplayLabel = 'תקציב המדינה';
 
 /** BudgetKey agent display icon */
 export const budgetDisplayIcon = LandmarkIcon;

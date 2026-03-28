@@ -8,7 +8,7 @@ import { ShoppingCartIcon } from 'lucide-react';
 import type { DataSourceConfig } from '@/data-sources/types';
 
 /** Rami Levy agent display label (Hebrew) */
-export const ramiLevyDisplayLabel = 'בודק מחירים ברמי לוי';
+export const ramiLevyDisplayLabel = 'רמי לוי';
 
 /** Rami Levy agent display icon */
 export const ramiLevyDisplayIcon = ShoppingCartIcon;

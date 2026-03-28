@@ -2,7 +2,7 @@
 
 import { useChat } from '@ai-sdk/react';
 import { DefaultChatTransport, UIMessage } from 'ai';
-import { useCallback, useEffect, useMemo, useRef } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useAuth } from '@clerk/nextjs';
 import { useQuery } from '@tanstack/react-query';
 import { useQuery as useConvexQuery } from 'convex/react';
@@ -29,6 +29,8 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
 import { LogIn, X } from 'lucide-react';
+import { ALL_DATA_SOURCE_IDS } from '@/data-sources/registry';
+import type { DataSourceId } from '@/data-sources/registry';
 
 /** Header name for passing user ID to API */
 const USER_ID_HEADER = 'x-user-id';
@@ -61,6 +63,23 @@ export function ChatThread({ id }: ChatThreadProps) {
     const userIdRef = useRef(userId);
     userIdRef.current = userId;
 
+    const [enabledSources, setEnabledSources] = useState<DataSourceId[]>([...ALL_DATA_SOURCE_IDS]);
+
+    // Ref so the memoized transport always reads the latest value
+    const enabledSourcesRef = useRef(enabledSources);
+    enabledSourcesRef.current = enabledSources;
+
+    const handleToggleSource = useCallback((sourceId: DataSourceId) => {
+        setEnabledSources((prev) => {
+            const next = prev.includes(sourceId) ? prev.filter((id) => id !== sourceId) : [...prev, sourceId];
+            // Prevent empty: if nothing left, re-enable all
+            return next.length === 0 ? [...ALL_DATA_SOURCE_IDS] : next;
+        });
+    }, []);
+
+    const handleSelectAllSources = useCallback(() => setEnabledSources([...ALL_DATA_SOURCE_IDS]), []);
+    const handleUnselectAllSources = useCallback(() => setEnabledSources([]), []);
+
     const transport = useMemo(
         () =>
             new DefaultChatTransport({
@@ -81,6 +100,10 @@ export function ChatThread({ id }: ChatThreadProps) {
                                 thread: id,
                                 resource: userIdRef.current,
                             },
+                            // Only send filter when not all sources are selected
+                            ...(enabledSourcesRef.current.length < ALL_DATA_SOURCE_IDS.length && {
+                                enabledSources: enabledSourcesRef.current,
+                            }),
                         },
                     };
                 },
@@ -239,6 +262,10 @@ export function ChatThread({ id }: ChatThreadProps) {
                             onSubmit={handleSend}
                             status={startedAsNew.current && !hasMessages ? undefined : status}
                             onStop={stop}
+                            enabledSources={enabledSources}
+                            onToggleSource={handleToggleSource}
+                            onSelectAllSources={handleSelectAllSources}
+                            onUnselectAllSources={handleUnselectAllSources}
                         />
                         <NotificationPrompt
                             isSupported={pushSubscription.isSupported}

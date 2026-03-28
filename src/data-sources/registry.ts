@@ -404,6 +404,33 @@ export const allDataSourceTools = {
 } as const;
 
 // ============================================================================
+// Data Source Picker
+// ============================================================================
+
+/** All data source IDs — for UI pickers and validation */
+export const ALL_DATA_SOURCE_IDS: readonly DataSourceId[] = DATA_SOURCE_METAS.map((ds) => ds.id);
+
+/** Map agent ID → data source ID (e.g., 'ramiLevyAgent' → 'rami-levy') */
+export const AGENT_ID_TO_SOURCE_ID: ReadonlyMap<string, DataSourceId> = new Map(
+    DATA_SOURCE_METAS.map((ds) => [ds.agentId, ds.id]),
+);
+
+/** Data source picker metadata — lightweight subset for UI components */
+export function getDataSourcePickerItems() {
+    return DATA_SOURCE_METAS.filter((meta): meta is DataSourceMeta & { landing: LandingConfig } => !!meta.landing).map(
+        (meta) => ({
+            id: meta.id,
+            label: meta.display.label,
+            icon: meta.display.icon,
+            logo: meta.landing.logo,
+            urlLabel: meta.display.badge.urlLabel,
+            category: meta.landing.category,
+            categoryOrder: meta.landing.order,
+        }),
+    );
+}
+
+// ============================================================================
 // Badge / Display Config
 // ============================================================================
 
@@ -598,9 +625,13 @@ export function getAllResourceExtractors(): Record<string, ToolResourceExtractor
 /**
  * Generate agent listing for the routing agent's system prompt.
  * Each data source contributes its agent ID and routing hint.
+ *
+ * @param agentIds — When provided, only include hints for these agent IDs.
+ *   This ensures the routing prompt matches the actually-registered sub-agents.
  */
-export function buildRoutingHints(): string {
-    return DATA_SOURCE_METAS.map((ds) => `- ${ds.agentId}\n  ${ds.routingHint}`).join('\n\n');
+export function buildRoutingHints(agentIds?: string[]): string {
+    const metas = agentIds ? DATA_SOURCE_METAS.filter((ds) => agentIds.includes(ds.agentId)) : DATA_SOURCE_METAS;
+    return metas.map((ds) => `- ${ds.agentId}\n  ${ds.routingHint}`).join('\n\n');
 }
 
 // ============================================================================

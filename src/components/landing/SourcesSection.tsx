@@ -2,19 +2,22 @@
 
 import { motion } from 'framer-motion';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { LANDING_CATEGORIES, type LandingCategory } from '@/data-sources/types';
+import { DATA_SOURCES_CATEGORIES, type DataSourceCategory } from '@/data-sources/types';
 import { getDataSourcesWithLanding } from '@/data-sources/registry';
 import { SourceCard } from './SourceCard';
 
 type LandingSource = ReturnType<typeof getDataSourcesWithLanding>[number];
 
 const sortedCategories = (
-    Object.entries(LANDING_CATEGORIES) as [LandingCategory, (typeof LANDING_CATEGORIES)[LandingCategory]][]
+    Object.entries(DATA_SOURCES_CATEGORIES) as [
+        DataSourceCategory,
+        (typeof DATA_SOURCES_CATEGORIES)[DataSourceCategory],
+    ][]
 ).sort(([, a], [, b]) => a.order - b.order);
 
 const sources = getDataSourcesWithLanding();
 
-const sourcesByCategory: Partial<Record<LandingCategory, LandingSource[]>> = Object.groupBy(
+const sourcesByCategory: Partial<Record<DataSourceCategory, LandingSource[]>> = Object.groupBy(
     sources,
     (s) => s.landing.category,
 );

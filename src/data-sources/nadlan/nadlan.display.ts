@@ -8,7 +8,7 @@ import { HomeIcon } from 'lucide-react';
 import type { DataSourceConfig } from '@/data-sources/types';
 
 /** Nadlan agent display label (Hebrew) */
-export const nadlanDisplayLabel = 'בודק בנתוני עסקאות נדל"ן';
+export const nadlanDisplayLabel = 'נדל"ן';
 
 /** Nadlan agent display icon */
 export const nadlanDisplayIcon = HomeIcon;

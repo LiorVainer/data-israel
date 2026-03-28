@@ -23,6 +23,7 @@ import {
     type ToolCallPart,
 } from '@/components/chat/types';
 import { clearActiveStreamId, getResumableStreamContext, setActiveStreamId } from '@/lib/redis/resumable-stream';
+import { ALL_DATA_SOURCE_IDS, type DataSourceId } from '@/data-sources/registry';
 import { sendPushToUser } from '@/lib/push/send-notification';
 import { stripToolResult, TOOL_ARGS_KEEP_FIELDS } from '@/agents/processors/truncate-tool-results.processor';
 import { pick } from 'es-toolkit';
@@ -296,9 +297,19 @@ export async function POST(req: Request) {
     try {
         const params = await req.json();
 
+        // Validate enabled data sources filter
+        const rawEnabledSources: unknown = params.enabledSources;
+        const enabledSources: DataSourceId[] | undefined =
+            Array.isArray(rawEnabledSources) && rawEnabledSources.length > 0
+                ? rawEnabledSources.filter(
+                      (s): s is DataSourceId =>
+                          typeof s === 'string' && (ALL_DATA_SOURCE_IDS as readonly string[]).includes(s),
+                  )
+                : undefined;
+
         // Resolve per-agent model config (Convex → env vars → defaults)
         const modelConfig = await resolveModelConfig();
-        const dynamicMastra = await getMastraWithModels(modelConfig);
+        const dynamicMastra = await getMastraWithModels(modelConfig, enabledSources);
 
         // Get user ID from header or use the one provided in the body
         const userId = getUserIdFromRequest(req);

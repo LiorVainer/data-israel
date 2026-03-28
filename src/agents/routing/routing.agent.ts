@@ -9,13 +9,9 @@ import { Agent } from '@mastra/core/agent';
 import { Memory } from '@mastra/memory';
 import { ConvexVector } from '@mastra/convex';
 import { openrouter } from '@openrouter/ai-sdk-provider';
-import {
-    PromptInjectionDetector,
-    UnicodeNormalizer,
-    SystemPromptScrubber,
-} from '@mastra/core/processors';
+import { PromptInjectionDetector, UnicodeNormalizer, SystemPromptScrubber } from '@mastra/core/processors';
 import { getMastraModelId } from '../model';
-import { ROUTING_CONFIG } from './config';
+import { ROUTING_CONFIG, buildRoutingInstructions } from './config';
 import { AgentConfig } from '../agent.config';
 import { AGENT_SCORERS } from '../evals/eval.config';
 import { ClientTools } from '@/lib/tools/client';
@@ -43,10 +39,13 @@ const vector =
 
 /** Factory: creates a routing agent with the given model and sub-agents */
 export function createRoutingAgent(modelId: string, subAgents: Record<string, Agent>): Agent {
+    // Build instructions listing only the actually-registered sub-agents
+    const instructions = buildRoutingInstructions(Object.keys(subAgents));
+
     return new Agent({
         id: 'routingAgent',
         name: ROUTING_CONFIG.name,
-        instructions: ROUTING_CONFIG.instructions,
+        instructions,
         model: modelId,
         memory: new Memory({
             ...(vector && { vector }),

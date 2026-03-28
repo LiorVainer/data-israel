@@ -8,7 +8,7 @@ import { PillIcon } from 'lucide-react';
 import type { DataSourceConfig } from '@/data-sources/types';
 
 /** Drugs agent display label (Hebrew) */
-export const drugsDisplayLabel = 'בודק במאגר התרופות';
+export const drugsDisplayLabel = 'מאגר התרופות';
 
 /** Drugs agent display icon */
 export const drugsDisplayIcon = PillIcon;

@@ -9,7 +9,7 @@ import type { AgentDisplayInfo, DataSourceConfig } from '@/data-sources/types';
 
 /** Agent display info for the DataGov agent in ChainOfThought UI */
 export const datagovAgentDisplay: AgentDisplayInfo = {
-    label: 'בודק במאגרי המידע הממשלתי',
+    label: 'מידע ממשלתי',
     icon: DatabaseIcon,
     dataSource: 'datagov',
 };

@@ -1,10 +1,12 @@
 import { buildRoutingHints } from '@/data-sources/registry';
 
-const agentHints = buildRoutingHints();
-
-export const ROUTING_CONFIG = {
-    name: 'סוכן ניתוב',
-    instructions: `
+/**
+ * Build routing agent instructions with only the available agents listed.
+ * @param agentIds — IDs of the actually-registered sub-agents (e.g., ['cbsAgent', 'nadlanAgent'])
+ */
+export function buildRoutingInstructions(agentIds?: string[]): string {
+    const agentHints = buildRoutingHints(agentIds);
+    return `
 אתה סוכן ניתוב (Router Agent) שמנהל רשת של סוכנים מומחים לנתונים ציבוריים של מדינת ישראל.
 
 ========================
@@ -135,5 +137,10 @@ ${agentHints}
 - כתוב את התשובה הסופית
 
 המטרה שלך היא שהמשתמש ירגיש שקיבל תשובה אמינה, ברורה, שימושית ומאומתת במקורות זמינים.
-`,
+`;
+}
+
+export const ROUTING_CONFIG = {
+    name: 'סוכן ניתוב',
+    instructions: buildRoutingInstructions(),
 } as const;

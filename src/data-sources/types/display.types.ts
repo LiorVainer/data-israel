@@ -35,15 +35,15 @@ export interface AgentDisplayInfo {
     dataSource?: DataSource;
 }
 
-/** Landing page category groups — single source of truth */
-export const LANDING_CATEGORIES = {
+/** Data source category groups — single source of truth for landing page, suggestions, and picker */
+export const DATA_SOURCES_CATEGORIES = {
     government: { label: 'ממשל ותקציב', order: 1 },
     economy: { label: 'כלכלה ונדל"ן', order: 2 },
     health: { label: 'בריאות', order: 3 },
 } as const;
 
-/** Valid landing page category */
-export type LandingCategory = keyof typeof LANDING_CATEGORIES;
+/** Valid data source category */
+export type DataSourceCategory = keyof typeof DATA_SOURCES_CATEGORIES;
 
 /** A single example prompt for the empty conversation */
 export interface SuggestionPrompt {
@@ -74,7 +74,7 @@ export interface LandingConfig {
     /** Up to 3 stat items */
     stats: { label: string; value: string; icon: LucideIcon }[];
     /** Which category tab this source appears under */
-    category: LandingCategory;
+    category: DataSourceCategory;
     /** Sort order within category */
     order: number;
 }

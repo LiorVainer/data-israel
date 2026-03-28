@@ -8,7 +8,7 @@ import { ShoppingCartIcon } from 'lucide-react';
 import type { DataSourceConfig } from '@/data-sources/types';
 
 /** Shufersal agent display label (Hebrew) */
-export const shufersalDisplayLabel = 'בודק מוצרים בשופרסל';
+export const shufersalDisplayLabel = 'שופרסל';
 
 /** Shufersal agent display icon */
 export const shufersalDisplayIcon = ShoppingCartIcon;

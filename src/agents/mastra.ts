@@ -15,7 +15,7 @@ import { routingAgent, createRoutingAgent } from './routing/routing.agent';
 import { createCbsAgent } from '@/data-sources/cbs';
 import { createDatagovAgent } from '@/data-sources/datagov';
 import { dataSourceAgents } from '@/data-sources/registry.server';
-import type { DataSourceId } from '@/data-sources/registry';
+import { AGENT_ID_TO_SOURCE_ID, type DataSourceId } from '@/data-sources/registry';
 import { MASTRA_SCORERS } from './evals/eval.config';
 import { ENV } from '@/lib/env';
 
@@ -85,8 +85,8 @@ let cachedMastra: Mastra | null = null;
  *
  * Async because some data sources (e.g., BudgetKey MCP) require async tool loading.
  */
-export async function getMastraWithModels(config: AgentModelConfig): Promise<Mastra> {
-    const configKey = JSON.stringify(config);
+export async function getMastraWithModels(config: AgentModelConfig, enabledSources?: DataSourceId[]): Promise<Mastra> {
+    const configKey = JSON.stringify({ config, enabledSources: enabledSources?.slice().sort() });
 
     if (cachedConfigKey === configKey && cachedMastra) {
         return cachedMastra;
@@ -94,11 +94,18 @@ export async function getMastraWithModels(config: AgentModelConfig): Promise<Mas
 
     console.log({ config });
 
+    // Filter data source agents when enabledSources is provided
+    const filteredAgentEntries = Object.entries(dataSourceAgents).filter(([agentId]) => {
+        if (!enabledSources?.length) return true;
+        const dsId = AGENT_ID_TO_SOURCE_ID.get(agentId);
+        return dsId !== undefined && enabledSources.includes(dsId);
+    });
+
     // Build sub-agents from registry with per-source model overrides
     // Some agent factories are async (MCP-based sources), so we await all of them
     const subAgentEntries = await Promise.all(
-        Object.entries(dataSourceAgents).map(async ([agentId, agentDef]) => {
-            const dsId = agentId.replace('Agent', '') as DataSourceId;
+        filteredAgentEntries.map(async ([agentId, agentDef]) => {
+            const dsId = AGENT_ID_TO_SOURCE_ID.get(agentId) ?? (agentId.replace('Agent', '') as DataSourceId);
             const modelId = config[dsId] ?? config.routing;
             const agent = await agentDef.createAgent(`openrouter/${modelId}`);
             return [agentId, agent] as const;

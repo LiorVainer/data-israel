@@ -8,7 +8,7 @@ import { LandmarkIcon } from 'lucide-react';
 import type { DataSourceConfig } from '@/data-sources/types';
 
 /** Knesset agent display label (Hebrew) */
-export const knessetDisplayLabel = 'בודק בנתוני הכנסת';
+export const knessetDisplayLabel = 'הכנסת';
 
 /** Knesset agent display icon */
 export const knessetDisplayIcon = LandmarkIcon;

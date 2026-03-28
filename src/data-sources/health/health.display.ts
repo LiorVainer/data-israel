@@ -8,7 +8,7 @@ import { HeartPulseIcon } from 'lucide-react';
 import type { DataSourceConfig } from '@/data-sources/types';
 
 /** Health agent display label (Hebrew) */
-export const healthDisplayLabel = 'בודק בנתוני משרד הבריאות';
+export const healthDisplayLabel = 'משרד הבריאות';
 
 /** Health agent display icon */
 export const healthDisplayIcon = HeartPulseIcon;
