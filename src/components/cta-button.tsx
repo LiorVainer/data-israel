@@ -31,9 +31,9 @@ const CTAButton = React.forwardRef<HTMLButtonElement, CTAButtonProps>(({ childre
                 .cta-button {
                     position: relative;
                     isolation: isolate;
-                    padding: 0.875rem 2.25rem;
+                    padding: 0.625rem 1.5rem;
                     border-radius: 999px;
-                    font-size: 1rem;
+                    font-size: 0.875rem;
                     font-weight: 700;
                     color: var(--action-tint);
                     border: 2px solid transparent;
@@ -79,6 +79,13 @@ const CTAButton = React.forwardRef<HTMLButtonElement, CTAButtonProps>(({ childre
 
                 .cta-button:active {
                     transform: scale(1.02) translateY(1px);
+                }
+
+                @media (min-width: 768px) {
+                    .cta-button {
+                        padding: 0.625rem 1.5rem;
+                        font-size: 1rem;
+                    }
                 }
 
                 .cta-button-content {
