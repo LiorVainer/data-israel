@@ -37,8 +37,8 @@ export function HeroSection({ onStartConversation }: HeroSectionProps) {
                 initial='hidden'
                 animate='visible'
             >
-                <Logo width={isMobile ? 50 : 80} aria-label='DataGov Logo' />
-                <h1 className='text-primary dark:text-logo-gradient-end font-bold text-lg md:text-xl'>דאטה ישראל</h1>
+                <Logo width={isMobile ? 50 : 60} aria-label='DataGov Logo' />
+                <h1 className='text-primary dark:text-logo-gradient-end font-bold md:text-lg'>דאטה ישראל</h1>
             </motion.div>
             <div className='flex-shrink-0 flex flex-col items-center gap-12 md:gap-16 4xl:gap-20'>
                 <div className='flex flex-col gap-2'>
