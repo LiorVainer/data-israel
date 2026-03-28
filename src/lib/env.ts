@@ -28,6 +28,7 @@ export const EnvSchema = z.object({
     // =======================
     VERCEL_GIT_COMMIT_SHA: z.string().optional(),
     NEXT_PUBLIC_SITE_URL: z.string().default('https://data-israel.org'),
+    NEXT_PUBLIC_BIT_DONATE_URL: z.string().optional(),
 });
 
 export type Env = z.infer<typeof EnvSchema>;
