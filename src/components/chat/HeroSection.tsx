@@ -40,7 +40,7 @@ export function HeroSection({ onStartConversation }: HeroSectionProps) {
                 <Logo width={isMobile ? 50 : 60} aria-label='DataGov Logo' />
                 <h1 className='text-primary dark:text-logo-gradient-end font-bold md:text-lg'>דאטה ישראל</h1>
             </motion.div>
-            <div className='flex-shrink-0 flex flex-col items-center gap-12 md:gap-16 4xl:gap-20'>
+            <div className='flex-shrink-0 flex flex-col items-center gap-18 md:gap-16 4xl:gap-20'>
                 <div className='flex flex-col gap-2'>
                     <HeroTitle line1='שואלים על ישראל.' line2='מקבלים נתונים רשמיים.' />
                     <div>

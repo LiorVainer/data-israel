@@ -93,7 +93,7 @@ export default function Home() {
                     animate={{ opacity: 1 }}
                     transition={{ delay: 1.2, duration: 0.6 }}
                     onClick={handleScrollToAbout}
-                    className='absolute bottom-3 left-1/2 -translate-x-1/2 z-10 flex flex-col items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors'
+                    className='absolute bottom-2 left-1/2 -translate-x-1/2 z-10 flex flex-col items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors'
                 >
                     <span>קראו עוד</span>
                     <ChevronDown className='w-4 h-4 animate-bounce' />
