@@ -45,6 +45,12 @@ npm run build    # Build production bundle
 npm start        # Start production server
 ```
 
+### Convex Backend
+```bash
+npx convex dev   # Start Convex dev server + regenerate `convex/_generated/api`
+```
+**Important**: When adding or modifying Convex functions (queries, mutations, actions), you must run `npx convex dev` to regenerate the `api` object in `convex/_generated/api.ts`. Without this, TypeScript imports like `api.threads.myNewFunction` will fail with "property does not exist" errors.
+
 ### Code Quality & Verification
 - No `any` or `as` type abuses were introduced
 ```bash

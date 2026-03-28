@@ -89,6 +89,81 @@ export const getCurrentUser = query({
 });
 
 /**
+ * Returns the current user's default enabled data sources.
+ *
+ * Uses ctx.auth.getUserIdentity() to identify the caller, then looks up
+ * user_settings by the `by_user_id` index. Returns null for guests or
+ * if no settings record exists (meaning defaults apply).
+ *
+ * @returns Array of default enabled source IDs, or null
+ */
+export const getUserSettings = query({
+    args: {},
+    handler: async (ctx) => {
+        const identity = await ctx.auth.getUserIdentity();
+        if (!identity) {
+            return null;
+        }
+
+        const record = await ctx.db
+            .query('user_settings')
+            .withIndex('by_user_id', (q) => q.eq('userId', identity.subject))
+            .unique();
+
+        return record?.defaultEnabledSources ?? null;
+    },
+});
+
+/**
+ * Upserts user-level default data source settings.
+ *
+ * Requires authentication — throws if the caller is not logged in.
+ * If defaultEnabledSources is empty, deletes the record (empty = default = no storage needed).
+ * Otherwise, inserts or updates the record with the new defaults.
+ *
+ * @param defaultEnabledSources - Array of default enabled data source IDs
+ */
+export const upsertUserSettings = mutation({
+    args: {
+        defaultEnabledSources: v.array(v.string()),
+    },
+    handler: async (ctx, { defaultEnabledSources }) => {
+        const identity = await ctx.auth.getUserIdentity();
+        if (!identity) {
+            throw new Error('Not authenticated');
+        }
+
+        const userId = identity.subject;
+
+        const existing = await ctx.db
+            .query('user_settings')
+            .withIndex('by_user_id', (q) => q.eq('userId', userId))
+            .unique();
+
+        // Empty array means "use defaults" — no need to store
+        if (defaultEnabledSources.length === 0) {
+            if (existing) {
+                await ctx.db.delete(existing._id);
+            }
+            return;
+        }
+
+        if (existing) {
+            await ctx.db.patch(existing._id, {
+                defaultEnabledSources,
+                updatedAt: Date.now(),
+            });
+        } else {
+            await ctx.db.insert('user_settings', {
+                userId,
+                defaultEnabledSources,
+                updatedAt: Date.now(),
+            });
+        }
+    },
+});
+
+/**
  * Update the current user's theme preference.
  * Requires authentication - throws if not logged in.
  */

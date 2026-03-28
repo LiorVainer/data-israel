@@ -5,7 +5,7 @@ import { DefaultChatTransport, UIMessage } from 'ai';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useAuth } from '@clerk/nextjs';
 import { useQuery } from '@tanstack/react-query';
-import { useQuery as useConvexQuery } from 'convex/react';
+import { useMutation, useQuery as useConvexQuery } from 'convex/react';
 import { api } from '@/convex/_generated/api';
 import { AgentConfig } from '@/agents/agent.config';
 import { threadService } from '@/services/thread.service';
@@ -54,6 +54,10 @@ export function ChatThread({ id }: ChatThreadProps) {
     const contextWindow = useConvexQuery(api.threads.getThreadContextWindow, { threadId: id });
     const totalTokens = contextWindow?.totalTokens ?? 0;
 
+    const threadSettings = useConvexQuery(api.threads.getThreadSettings, { threadId: id });
+    const userSettings = useConvexQuery(api.users.getUserSettings);
+    const upsertThreadSettings = useMutation(api.threads.upsertThreadSettings);
+
     const searchParams = useSearchParams();
     const [initialMessageData, , removeInitialMessage] = useSessionStorage<InitialMessageData>(INITIAL_MESSAGE_KEY);
     const startedAsNew = useRef(initialMessageData?.chatId === id || searchParams.has('new'));
@@ -64,6 +68,33 @@ export function ChatThread({ id }: ChatThreadProps) {
     userIdRef.current = userId;
 
     const [enabledSources, setEnabledSources] = useState<DataSourceId[]>([...ALL_DATA_SOURCE_IDS]);
+    const didInitSources = useRef(false);
+
+    useEffect(() => {
+        if (didInitSources.current) return;
+        // Wait for queries to resolve (undefined = loading, null = no record)
+        if (threadSettings === undefined || userSettings === undefined) return;
+        didInitSources.current = true;
+
+        if (threadSettings?.length) {
+            setEnabledSources(threadSettings as DataSourceId[]);
+        } else if (userSettings?.length) {
+            setEnabledSources(userSettings as DataSourceId[]);
+        }
+        // else: keep default (all sources)
+    }, [threadSettings, userSettings]);
+
+    const isInitialMount = useRef(true);
+
+    useEffect(() => {
+        if (isInitialMount.current) {
+            isInitialMount.current = false;
+            return;
+        }
+        // All selected = delete the record (default state)
+        const sourcesToSave = enabledSources.length === ALL_DATA_SOURCE_IDS.length ? [] : enabledSources;
+        void upsertThreadSettings({ threadId: id, enabledSources: sourcesToSave });
+    }, [enabledSources, id, upsertThreadSettings]);
 
     // Ref so the memoized transport always reads the latest value
     const enabledSourcesRef = useRef(enabledSources);

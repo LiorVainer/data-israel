@@ -133,7 +133,7 @@ export default function AdminPage() {
 
     return (
         <div className='relative w-full' dir='rtl'>
-            <div className='relative z-10 flex min-h-dvh flex-col items-center justify-center px-4 py-12'>
+            <div className='relative z-10 flex min-h-dvh flex-col items-center justify-center px-4 pt-14'>
                 <div className='w-full max-w-5xl'>
                     <h1 className='mb-8 text-3xl font-bold'>פאנל ניהול</h1>
                     <DirectionProvider dir='rtl'>

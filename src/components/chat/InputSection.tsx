@@ -8,7 +8,14 @@ import {
     PromptInputSubmit,
     PromptInputTextarea,
 } from '@/components/ai-elements/prompt-input';
-import { DataSourcePicker } from '@/components/chat/DataSourcePicker';
+import {
+    DatabaseIcon,
+    DataSourcePicker,
+    DataSourcePickerContent,
+    DataSourcePickerTrigger,
+    getPickerFooterLabel,
+    getPickerLabel,
+} from '@/components/chat/DataSourcePicker';
 import type { DataSourceId } from '@/data-sources/registry';
 
 interface InputSectionProps {
@@ -59,7 +66,16 @@ export function InputSection({
                         onToggle={onToggleSource}
                         onSelectAll={onSelectAllSources}
                         onUnselectAll={onUnselectAllSources}
-                    />
+                    >
+                        <DataSourcePickerTrigger
+                            className='flex h-7 items-center gap-1.5 rounded-full border border-border/60 bg-muted/50 px-2.5 text-xs transition-colors hover:bg-muted disabled:pointer-events-none disabled:opacity-50'
+                            disabled={isBusy}
+                        >
+                            <DatabaseIcon className='size-3.5' />
+                            <span>{getPickerLabel(enabledSources)}</span>
+                        </DataSourcePickerTrigger>
+                        <DataSourcePickerContent footerLabel={getPickerFooterLabel(enabledSources)} />
+                    </DataSourcePicker>
                     <PromptInputSubmit
                         className='self-end rounded-md bg-action text-white dark:text-black transition-all duration-300 ease-out hover:scale-105 hover:bg-action-dark active:scale-[1.02] active:translate-y-px'
                         status={status !== 'streaming' ? status : 'submitted'}
