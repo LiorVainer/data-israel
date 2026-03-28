@@ -7,6 +7,7 @@ import { Logo } from '@/components/ui/logo';
 import { CTAButton } from '@/components/cta-button';
 import { ArrowLeft, Heart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { DonateDialog } from '@/components/landing/DonateDialog';
 
 const fadeUpVariants = {
     hidden: { opacity: 0, y: 30 },
@@ -62,21 +63,16 @@ export function HeroSection({ onStartConversation, onScrollToAbout }: HeroSectio
                             </span>
                         </CTAButton>
                     )}
-                    <Button
-                        variant='outline'
-                        size='lg'
-                        asChild
-                        className='rounded-full px-9 py-3.5 h-auto font-bold text-base'
-                    >
-                        <a
-                            href='https://www.bitpay.co.il/app/me/D7F8C813-B55F-C14F-C5D8-1381C6D038DDD06D'
-                            target='_blank'
-                            rel='noopener noreferrer'
+                    <DonateDialog>
+                        <Button
+                            variant='outline'
+                            size='lg'
+                            className='rounded-full px-9 py-3.5 h-auto font-bold text-base'
                         >
                             לתמיכה במיזם
                             <Heart className='w-4 h-4' />
-                        </a>
-                    </Button>
+                        </Button>
+                    </DonateDialog>
                 </motion.div>
             </div>
         </div>
