@@ -12,9 +12,9 @@ import { BudgetDataSource } from './budget';
 import { NadlanDataSource } from './nadlan';
 import { DrugsDataSource } from './drugs';
 import { HealthDataSource } from './health';
-import { GroceryDataSource } from './grocery';
 import { KnessetDataSource } from './knesset';
 import { ShufersalDataSource } from './shufersal';
+import { RamiLevyDataSource } from './rami-levy';
 
 /**
  * Agent references for Mastra registration — keyed by agent ID.
@@ -31,7 +31,7 @@ export const dataSourceAgents = {
     [NadlanDataSource.agent.id]: NadlanDataSource.agent,
     [DrugsDataSource.agent.id]: DrugsDataSource.agent,
     [HealthDataSource.agent.id]: HealthDataSource.agent,
-    [GroceryDataSource.agent.id]: GroceryDataSource.agent,
     [KnessetDataSource.agent.id]: KnessetDataSource.agent,
     [ShufersalDataSource.agent.id]: ShufersalDataSource.agent,
+    [RamiLevyDataSource.agent.id]: RamiLevyDataSource.agent,
 } as const;

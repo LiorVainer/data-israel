@@ -260,5 +260,5 @@ The `formatInput`/`formatOutput` fields are optional and no longer used by the U
 - Source URL resolvers are per-tool (co-located), not a central switch
 - `DataSourceDefinition` is generic over `TTools` — keys in `sourceResolvers` and `translations` are type-checked
 - `routingHint` is auto-injected into the routing agent's system prompt via `buildRoutingHints()`
-- `DataSource` type union: `'cbs' | 'datagov' | 'budget' | 'knesset' | 'nadlan' | 'drugs' | 'health' | 'grocery'`
+- `DataSource` type union: `'cbs' | 'datagov' | 'budget' | 'knesset' | 'nadlan' | 'drugs' | 'health' | 'shufersal' | 'rami-levy'`
 - Registry is split: `registry.ts` (client-safe) and `registry.server.ts` (server-only agent refs)

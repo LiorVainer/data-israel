@@ -14,9 +14,9 @@ export type SubAgentId =
     | 'nadlan'
     | 'drugs'
     | 'health'
-    | 'grocery'
     | 'knesset'
-    | 'shufersal';
+    | 'shufersal'
+    | 'rami-levy';
 
 const getModelIdForAgent = (agentId?: SubAgentId): string => {
     if (!agentId) return AgentConfig.MODEL.DEFAULT_ID;
@@ -34,12 +34,12 @@ const getModelIdForAgent = (agentId?: SubAgentId): string => {
             return AgentConfig.MODEL.DRUGS_ID;
         case 'health':
             return AgentConfig.MODEL.HEALTH_ID;
-        case 'grocery':
-            return AgentConfig.MODEL.GROCERY_ID;
         case 'knesset':
             return AgentConfig.MODEL.KNESSET_ID;
         case 'shufersal':
             return AgentConfig.MODEL.SHUFERSAL_ID;
+        case 'rami-levy':
+            return AgentConfig.MODEL.RAMI_LEVY_ID;
     }
 };
 

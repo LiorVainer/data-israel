@@ -19,6 +19,5 @@ export const datagovBadgeConfig: DataSourceConfig = {
     urlLabel: 'data.gov.il',
     nameLabel: 'מידע ממשלתי',
     url: 'https://data.gov.il',
-    className:
-        'bg-[var(--badge-datagov)] text-[var(--badge-datagov-foreground)] hover:bg-[var(--badge-datagov)]/80',
+    className: 'bg-[var(--badge-datagov)] text-[var(--badge-datagov-foreground)] hover:bg-[var(--badge-datagov)]/80',
 };

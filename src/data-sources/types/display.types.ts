@@ -15,7 +15,6 @@ export type DataSource =
     | 'nadlan'
     | 'drugs'
     | 'health'
-    | 'grocery'
     | 'shufersal'
     | 'rami-levy';
 

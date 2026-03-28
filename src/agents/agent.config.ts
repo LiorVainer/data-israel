@@ -46,12 +46,12 @@ export const AgentConfig = {
         DRUGS_ID: ENV.AI_DRUGS_MODEL_ID ?? ENV.AI_DEFAULT_MODEL_ID,
         /** Health agent model ID (falls back to DEFAULT_ID) */
         HEALTH_ID: ENV.AI_HEALTH_MODEL_ID ?? ENV.AI_DEFAULT_MODEL_ID,
-        /** Grocery agent model ID (falls back to DEFAULT_ID) */
-        GROCERY_ID: ENV.AI_GROCERY_MODEL_ID ?? ENV.AI_DEFAULT_MODEL_ID,
         /** Knesset agent model ID (falls back to DEFAULT_ID) */
         KNESSET_ID: ENV.AI_KNESSET_MODEL_ID ?? ENV.AI_DEFAULT_MODEL_ID,
         /** Shufersal agent model ID (falls back to DEFAULT_ID) */
         SHUFERSAL_ID: ENV.AI_SHUFERSAL_MODEL_ID ?? ENV.AI_DEFAULT_MODEL_ID,
+        /** Rami Levy agent model ID (falls back to DEFAULT_ID) */
+        RAMI_LEVY_ID: ENV.AI_RAMI_LEVY_MODEL_ID ?? ENV.AI_DEFAULT_MODEL_ID,
     },
 
     /** Memory configuration for all agents */

@@ -57,12 +57,6 @@ const PROVIDER_DISPLAY: Record<
         borderClass: 'border-r-badge-health',
         tintClass: 'bg-badge-health/10 text-badge-health-foreground',
     },
-    grocery: {
-        nameLabel: 'מחירי מזון — סופרמרקטים',
-        summaryLabel: DATA_SOURCE_CONFIG.grocery.nameLabel,
-        borderClass: 'border-r-badge-grocery',
-        tintClass: 'bg-badge-grocery/10 text-badge-grocery-foreground',
-    },
     knesset: {
         nameLabel: 'הכנסת — הצעות חוק וועדות',
         summaryLabel: 'כנסת',
@@ -98,7 +92,6 @@ const PROVIDER_ORDER: GroupKey[] = [
     'nadlan',
     'drugs',
     'health',
-    'grocery',
     'shufersal',
     'rami-levy',
     'other',
@@ -117,7 +110,6 @@ export function SourcesPart({ sources }: SourcesPartProps) {
             nadlan: { portal: [], api: [] },
             drugs: { portal: [], api: [] },
             health: { portal: [], api: [] },
-            grocery: { portal: [], api: [] },
             knesset: { portal: [], api: [] },
             shufersal: { portal: [], api: [] },
             'rami-levy': { portal: [], api: [] },

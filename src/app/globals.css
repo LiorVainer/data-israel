@@ -58,12 +58,12 @@
   --color-badge-drugs-foreground: var(--badge-drugs-foreground);
   --color-badge-health: var(--badge-health);
   --color-badge-health-foreground: var(--badge-health-foreground);
-  --color-badge-grocery: var(--badge-grocery);
-  --color-badge-grocery-foreground: var(--badge-grocery-foreground);
   --color-badge-knesset: var(--badge-knesset);
   --color-badge-knesset-foreground: var(--badge-knesset-foreground);
   --color-badge-shufersal: var(--badge-shufersal);
   --color-badge-shufersal-foreground: var(--badge-shufersal-foreground);
+  --color-badge-rami-levy: var(--badge-rami-levy);
+  --color-badge-rami-levy-foreground: var(--badge-rami-levy-foreground);
   /* Semantic status colors */
   --color-success: var(--success);
   --color-error: var(--error);
@@ -122,12 +122,12 @@
   --badge-drugs-foreground: oklch(0.3 0.08 160);
   --badge-health: oklch(0.88 0.09 15);
   --badge-health-foreground: oklch(0.35 0.1 15);
-  --badge-grocery: oklch(0.88 0.1 155);
-  --badge-grocery-foreground: oklch(0.3 0.1 155);
   --badge-knesset: oklch(0.88 0.09 250);
   --badge-knesset-foreground: oklch(0.3 0.12 250);
   --badge-shufersal: oklch(0.88 0.12 145);
   --badge-shufersal-foreground: oklch(0.3 0.1 145);
+  --badge-rami-levy: oklch(0.88 0.1 220);
+  --badge-rami-levy-foreground: oklch(0.3 0.12 220);
   /* Semantic status colors */
   --success: oklch(0.508 0.118 165.612); /* emerald-700 */
   --error: oklch(0.505 0.213 27.518);   /* red-700 */
@@ -186,12 +186,12 @@
   --badge-drugs-foreground: oklch(0.9 0.07 160);
   --badge-health: oklch(0.42 0.09 15);
   --badge-health-foreground: oklch(0.9 0.08 15);
-  --badge-grocery: oklch(0.4 0.12 155);
-  --badge-grocery-foreground: oklch(0.9 0.08 155);
   --badge-knesset: oklch(0.4 0.1 250);
   --badge-knesset-foreground: oklch(0.9 0.08 250);
   --badge-shufersal: oklch(0.4 0.12 145);
   --badge-shufersal-foreground: oklch(0.9 0.08 145);
+  --badge-rami-levy: oklch(0.4 0.1 220);
+  --badge-rami-levy-foreground: oklch(0.9 0.08 220);
   --action: oklch(0.78 0.14 64.119);
   --action-dark: oklch(0.6 0.15 55);
   --action-tint: oklch(0.25 0.03 51);

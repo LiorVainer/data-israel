@@ -73,10 +73,6 @@ import { HealthTools, healthSourceResolvers } from './health/tools';
 import { healthTranslations } from './health/health.translations';
 import { healthDisplayLabel, healthDisplayIcon, healthBadgeConfig } from './health/health.display';
 
-import { GroceryTools, grocerySourceResolvers } from './grocery/tools';
-import { groceryTranslations } from './grocery/grocery.translations';
-import { groceryDisplayLabel, groceryDisplayIcon, groceryBadgeConfig } from './grocery/grocery.display';
-
 import { KnessetTools, knessetSourceResolvers } from './knesset/tools';
 import { knessetTranslations } from './knesset/knesset.translations';
 import { knessetDisplayLabel, knessetDisplayIcon, knessetBadgeConfig } from './knesset/knesset.display';
@@ -299,38 +295,6 @@ const DATA_SOURCE_METAS: readonly DataSourceMeta[] = [
         },
     },
     {
-        id: 'grocery',
-        agentId: 'groceryAgent',
-        display: { label: groceryDisplayLabel, icon: groceryDisplayIcon, badge: groceryBadgeConfig },
-        routingHint:
-            'מחירי מזון בסופרמרקטים — חיפוש מוצרים לפי ברקוד או שם, השוואת מחירים בין רשתות (שופרסל, רמי לוי, יוחננוף, ויקטורי, אושר עד, טיב טעם), סניפים, ומבצעים. נתונים לפי חוק שקיפות מחירים 2015.',
-        tools: GroceryTools,
-        sourceResolvers: grocerySourceResolvers as Record<string, ToolSourceResolver>,
-        translations: groceryTranslations as Record<string, ToolTranslation>,
-        resourceExtractors: {},
-        landing: {
-            logo: '/grocery-logo.svg',
-            description: 'מחירי מזון בסופרמרקטים — השוואת מחירים, מבצעים וסניפים ב-7 רשתות',
-            stats: [
-                { label: 'רשתות', value: '7', icon: ShoppingCartIcon },
-                { label: 'עדכון יומי', value: '24h', icon: CalendarIcon },
-                { label: 'מוצרים', value: '50K+', icon: TagIcon },
-            ],
-            category: 'economy',
-            order: 3,
-        },
-        suggestions: {
-            prompts: [
-                {
-                    label: 'השוואת מחירי חלב',
-                    prompt: 'כמה עולה חלב תנובה 3% בשופרסל לעומת רמי לוי?',
-                    icon: ShoppingCartIcon,
-                },
-                { label: 'סל קניות בסיסי', prompt: 'השווה מחירי סל קניות בסיסי בין הרשתות', icon: TagIcon },
-            ],
-        },
-    },
-    {
         id: 'knesset',
         agentId: 'knessetAgent',
         display: { label: knessetDisplayLabel, icon: knessetDisplayIcon, badge: knessetBadgeConfig },
@@ -389,6 +353,37 @@ const DATA_SOURCE_METAS: readonly DataSourceMeta[] = [
             ],
         },
     },
+    {
+        id: 'rami-levy',
+        agentId: 'ramiLevyAgent',
+        display: { label: ramiLevyDisplayLabel, icon: ramiLevyDisplayIcon, badge: ramiLevyBadgeConfig },
+        routingHint:
+            'מחירי מוצרים ברמי לוי — חיפוש מוצרים לפי שם או ברקוד, מחירים, מותגים, ומחלקות בקטלוג רמי לוי אונליין',
+        tools: RamiLevyTools,
+        sourceResolvers: ramiLevySourceResolvers as Record<string, ToolSourceResolver>,
+        translations: ramiLevyTranslations as Record<string, ToolTranslation>,
+        resourceExtractors: {},
+        landing: {
+            logo: '/rami-levy-logo.svg',
+            description: 'רמי לוי — חיפוש מוצרים ומחירים בקטלוג הסופרמרקט',
+            stats: [
+                { label: 'מוצרים', value: '30K+', icon: ShoppingCartIcon },
+                { label: 'כלים', value: '2', icon: TagIcon },
+            ],
+            category: 'economy',
+            order: 5,
+        },
+        suggestions: {
+            prompts: [
+                {
+                    label: 'מחירי חלב ברמי לוי',
+                    prompt: 'כמה עולה חלב תנובה 3% ברמי לוי?',
+                    icon: ShoppingCartIcon,
+                },
+                { label: 'חיפוש מוצר ברמי לוי', prompt: 'חפש קוטג׳ 5% ברמי לוי', icon: TagIcon },
+            ],
+        },
+    },
 ] as const;
 
 // ============================================================================
@@ -403,9 +398,9 @@ export const allDataSourceTools = {
     ...NadlanTools,
     ...DrugsTools,
     ...HealthTools,
-    ...GroceryTools,
     ...KnessetTools,
     ...ShufersalTools,
+    ...RamiLevyTools,
 } as const;
 
 // ============================================================================
@@ -631,6 +626,7 @@ export const SOURCE_URL_TOOL_NAMES = [
     'generateHealthSourceUrl',
     'generateKnessetSourceUrl',
     'generateShufersalSourceUrl',
+    'generateRamiLevySourceUrl',
 ] as const;
 
 /** Client-side tools (charts, suggestions) — not part of any data source */

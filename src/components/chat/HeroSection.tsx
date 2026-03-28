@@ -5,9 +5,8 @@ import { HeroSubtitle, HeroTitle } from '@/components/ui/shape-landing-hero';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Logo } from '@/components/ui/logo';
 import { CTAButton } from '@/components/cta-button';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Heart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { DonateDialog } from '@/components/landing/DonateDialog';
 
 const fadeUpVariants = {
     hidden: { opacity: 0, y: 30 },
@@ -55,23 +54,28 @@ export function HeroSection({ onStartConversation }: HeroSectionProps) {
                     transition={{ delay: 0.8, duration: 0.5 }}
                 >
                     {onStartConversation && (
-                        <CTAButton onClick={onStartConversation} className='min-w-52 md:min-w-52'>
-                            <span className='flex items-center font-bold gap-3 justify-center'>
+                        <CTAButton onClick={onStartConversation}>
+                            <span className='flex items-center font-bold gap-3 justify-between'>
                                 התחילו לשאול
                                 <ArrowLeft className='w-4 h-4' />
                             </span>
                         </CTAButton>
                     )}
-                    <DonateDialog>
-                        <Button
-                            variant='outline'
-                            size='lg'
-                            className='min-w-52 md:min-w-52 gap-3 rounded-full px-6 py-2.5 md:px-9 md:py-2.5 h-auto text-sm md:text-base '
+                    <Button
+                        variant='outline'
+                        size='lg'
+                        asChild
+                        className='rounded-full px-9 py-3.5 h-auto font-bold text-base'
+                    >
+                        <a
+                            href='https://www.bitpay.co.il/app/me/D7F8C813-B55F-C14F-C5D8-1381C6D038DDD06D'
+                            target='_blank'
+                            rel='noopener noreferrer'
                         >
                             לתמיכה במיזם
-                            {/*<Heart className='w-4 h-4 fill-background/80 dark:fill-background text-foreground/80 dark:text-foreground font-normal' />*/}
-                        </Button>
-                    </DonateDialog>
+                            <Heart className='w-4 h-4' />
+                        </a>
+                    </Button>
                 </motion.div>
             </div>
         </div>
