@@ -383,10 +383,7 @@ export async function POST(req: Request) {
                         for (const tr of toolResults) {
                             const { toolName, result } = tr.payload;
                             if (toolName.startsWith('agent-')) {
-                                console.log(
-                                    `\n[debug] Sub-agent "${toolName}" result:`,
-                                    JSON.stringify(result, null, 2),
-                                );
+                                // You can Add Agent Result Handler Here
                             }
                         }
                     }

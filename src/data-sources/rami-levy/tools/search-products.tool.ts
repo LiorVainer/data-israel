@@ -72,7 +72,7 @@ export const searchRamiLevyProducts = createTool({
             const mapped = products.map((p) => ({
                 name: p.name,
                 price: p.price.price,
-                barcode: p.barcode,
+                barcode: String(p.barcode),
                 brand: p.gs?.BrandName ?? '',
                 department: p.department?.name ?? '',
                 isWeighted: p.prop?.sw_shakil === 1 || p.prop?.by_kilo === 1,

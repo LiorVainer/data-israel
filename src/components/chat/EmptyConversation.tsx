@@ -55,9 +55,9 @@ interface EmptyConversationProps {
 
 export function EmptyConversation({ onClick }: EmptyConversationProps) {
     return (
-        <div className='flex flex-col h-full w-full max-w-4xl mx-auto overflow-hidden' dir='rtl'>
+        <div className='flex flex-col h-full w-full max-w-4xl mx-auto overflow-hidden gap-4' dir='rtl'>
             {/* Fixed header */}
-            <div className='shrink-0 text-right space-y-2  pt-4 md:pt-8'>
+            <div className='shrink-0 text-right space-y-2 pt-4 md:pt-8'>
                 <h2 className='text-xl md:text-2xl font-semibold text-foreground/90'>איזה נתון תרצה לבדוק?</h2>
                 <p className='text-sm text-muted-foreground'>שאלו שאלה על נתונים ציבוריים של ישראל.</p>
             </div>

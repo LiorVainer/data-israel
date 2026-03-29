@@ -67,10 +67,7 @@ export function InputSection({
                         onSelectAll={onSelectAllSources}
                         onUnselectAll={onUnselectAllSources}
                     >
-                        <DataSourcePickerTrigger
-                            className='flex h-7 items-center gap-1.5 rounded-full border border-border/60 bg-muted/50 px-2.5 text-xs transition-colors hover:bg-muted disabled:pointer-events-none disabled:opacity-50'
-                            disabled={isBusy}
-                        >
+                        <DataSourcePickerTrigger className='flex h-7 items-center gap-1.5 rounded-full border border-border/60 bg-muted/50 px-2.5 text-xs transition-colors hover:bg-muted disabled:pointer-events-none disabled:opacity-50'>
                             <DatabaseIcon className='size-3.5' />
                             <span>{getPickerLabel(enabledSources)}</span>
                         </DataSourcePickerTrigger>

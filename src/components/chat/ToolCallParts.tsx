@@ -123,7 +123,8 @@ function buildAgentInternalCallsMap(allParts: UIMessage['parts']): Map<string, A
                 toolCallId: tc.toolCallId,
                 searchedResourceName:
                     getString(result, 'searchedResourceName') ?? getString(tc.args, 'searchedResourceName'),
-                success: typeof result?.success === 'boolean' ? result.success : undefined,
+                success:
+                    typeof result?.success === 'boolean' ? result.success : result?.error === true ? false : undefined,
                 error: getString(result, 'error'),
                 isComplete: completedIds.has(tc.toolCallId),
             };

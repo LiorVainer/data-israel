@@ -7,16 +7,16 @@ import { ReasoningPart } from './ReasoningPart';
 import { SourcesPart } from './SourcesPart';
 import { LoadingShimmer } from './LoadingShimmer';
 import { ChartError, ChartLoadingState, ChartRenderer } from './ChartRenderer';
-import { getToolStatus, isToolPart, isAgentDataPart, SourceUrlUIPart, ToolCallPart } from './types';
 import type { EnrichedSourceUrl } from './types';
+import { getToolStatus, isAgentDataPart, isToolPart, SourceUrlUIPart, ToolCallPart } from './types';
 import {
-    resolveToolSourceUrl,
-    getToolDataSource,
     AgentsDisplayMap,
     CLIENT_TOOL_NAMES,
+    getToolDataSource,
+    resolveToolSourceUrl,
     SOURCE_URL_TOOL_NAMES,
-    toToolPartTypeSet,
     toToolPartType,
+    toToolPartTypeSet,
 } from '@/data-sources/registry';
 import type { DisplayChartInput } from '@/lib/tools/client/display-chart';
 import { UIMessage } from 'ai';
@@ -30,6 +30,7 @@ const CLIENT_TOOL_TYPES = toToolPartTypeSet([...CLIENT_TOOL_NAMES, ...SOURCE_URL
 
 /** Tool types that generate source URLs from dedicated tool results */
 const SOURCE_TOOL_TYPES = toToolPartTypeSet(SOURCE_URL_TOOL_NAMES);
+const SOURCE_TOOL_NAMES_SET = new Set<string>(SOURCE_URL_TOOL_NAMES);
 
 /** suggestFollowUps part type — consumed by ChatThread for the Suggestions UI, not rendered in message body */
 const SUGGEST_FOLLOW_UPS_TYPE = toToolPartType('suggestFollowUps');
@@ -167,6 +168,23 @@ export function MessageItem({ message, isLastMessage, isStreaming, onRegenerate 
             const agentDs = AgentsDisplayMap[agentName as keyof typeof AgentsDisplayMap]?.dataSource;
 
             for (const toolResult of part.data.toolResults) {
+                // Check for dedicated source URL tools (generateShufersalSourceUrl, etc.)
+                if (SOURCE_TOOL_NAMES_SET.has(toolResult.toolName)) {
+                    const output = toolResult.result as { success?: boolean; url?: string; title?: string } | undefined;
+                    if (output?.success && output.url) {
+                        autoSourceParts.push({
+                            type: 'source-url' as const,
+                            sourceId: toolResult.toolCallId ?? `dedicated-${toolResult.toolName}`,
+                            url: output.url,
+                            title: output.title,
+                            dataSource: agentDs ?? getToolDataSource(toolResult.toolName),
+                            urlType: 'portal' as const,
+                        });
+                    }
+                    continue;
+                }
+
+                // Auto-resolve source URLs from data tool outputs
                 const toolType = `tool-${toolResult.toolName}`;
                 const resolved = resolveToolSourceUrl(toolType, toolResult.args, toolResult.result);
                 if (!resolved) continue;
