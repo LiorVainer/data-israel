@@ -30,7 +30,7 @@ import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
 import { LogIn, X } from 'lucide-react';
 import { ALL_DATA_SOURCE_IDS } from '@/data-sources/registry';
-import type { DataSourceId } from '@/data-sources/registry';
+import type { DataSource } from '@/data-sources/registry';
 
 /** Header name for passing user ID to API */
 const USER_ID_HEADER = 'x-user-id';
@@ -67,7 +67,7 @@ export function ChatThread({ id }: ChatThreadProps) {
     const userIdRef = useRef(userId);
     userIdRef.current = userId;
 
-    const [enabledSources, setEnabledSources] = useState<DataSourceId[]>([...ALL_DATA_SOURCE_IDS]);
+    const [enabledSources, setEnabledSources] = useState<DataSource[]>([...ALL_DATA_SOURCE_IDS]);
     const didInitSources = useRef(false);
 
     useEffect(() => {
@@ -77,9 +77,9 @@ export function ChatThread({ id }: ChatThreadProps) {
         didInitSources.current = true;
 
         if (threadSettings?.length) {
-            setEnabledSources(threadSettings as DataSourceId[]);
+            setEnabledSources(threadSettings as DataSource[]);
         } else if (userSettings?.length) {
-            setEnabledSources(userSettings as DataSourceId[]);
+            setEnabledSources(userSettings as DataSource[]);
         }
         // else: keep default (all sources)
     }, [threadSettings, userSettings]);
@@ -100,7 +100,7 @@ export function ChatThread({ id }: ChatThreadProps) {
     const enabledSourcesRef = useRef(enabledSources);
     enabledSourcesRef.current = enabledSources;
 
-    const handleToggleSource = useCallback((sourceId: DataSourceId) => {
+    const handleToggleSource = useCallback((sourceId: DataSource) => {
         setEnabledSources((prev) => {
             const next = prev.includes(sourceId) ? prev.filter((id) => id !== sourceId) : [...prev, sourceId];
             // Prevent empty: if nothing left, re-enable all

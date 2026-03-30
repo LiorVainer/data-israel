@@ -8,7 +8,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { api } from '@/convex/_generated/api';
 import { useUser } from '@/context/UserContext';
 import { DataIsraelLoader } from '@/components/chat/DataIsraelLoader';
-import type { DataSourceId } from '@/data-sources/registry';
+import type { DataSource } from '@/data-sources/registry';
 import { ALL_DATA_SOURCE_IDS } from '@/data-sources/registry';
 import {
     DataSourcePicker,
@@ -23,7 +23,7 @@ import {
 // Helpers
 // ---------------------------------------------------------------------------
 
-function getSourceLabel(sources: DataSourceId[]) {
+function getSourceLabel(sources: DataSource[]) {
     const allSelected = sources.length === 0 || sources.length === totalSources;
     if (allSelected) return 'כל מקורות המידע';
     if (sources.length === 1) {
@@ -43,7 +43,7 @@ export default function SettingsPage() {
     const userSettings = useQuery(api.users.getUserSettings);
     const upsertUserSettings = useMutation(api.users.upsertUserSettings);
 
-    const [enabledSources, setEnabledSources] = useState<DataSourceId[]>([...ALL_DATA_SOURCE_IDS]);
+    const [enabledSources, setEnabledSources] = useState<DataSource[]>([...ALL_DATA_SOURCE_IDS]);
     const allSelected = enabledSources.length === 0 || enabledSources.length === totalSources;
     const didInit = useRef(false);
 
@@ -51,12 +51,12 @@ export default function SettingsPage() {
         if (didInit.current || userSettings === undefined) return;
         didInit.current = true;
         if (userSettings && userSettings.length > 0) {
-            setEnabledSources(userSettings as DataSourceId[]);
+            setEnabledSources(userSettings as DataSource[]);
         }
     }, [userSettings]);
 
     const persistSources = useCallback(
-        (sources: DataSourceId[]) => {
+        (sources: DataSource[]) => {
             const toStore = sources.length === totalSources ? [] : sources;
             void upsertUserSettings({ defaultEnabledSources: toStore });
         },
@@ -64,10 +64,10 @@ export default function SettingsPage() {
     );
 
     const handleToggle = useCallback(
-        (sourceId: DataSourceId) => {
+        (sourceId: DataSource) => {
             setEnabledSources((prev) => {
                 const current = prev.length === 0 ? [...ALL_DATA_SOURCE_IDS] : prev;
-                let next: DataSourceId[];
+                let next: DataSource[];
                 if (current.includes(sourceId)) {
                     next = current.filter((id) => id !== sourceId);
                 } else {

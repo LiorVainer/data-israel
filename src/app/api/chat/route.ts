@@ -23,7 +23,7 @@ import {
     type ToolCallPart,
 } from '@/components/chat/types';
 import { clearActiveStreamId, getResumableStreamContext, setActiveStreamId } from '@/lib/redis/resumable-stream';
-import { ALL_DATA_SOURCE_IDS, type DataSourceId } from '@/data-sources/registry';
+import { ALL_DATA_SOURCE_IDS, type DataSource } from '@/data-sources/registry';
 import { sendPushToUser } from '@/lib/push/send-notification';
 import { stripToolResult, TOOL_ARGS_KEEP_FIELDS } from '@/agents/processors/truncate-tool-results.processor';
 import { pick } from 'es-toolkit';
@@ -299,10 +299,10 @@ export async function POST(req: Request) {
 
         // Validate enabled data sources filter
         const rawEnabledSources: unknown = params.enabledSources;
-        const enabledSources: DataSourceId[] | undefined =
+        const enabledSources: DataSource[] | undefined =
             Array.isArray(rawEnabledSources) && rawEnabledSources.length > 0
                 ? rawEnabledSources.filter(
-                      (s): s is DataSourceId =>
+                      (s): s is DataSource =>
                           typeof s === 'string' && (ALL_DATA_SOURCE_IDS as readonly string[]).includes(s),
                   )
                 : undefined;

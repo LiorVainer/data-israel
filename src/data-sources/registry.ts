@@ -15,98 +15,99 @@
  */
 
 import type {
-    ToolTranslation,
-    ToolSourceResolver,
-    ToolResourceExtractor,
-    DataSourceConfig,
     AgentDisplayInfo,
     DataSource,
+    DataSourceConfig,
     LandingConfig,
     SuggestionsConfig,
-} from './types';
+    ToolResourceExtractor,
+    ToolSourceResolver,
+    ToolTranslation,
+} from '@/data-sources/types';
 import {
     ActivityIcon,
-    DatabaseIcon,
-    BuildingIcon,
-    FileIcon,
-    TrendingUpIcon,
-    LayersIcon,
-    CalendarIcon,
-    LandmarkIcon,
-    GavelIcon,
-    HomeIcon,
-    PillIcon,
-    HeartPulseIcon,
-    ShoppingCartIcon,
-    ScrollTextIcon,
-    UsersIcon,
     BarChart3Icon,
-    StethoscopeIcon,
-    TagIcon,
+    BuildingIcon,
+    CalendarIcon,
+    DatabaseIcon,
+    FileIcon,
+    GavelIcon,
+    HeartPulseIcon,
+    HomeIcon,
+    LandmarkIcon,
+    LayersIcon,
+    PillIcon,
+    ScrollTextIcon,
     SearchIcon,
     ShieldCheckIcon,
+    ShoppingCartIcon,
+    StethoscopeIcon,
+    TagIcon,
+    TrendingUpIcon,
+    UsersIcon,
 } from 'lucide-react';
 
 // Client-safe imports — tools, translations, display, resolvers (no Agent dependency)
-import { CbsTools, cbsSourceResolvers, cbsResourceExtractors } from './cbs/tools';
-import { cbsTranslations } from './cbs/cbs.translations';
-import { cbsDisplayLabel, cbsDisplayIcon, cbsBadgeConfig } from './cbs/cbs.display';
+import { cbsResourceExtractors, cbsSourceResolvers, CbsTools } from '@/data-sources/cbs/tools';
+import { cbsTranslations } from '@/data-sources/cbs/cbs.translations';
+import { cbsBadgeConfig, cbsDisplayIcon, cbsDisplayLabel } from '@/data-sources/cbs/cbs.display';
 
-import { DataGovTools, datagovSourceResolvers, datagovResourceExtractors } from './datagov/tools';
-import { datagovTranslations } from './datagov/datagov.translations';
-import { datagovAgentDisplay, datagovBadgeConfig } from './datagov/datagov.display';
+import { datagovResourceExtractors, datagovSourceResolvers, DataGovTools } from '@/data-sources/datagov/tools';
+import { datagovTranslations } from '@/data-sources/datagov/datagov.translations';
+import { datagovAgentDisplay, datagovBadgeConfig } from '@/data-sources/datagov/datagov.display';
 
-import { BudgetToolNames } from './budget/budget.tools';
-import { budgetTranslations } from './budget/budget.translations';
-import { budgetDisplayLabel, budgetDisplayIcon, budgetBadgeConfig } from './budget/budget.display';
-import { budgetSourceResolvers } from './budget/budget.source-resolvers';
+import { BudgetToolNames } from '@/data-sources/budget/budget.tools';
+import { budgetTranslations } from '@/data-sources/budget/budget.translations';
+import { budgetBadgeConfig, budgetDisplayIcon, budgetDisplayLabel } from '@/data-sources/budget/budget.display';
+import { budgetSourceResolvers } from '@/data-sources/budget/budget.source-resolvers';
 
-import { NadlanTools, nadlanSourceResolvers } from './nadlan/tools';
-import { nadlanTranslations } from './nadlan/nadlan.translations';
-import { nadlanDisplayLabel, nadlanDisplayIcon, nadlanBadgeConfig } from './nadlan/nadlan.display';
+import { nadlanSourceResolvers, NadlanTools } from '@/data-sources/nadlan/tools';
+import { nadlanTranslations } from '@/data-sources/nadlan/nadlan.translations';
+import { nadlanBadgeConfig, nadlanDisplayIcon, nadlanDisplayLabel } from '@/data-sources/nadlan/nadlan.display';
 
-import { DrugsTools, drugsSourceResolvers } from './drugs/tools';
-import { drugsTranslations } from './drugs/drugs.translations';
-import { drugsDisplayLabel, drugsDisplayIcon, drugsBadgeConfig } from './drugs/drugs.display';
+import { drugsSourceResolvers, DrugsTools } from '@/data-sources/drugs/tools';
+import { drugsTranslations } from '@/data-sources/drugs/drugs.translations';
+import { drugsBadgeConfig, drugsDisplayIcon, drugsDisplayLabel } from '@/data-sources/drugs/drugs.display';
 
-import { HealthTools, healthSourceResolvers } from './health/tools';
-import { healthTranslations } from './health/health.translations';
-import { healthDisplayLabel, healthDisplayIcon, healthBadgeConfig } from './health/health.display';
+import { healthSourceResolvers, HealthTools } from '@/data-sources/health/tools';
+import { healthTranslations } from '@/data-sources/health/health.translations';
+import { healthBadgeConfig, healthDisplayIcon, healthDisplayLabel } from '@/data-sources/health/health.display';
 
-import { KnessetTools, knessetSourceResolvers } from './knesset/tools';
-import { knessetTranslations } from './knesset/knesset.translations';
-import { knessetDisplayLabel, knessetDisplayIcon, knessetBadgeConfig } from './knesset/knesset.display';
+import { knessetSourceResolvers, KnessetTools } from '@/data-sources/knesset/tools';
+import { knessetTranslations } from '@/data-sources/knesset/knesset.translations';
+import { knessetBadgeConfig, knessetDisplayIcon, knessetDisplayLabel } from '@/data-sources/knesset/knesset.display';
 
-import { ShufersalTools, shufersalSourceResolvers } from './shufersal/tools';
-import { shufersalTranslations } from './shufersal/shufersal.translations';
-import { shufersalDisplayLabel, shufersalDisplayIcon, shufersalBadgeConfig } from './shufersal/shufersal.display';
+import { shufersalSourceResolvers, ShufersalTools } from '@/data-sources/shufersal/tools';
+import { shufersalTranslations } from '@/data-sources/shufersal/shufersal.translations';
+import {
+    shufersalBadgeConfig,
+    shufersalDisplayIcon,
+    shufersalDisplayLabel,
+} from '@/data-sources/shufersal/shufersal.display';
 
-import { RamiLevyTools, ramiLevySourceResolvers } from './rami-levy/tools';
-import { ramiLevyTranslations } from './rami-levy/rami-levy.translations';
-import { ramiLevyDisplayLabel, ramiLevyDisplayIcon, ramiLevyBadgeConfig } from './rami-levy/rami-levy.display';
+import { ramiLevySourceResolvers, RamiLevyTools } from '@/data-sources/rami-levy/tools';
+import {
+    ramiLevyBadgeConfig,
+    ramiLevyDisplayIcon,
+    ramiLevyDisplayLabel,
+} from '@/data-sources/rami-levy/rami-levy.display';
+import { ramiLevyTranslations } from '@/data-sources/rami-levy/rami-levy.translations';
 
 import { clientTranslations } from '@/lib/tools/client/translations';
-
-// ============================================================================
-// Derived Types
-// ============================================================================
-
-/** Union of all data source IDs — re-exports DataSource from display.types for consistency */
-export type DataSourceId = DataSource;
 
 // ============================================================================
 // Static Data Source Metadata (client-safe — no Agent imports)
 // ============================================================================
 
 interface DataSourceMeta {
-    id: DataSourceId;
+    id: DataSource;
     agentId: string;
     display: { label: string; icon: typeof ActivityIcon; badge: DataSourceConfig };
     routingHint: string;
     tools: Record<string, unknown>;
-    sourceResolvers: Record<string, ToolSourceResolver>;
-    translations: Record<string, ToolTranslation>;
-    resourceExtractors: Record<string, ToolResourceExtractor>;
+    sourceResolvers: Partial<Record<string, ToolSourceResolver>>;
+    translations: Partial<Record<string, ToolTranslation>>;
+    resourceExtractors: Partial<Record<string, ToolResourceExtractor>>;
     /** Optional landing page display config */
     landing?: LandingConfig;
     /** Optional example prompts for empty conversation */
@@ -121,9 +122,9 @@ const DATA_SOURCE_METAS: readonly DataSourceMeta[] = [
         routingHint:
             'נתונים סטטיסטיים רשמיים של הלשכה המרכזית לסטטיסטיקה — סדרות זמן (אוכלוסייה, כלכלה, חינוך, תעסוקה), מדדי מחירים (מדד המחירים לצרכן, מדדי דיור, הצמדה), ומילון יישובים (ערים, מועצות, נפות, מחוזות)',
         tools: CbsTools,
-        sourceResolvers: cbsSourceResolvers as Record<string, ToolSourceResolver>,
-        translations: cbsTranslations as Record<string, ToolTranslation>,
-        resourceExtractors: cbsResourceExtractors as Record<string, ToolResourceExtractor>,
+        sourceResolvers: cbsSourceResolvers,
+        translations: cbsTranslations,
+        resourceExtractors: cbsResourceExtractors,
         landing: {
             logo: '/cbs-logo.svg',
             description: 'הלשכה המרכזית לסטטיסטיקה — סדרות סטטיסטיות, מדדי מחירים ונתוני אוכלוסין',
@@ -153,9 +154,9 @@ const DATA_SOURCE_METAS: readonly DataSourceMeta[] = [
         routingHint:
             'נתוני ממשל פתוחים מאתר data.gov.il — מאגרי נתונים, ארגונים, קבוצות, תגיות, משאבים ושאילתות DataStore.',
         tools: DataGovTools,
-        sourceResolvers: datagovSourceResolvers as Record<string, ToolSourceResolver>,
-        translations: datagovTranslations as Record<string, ToolTranslation>,
-        resourceExtractors: datagovResourceExtractors as Record<string, ToolResourceExtractor>,
+        sourceResolvers: datagovSourceResolvers,
+        translations: datagovTranslations,
+        resourceExtractors: datagovResourceExtractors,
         landing: {
             logo: '/datagov-logo.svg',
             description: 'פורטל הנתונים הפתוחים של ממשלת ישראל — מאגרי מידע, ארגונים וקבצים',
@@ -185,8 +186,8 @@ const DATA_SOURCE_METAS: readonly DataSourceMeta[] = [
         routingHint:
             'נתוני תקציב המדינה של ישראל מפרויקט מפתח התקציב — ספר התקציב (הוצאות מתוכננות ומבוצעות 1997-2025), תוכניות תמיכה תקציביות, התקשרויות רכש ממשלתיות, מכרזים, ישויות (חברות, עמותות, רשויות), הכנסות המדינה, ובקשות לשינויי תקציב.',
         tools: BudgetToolNames as Record<string, unknown>,
-        sourceResolvers: budgetSourceResolvers as Record<string, ToolSourceResolver>,
-        translations: budgetTranslations as Record<string, ToolTranslation>,
+        sourceResolvers: budgetSourceResolvers,
+        translations: budgetTranslations,
         resourceExtractors: {},
         landing: {
             logo: '/budget-logo.svg',
@@ -213,8 +214,8 @@ const DATA_SOURCE_METAS: readonly DataSourceMeta[] = [
         routingHint:
             'נתוני עסקאות נדל"ן בישראל ממערכת govmap — חיפוש עסקאות לפי כתובת, מחירים למ"ר, מגמות שוק, הערכת שווי נכסים, והשוואת שכונות ורחובות',
         tools: NadlanTools,
-        sourceResolvers: nadlanSourceResolvers as Record<string, ToolSourceResolver>,
-        translations: nadlanTranslations as Record<string, ToolTranslation>,
+        sourceResolvers: nadlanSourceResolvers,
+        translations: nadlanTranslations,
         resourceExtractors: {},
         landing: {
             logo: '/nadlan-logo.svg',
@@ -241,8 +242,8 @@ const DATA_SOURCE_METAS: readonly DataSourceMeta[] = [
         routingHint:
             'מאגר התרופות של משרד הבריאות — חיפוש תרופות לפי שם, סימפטום, חומר פעיל או קוד ATC, פרטי תרופה מקיפים, חלופות גנריות, סל בריאות ומחירים',
         tools: DrugsTools,
-        sourceResolvers: drugsSourceResolvers as Record<string, ToolSourceResolver>,
-        translations: drugsTranslations as Record<string, ToolTranslation>,
+        sourceResolvers: drugsSourceResolvers,
+        translations: drugsTranslations,
         resourceExtractors: {},
         landing: {
             logo: '/drugs-logo.svg',
@@ -269,8 +270,8 @@ const DATA_SOURCE_METAS: readonly DataSourceMeta[] = [
         routingHint:
             'נתוני בריאות ציבורית ממשרד הבריאות — נפגעי מלחמה, שירותי רפואה, איכות חופים, מבוטחי קופות חולים, חיסוני ילדים, בדיקות התפתחותיות ואיכות שירות',
         tools: HealthTools,
-        sourceResolvers: healthSourceResolvers as Record<string, ToolSourceResolver>,
-        translations: healthTranslations as Record<string, ToolTranslation>,
+        sourceResolvers: healthSourceResolvers,
+        translations: healthTranslations,
         resourceExtractors: {},
         landing: {
             logo: '/health-logo.svg',
@@ -300,8 +301,8 @@ const DATA_SOURCE_METAS: readonly DataSourceMeta[] = [
         display: { label: knessetDisplayLabel, icon: knessetDisplayIcon, badge: knessetBadgeConfig },
         routingHint: 'נתוני הכנסת — הצעות חוק, ועדות כנסת, חברי כנסת, ותהליכי חקיקה מה-API הפתוח של הכנסת',
         tools: KnessetTools,
-        sourceResolvers: knessetSourceResolvers as Record<string, ToolSourceResolver>,
-        translations: knessetTranslations as Record<string, ToolTranslation>,
+        sourceResolvers: knessetSourceResolvers,
+        translations: knessetTranslations,
         resourceExtractors: {},
         landing: {
             logo: '/knesset-logo.svg',
@@ -328,8 +329,8 @@ const DATA_SOURCE_METAS: readonly DataSourceMeta[] = [
         routingHint:
             'מוצרים ומחירים בשופרסל — חיפוש מוצרים לפי שם או ברקוד, מחירים בשקלים, יצרנים ומותגים באתר שופרסל אונליין',
         tools: ShufersalTools,
-        sourceResolvers: shufersalSourceResolvers as Record<string, ToolSourceResolver>,
-        translations: shufersalTranslations as Record<string, ToolTranslation>,
+        sourceResolvers: shufersalSourceResolvers,
+        translations: shufersalTranslations,
         resourceExtractors: {},
         landing: {
             logo: '/shufersal-logo.svg',
@@ -360,8 +361,8 @@ const DATA_SOURCE_METAS: readonly DataSourceMeta[] = [
         routingHint:
             'מחירי מוצרים ברמי לוי — חיפוש מוצרים לפי שם או ברקוד, מחירים, מותגים, ומחלקות בקטלוג רמי לוי אונליין',
         tools: RamiLevyTools,
-        sourceResolvers: ramiLevySourceResolvers as Record<string, ToolSourceResolver>,
-        translations: ramiLevyTranslations as Record<string, ToolTranslation>,
+        sourceResolvers: ramiLevySourceResolvers,
+        translations: ramiLevyTranslations,
         resourceExtractors: {},
         landing: {
             logo: '/rami-levy-logo.svg',
@@ -408,10 +409,10 @@ export const allDataSourceTools = {
 // ============================================================================
 
 /** All data source IDs — for UI pickers and validation */
-export const ALL_DATA_SOURCE_IDS: readonly DataSourceId[] = DATA_SOURCE_METAS.map((ds) => ds.id);
+export const ALL_DATA_SOURCE_IDS: readonly DataSource[] = DATA_SOURCE_METAS.map((ds) => ds.id);
 
 /** Map agent ID → data source ID (e.g., 'ramiLevyAgent' → 'rami-levy') */
-export const AGENT_ID_TO_SOURCE_ID: ReadonlyMap<string, DataSourceId> = new Map(
+export const AGENT_ID_TO_SOURCE_ID: ReadonlyMap<string, DataSource> = new Map(
     DATA_SOURCE_METAS.map((ds) => [ds.agentId, ds.id]),
 );
 
@@ -435,9 +436,9 @@ export function getDataSourcePickerItems() {
 // ============================================================================
 
 /** Badge configuration record keyed by data source ID */
-export const DATA_SOURCE_CONFIG: Record<DataSourceId, DataSourceConfig> = Object.fromEntries(
+export const DATA_SOURCE_CONFIG: Record<DataSource, DataSourceConfig> = Object.fromEntries(
     DATA_SOURCE_METAS.map((ds) => [ds.id, ds.display.badge]),
-) as Record<DataSourceId, DataSourceConfig>;
+) as Record<DataSource, DataSourceConfig>;
 
 // ============================================================================
 // Landing Page Data
@@ -495,7 +496,7 @@ export const AgentsDisplayMap: Record<string, AgentDisplayInfo> = {
 // ============================================================================
 
 /** Pre-built map: tool name → data source ID */
-const toolToDataSourceMap = new Map<string, DataSourceId>();
+const toolToDataSourceMap = new Map<string, DataSource>();
 for (const ds of DATA_SOURCE_METAS) {
     for (const toolName of Object.keys(ds.tools)) {
         toolToDataSourceMap.set(toolName, ds.id);
@@ -508,7 +509,7 @@ for (const ds of DATA_SOURCE_METAS) {
  * Get the data source ID for a tool by its key (without 'tool-' prefix).
  * Also handles agent-as-tool keys like 'agent-cbsAgent'.
  */
-export function getToolDataSource(toolKey: string): DataSourceId | undefined {
+export function getToolDataSource(toolKey: string): DataSource | undefined {
     return toolToDataSourceMap.get(toolKey);
 }
 
@@ -552,15 +553,15 @@ export function resolveToolSourceUrl(
 // Translations
 // ============================================================================
 
-/**
- * Get all tool translations — merges per-source translations and auto-generates
- * agent-as-tool entries using display.label and display.icon.
- */
-export function getAllTranslations(): Record<string, ToolTranslation> {
+function isRecord(v: unknown): v is Record<string, unknown> {
+    return typeof v === 'object' && v !== null;
+}
+
+/** All tool translations — built once, reused on every call. */
+const _allTranslations: Record<string, ToolTranslation> = (() => {
     const result: Record<string, ToolTranslation> = {};
 
     for (const ds of DATA_SOURCE_METAS) {
-        // Per-source tool translations
         for (const [toolName, translation] of Object.entries(ds.translations)) {
             if (translation) {
                 result[toolName] = translation;
@@ -568,24 +569,20 @@ export function getAllTranslations(): Record<string, ToolTranslation> {
         }
 
         // Auto-generated agent-as-tool translation
-        const agentKey = `agent-${ds.agentId}`;
-        result[agentKey] = {
+        result[`agent-${ds.agentId}`] = {
             name: ds.display.label,
             icon: ds.display.icon,
             formatInput: (input: unknown) => {
-                const i = input as Record<string, unknown> | undefined;
-                if (i && typeof i.prompt === 'string') return i.prompt;
+                if (isRecord(input) && typeof input.prompt === 'string') return input.prompt;
                 return undefined;
             },
             formatOutput: (output: unknown) => {
-                const o = output as Record<string, unknown> | undefined;
-                if (o && typeof o.text === 'string') return o.text;
+                if (isRecord(output) && typeof output.text === 'string') return output.text;
                 return 'הושלם';
             },
         };
     }
 
-    // Client tool translations (charts, suggestions)
     for (const [toolName, translation] of Object.entries(clientTranslations)) {
         if (translation) {
             result[toolName] = translation;
@@ -593,18 +590,19 @@ export function getAllTranslations(): Record<string, ToolTranslation> {
     }
 
     return result;
+})();
+
+/** Get all tool translations (memoized). */
+export function getAllTranslations(): Record<string, ToolTranslation> {
+    return _allTranslations;
 }
 
 // ============================================================================
 // Resource Extractors
 // ============================================================================
 
-/**
- * Get all tool resource extractors — merges per-source extractors into a
- * single record keyed by tool name. Used by ChainOfThought UI to extract
- * display resource chips from tool inputs/outputs.
- */
-export function getAllResourceExtractors(): Record<string, ToolResourceExtractor> {
+/** All tool resource extractors — built once, reused on every call. */
+const _allResourceExtractors: Record<string, ToolResourceExtractor> = (() => {
     const result: Record<string, ToolResourceExtractor> = {};
 
     for (const ds of DATA_SOURCE_METAS) {
@@ -616,6 +614,11 @@ export function getAllResourceExtractors(): Record<string, ToolResourceExtractor
     }
 
     return result;
+})();
+
+/** Get all tool resource extractors (memoized). */
+export function getAllResourceExtractors(): Record<string, ToolResourceExtractor> {
+    return _allResourceExtractors;
 }
 
 // ============================================================================
@@ -681,5 +684,4 @@ export const CLIENT_TOOL_NAMES = [
 // Re-exports for convenience
 // ============================================================================
 
-export type { DataSourceDefinition } from './types';
-export type { DataSource, AgentDisplayInfo } from './types';
+export type { AgentDisplayInfo, DataSource } from '@/data-sources/types';

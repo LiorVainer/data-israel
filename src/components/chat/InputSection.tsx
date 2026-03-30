@@ -16,15 +16,15 @@ import {
     getPickerFooterLabel,
     getPickerLabel,
 } from '@/components/chat/DataSourcePicker';
-import type { DataSourceId } from '@/data-sources/registry';
+import type { DataSource } from '@/data-sources/registry';
 
 interface InputSectionProps {
     onSubmit?: (text: string) => void;
     status?: ChatStatus;
     onStop?: () => void;
     placeholder?: string;
-    enabledSources: DataSourceId[];
-    onToggleSource: (sourceId: DataSourceId) => void;
+    enabledSources: DataSource[];
+    onToggleSource: (sourceId: DataSource) => void;
     onSelectAllSources: () => void;
     onUnselectAllSources: () => void;
 }

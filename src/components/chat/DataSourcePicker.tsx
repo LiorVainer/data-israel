@@ -8,7 +8,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { Dialog, DialogContent, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Drawer, DrawerContent, DrawerTitle, DrawerTrigger } from '@/components/ui/drawer';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
-import type { DataSourceId } from '@/data-sources/registry';
+import type { DataSource } from '@/data-sources/registry';
 import { getDataSourcePickerItems } from '@/data-sources/registry';
 import type { DataSourceCategory } from '@/data-sources/types';
 import { DATA_SOURCES_CATEGORIES } from '@/data-sources/types';
@@ -35,10 +35,10 @@ export const totalSources = pickerItems.length;
 // ---------------------------------------------------------------------------
 
 interface DataSourcePickerContextValue {
-    enabledSources: DataSourceId[];
+    enabledSources: DataSource[];
     allSelected: boolean;
     noneSelected: boolean;
-    onToggle: (sourceId: DataSourceId) => void;
+    onToggle: (sourceId: DataSource) => void;
     onSelectAll: () => void;
     onUnselectAll: () => void;
 }
@@ -56,8 +56,8 @@ function useDataSourcePickerContext() {
 // ---------------------------------------------------------------------------
 
 export interface DataSourcePickerProps {
-    enabledSources: DataSourceId[];
-    onToggle: (sourceId: DataSourceId) => void;
+    enabledSources: DataSource[];
+    onToggle: (sourceId: DataSource) => void;
     onSelectAll: () => void;
     onUnselectAll: () => void;
     open?: boolean;
@@ -226,7 +226,7 @@ export function DataSourcePickerContent({ className, footerLabel }: DataSourcePi
 // Helper: get trigger label from enabledSources
 // ---------------------------------------------------------------------------
 
-export function getPickerLabel(enabledSources: DataSourceId[]) {
+export function getPickerLabel(enabledSources: DataSource[]) {
     const allSelected = enabledSources.length === totalSources || enabledSources.length === 0;
     if (allSelected) return 'בחר מקורות מידע';
     if (enabledSources.length === 1) {
@@ -235,7 +235,7 @@ export function getPickerLabel(enabledSources: DataSourceId[]) {
     return `${enabledSources.length} מקורות מידע נבחרו`;
 }
 
-export function getPickerFooterLabel(enabledSources: DataSourceId[]) {
+export function getPickerFooterLabel(enabledSources: DataSource[]) {
     const allSelected = enabledSources.length === totalSources || enabledSources.length === 0;
     return allSelected ? 'כל מקורות המידע נבחרו' : getPickerLabel(enabledSources);
 }

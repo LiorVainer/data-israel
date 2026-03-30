@@ -15,7 +15,7 @@ import { routingAgent, createRoutingAgent } from './routing/routing.agent';
 import { createCbsAgent } from '@/data-sources/cbs';
 import { createDatagovAgent } from '@/data-sources/datagov';
 import { dataSourceAgents } from '@/data-sources/registry.server';
-import { AGENT_ID_TO_SOURCE_ID, type DataSourceId } from '@/data-sources/registry';
+import { AGENT_ID_TO_SOURCE_ID, type DataSource } from '@/data-sources/registry';
 import { MASTRA_SCORERS } from './evals/eval.config';
 import { ENV } from '@/lib/env';
 
@@ -85,7 +85,7 @@ let cachedMastra: Mastra | null = null;
  *
  * Async because some data sources (e.g., BudgetKey MCP) require async tool loading.
  */
-export async function getMastraWithModels(config: AgentModelConfig, enabledSources?: DataSourceId[]): Promise<Mastra> {
+export async function getMastraWithModels(config: AgentModelConfig, enabledSources?: DataSource[]): Promise<Mastra> {
     const configKey = JSON.stringify({ config, enabledSources: enabledSources?.slice().sort() });
 
     if (cachedConfigKey === configKey && cachedMastra) {
@@ -105,7 +105,7 @@ export async function getMastraWithModels(config: AgentModelConfig, enabledSourc
     // Some agent factories are async (MCP-based sources), so we await all of them
     const subAgentEntries = await Promise.all(
         filteredAgentEntries.map(async ([agentId, agentDef]) => {
-            const dsId = AGENT_ID_TO_SOURCE_ID.get(agentId) ?? (agentId.replace('Agent', '') as DataSourceId);
+            const dsId = AGENT_ID_TO_SOURCE_ID.get(agentId) ?? (agentId.replace('Agent', '') as DataSource);
             const modelId = config[dsId] ?? config.routing;
             const agent = await agentDef.createAgent(`openrouter/${modelId}`);
             return [agentId, agent] as const;
