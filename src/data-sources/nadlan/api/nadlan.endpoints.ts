@@ -121,6 +121,15 @@ export function buildNeighborhoodDealsUrl(polygonId: string, params?: UrlParams)
 export const GOVMAP_PORTAL_BASE_URL = 'https://www.govmap.gov.il';
 
 /**
+ * Govmap layer identifiers for the `lay` URL parameter.
+ * @see https://api.govmap.gov.il/docs/url-functions/zoom-by-coordinates
+ */
+export const GOVMAP_LAYERS = {
+    /** Real-estate transactions layer */
+    NADLAN: 'NADLAN',
+} as const;
+
+/**
  * Builds a Govmap portal URL for viewing the Nadlan layer on the map.
  *
  * Coordinates use ITM (Israel Transverse Mercator / EPSG:2039) — govmap auto-detects
@@ -133,9 +142,15 @@ export const GOVMAP_PORTAL_BASE_URL = 'https://www.govmap.gov.il';
  *  - z=6    — zoom level (0–10, 6 = neighbourhood)
  *  - lay=NADLAN — real-estate transactions layer
  */
-export function buildGovmapPortalUrl(longitude?: number, latitude?: number): string {
+export function buildGovmapPortalUrl(longitude?: number, latitude?: number, query?: string): string {
+    const url = new URL(GOVMAP_PORTAL_BASE_URL);
     if (longitude !== undefined && latitude !== undefined) {
-        return `${GOVMAP_PORTAL_BASE_URL}/?c=${longitude},${latitude}&z=6&lay=NADLAN`;
+        url.searchParams.set('c', `${longitude},${latitude}`);
+        url.searchParams.set('z', '6');
     }
-    return `${GOVMAP_PORTAL_BASE_URL}/?lay=NADLAN`;
+    url.searchParams.set('lay', GOVMAP_LAYERS.NADLAN);
+    if (query) {
+        url.searchParams.set('q', query);
+    }
+    return url.toString();
 }
