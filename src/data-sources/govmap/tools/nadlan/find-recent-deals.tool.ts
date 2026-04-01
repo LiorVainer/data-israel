@@ -7,8 +7,8 @@
 
 import { createTool } from '@mastra/core/tools';
 import { z } from 'zod';
-import { nadlanApi } from '../api/nadlan.client';
-import { buildGovmapPortalUrl } from '../api/nadlan.endpoints';
+import { nadlanApi } from '../../api/nadlan/nadlan.client';
+import { buildGovmapPortalUrl } from '../../api/nadlan/nadlan.endpoints';
 import { commonToolInput, toolOutputSchema } from '@/data-sources/types';
 import type { ToolSourceResolver } from '@/data-sources/types';
 
@@ -34,17 +34,17 @@ const dealSchema = z.object({
     id: z.number(),
     dealAmount: z.number().describe('Transaction amount in NIS'),
     dealDate: z.string().describe('Transaction date'),
-    assetArea: z.number().optional().describe('Property area in sqm'),
-    pricePerSqm: z.number().optional().describe('Price per sqm in NIS'),
-    settlementName: z.string().optional().describe('City/settlement name'),
-    streetName: z.string().optional().describe('Street name'),
-    houseNumber: z.string().optional().describe('House number'),
-    assetType: z.string().optional().describe('Property type'),
-    neighborhood: z.string().optional().describe('Neighborhood'),
-    floor: z.string().optional().describe('Floor description'),
-    floorNumber: z.number().optional().describe('Numeric floor'),
-    rooms: z.number().optional().describe('Number of rooms'),
-    dealSource: z.string().optional().describe('Deal source: same_building, street, neighborhood'),
+    assetArea: z.number().nullable().optional().describe('Property area in sqm'),
+    pricePerSqm: z.number().nullable().optional().describe('Price per sqm in NIS'),
+    settlementName: z.string().nullable().optional().describe('City/settlement name'),
+    streetName: z.string().nullable().optional().describe('Street name'),
+    houseNumber: z.string().nullable().optional().describe('House number'),
+    assetType: z.string().nullable().optional().describe('Property type'),
+    neighborhood: z.string().nullable().optional().describe('Neighborhood'),
+    floor: z.string().nullable().optional().describe('Floor description'),
+    floorNumber: z.number().nullable().optional().describe('Numeric floor'),
+    rooms: z.number().nullable().optional().describe('Number of rooms'),
+    dealSource: z.string().nullable().optional().describe('Deal source: same_building, street, neighborhood'),
 });
 
 const statisticsSchema = z.object({
@@ -124,7 +124,7 @@ export const findRecentNadlanDeals = createTool({
     outputSchema: findRecentDealsOutputSchema,
     execute: async ({ address, yearsBack = 2, radiusMeters = 50, maxDeals = 100, dealType = 2 }) => {
         const dealTypeDescription = dealType === 1 ? 'יד ראשונה (חדש)' : 'יד שנייה (משומש)';
-        const portalUrl = buildGovmapPortalUrl();
+        const portalUrl = buildGovmapPortalUrl(undefined, undefined, address);
 
         try {
             const result = await nadlanApi.findRecentDealsForAddress(
@@ -159,7 +159,11 @@ export const findRecentNadlanDeals = createTool({
                 statistics: result.statistics,
                 deals: result.deals,
                 portalUrl: result.searchCoordinates
-                    ? buildGovmapPortalUrl(result.searchCoordinates.longitude, result.searchCoordinates.latitude)
+                    ? buildGovmapPortalUrl(
+                          result.searchCoordinates.longitude,
+                          result.searchCoordinates.latitude,
+                          address,
+                      )
                     : portalUrl,
             };
         } catch (error) {

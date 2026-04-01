@@ -7,8 +7,8 @@
 
 import { createTool } from '@mastra/core/tools';
 import { z } from 'zod';
-import { nadlanApi } from '../api/nadlan.client';
-import { buildGovmapPortalUrl } from '../api/nadlan.endpoints';
+import { nadlanApi } from '../../api/nadlan/nadlan.client';
+import { buildGovmapPortalUrl } from '../../api/nadlan/nadlan.endpoints';
 import { commonToolInput, toolOutputSchema } from '@/data-sources/types';
 import type { ToolSourceResolver } from '@/data-sources/types';
 
@@ -84,7 +84,7 @@ export const getNadlanValuationComparables = createTool({
     inputSchema: getValuationComparablesInputSchema,
     outputSchema: getValuationComparablesOutputSchema,
     execute: async ({ address, targetAreaSqm, radiusMeters = 200, yearsBack = 2, dealType = 2 }) => {
-        const portalUrl = buildGovmapPortalUrl();
+        const portalUrl = buildGovmapPortalUrl(undefined, undefined, address);
 
         try {
             const result = await nadlanApi.findRecentDealsForAddress(address, yearsBack, radiusMeters, 200, dealType);
@@ -144,7 +144,11 @@ export const getNadlanValuationComparables = createTool({
                 estimatedTotalValue,
                 comparables,
                 portalUrl: result.searchCoordinates
-                    ? buildGovmapPortalUrl(result.searchCoordinates.longitude, result.searchCoordinates.latitude)
+                    ? buildGovmapPortalUrl(
+                          result.searchCoordinates.longitude,
+                          result.searchCoordinates.latitude,
+                          address,
+                      )
                     : portalUrl,
             };
         } catch (error) {

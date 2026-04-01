@@ -2,7 +2,7 @@ import { buildRoutingHints } from '@/data-sources/registry';
 
 /**
  * Build routing agent instructions with only the available agents listed.
- * @param agentIds — IDs of the actually-registered sub-agents (e.g., ['cbsAgent', 'nadlanAgent'])
+ * @param agentIds — IDs of the actually-registered sub-agents (e.g., ['cbsAgent', 'govmapAgent'])
  */
 export function buildRoutingInstructions(agentIds?: string[]): string {
     const agentHints = buildRoutingHints(agentIds);

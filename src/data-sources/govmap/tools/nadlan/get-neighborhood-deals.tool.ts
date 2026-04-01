@@ -6,8 +6,8 @@
 
 import { createTool } from '@mastra/core/tools';
 import { z } from 'zod';
-import { nadlanApi } from '../api/nadlan.client';
-import { buildNeighborhoodDealsUrl } from '../api/nadlan.endpoints';
+import { nadlanApi } from '../../api/nadlan/nadlan.client';
+import { buildNeighborhoodDealsUrl } from '../../api/nadlan/nadlan.endpoints';
 import { commonToolInput, toolOutputSchema } from '@/data-sources/types';
 import type { ToolSourceResolver } from '@/data-sources/types';
 

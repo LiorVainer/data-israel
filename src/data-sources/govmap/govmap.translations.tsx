@@ -1,15 +1,15 @@
 /**
- * Nadlan Tool Translations
+ * GovMap Tool Translations
  *
- * Hebrew translations and formatters for Nadlan tools displayed in the UI.
+ * Hebrew translations and formatters for GovMap tools displayed in the UI.
  * Icons are LucideIcon components (not JSX elements).
  */
 
 import { BarChart2Icon, HomeIcon, LinkIcon, MapPinIcon, SearchIcon, TrendingUpIcon } from 'lucide-react';
 import type { ToolTranslation } from '@/data-sources/types';
-import type { NadlanToolName } from './tools';
+import type { GovmapToolName } from './tools';
 
-export const nadlanTranslations: Partial<Record<NadlanToolName, ToolTranslation>> = {
+export const govmapTranslations: Partial<Record<GovmapToolName, ToolTranslation>> = {
     autocompleteNadlanAddress: {
         name: 'חיפוש כתובת',
         icon: SearchIcon,

@@ -1,104 +1,13 @@
 /**
- * Govmap Nadlan API Client
+ * Nadlan (Real Estate) API Client
  *
  * Provides typed access to the Govmap real estate API.
- * Includes retry with exponential backoff and simple rate limiting (5 req/s).
+ * Uses the shared GovMap client infrastructure for requests.
  */
 
-import axios, { type AxiosInstance } from 'axios';
-import pLimit from 'p-limit';
-import { sleep } from '@/lib/utils/sleep';
-import { GOVMAP_BASE_URL } from './nadlan.endpoints';
-import type {
-    AutocompleteResponse,
-    CoordinatePoint,
-    Deal,
-    DealStatistics,
-    DealType,
-    DealsResponse,
-    PolygonMetadata,
-    RawDeal,
-} from './nadlan.types';
-
-// ============================================================================
-// Axios Instance
-// ============================================================================
-
-const govmapInstance: AxiosInstance = axios.create({
-    baseURL: GOVMAP_BASE_URL,
-    timeout: 30_000,
-    headers: {
-        'Content-Type': 'application/json',
-        Accept: 'application/json',
-        'User-Agent': 'NadlanMCP/1.0.0',
-    },
-});
-
-// ============================================================================
-// Rate Limiting & Concurrency
-// ============================================================================
-
-/** Max 5 concurrent requests to respect Govmap rate limit */
-const govmapLimit = pLimit(5);
-
-/** Min interval between requests (200ms = 5 req/s) */
-const MIN_INTERVAL_MS = 200;
-let lastRequestTime = 0;
-
-async function rateLimit(): Promise<void> {
-    const elapsed = Date.now() - lastRequestTime;
-    if (elapsed < MIN_INTERVAL_MS) {
-        await sleep(MIN_INTERVAL_MS - elapsed);
-    }
-    lastRequestTime = Date.now();
-}
-
-// ============================================================================
-// Retry Logic
-// ============================================================================
-
-/** Status codes worth retrying (transient server errors) */
-const RETRYABLE_STATUS_CODES = new Set([500, 502, 503, 504]);
-const MAX_RETRIES = 3;
-const BASE_DELAY_MS = 1000;
-
-async function govmapRequest<T>(
-    method: 'get' | 'post',
-    endpoint: string,
-    options?: { params?: Record<string, unknown>; data?: Record<string, unknown> },
-): Promise<T> {
-    return govmapLimit(async () => {
-        let lastError: Error | undefined;
-
-        for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
-            try {
-                await rateLimit();
-
-                const response =
-                    method === 'get'
-                        ? await govmapInstance.get<T>(endpoint, { params: options?.params })
-                        : await govmapInstance.post<T>(endpoint, options?.data);
-
-                return response.data;
-            } catch (error) {
-                lastError = error instanceof Error ? error : new Error(String(error));
-
-                const status = axios.isAxiosError(error) ? error.response?.status : undefined;
-                const isRetryable = status !== undefined && RETRYABLE_STATUS_CODES.has(status);
-                const isTimeout = axios.isAxiosError(error) && error.code === 'ECONNABORTED';
-
-                if ((isRetryable || isTimeout) && attempt < MAX_RETRIES) {
-                    await sleep(BASE_DELAY_MS * Math.pow(2, attempt));
-                    continue;
-                }
-
-                throw lastError;
-            }
-        }
-
-        throw lastError ?? new Error('Govmap API request failed after retries');
-    });
-}
+import { govmapRequest, parseCoordinatesFromShape } from '../govmap.client';
+import type { AutocompleteResponse, CoordinatePoint } from '../govmap.types';
+import type { Deal, DealStatistics, DealType, DealsResponse, PolygonMetadata, RawDeal } from './nadlan.types';
 
 // ============================================================================
 // Deal Processing Helpers
@@ -184,24 +93,6 @@ function computeStatistics(deals: Deal[]): DealStatistics {
     }
 
     return stats;
-}
-
-// ============================================================================
-// Parse Coordinates from WKT POINT
-// ============================================================================
-
-function parseCoordinatesFromShape(shape?: string): CoordinatePoint | undefined {
-    if (!shape || !shape.startsWith('POINT(')) return undefined;
-    try {
-        const coordsStr = shape.slice(6, -1); // Remove "POINT(" and ")"
-        const parts = coordsStr.split(/\s+/);
-        if (parts.length === 2) {
-            return { longitude: parseFloat(parts[0]), latitude: parseFloat(parts[1]) };
-        }
-    } catch {
-        // Ignore parse errors
-    }
-    return undefined;
 }
 
 // ============================================================================
@@ -378,4 +269,4 @@ export const nadlanApi = {
     },
 };
 
-export { cleanDeals, computeStatistics, parseCoordinatesFromShape, BLOAT_FIELDS };
+export { cleanDeals, computeStatistics, BLOAT_FIELDS };

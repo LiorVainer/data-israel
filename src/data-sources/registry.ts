@@ -61,9 +61,9 @@ import { budgetTranslations } from '@/data-sources/budget/budget.translations';
 import { budgetBadgeConfig, budgetDisplayIcon, budgetDisplayLabel } from '@/data-sources/budget/budget.display';
 import { budgetSourceResolvers } from '@/data-sources/budget/budget.source-resolvers';
 
-import { nadlanSourceResolvers, NadlanTools } from '@/data-sources/nadlan/tools';
-import { nadlanTranslations } from '@/data-sources/nadlan/nadlan.translations';
-import { nadlanBadgeConfig, nadlanDisplayIcon, nadlanDisplayLabel } from '@/data-sources/nadlan/nadlan.display';
+import { govmapSourceResolvers, GovmapTools } from '@/data-sources/govmap/tools';
+import { govmapTranslations } from '@/data-sources/govmap/govmap.translations';
+import { govmapBadgeConfig, govmapDisplayIcon, govmapDisplayLabel } from '@/data-sources/govmap/govmap.display';
 
 import { drugsSourceResolvers, DrugsTools } from '@/data-sources/drugs/tools';
 import { drugsTranslations } from '@/data-sources/drugs/drugs.translations';
@@ -208,18 +208,18 @@ const DATA_SOURCE_METAS: readonly DataSourceMeta[] = [
         },
     },
     {
-        id: 'nadlan',
-        agentId: 'nadlanAgent',
-        display: { label: nadlanDisplayLabel, icon: nadlanDisplayIcon, badge: nadlanBadgeConfig },
+        id: 'govmap',
+        agentId: 'govmapAgent',
+        display: { label: govmapDisplayLabel, icon: govmapDisplayIcon, badge: govmapBadgeConfig },
         routingHint:
-            'נתוני עסקאות נדל"ן בישראל ממערכת govmap — חיפוש עסקאות לפי כתובת, מחירים למ"ר, מגמות שוק, הערכת שווי נכסים, והשוואת שכונות ורחובות',
-        tools: NadlanTools,
-        sourceResolvers: nadlanSourceResolvers,
-        translations: nadlanTranslations,
+            'נתוני GovMap — פורטל המפות הממשלתי של ישראל. כרגע כולל שכבת נדל"ן: חיפוש עסקאות לפי כתובת, מחירים למ"ר, מגמות שוק, הערכת שווי נכסים, והשוואת שכונות ורחובות',
+        tools: GovmapTools,
+        sourceResolvers: govmapSourceResolvers,
+        translations: govmapTranslations,
         resourceExtractors: {},
         landing: {
-            logo: '/nadlan-logo.svg',
-            description: 'עסקאות נדל"ן בישראל — מחירים, מגמות שוק, הערכות שווי ונתוני שכונות',
+            logo: '/govmap-logo.svg',
+            description: 'GovMap — פורטל המפות הממשלתי: נדל"ן, מגמות שוק, הערכות שווי ונתוני שכונות',
             stats: [
                 { label: 'כלים', value: '8', icon: HomeIcon },
                 { label: 'נתוני עסקאות', value: '100K+', icon: BarChart3Icon },
@@ -396,7 +396,7 @@ export const allDataSourceTools = {
     ...CbsTools,
     ...DataGovTools,
     ...BudgetToolNames,
-    ...NadlanTools,
+    ...GovmapTools,
     ...DrugsTools,
     ...HealthTools,
     ...KnessetTools,

@@ -12,7 +12,7 @@ export type DataSource =
     | 'datagov'
     | 'budget'
     | 'knesset'
-    | 'nadlan'
+    | 'govmap'
     | 'drugs'
     | 'health'
     | 'shufersal'

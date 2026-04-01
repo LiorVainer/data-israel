@@ -14,7 +14,7 @@ export const EnvSchema = z.object({
     AI_DATAGOV_MODEL_ID: z.string().default('google/gemini-2.5-flash-lite'),
     AI_CBS_MODEL_ID: z.string().default('google/gemini-2.5-flash-lite'),
     AI_BUDGET_MODEL_ID: z.string().default('google/gemini-2.5-flash-lite'),
-    AI_NADLAN_MODEL_ID: z.string().default('google/gemini-2.5-flash-lite'),
+    AI_GOVMAP_MODEL_ID: z.string().default('google/gemini-2.5-flash-lite'),
     AI_DRUGS_MODEL_ID: z.string().optional(),
     AI_HEALTH_MODEL_ID: z.string().optional(),
     AI_KNESSET_MODEL_ID: z.string().optional(),

@@ -7,8 +7,8 @@
 
 import { createTool } from '@mastra/core/tools';
 import { z } from 'zod';
-import { nadlanApi } from '../api/nadlan.client';
-import { buildGovmapPortalUrl } from '../api/nadlan.endpoints';
+import { nadlanApi } from '../../api/nadlan/nadlan.client';
+import { buildGovmapPortalUrl } from '../../api/nadlan/nadlan.endpoints';
 import { commonToolInput, toolOutputSchema } from '@/data-sources/types';
 import type { ToolSourceResolver } from '@/data-sources/types';
 
@@ -89,7 +89,7 @@ export const getNadlanDealStatistics = createTool({
     outputSchema: getDealStatisticsOutputSchema,
     execute: async ({ address, yearsBack = 2, radiusMeters = 100, dealType = 2 }) => {
         const dealTypeDescription = dealType === 1 ? 'יד ראשונה (חדש)' : 'יד שנייה (משומש)';
-        const portalUrl = buildGovmapPortalUrl();
+        const portalUrl = buildGovmapPortalUrl(undefined, undefined, address);
 
         try {
             const result = await nadlanApi.findRecentDealsForAddress(address, yearsBack, radiusMeters, 200, dealType);
@@ -109,7 +109,11 @@ export const getNadlanDealStatistics = createTool({
                 dealTypeDescription,
                 statistics: result.statistics,
                 portalUrl: result.searchCoordinates
-                    ? buildGovmapPortalUrl(result.searchCoordinates.longitude, result.searchCoordinates.latitude)
+                    ? buildGovmapPortalUrl(
+                          result.searchCoordinates.longitude,
+                          result.searchCoordinates.latitude,
+                          address,
+                      )
                     : portalUrl,
             };
         } catch (error) {

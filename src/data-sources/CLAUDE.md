@@ -17,7 +17,7 @@ src/data-sources/
 ├── cbs/                            # CBS data source (9 tools)
 ├── datagov/                        # DataGov data source (16 tools)
 ├── budget/                         # BudgetKey data source (3 MCP tools)
-├── nadlan/                         # Nadlan real estate data source (8 tools)
+├── govmap/                         # GovMap multi-layer data source (8 tools, real estate layer)
 ├── drugs/                          # Israel Drugs data source (8 tools)
 ├── health/                         # IL Health data source (5 tools)
 └── grocery/                        # Grocery Prices data source (5 tools)
@@ -260,5 +260,5 @@ The `formatInput`/`formatOutput` fields are optional and no longer used by the U
 - Source URL resolvers are per-tool (co-located), not a central switch
 - `DataSourceDefinition` is generic over `TTools` — keys in `sourceResolvers` and `translations` are type-checked
 - `routingHint` is auto-injected into the routing agent's system prompt via `buildRoutingHints()`
-- `DataSource` type union: `'cbs' | 'datagov' | 'budget' | 'knesset' | 'nadlan' | 'drugs' | 'health' | 'shufersal' | 'rami-levy'`
+- `DataSource` type union: `'cbs' | 'datagov' | 'budget' | 'knesset' | 'govmap' | 'drugs' | 'health' | 'shufersal' | 'rami-levy'`
 - Registry is split: `registry.ts` (client-safe) and `registry.server.ts` (server-only agent refs)

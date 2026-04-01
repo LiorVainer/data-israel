@@ -11,7 +11,7 @@ export type SubAgentId =
     | 'datagov'
     | 'cbs'
     | 'budget'
-    | 'nadlan'
+    | 'govmap'
     | 'drugs'
     | 'health'
     | 'knesset'
@@ -28,8 +28,8 @@ const getModelIdForAgent = (agentId?: SubAgentId): string => {
             return AgentConfig.MODEL.CBS_ID;
         case 'budget':
             return AgentConfig.MODEL.BUDGET_ID;
-        case 'nadlan':
-            return AgentConfig.MODEL.NADLAN_ID;
+        case 'govmap':
+            return AgentConfig.MODEL.GOVMAP_ID;
         case 'drugs':
             return AgentConfig.MODEL.DRUGS_ID;
         case 'health':

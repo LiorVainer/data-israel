@@ -1,41 +1,9 @@
 /**
- * Govmap Nadlan API Types
+ * Nadlan (Real Estate) API Types
  *
- * Type definitions for all Govmap real estate API response shapes.
- * Based on the Govmap REST API at https://www.govmap.gov.il/api/
+ * Type definitions for Nadlan-specific API response shapes.
+ * Shared types (AutocompleteResult, CoordinatePoint, etc.) live in ../govmap.types.
  */
-
-// ============================================================================
-// Autocomplete
-// ============================================================================
-
-/** Single result from address autocomplete */
-export interface AutocompleteResult {
-    /** Display text for the address */
-    text: string;
-    /** Unique identifier */
-    id: string;
-    /** Result type (address, street, city, etc.) */
-    type: string;
-    /** Relevance score */
-    score: number;
-    /** WKT POINT string with coordinates, e.g. "POINT(34.78 32.07)" */
-    shape?: string;
-}
-
-/** Response from address autocomplete API */
-export interface AutocompleteResponse {
-    resultsCount: number;
-    results: AutocompleteResult[];
-}
-
-/** Parsed coordinate point (ITM projection) */
-export interface CoordinatePoint {
-    /** X coordinate in ITM projection (meters) */
-    longitude: number;
-    /** Y coordinate in ITM projection (meters) */
-    latitude: number;
-}
 
 // ============================================================================
 // Deals

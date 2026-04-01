@@ -1,5 +1,5 @@
 /**
- * Nadlan Data Source Contract Tests
+ * GovMap Data Source Contract Tests
  *
  * Verifies the DataSourceDefinition interface is properly satisfied,
  * translations/resolvers match tool keys, and searchedResourceName is input-only.
@@ -41,7 +41,7 @@ vi.mock('@/lib/env', () => ({
         AI_DEFAULT_MODEL_ID: 'test/model',
         AI_DATAGOV_MODEL_ID: null,
         AI_CBS_MODEL_ID: null,
-        AI_NADLAN_MODEL_ID: null,
+        AI_GOVMAP_MODEL_ID: null,
         AI_MAX_STEPS: 10,
         AI_TOOL_CALL_CONCURRENCY: 1,
     },
@@ -76,59 +76,59 @@ vi.mock('@mastra/evals/scorers/utils', () => ({
 // Imports (after mocks)
 // ============================================================================
 
-let NadlanDataSource: typeof import('../index').NadlanDataSource;
+let GovmapDataSource: typeof import('../index').GovmapDataSource;
 
 beforeAll(async () => {
     const mod = await import('../index');
-    NadlanDataSource = mod.NadlanDataSource;
+    GovmapDataSource = mod.GovmapDataSource;
 });
 
 // ============================================================================
 // Tests
 // ============================================================================
 
-describe('Nadlan data source contract', () => {
+describe('GovMap data source contract', () => {
     it('satisfies DataSourceDefinition structure', () => {
-        expect(NadlanDataSource.id).toBe('nadlan');
-        expect(NadlanDataSource.tools).toBeDefined();
-        expect(typeof NadlanDataSource.agent.createAgent).toBe('function');
-        expect(NadlanDataSource.agent.id).toBe('nadlanAgent');
-        expect(typeof NadlanDataSource.agent.name).toBe('string');
-        expect(typeof NadlanDataSource.agent.description).toBe('string');
-        expect(typeof NadlanDataSource.agent.instructions).toBe('string');
-        expect(typeof NadlanDataSource.routingHint).toBe('string');
-        expect(NadlanDataSource.display).toBeDefined();
-        expect(typeof NadlanDataSource.display.label).toBe('string');
-        expect(NadlanDataSource.display.icon).toBeDefined();
-        expect(NadlanDataSource.display.badge).toBeDefined();
+        expect(GovmapDataSource.id).toBe('govmap');
+        expect(GovmapDataSource.tools).toBeDefined();
+        expect(typeof GovmapDataSource.agent.createAgent).toBe('function');
+        expect(GovmapDataSource.agent.id).toBe('govmapAgent');
+        expect(typeof GovmapDataSource.agent.name).toBe('string');
+        expect(typeof GovmapDataSource.agent.description).toBe('string');
+        expect(typeof GovmapDataSource.agent.instructions).toBe('string');
+        expect(typeof GovmapDataSource.routingHint).toBe('string');
+        expect(GovmapDataSource.display).toBeDefined();
+        expect(typeof GovmapDataSource.display.label).toBe('string');
+        expect(GovmapDataSource.display.icon).toBeDefined();
+        expect(GovmapDataSource.display.badge).toBeDefined();
     });
 
     it('all translation keys exist in tools', () => {
-        for (const key of Object.keys(NadlanDataSource.translations)) {
-            expect(NadlanDataSource.tools).toHaveProperty(key);
+        for (const key of Object.keys(GovmapDataSource.translations)) {
+            expect(GovmapDataSource.tools).toHaveProperty(key);
         }
     });
 
     it('all sourceResolver keys exist in tools', () => {
-        for (const key of Object.keys(NadlanDataSource.sourceResolvers)) {
-            expect(NadlanDataSource.tools).toHaveProperty(key);
+        for (const key of Object.keys(GovmapDataSource.sourceResolvers)) {
+            expect(GovmapDataSource.tools).toHaveProperty(key);
         }
     });
 
-    it('agent factory returns Agent with id nadlanAgent', () => {
-        const agent = NadlanDataSource.agent.createAgent('openrouter/test/model');
-        expect(agent.id).toBe('nadlanAgent');
+    it('agent factory returns Agent with id govmapAgent', () => {
+        const agent = GovmapDataSource.agent.createAgent('openrouter/test/model');
+        expect(agent.id).toBe('govmapAgent');
     });
 
     it('source resolvers return null for failed output', () => {
-        for (const resolver of Object.values(NadlanDataSource.sourceResolvers)) {
+        for (const resolver of Object.values(GovmapDataSource.sourceResolvers)) {
             if (!resolver) continue;
             expect(resolver({}, { success: false })).toBeNull();
         }
     });
 
     it('source resolvers return ToolSource for valid output with portalUrl or apiUrl', () => {
-        for (const resolver of Object.values(NadlanDataSource.sourceResolvers)) {
+        for (const resolver of Object.values(GovmapDataSource.sourceResolvers)) {
             if (!resolver) continue;
             // Test with portalUrl (used by findRecentDeals, etc.)
             const portalResult = resolver(
@@ -152,7 +152,7 @@ describe('Nadlan data source contract', () => {
     });
 
     it('no tool output schema includes searchedResourceName', () => {
-        for (const [name, tool] of Object.entries(NadlanDataSource.tools)) {
+        for (const [name, tool] of Object.entries(GovmapDataSource.tools)) {
             const outputSchema = (tool as { outputSchema?: z.ZodType }).outputSchema;
             if (!outputSchema) continue;
 
@@ -181,12 +181,12 @@ describe('Nadlan data source contract', () => {
             'generateNadlanSourceUrl',
         ];
         for (const name of expectedTools) {
-            expect(NadlanDataSource.tools).toHaveProperty(name);
+            expect(GovmapDataSource.tools).toHaveProperty(name);
         }
     });
 
     it('translations include icons as components (LucideIcon), not JSX elements', () => {
-        for (const [key, translation] of Object.entries(NadlanDataSource.translations)) {
+        for (const [key, translation] of Object.entries(GovmapDataSource.translations)) {
             if (!translation) continue;
             expect(translation.icon).toBeDefined();
             expect(translation.icon).not.toHaveProperty(

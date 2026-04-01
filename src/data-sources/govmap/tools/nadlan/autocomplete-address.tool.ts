@@ -7,8 +7,8 @@
 
 import { createTool } from '@mastra/core/tools';
 import { z } from 'zod';
-import { nadlanApi } from '../api/nadlan.client';
-import { toolOutputSchema } from '@/data-sources/types';
+import { nadlanApi } from '../../api/nadlan/nadlan.client';
+import { commonToolInput, toolOutputSchema } from '@/data-sources/types';
 
 // ============================================================================
 // Schemas
@@ -20,6 +20,7 @@ export const autocompleteAddressInputSchema = z.object({
         .describe(
             'Full Israeli address in Hebrew including street name, house number, and city (e.g. "סוקולוב 38 חולון"). A city name alone will not return address results.',
         ),
+    ...commonToolInput,
 });
 
 export const autocompleteAddressOutputSchema = toolOutputSchema({

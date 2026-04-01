@@ -96,7 +96,7 @@ src/                              # Application source code
 │   ├── cbs/                      # CBS (9 tools, Central Bureau of Statistics)
 │   ├── datagov/                  # DataGov (16 tools, data.gov.il CKAN API)
 │   ├── budget/                   # BudgetKey (3 MCP tools, state budget 1997-2025)
-│   ├── nadlan/                   # Nadlan (8 tools, real estate transactions)
+│   ├── govmap/                   # GovMap (8 tools, multi-layer geospatial — nadlan primary)
 │   ├── drugs/                    # Drugs (8 tools, pharmaceutical database)
 │   ├── health/                   # Health (5 tools, MOH dashboards)
 │   └── grocery/                  # Grocery (5 tools, supermarket prices)
@@ -195,7 +195,7 @@ User (/) → submit message → crypto.randomUUID() → /chat/:id?new
                                                         ↓
          ┌──────────┬──────────┬──────────┬──────────┬──────────┬──────────┬──────────┐
          ↓          ↓          ↓          ↓          ↓          ↓          ↓          ↓
-     datagov     cbs       budget     nadlan     drugs      health    grocery    Client
+     datagov     cbs       budget     govmap     drugs      health    grocery    Client
      Agent       Agent     Agent      Agent      Agent      Agent     Agent      Tools
      16 tools    9 tools   3 MCP      8 tools    8 tools    5 tools   5 tools    charts+
      CKAN API    CBS API   BudgetKey  GovMap     MOH Drug   MOH Dash  XML feeds  suggestions
@@ -213,7 +213,7 @@ User (/) → submit message → crypto.randomUUID() → /chat/:id?new
 | `datagovAgent` | סוכן data.gov.il | 16 | Israeli open data search (CKAN API) — runs as sub-agent |
 | `cbsAgent` | סוכן הלמ"ס | 9 | Central Bureau of Statistics (series, prices, localities) — runs as sub-agent |
 | `budgetAgent` | סוכן תקציב המדינה | 3 (MCP) | State budget via BudgetKey MCP endpoint (1997-2025) — runs as sub-agent |
-| `nadlanAgent` | סוכן נדל"ן | 8 | Real estate transactions via GovMap API — runs as sub-agent |
+| `govmapAgent` | סוכן GovMap | 8 | GovMap geospatial data (real estate transactions, market trends) — runs as sub-agent |
 | `drugsAgent` | סוכן תרופות | 8 | Pharmaceutical database (Ministry of Health) — runs as sub-agent |
 | `healthAgent` | סוכן בריאות | 5 | Public health dashboards (Ministry of Health) — runs as sub-agent |
 | `groceryAgent` | סוכן מחירי מזון | 5 | Supermarket price transparency (XML feeds) — runs as sub-agent |
@@ -339,7 +339,7 @@ The agent uses **Mastra 1.1** with AI SDK v6 tools. Key implementation details:
 - **data.gov.il**: CKAN API at `https://data.gov.il/api/3` (datasets, organizations, groups, tags, resources, DataStore)
 - **CBS (הלמ"ס)**: Statistical series, price indices, CPI calculations, locality dictionary
 - **BudgetKey**: MCP endpoint at `https://next.obudget.org/mcp` (state budget, contracts, tenders, entities, revenues)
-- **Nadlan**: REST API at `https://www.govmap.gov.il/api/` (real estate transactions, price trends, valuations)
+- **GovMap**: REST API at `https://www.govmap.gov.il/api/` (real estate transactions, price trends, valuations — multi-layer geospatial)
 - **Israel Drugs**: REST API at `https://israeldrugs.health.gov.il/GovServiceList/IDRServer` (drug registry, generics, health basket)
 - **IL Health**: REST API at `https://datadashboard.health.gov.il/api` (public health dashboards, HMO data, service quality)
 - **Grocery Prices**: XML feeds from supermarket chains (Shufersal, Rami Levy, Yochananof, Victory, Osher Ad, Tiv Taam)
