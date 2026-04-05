@@ -10,22 +10,6 @@ import { z } from 'zod';
 import { nadlanApi } from '../../api/nadlan/nadlan.client';
 import { buildGovmapPortalUrl } from '../../api/nadlan/nadlan.endpoints';
 import { commonToolInput, toolOutputSchema } from '@/data-sources/types';
-import type { ToolSourceResolver } from '@/data-sources/types';
-
-// ============================================================================
-// Helpers
-// ============================================================================
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-    return typeof value === 'object' && value !== null;
-}
-
-function getString(obj: unknown, key: string): string | undefined {
-    if (!isRecord(obj)) return undefined;
-    const val = obj[key];
-    return typeof val === 'string' ? val : undefined;
-}
-
 // ============================================================================
 // Schemas
 // ============================================================================
@@ -175,18 +159,3 @@ export const findRecentNadlanDeals = createTool({
         }
     },
 });
-
-// ============================================================================
-// Source URL Resolver
-// ============================================================================
-
-export const resolveSourceUrl: ToolSourceResolver = (_input, output) => {
-    const portalUrl = getString(output, 'portalUrl');
-    if (!portalUrl) return null;
-    const name = getString(_input, 'searchedResourceName');
-    return {
-        url: portalUrl,
-        title: name ? `עסקאות נדל"ן — ${name}` : 'עסקאות נדל"ן — govmap.gov.il',
-        urlType: 'portal',
-    };
-};

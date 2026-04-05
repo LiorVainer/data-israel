@@ -121,24 +121,33 @@ describe('Health data source contract', () => {
         expect(agent.id).toBe('healthAgent');
     });
 
-    it('source resolvers return null for failed output', () => {
+    it('source resolvers return empty array for failed output', () => {
         for (const resolver of Object.values(HealthDataSource.sourceResolvers)) {
             if (!resolver) continue;
-            expect(resolver({}, { success: false })).toBeNull();
+            const result = resolver({ searchedResourceName: 'test' }, { success: false, error: 'test error' });
+            expect(result).toEqual([]);
         }
     });
 
-    it('source resolvers return ToolSource for valid output with apiUrl', () => {
+    it('source resolvers return ToolSource[] for valid output', () => {
         for (const resolver of Object.values(HealthDataSource.sourceResolvers)) {
             if (!resolver) continue;
+            const validOutput = {
+                success: true as const,
+                apiUrl: 'https://example.com/api',
+                portalUrl: 'https://example.com/portal',
+            };
+            // Cast through unknown since tests don't construct full discriminated union
             const result = resolver(
                 { searchedResourceName: 'test' },
-                { success: true, apiUrl: 'https://example.com/api' },
+                validOutput as unknown as Parameters<typeof resolver>[1],
             );
-            expect(result).not.toBeNull();
-            expect(result).toHaveProperty('url');
-            expect(result).toHaveProperty('title');
-            expect(result).toHaveProperty('urlType');
+            expect(result.length).toBeGreaterThan(0);
+            for (const source of result) {
+                expect(source).toHaveProperty('url');
+                expect(source).toHaveProperty('title');
+                expect(source).toHaveProperty('urlType');
+            }
         }
     });
 
@@ -160,13 +169,21 @@ describe('Health data source contract', () => {
         }
     });
 
-    it('tools contain expected health tool names', () => {
+    it('tools contain expected health and drug tool names', () => {
         const expectedTools = [
+            // Overview-data (health dashboard) tools
             'getAvailableSubjects',
             'getHealthMetadata',
             'getHealthData',
             'getHealthLinks',
-            'generateHealthSourceUrl',
+            // Drug registry tools
+            'searchDrugByName',
+            'searchDrugBySymptom',
+            'exploreGenericAlternatives',
+            'exploreTherapeuticCategories',
+            'browseSymptoms',
+            'getDrugDetails',
+            'suggestDrugNames',
         ];
         for (const name of expectedTools) {
             expect(HealthDataSource.tools).toHaveProperty(name);

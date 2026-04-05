@@ -110,38 +110,13 @@ describe('Shufersal data source contract', () => {
         }
     });
 
-    it('all sourceResolver keys exist in tools', () => {
-        for (const key of Object.keys(ShufersalDataSource.sourceResolvers)) {
-            expect(ShufersalDataSource.tools).toHaveProperty(key);
-        }
+    it('sourceResolvers is empty (uses declarative sourceConfigs)', () => {
+        expect(Object.keys(ShufersalDataSource.sourceResolvers)).toHaveLength(0);
     });
 
     it('agent factory returns Agent with id shufersalAgent', () => {
         const agent = ShufersalDataSource.agent.createAgent('openrouter/test/model');
         expect(agent.id).toBe('shufersalAgent');
-    });
-
-    it('source resolvers return null for failed output', () => {
-        for (const resolver of Object.values(ShufersalDataSource.sourceResolvers)) {
-            if (!resolver) continue;
-            expect(resolver({}, { success: false })).toBeNull();
-        }
-    });
-
-    it('source resolvers return ToolSource for valid output with apiUrl', () => {
-        for (const resolver of Object.values(ShufersalDataSource.sourceResolvers)) {
-            if (!resolver) continue;
-            const result = resolver(
-                { searchedResourceName: 'test' },
-                { success: true, apiUrl: 'https://www.shufersal.co.il/online/he/search/results?q=test' },
-            );
-            expect(result).not.toBeNull();
-            if (result) {
-                expect(result).toHaveProperty('url');
-                expect(result).toHaveProperty('title');
-                expect(result).toHaveProperty('urlType');
-            }
-        }
     });
 
     it('no tool output schema includes searchedResourceName', () => {
@@ -163,7 +138,7 @@ describe('Shufersal data source contract', () => {
     });
 
     it('tools contain expected Shufersal tool names', () => {
-        const expectedTools = ['searchShufersalProducts', 'generateShufersalSourceUrl'];
+        const expectedTools = ['searchShufersalProducts'];
         for (const name of expectedTools) {
             expect(ShufersalDataSource.tools).toHaveProperty(name);
         }

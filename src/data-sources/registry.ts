@@ -21,6 +21,8 @@ import type {
     LandingConfig,
     SuggestionsConfig,
     ToolResourceExtractor,
+    ToolSource,
+    ToolSourceConfig,
     ToolSourceResolver,
     ToolTranslation,
 } from '@/data-sources/types';
@@ -48,7 +50,7 @@ import {
 } from 'lucide-react';
 
 // Client-safe imports — tools, translations, display, resolvers (no Agent dependency)
-import { cbsResourceExtractors, cbsSourceResolvers, CbsTools } from '@/data-sources/cbs/tools';
+import { cbsResourceExtractors, cbsSourceConfigs, CbsTools } from '@/data-sources/cbs/tools';
 import { cbsTranslations } from '@/data-sources/cbs/cbs.translations';
 import { cbsBadgeConfig, cbsDisplayIcon, cbsDisplayLabel } from '@/data-sources/cbs/cbs.display';
 
@@ -61,23 +63,19 @@ import { budgetTranslations } from '@/data-sources/budget/budget.translations';
 import { budgetBadgeConfig, budgetDisplayIcon, budgetDisplayLabel } from '@/data-sources/budget/budget.display';
 import { budgetSourceResolvers } from '@/data-sources/budget/budget.source-resolvers';
 
-import { govmapSourceResolvers, GovmapTools } from '@/data-sources/govmap/tools';
+import { govmapSourceConfigs, GovmapTools } from '@/data-sources/govmap/tools';
 import { govmapTranslations } from '@/data-sources/govmap/govmap.translations';
 import { govmapBadgeConfig, govmapDisplayIcon, govmapDisplayLabel } from '@/data-sources/govmap/govmap.display';
 
-import { drugsSourceResolvers, DrugsTools } from '@/data-sources/drugs/tools';
-import { drugsTranslations } from '@/data-sources/drugs/drugs.translations';
-import { drugsBadgeConfig, drugsDisplayIcon, drugsDisplayLabel } from '@/data-sources/drugs/drugs.display';
-
-import { healthSourceResolvers, HealthTools } from '@/data-sources/health/tools';
+import { healthSourceConfigs, healthSourceResolvers, HealthTools } from '@/data-sources/health/tools';
 import { healthTranslations } from '@/data-sources/health/health.translations';
 import { healthBadgeConfig, healthDisplayIcon, healthDisplayLabel } from '@/data-sources/health/health.display';
 
-import { knessetSourceResolvers, KnessetTools } from '@/data-sources/knesset/tools';
+import { knessetSourceConfigs, KnessetTools } from '@/data-sources/knesset/tools';
 import { knessetTranslations } from '@/data-sources/knesset/knesset.translations';
 import { knessetBadgeConfig, knessetDisplayIcon, knessetDisplayLabel } from '@/data-sources/knesset/knesset.display';
 
-import { shufersalSourceResolvers, ShufersalTools } from '@/data-sources/shufersal/tools';
+import { shufersalSourceConfigs, ShufersalTools } from '@/data-sources/shufersal/tools';
 import { shufersalTranslations } from '@/data-sources/shufersal/shufersal.translations';
 import {
     shufersalBadgeConfig,
@@ -85,7 +83,7 @@ import {
     shufersalDisplayLabel,
 } from '@/data-sources/shufersal/shufersal.display';
 
-import { ramiLevySourceResolvers, RamiLevyTools } from '@/data-sources/rami-levy/tools';
+import { ramiLevySourceConfigs, RamiLevyTools } from '@/data-sources/rami-levy/tools';
 import {
     ramiLevyBadgeConfig,
     ramiLevyDisplayIcon,
@@ -105,7 +103,10 @@ interface DataSourceMeta {
     display: { label: string; icon: typeof ActivityIcon; badge: DataSourceConfig };
     routingHint: string;
     tools: Record<string, unknown>;
-    sourceResolvers: Partial<Record<string, ToolSourceResolver>>;
+    /** Declarative source URL configs — registry auto-generates resolvers */
+    sourceConfigs?: Partial<Record<string, ToolSourceConfig>>;
+    /** Custom source URL resolvers — override sourceConfigs for non-standard tools */
+    sourceResolvers?: Partial<Record<string, ToolSourceResolver>>;
     translations: Partial<Record<string, ToolTranslation>>;
     resourceExtractors: Partial<Record<string, ToolResourceExtractor>>;
     /** Optional landing page display config */
@@ -122,7 +123,7 @@ const DATA_SOURCE_METAS: readonly DataSourceMeta[] = [
         routingHint:
             'נתונים סטטיסטיים רשמיים של הלשכה המרכזית לסטטיסטיקה — סדרות זמן (אוכלוסייה, כלכלה, חינוך, תעסוקה), מדדי מחירים (מדד המחירים לצרכן, מדדי דיור, הצמדה), ומילון יישובים (ערים, מועצות, נפות, מחוזות)',
         tools: CbsTools,
-        sourceResolvers: cbsSourceResolvers,
+        sourceConfigs: cbsSourceConfigs,
         translations: cbsTranslations,
         resourceExtractors: cbsResourceExtractors,
         landing: {
@@ -133,8 +134,8 @@ const DATA_SOURCE_METAS: readonly DataSourceMeta[] = [
                 { label: 'נושאים', value: '30+', icon: LayersIcon },
                 { label: 'שנות נתונים', value: '75+', icon: CalendarIcon },
             ],
-            category: 'economy',
-            order: 1,
+            category: 'general',
+            order: 4,
         },
         suggestions: {
             prompts: [
@@ -165,7 +166,7 @@ const DATA_SOURCE_METAS: readonly DataSourceMeta[] = [
                 { label: 'ארגונים', value: '80+', icon: BuildingIcon },
                 { label: 'קבצים', value: '10,000+', icon: FileIcon },
             ],
-            category: 'government',
+            category: 'general',
             order: 1,
         },
         suggestions: {
@@ -190,15 +191,15 @@ const DATA_SOURCE_METAS: readonly DataSourceMeta[] = [
         translations: budgetTranslations,
         resourceExtractors: {},
         landing: {
-            logo: '/budget-logo.svg',
+            logo: '/budget-logo.png',
             description: 'תקציב המדינה — הוצאות, הכנסות, התקשרויות, תמיכות ומכרזים (1997-2025)',
             stats: [
                 { label: 'מאגרי נתונים', value: '8', icon: DatabaseIcon },
                 { label: 'שנות תקציב', value: '28', icon: CalendarIcon },
                 { label: 'שאילתות', value: 'SQL', icon: ScrollTextIcon },
             ],
-            category: 'government',
-            order: 2,
+            category: 'economy',
+            order: 1,
         },
         suggestions: {
             prompts: [
@@ -214,18 +215,18 @@ const DATA_SOURCE_METAS: readonly DataSourceMeta[] = [
         routingHint:
             'נתוני GovMap — פורטל המפות הממשלתי של ישראל. כרגע כולל שכבת נדל"ן: חיפוש עסקאות לפי כתובת, מחירים למ"ר, מגמות שוק, הערכת שווי נכסים, והשוואת שכונות ורחובות',
         tools: GovmapTools,
-        sourceResolvers: govmapSourceResolvers,
+        sourceConfigs: govmapSourceConfigs,
         translations: govmapTranslations,
         resourceExtractors: {},
         landing: {
-            logo: '/govmap-logo.svg',
+            logo: '/govmap-logo.png',
             description: 'GovMap — פורטל המפות הממשלתי: נדל"ן, מגמות שוק, הערכות שווי ונתוני שכונות',
             stats: [
                 { label: 'כלים', value: '8', icon: HomeIcon },
                 { label: 'נתוני עסקאות', value: '100K+', icon: BarChart3Icon },
                 { label: 'ערים', value: '250+', icon: UsersIcon },
             ],
-            category: 'economy',
+            category: 'general',
             order: 2,
         },
         suggestions: {
@@ -236,22 +237,23 @@ const DATA_SOURCE_METAS: readonly DataSourceMeta[] = [
         },
     },
     {
-        id: 'drugs',
-        agentId: 'drugsAgent',
-        display: { label: drugsDisplayLabel, icon: drugsDisplayIcon, badge: drugsBadgeConfig },
+        id: 'health',
+        agentId: 'healthAgent',
+        display: { label: healthDisplayLabel, icon: healthDisplayIcon, badge: healthBadgeConfig },
         routingHint:
-            'מאגר התרופות של משרד הבריאות — חיפוש תרופות לפי שם, סימפטום, חומר פעיל או קוד ATC, פרטי תרופה מקיפים, חלופות גנריות, סל בריאות ומחירים',
-        tools: DrugsTools,
-        sourceResolvers: drugsSourceResolvers,
-        translations: drugsTranslations,
+            'משרד הבריאות — מאגר תרופות (חיפוש לפי שם, סימפטום, חומר פעיל, חלופות גנריות, סל בריאות) ונתוני בריאות ציבורית (נפגעי מלחמה, שירותי רפואה, איכות חופים, מבוטחי קופות חולים, חיסוני ילדים, בדיקות התפתחותיות ואיכות שירות)',
+        tools: HealthTools,
+        sourceConfigs: healthSourceConfigs,
+        sourceResolvers: healthSourceResolvers,
+        translations: healthTranslations,
         resourceExtractors: {},
         landing: {
-            logo: '/drugs-logo.svg',
-            description: 'מאגר התרופות של משרד הבריאות — תרופות, חלופות גנריות, סל בריאות וקופות חולים',
+            logo: '/health-logo.png',
+            description: 'משרד הבריאות — מאגר תרופות, חלופות גנריות, סל בריאות, קופות חולים, איכות שירות ועוד',
             stats: [
-                { label: 'קטגוריות ATC', value: '1,172', icon: PillIcon },
-                { label: 'כלים', value: '8', icon: TagIcon },
-                { label: 'שפות', value: '4', icon: UsersIcon },
+                { label: 'כלים', value: '13', icon: HeartPulseIcon },
+                { label: 'תרופות + בריאות', value: '2 תחומים', icon: PillIcon },
+                { label: 'מקור', value: 'משה"ב', icon: BuildingIcon },
             ],
             category: 'health',
             order: 1,
@@ -260,32 +262,6 @@ const DATA_SOURCE_METAS: readonly DataSourceMeta[] = [
             prompts: [
                 { label: 'חלופות גנריות', prompt: 'מהן החלופות הגנריות לאקמול?', icon: PillIcon },
                 { label: 'סל בריאות', prompt: 'אילו תרופות מכוסות בסל הבריאות לסוכרת?', icon: HeartPulseIcon },
-            ],
-        },
-    },
-    {
-        id: 'health',
-        agentId: 'healthAgent',
-        display: { label: healthDisplayLabel, icon: healthDisplayIcon, badge: healthBadgeConfig },
-        routingHint:
-            'נתוני בריאות ציבורית ממשרד הבריאות — נפגעי מלחמה, שירותי רפואה, איכות חופים, מבוטחי קופות חולים, חיסוני ילדים, בדיקות התפתחותיות ואיכות שירות',
-        tools: HealthTools,
-        sourceResolvers: healthSourceResolvers,
-        translations: healthTranslations,
-        resourceExtractors: {},
-        landing: {
-            logo: '/health-logo.svg',
-            description: 'דשבורד הבריאות של משרד הבריאות — קופות חולים, איכות שירות, בדיקות ילדים ועוד',
-            stats: [
-                { label: 'נושאים', value: '7', icon: StethoscopeIcon },
-                { label: 'כלים', value: '5', icon: HeartPulseIcon },
-                { label: 'מקור', value: 'משה"ב', icon: BuildingIcon },
-            ],
-            category: 'health',
-            order: 2,
-        },
-        suggestions: {
-            prompts: [
                 {
                     label: 'איכות שירות בתי חולים',
                     prompt: 'מה איכות השירות בבתי החולים בישראל?',
@@ -301,18 +277,18 @@ const DATA_SOURCE_METAS: readonly DataSourceMeta[] = [
         display: { label: knessetDisplayLabel, icon: knessetDisplayIcon, badge: knessetBadgeConfig },
         routingHint: 'נתוני הכנסת — הצעות חוק, ועדות כנסת, חברי כנסת, ותהליכי חקיקה מה-API הפתוח של הכנסת',
         tools: KnessetTools,
-        sourceResolvers: knessetSourceResolvers,
+        sourceConfigs: knessetSourceConfigs,
         translations: knessetTranslations,
         resourceExtractors: {},
         landing: {
-            logo: '/knesset-logo.svg',
+            logo: '/knesset-logo.png',
             description: 'הכנסת — הצעות חוק, ועדות, חברי כנסת ותהליכי חקיקה',
             stats: [
                 { label: 'כלים', value: '7', icon: GavelIcon },
                 { label: 'כנסות', value: '25', icon: LandmarkIcon },
                 { label: 'נתונים', value: 'OData', icon: DatabaseIcon },
             ],
-            category: 'government',
+            category: 'general',
             order: 3,
         },
         suggestions: {
@@ -329,11 +305,11 @@ const DATA_SOURCE_METAS: readonly DataSourceMeta[] = [
         routingHint:
             'מוצרים ומחירים בשופרסל — חיפוש מוצרים לפי שם או ברקוד, מחירים בשקלים, יצרנים ומותגים באתר שופרסל אונליין',
         tools: ShufersalTools,
-        sourceResolvers: shufersalSourceResolvers,
+        sourceConfigs: shufersalSourceConfigs,
         translations: shufersalTranslations,
         resourceExtractors: {},
         landing: {
-            logo: '/shufersal-logo.svg',
+            logo: '/shufersal-logo.png',
             description: 'שופרסל אונליין — חיפוש מוצרים, מחירים, יצרנים ומותגים ברשת הגדולה בישראל',
             stats: [
                 { label: 'מוצרים', value: '30K+', icon: ShoppingCartIcon },
@@ -341,7 +317,7 @@ const DATA_SOURCE_METAS: readonly DataSourceMeta[] = [
                 { label: 'כלים', value: '2', icon: TagIcon },
             ],
             category: 'economy',
-            order: 4,
+            order: 2,
         },
         suggestions: {
             prompts: [
@@ -361,18 +337,18 @@ const DATA_SOURCE_METAS: readonly DataSourceMeta[] = [
         routingHint:
             'מחירי מוצרים ברמי לוי — חיפוש מוצרים לפי שם או ברקוד, מחירים, מותגים, ומחלקות בקטלוג רמי לוי אונליין',
         tools: RamiLevyTools,
-        sourceResolvers: ramiLevySourceResolvers,
+        sourceConfigs: ramiLevySourceConfigs,
         translations: ramiLevyTranslations,
         resourceExtractors: {},
         landing: {
-            logo: '/rami-levy-logo.svg',
+            logo: '/rami-levy-logo.png',
             description: 'רמי לוי — חיפוש מוצרים ומחירים בקטלוג הסופרמרקט',
             stats: [
                 { label: 'מוצרים', value: '30K+', icon: ShoppingCartIcon },
                 { label: 'כלים', value: '2', icon: TagIcon },
             ],
             category: 'economy',
-            order: 5,
+            order: 3,
         },
         suggestions: {
             prompts: [
@@ -397,7 +373,6 @@ export const allDataSourceTools = {
     ...DataGovTools,
     ...BudgetToolNames,
     ...GovmapTools,
-    ...DrugsTools,
     ...HealthTools,
     ...KnessetTools,
     ...ShufersalTools,
@@ -525,28 +500,56 @@ export function getToolDataSourceConfig(toolKey: string): DataSourceConfig | und
 // Source URL Resolution
 // ============================================================================
 
+import type { CommonToolInput, ToolOutputSchemaType } from '@/data-sources/types';
+
+/** Build a type-safe resolver from a declarative ToolSourceConfig */
+function buildSourceResolver(config: ToolSourceConfig): ToolSourceResolver {
+    return (input: CommonToolInput, output: ToolOutputSchemaType<Record<string, never>>) => {
+        if (!output.success) return [];
+        const name = input.searchedResourceName;
+        const label = name ? `${config.title} — ${name}` : config.title;
+        const sources: ToolSource[] = [];
+        if (output.portalUrl) sources.push({ url: output.portalUrl, title: label, urlType: 'portal' });
+        if (output.apiUrl) sources.push({ url: output.apiUrl, title: label, urlType: 'api' });
+        return sources;
+    };
+}
+
 /** Pre-built map: 'tool-{toolName}' → resolver function */
 const resolverMap = new Map<string, ToolSourceResolver>();
 for (const ds of DATA_SOURCE_METAS) {
-    for (const [toolName, resolver] of Object.entries(ds.sourceResolvers)) {
-        if (resolver) {
-            resolverMap.set(`tool-${toolName}`, resolver);
+    // Custom resolvers take priority
+    if (ds.sourceResolvers) {
+        for (const [toolName, resolver] of Object.entries(ds.sourceResolvers)) {
+            if (resolver) {
+                resolverMap.set(`tool-${toolName}`, resolver);
+            }
+        }
+    }
+    // Declarative configs — auto-generate resolvers (skip if custom exists)
+    if (ds.sourceConfigs) {
+        for (const [toolName, config] of Object.entries(ds.sourceConfigs)) {
+            if (config && !resolverMap.has(`tool-${toolName}`)) {
+                resolverMap.set(`tool-${toolName}`, buildSourceResolver(config));
+            }
         }
     }
 }
 
 /**
- * Resolve a source URL from a tool's part type, input, and output.
- * Returns null if no resolver exists for the tool or if the resolver returns null.
+ * Resolve source URLs from a tool's part type, input, and output.
+ * Returns an array of ToolSource (empty if no resolver or no URLs found).
  */
-export function resolveToolSourceUrl(
-    toolType: string,
-    input: unknown,
-    output: unknown,
-): ReturnType<ToolSourceResolver> {
+export function resolveToolSourceUrls(toolType: string, input: unknown, output: unknown): ToolSource[] {
     const resolver = resolverMap.get(toolType);
-    if (!resolver) return null;
-    return resolver(input, output);
+    if (!resolver) return [];
+    return resolver(input as CommonToolInput, output as ToolOutputSchemaType<Record<string, never>>);
+}
+
+/** @deprecated Use resolveToolSourceUrls instead. Kept for backward compatibility. */
+export function resolveToolSourceUrl(toolType: string, input: unknown, output: unknown): ToolSource | null {
+    const sources = resolveToolSourceUrls(toolType, input, output);
+    return sources[0] ?? null;
 }
 
 // ============================================================================
@@ -650,18 +653,6 @@ export function toToolPartType(name: string): string {
 export function toToolPartTypeSet(names: readonly string[]): Set<string> {
     return new Set(names.map(toToolPartType));
 }
-
-/** Dedicated source URL generation tools */
-export const SOURCE_URL_TOOL_NAMES = [
-    'generateDataGovSourceUrl',
-    'generateCbsSourceUrl',
-    'generateNadlanSourceUrl',
-    'generateDrugsSourceUrl',
-    'generateHealthSourceUrl',
-    'generateKnessetSourceUrl',
-    'generateShufersalSourceUrl',
-    'generateRamiLevySourceUrl',
-] as const;
 
 /** Client-side tools (charts, suggestions) — not part of any data source */
 export const CLIENT_TOOL_NAMES = [

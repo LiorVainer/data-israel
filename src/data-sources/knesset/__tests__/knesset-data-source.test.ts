@@ -109,8 +109,8 @@ describe('Knesset data source contract', () => {
         }
     });
 
-    it('all sourceResolver keys exist in tools', () => {
-        for (const key of Object.keys(KnessetDataSource.sourceResolvers)) {
+    it('all sourceConfig keys exist in tools', () => {
+        for (const key of Object.keys(KnessetDataSource.sourceConfigs ?? {})) {
             expect(KnessetDataSource.tools).toHaveProperty(key);
         }
     });
@@ -120,31 +120,11 @@ describe('Knesset data source contract', () => {
         expect(agent.id).toBe('knessetAgent');
     });
 
-    it('source resolvers return null for failed output', () => {
-        for (const resolver of Object.values(KnessetDataSource.sourceResolvers)) {
-            if (!resolver) continue;
-            expect(resolver({}, { success: false })).toBeNull();
-        }
-    });
-
-    it('source resolvers return ToolSource for valid output with portalUrl or apiUrl', () => {
-        for (const resolver of Object.values(KnessetDataSource.sourceResolvers)) {
-            if (!resolver) continue;
-            const portalResult = resolver(
-                { searchedResourceName: 'test' },
-                { success: true, portalUrl: 'https://main.knesset.gov.il' },
-            );
-            const apiResult = resolver(
-                { searchedResourceName: 'test' },
-                { success: true, apiUrl: 'http://knesset.gov.il/Odata/ParliamentInfo.svc/KNS_Bill()' },
-            );
-            const result = portalResult ?? apiResult;
-            expect(result).not.toBeNull();
-            if (result) {
-                expect(result).toHaveProperty('url');
-                expect(result).toHaveProperty('title');
-                expect(result).toHaveProperty('urlType');
-            }
+    it('sourceConfigs have Hebrew title strings', () => {
+        for (const config of Object.values(KnessetDataSource.sourceConfigs ?? {})) {
+            expect(config).toBeDefined();
+            expect(typeof config?.title).toBe('string');
+            expect(config?.title.length).toBeGreaterThan(0);
         }
     });
 
@@ -174,7 +154,6 @@ describe('Knesset data source contract', () => {
             'listKnessetCommittees',
             'getKnessetMembers',
             'getCurrentKnesset',
-            'generateKnessetSourceUrl',
         ];
         for (const name of expectedTools) {
             expect(KnessetDataSource.tools).toHaveProperty(name);

@@ -5,14 +5,7 @@
  * Icons are LucideIcon components (not JSX elements).
  */
 
-import {
-    ActivityIcon,
-    BarChart2Icon,
-    DatabaseIcon,
-    LineChartIcon,
-    LinkIcon,
-    SearchIcon,
-} from 'lucide-react';
+import { ActivityIcon, BarChart2Icon, DatabaseIcon, LineChartIcon, SearchIcon } from 'lucide-react';
 import type { ToolTranslation } from '@/data-sources/types';
 import type { CbsToolName } from './tools';
 
@@ -48,9 +41,5 @@ export const cbsTranslations: Partial<Record<CbsToolName, ToolTranslation>> = {
     searchCbsLocalities: {
         name: 'חיפוש יישובים',
         icon: SearchIcon,
-    },
-    generateCbsSourceUrl: {
-        name: 'יצירת קישור למקור למ"ס',
-        icon: LinkIcon,
     },
 };

@@ -10,21 +10,6 @@ import { z } from 'zod';
 import { ramiLevyApi } from '../api/rami-levy.client';
 import { RAMI_LEVY_DEFAULT_STORE_ID, buildSearchPortalUrl } from '../api/rami-levy.endpoints';
 import { commonToolInput, toolOutputSchema } from '@/data-sources/types';
-import type { ToolSourceResolver } from '@/data-sources/types';
-
-// ============================================================================
-// Helpers
-// ============================================================================
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-    return typeof value === 'object' && value !== null;
-}
-
-function getString(obj: unknown, key: string): string | undefined {
-    if (!isRecord(obj)) return undefined;
-    const val = obj[key];
-    return typeof val === 'string' ? val : undefined;
-}
 
 // ============================================================================
 // Schemas
@@ -94,23 +79,3 @@ export const searchRamiLevyProducts = createTool({
         }
     },
 });
-
-// ============================================================================
-// Source URL Resolver
-// ============================================================================
-
-export const resolveSourceUrl: ToolSourceResolver = (input, output) => {
-    if (!isRecord(output) || output.success === false) return null;
-
-    const portalUrl = getString(output, 'portalUrl');
-    if (portalUrl) {
-        const searchedName = getString(input, 'searchedResourceName');
-        return {
-            url: portalUrl,
-            title: searchedName ?? 'חיפוש מוצרים ברמי לוי',
-            urlType: 'portal',
-        };
-    }
-
-    return null;
-};

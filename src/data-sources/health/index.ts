@@ -1,7 +1,8 @@
 /**
- * Health Data Source Definition
+ * Health Data Source Definition (Unified)
  *
- * Self-contained module for the Israeli Ministry of Health data dashboard.
+ * Self-contained module for the Israeli Ministry of Health —
+ * drug registry and public health dashboards.
  * Satisfies the DataSourceDefinition interface for registry integration.
  */
 
@@ -34,7 +35,7 @@ export const HealthDataSource = {
     },
 
     routingHint:
-        'נתוני בריאות ציבורית ממשרד הבריאות — נפגעי מלחמה, שירותי רפואה, איכות חופים, מבוטחי קופות חולים, חיסוני ילדים, בדיקות התפתחותיות ואיכות שירות',
+        'משרד הבריאות — מאגר תרופות (חיפוש לפי שם, סימפטום, חומר פעיל, חלופות גנריות, סל בריאות) ונתוני בריאות ציבורית (נפגעי מלחמה, שירותי רפואה, איכות חופים, מבוטחי קופות חולים, חיסוני ילדים, בדיקות התפתחותיות ואיכות שירות)',
 
     tools: HealthTools,
     sourceResolvers: healthSourceResolvers,
@@ -42,7 +43,7 @@ export const HealthDataSource = {
 } satisfies DataSourceDefinition<typeof HealthTools>;
 
 // Re-export tools and types for convenience
-export { HealthTools, type HealthToolName, healthSourceResolvers } from './tools';
+export { HealthTools, type HealthToolName, healthSourceConfigs, healthSourceResolvers } from './tools';
 export { createHealthAgent } from './health.agent';
 export { healthTranslations } from './health.translations';
 export { healthDisplayLabel, healthDisplayIcon, healthBadgeConfig } from './health.display';

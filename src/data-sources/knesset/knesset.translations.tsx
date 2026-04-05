@@ -5,7 +5,7 @@
  * Icons are LucideIcon components (not JSX elements).
  */
 
-import { GavelIcon, InfoIcon, LandmarkIcon, LinkIcon, SearchIcon, UsersIcon } from 'lucide-react';
+import { GavelIcon, InfoIcon, LandmarkIcon, SearchIcon, UsersIcon } from 'lucide-react';
 import type { ToolTranslation } from '@/data-sources/types';
 import type { KnessetToolName } from './tools';
 
@@ -33,9 +33,5 @@ export const knessetTranslations: Partial<Record<KnessetToolName, ToolTranslatio
     getCurrentKnesset: {
         name: 'כנסת נוכחית',
         icon: LandmarkIcon,
-    },
-    generateKnessetSourceUrl: {
-        name: 'יצירת קישור לכנסת',
-        icon: LinkIcon,
     },
 };

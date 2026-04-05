@@ -160,4 +160,3 @@ export interface AgentDataPart {
 export function isAgentDataPart(part: { type: string }): part is AgentDataPart {
     return part.type === 'data-tool-agent';
 }
-

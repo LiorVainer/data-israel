@@ -8,7 +8,7 @@
 import type { Agent } from '@mastra/core/agent';
 import type { Tool } from '@mastra/core/tools';
 import type { LucideIcon } from 'lucide-react';
-import type { ToolResourceExtractor, ToolSourceResolver, ToolTranslation } from './tool.types';
+import type { ToolResourceExtractor, ToolSourceConfig, ToolSourceResolver, ToolTranslation } from './tool.types';
 import type { DataSourceConfig, LandingConfig, SuggestionsConfig } from './display.types';
 
 export interface DataSourceDefinition<TTools extends Record<string, Tool<any, any, any, any, any, any, any>>> {
@@ -48,8 +48,11 @@ export interface DataSourceDefinition<TTools extends Record<string, Tool<any, an
     /** All Mastra tools for this data source */
     tools: TTools;
 
-    /** Per-tool source URL resolvers (keys must be tool names from TTools) */
-    sourceResolvers: Partial<Record<keyof TTools & string, ToolSourceResolver>>;
+    /** Declarative source URL configs — registry auto-generates resolvers */
+    sourceConfigs?: Partial<Record<keyof TTools & string, ToolSourceConfig>>;
+
+    /** Per-tool source URL resolvers (keys must be tool names from TTools) — use sourceConfigs for standard tools */
+    sourceResolvers?: Partial<Record<keyof TTools & string, ToolSourceResolver>>;
 
     /** Per-tool Hebrew translations (keys must be tool names from TTools) */
     translations: Partial<Record<keyof TTools & string, ToolTranslation>>;

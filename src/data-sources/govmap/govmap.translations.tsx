@@ -5,7 +5,7 @@
  * Icons are LucideIcon components (not JSX elements).
  */
 
-import { BarChart2Icon, HomeIcon, LinkIcon, MapPinIcon, SearchIcon, TrendingUpIcon } from 'lucide-react';
+import { BarChart2Icon, HomeIcon, MapPinIcon, SearchIcon, TrendingUpIcon } from 'lucide-react';
 import type { ToolTranslation } from '@/data-sources/types';
 import type { GovmapToolName } from './tools';
 
@@ -116,20 +116,6 @@ export const govmapTranslations: Partial<Record<GovmapToolName, ToolTranslation>
             const o = output as Record<string, unknown>;
             if (o.success === false && typeof o.error === 'string') return `שגיאה: ${o.error}`;
             return 'הסטטיסטיקה חושבה';
-        },
-    },
-    generateNadlanSourceUrl: {
-        name: 'יצירת קישור למקור נדל"ן',
-        icon: LinkIcon,
-        formatInput: (input) => {
-            const i = input as Record<string, unknown>;
-            if (typeof i.title === 'string') return `יוצר קישור: "${i.title}"`;
-            return 'יוצר קישור למקור...';
-        },
-        formatOutput: (output) => {
-            const o = output as Record<string, unknown>;
-            if (o.success === true && typeof o.title === 'string') return o.title;
-            return undefined;
         },
     },
 };

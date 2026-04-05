@@ -110,38 +110,13 @@ describe('Rami Levy data source contract', () => {
         }
     });
 
-    it('all sourceResolver keys exist in tools', () => {
-        for (const key of Object.keys(RamiLevyDataSource.sourceResolvers)) {
-            expect(RamiLevyDataSource.tools).toHaveProperty(key);
-        }
+    it('sourceResolvers is empty (uses declarative sourceConfigs)', () => {
+        expect(Object.keys(RamiLevyDataSource.sourceResolvers)).toHaveLength(0);
     });
 
     it('agent factory returns Agent with id ramiLevyAgent', () => {
         const agent = RamiLevyDataSource.agent.createAgent('openrouter/test/model');
         expect(agent.id).toBe('ramiLevyAgent');
-    });
-
-    it('source resolvers return null for failed output', () => {
-        for (const resolver of Object.values(RamiLevyDataSource.sourceResolvers)) {
-            if (!resolver) continue;
-            expect(resolver({}, { success: false })).toBeNull();
-        }
-    });
-
-    it('source resolvers return ToolSource for valid output with portalUrl', () => {
-        for (const resolver of Object.values(RamiLevyDataSource.sourceResolvers)) {
-            if (!resolver) continue;
-            const result = resolver(
-                { searchedResourceName: 'test' },
-                { success: true, portalUrl: 'https://www.rami-levy.co.il/he/online/search?q=test' },
-            );
-            expect(result).not.toBeNull();
-            if (result) {
-                expect(result).toHaveProperty('url');
-                expect(result).toHaveProperty('title');
-                expect(result).toHaveProperty('urlType');
-            }
-        }
     });
 
     it('no tool output schema includes searchedResourceName', () => {
@@ -163,7 +138,7 @@ describe('Rami Levy data source contract', () => {
     });
 
     it('tools contain expected Rami Levy tool names', () => {
-        const expectedTools = ['searchRamiLevyProducts', 'generateRamiLevySourceUrl'];
+        const expectedTools = ['searchRamiLevyProducts'];
         for (const name of expectedTools) {
             expect(RamiLevyDataSource.tools).toHaveProperty(name);
         }

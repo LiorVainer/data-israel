@@ -9,21 +9,6 @@ import { z } from 'zod';
 import { nadlanApi } from '../../api/nadlan/nadlan.client';
 import { buildNeighborhoodDealsUrl } from '../../api/nadlan/nadlan.endpoints';
 import { commonToolInput, toolOutputSchema } from '@/data-sources/types';
-import type { ToolSourceResolver } from '@/data-sources/types';
-
-// ============================================================================
-// Helpers
-// ============================================================================
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-    return typeof value === 'object' && value !== null;
-}
-
-function getString(obj: unknown, key: string): string | undefined {
-    if (!isRecord(obj)) return undefined;
-    const val = obj[key];
-    return typeof val === 'string' ? val : undefined;
-}
 
 // ============================================================================
 // Schemas
@@ -122,18 +107,3 @@ export const getNeighborhoodNadlanDeals = createTool({
         }
     },
 });
-
-// ============================================================================
-// Source URL Resolver
-// ============================================================================
-
-export const resolveSourceUrl: ToolSourceResolver = (input, output) => {
-    const apiUrl = getString(output, 'apiUrl');
-    if (!apiUrl) return null;
-    const name = getString(input, 'searchedResourceName');
-    return {
-        url: apiUrl,
-        title: name ? `עסקאות שכונה — ${name}` : 'עסקאות שכונה — govmap.gov.il',
-        urlType: 'api',
-    };
-};

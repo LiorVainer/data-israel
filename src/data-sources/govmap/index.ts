@@ -6,7 +6,7 @@
  */
 
 import type { DataSourceDefinition } from '@/data-sources/types';
-import { GovmapTools, govmapSourceResolvers } from './tools';
+import { GovmapTools, govmapSourceConfigs } from './tools';
 import {
     createGovmapAgent,
     GOVMAP_AGENT_NAME,
@@ -37,12 +37,12 @@ export const GovmapDataSource = {
         'נתוני GovMap — פורטל המפות הממשלתי של ישראל. כרגע כולל שכבת נדל"ן: חיפוש עסקאות לפי כתובת, מחירים למ"ר, מגמות שוק, הערכת שווי נכסים, והשוואת שכונות ורחובות',
 
     tools: GovmapTools,
-    sourceResolvers: govmapSourceResolvers,
+    sourceConfigs: govmapSourceConfigs,
     translations: govmapTranslations,
 } satisfies DataSourceDefinition<typeof GovmapTools>;
 
 // Re-export tools and types for convenience
-export { GovmapTools, type GovmapToolName, govmapSourceResolvers } from './tools';
+export { GovmapTools, type GovmapToolName, govmapSourceConfigs } from './tools';
 export { createGovmapAgent } from './govmap.agent';
 export { govmapTranslations } from './govmap.translations';
 export { govmapDisplayLabel, govmapDisplayIcon, govmapBadgeConfig } from './govmap.display';

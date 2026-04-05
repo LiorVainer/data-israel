@@ -1,10 +1,10 @@
 /**
  * Knesset (Parliament) Tools
  *
- * Re-exports all Knesset tools and collects source URL resolvers.
+ * Re-exports all Knesset tools and collects declarative source URL configs.
  */
 
-import type { ToolSourceResolver } from '@/data-sources/types';
+import type { ToolSourceConfig } from '@/data-sources/types';
 
 // Tool exports
 export { searchKnessetBills } from './search-bills.tool';
@@ -13,7 +13,6 @@ export { getKnessetCommitteeInfo } from './get-committee-info.tool';
 export { listKnessetCommittees } from './list-committees.tool';
 export { getKnessetMembers } from './get-knesset-members.tool';
 export { getCurrentKnesset } from './get-current-knesset.tool';
-export { generateKnessetSourceUrl } from './generate-source-url.tool';
 
 // ============================================================================
 // Collected tool object
@@ -25,7 +24,6 @@ import { getKnessetCommitteeInfo } from './get-committee-info.tool';
 import { listKnessetCommittees } from './list-committees.tool';
 import { getKnessetMembers } from './get-knesset-members.tool';
 import { getCurrentKnesset } from './get-current-knesset.tool';
-import { generateKnessetSourceUrl } from './generate-source-url.tool';
 
 /** All Knesset tools as a single object */
 export const KnessetTools = {
@@ -35,27 +33,20 @@ export const KnessetTools = {
     listKnessetCommittees,
     getKnessetMembers,
     getCurrentKnesset,
-    generateKnessetSourceUrl,
 };
 
 /** Union of all Knesset tool names, derived from the KnessetTools object */
 export type KnessetToolName = keyof typeof KnessetTools;
 
 // ============================================================================
-// Source URL resolvers (co-located in tool files)
+// Declarative source URL configs
 // ============================================================================
 
-import { resolveSourceUrl as searchBillsResolver } from './search-bills.tool';
-import { resolveSourceUrl as getBillInfoResolver } from './get-bill-info.tool';
-import { resolveSourceUrl as getCommitteeInfoResolver } from './get-committee-info.tool';
-import { resolveSourceUrl as listCommitteesResolver } from './list-committees.tool';
-import { resolveSourceUrl as getKnessetMembersResolver } from './get-knesset-members.tool';
-
-/** Collected source resolvers for Knesset tools */
-export const knessetSourceResolvers: Partial<Record<KnessetToolName, ToolSourceResolver>> = {
-    searchKnessetBills: searchBillsResolver,
-    getKnessetBillInfo: getBillInfoResolver,
-    getKnessetCommitteeInfo: getCommitteeInfoResolver,
-    listKnessetCommittees: listCommitteesResolver,
-    getKnessetMembers: getKnessetMembersResolver,
+/** Declarative source configs for Knesset tools — registry auto-generates resolvers */
+export const knessetSourceConfigs: Partial<Record<KnessetToolName, ToolSourceConfig>> = {
+    searchKnessetBills: { title: 'הצעות חוק' },
+    getKnessetBillInfo: { title: 'הצעת חוק' },
+    getKnessetCommitteeInfo: { title: 'ועדת כנסת' },
+    listKnessetCommittees: { title: 'ועדות כנסת' },
+    getKnessetMembers: { title: 'חברי כנסת' },
 };

@@ -11,21 +11,6 @@ import { knessetApi } from '../api/knesset.client';
 import { buildEntityByIdUrl, KNESSET_ENTITIES, buildBillPortalUrl } from '../api/knesset.endpoints';
 import { BILL_SUB_TYPES } from '../api/knesset.types';
 import { commonToolInput, toolOutputSchema } from '@/data-sources/types';
-import type { ToolSourceResolver } from '@/data-sources/types';
-
-// ============================================================================
-// Helpers
-// ============================================================================
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-    return typeof value === 'object' && value !== null;
-}
-
-function getString(obj: unknown, key: string): string | undefined {
-    if (!isRecord(obj)) return undefined;
-    const val = obj[key];
-    return typeof val === 'string' ? val : undefined;
-}
 
 // ============================================================================
 // Schemas
@@ -119,18 +104,3 @@ export const getKnessetBillInfo = createTool({
         }
     },
 });
-
-// ============================================================================
-// Source URL Resolver
-// ============================================================================
-
-export const resolveSourceUrl: ToolSourceResolver = (_input, output) => {
-    const portalUrl = getString(output, 'portalUrl');
-    if (!portalUrl) return null;
-    const name = getString(_input, 'searchedResourceName');
-    return {
-        url: portalUrl,
-        title: name ? `הצעת חוק — ${name}` : 'הצעת חוק — הכנסת',
-        urlType: 'portal',
-    };
-};

@@ -54,9 +54,7 @@
   --color-badge-budget-foreground: var(--badge-budget-foreground);
   --color-badge-govmap: var(--badge-govmap);
   --color-badge-govmap-foreground: var(--badge-govmap-foreground);
-  --color-badge-drugs: var(--badge-drugs);
-  --color-badge-drugs-foreground: var(--badge-drugs-foreground);
-  --color-badge-health: var(--badge-health);
+--color-badge-health: var(--badge-health);
   --color-badge-health-foreground: var(--badge-health-foreground);
   --color-badge-knesset: var(--badge-knesset);
   --color-badge-knesset-foreground: var(--badge-knesset-foreground);
@@ -118,9 +116,7 @@
   --badge-budget-foreground: oklch(0.3 0.1 155);
   --badge-govmap: oklch(0.895 0.08 160);
   --badge-govmap-foreground: oklch(0.35 0.1 155);
-  --badge-drugs: oklch(0.88 0.08 160);
-  --badge-drugs-foreground: oklch(0.3 0.08 160);
-  --badge-health: oklch(0.88 0.09 15);
+--badge-health: oklch(0.88 0.09 15);
   --badge-health-foreground: oklch(0.35 0.1 15);
   --badge-knesset: oklch(0.88 0.09 250);
   --badge-knesset-foreground: oklch(0.3 0.12 250);
@@ -182,9 +178,7 @@
   --badge-budget-foreground: oklch(0.9 0.07 155);
   --badge-govmap: oklch(0.45 0.1 160);
   --badge-govmap-foreground: oklch(0.9 0.08 160);
-  --badge-drugs: oklch(0.4 0.08 160);
-  --badge-drugs-foreground: oklch(0.9 0.07 160);
-  --badge-health: oklch(0.42 0.09 15);
+--badge-health: oklch(0.42 0.09 15);
   --badge-health-foreground: oklch(0.9 0.08 15);
   --badge-knesset: oklch(0.4 0.1 250);
   --badge-knesset-foreground: oklch(0.9 0.08 250);

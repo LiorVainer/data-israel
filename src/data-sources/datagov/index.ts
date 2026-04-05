@@ -45,7 +45,7 @@ export const DataGovDataSource = {
             { label: 'ארגונים', value: '80+', icon: BuildingIcon },
             { label: 'קבצים', value: '10,000+', icon: FileIcon },
         ],
-        category: 'government',
+        category: 'general',
         order: 1,
     },
 

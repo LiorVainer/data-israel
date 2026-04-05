@@ -6,7 +6,7 @@
  */
 
 import type { DataSourceDefinition } from '@/data-sources/types';
-import { KnessetTools, knessetSourceResolvers } from './tools';
+import { KnessetTools, knessetSourceConfigs } from './tools';
 import {
     createKnessetAgent,
     KNESSET_AGENT_NAME,
@@ -36,12 +36,12 @@ export const KnessetDataSource = {
     routingHint: 'נתוני הכנסת — הצעות חוק, ועדות כנסת, חברי כנסת, ותהליכי חקיקה מה-API הפתוח של הכנסת',
 
     tools: KnessetTools,
-    sourceResolvers: knessetSourceResolvers,
+    sourceConfigs: knessetSourceConfigs,
     translations: knessetTranslations,
 } satisfies DataSourceDefinition<typeof KnessetTools>;
 
 // Re-export tools and types for convenience
-export { KnessetTools, type KnessetToolName, knessetSourceResolvers } from './tools';
+export { KnessetTools, type KnessetToolName, knessetSourceConfigs } from './tools';
 export { createKnessetAgent } from './knesset.agent';
 export { knessetTranslations } from './knesset.translations';
 export { knessetDisplayLabel, knessetDisplayIcon, knessetBadgeConfig } from './knesset.display';

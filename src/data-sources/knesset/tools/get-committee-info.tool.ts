@@ -9,21 +9,6 @@ import { z } from 'zod';
 import { knessetApi } from '../api/knesset.client';
 import { buildEntityByIdUrl, KNESSET_ENTITIES, buildCommitteePortalUrl } from '../api/knesset.endpoints';
 import { commonToolInput, toolOutputSchema } from '@/data-sources/types';
-import type { ToolSourceResolver } from '@/data-sources/types';
-
-// ============================================================================
-// Helpers
-// ============================================================================
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-    return typeof value === 'object' && value !== null;
-}
-
-function getString(obj: unknown, key: string): string | undefined {
-    if (!isRecord(obj)) return undefined;
-    const val = obj[key];
-    return typeof val === 'string' ? val : undefined;
-}
 
 // ============================================================================
 // Schemas
@@ -95,18 +80,3 @@ export const getKnessetCommitteeInfo = createTool({
         }
     },
 });
-
-// ============================================================================
-// Source URL Resolver
-// ============================================================================
-
-export const resolveSourceUrl: ToolSourceResolver = (_input, output) => {
-    const portalUrl = getString(output, 'portalUrl');
-    if (!portalUrl) return null;
-    const name = getString(_input, 'searchedResourceName');
-    return {
-        url: portalUrl,
-        title: name ? `ועדת כנסת — ${name}` : 'ועדת כנסת',
-        urlType: 'portal',
-    };
-};

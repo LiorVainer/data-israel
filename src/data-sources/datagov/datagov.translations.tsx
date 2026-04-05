@@ -12,7 +12,6 @@ import {
     FileIcon,
     FileTextIcon,
     FolderIcon,
-    LinkIcon,
     ListIcon,
     ScrollTextIcon,
     SearchIcon,
@@ -82,9 +81,5 @@ export const datagovTranslations: Partial<Record<DataGovToolName, ToolTranslatio
     searchResources: {
         name: 'חיפוש קבצים',
         icon: SearchIcon,
-    },
-    generateDataGovSourceUrl: {
-        name: 'יצירת קישור למקור ממשלתי',
-        icon: LinkIcon,
     },
 };

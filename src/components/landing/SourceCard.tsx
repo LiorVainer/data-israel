@@ -13,14 +13,6 @@ interface SourceCardProps {
     };
 }
 
-/** Known logo files in /public */
-const LOGO_FILES = new Set(['datagov-logo.svg', 'cbs-logo.svg']);
-
-function hasLogoFile(logo: string): boolean {
-    const filename = logo.replace(/^\//, '');
-    return LOGO_FILES.has(filename);
-}
-
 export function SourceCard({ source }: SourceCardProps) {
     const { landing, badge, display } = source;
     const DisplayIcon = display.icon;
@@ -34,7 +26,7 @@ export function SourceCard({ source }: SourceCardProps) {
                     rel='noopener noreferrer'
                     className='hover:opacity-70 transition-opacity'
                 >
-                    {hasLogoFile(landing.logo) ? (
+                    {landing.logo ? (
                         <Image src={landing.logo} alt={badge.nameLabel} width={120} height={50} />
                     ) : (
                         <div className='flex flex-col items-center gap-2'>

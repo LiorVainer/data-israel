@@ -15,7 +15,7 @@ export const healthDisplayIcon = HeartPulseIcon;
 
 /** Health badge configuration for data source attribution */
 export const healthBadgeConfig: DataSourceConfig = {
-    urlLabel: 'datadashboard.health.gov.il',
+    urlLabel: 'health.gov.il',
     nameLabel: 'בריאות',
     url: 'https://datadashboard.health.gov.il',
     className: 'bg-[var(--badge-health)] text-[var(--badge-health-foreground)] hover:bg-[var(--badge-health)]/80',

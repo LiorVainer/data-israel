@@ -10,7 +10,7 @@ import { CbsDataSource } from './cbs';
 import { DataGovDataSource } from './datagov';
 import { BudgetDataSource } from './budget';
 import { GovmapDataSource } from './govmap';
-import { DrugsDataSource } from './drugs';
+
 import { HealthDataSource } from './health';
 import { KnessetDataSource } from './knesset';
 import { ShufersalDataSource } from './shufersal';
@@ -29,7 +29,6 @@ export const dataSourceAgents = {
     [DataGovDataSource.agent.id]: DataGovDataSource.agent,
     [BudgetDataSource.agent.id]: BudgetDataSource.agent,
     [GovmapDataSource.agent.id]: GovmapDataSource.agent,
-    [DrugsDataSource.agent.id]: DrugsDataSource.agent,
     [HealthDataSource.agent.id]: HealthDataSource.agent,
     [KnessetDataSource.agent.id]: KnessetDataSource.agent,
     [ShufersalDataSource.agent.id]: ShufersalDataSource.agent,

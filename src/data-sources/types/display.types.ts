@@ -7,16 +7,7 @@
 import type { LucideIcon } from 'lucide-react';
 
 /** Data source identifier */
-export type DataSource =
-    | 'cbs'
-    | 'datagov'
-    | 'budget'
-    | 'knesset'
-    | 'govmap'
-    | 'drugs'
-    | 'health'
-    | 'shufersal'
-    | 'rami-levy';
+export type DataSource = 'cbs' | 'datagov' | 'budget' | 'knesset' | 'govmap' | 'health' | 'shufersal' | 'rami-levy';
 
 /** Badge configuration for data source attribution */
 export interface DataSourceConfig {
@@ -37,8 +28,8 @@ export interface AgentDisplayInfo {
 
 /** Data source category groups — single source of truth for landing page, suggestions, and picker */
 export const DATA_SOURCES_CATEGORIES = {
-    government: { label: 'ממשל ותקציב', order: 1 },
-    economy: { label: 'כלכלה ונדל"ן', order: 2 },
+    general: { label: 'מידע כללי', order: 1 },
+    economy: { label: 'כלכלה ותקציב', order: 2 },
     health: { label: 'בריאות', order: 3 },
 } as const;
 
@@ -67,8 +58,8 @@ export interface SuggestionsConfig {
 
 /** Landing page display config for a data source */
 export interface LandingConfig {
-    /** Path to logo SVG in /public */
-    logo: string;
+    /** Path to logo image in /public — when omitted, SourceCard falls back to the display icon */
+    logo?: string;
     /** Hebrew one-liner description */
     description: string;
     /** Up to 3 stat items */

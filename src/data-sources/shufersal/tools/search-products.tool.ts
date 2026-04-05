@@ -9,21 +9,6 @@ import { z } from 'zod';
 import { shufersalApi } from '../api/shufersal.client';
 import { buildShufersalSearchUrl } from '../api/shufersal.endpoints';
 import { commonToolInput, toolOutputSchema } from '@/data-sources/types';
-import type { ToolSourceResolver } from '@/data-sources/types';
-
-// ============================================================================
-// Helpers
-// ============================================================================
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-    return typeof value === 'object' && value !== null;
-}
-
-function getString(obj: unknown, key: string): string | undefined {
-    if (!isRecord(obj)) return undefined;
-    const val = obj[key];
-    return typeof val === 'string' ? val : undefined;
-}
 
 // ============================================================================
 // Schemas
@@ -34,23 +19,17 @@ const productSummarySchema = z.object({
     name: z.string(),
     price: z.number(),
     formattedPrice: z.string(),
-    manufacturer: z.string(),
-    brandName: z.string(),
-    unitDescription: z.string(),
-    category: z.string(),
-    sellingMethod: z.string(),
+    manufacturer: z.string().nullable(),
+    brandName: z.string().nullable(),
+    unitDescription: z.string().nullable(),
+    category: z.string().nullable(),
+    sellingMethod: z.string().nullable(),
     imageUrl: z.string().nullable(),
 });
 
 export const searchProductsInputSchema = z.object({
     query: z.string().min(1).describe('מילת מפתח, שם מוצר או ברקוד לחיפוש בשופרסל'),
-    limit: z
-        .number()
-        .int()
-        .min(1)
-        .max(30)
-        .optional()
-        .describe('מספר תוצאות מקסימלי (ברירת מחדל: 10)'),
+    limit: z.number().int().min(1).max(30).optional().describe('מספר תוצאות מקסימלי (ברירת מחדל: 10)'),
     ...commonToolInput,
 });
 
@@ -111,18 +90,3 @@ export const searchShufersalProducts = createTool({
         }
     },
 });
-
-// ============================================================================
-// Source URL Resolver
-// ============================================================================
-
-export const resolveSourceUrl: ToolSourceResolver = (_input, output) => {
-    const apiUrl = getString(output, 'apiUrl');
-    if (!apiUrl) return null;
-    const name = getString(_input, 'searchedResourceName');
-    return {
-        url: apiUrl,
-        title: name ? `מוצרי שופרסל — ${name}` : 'חיפוש מוצרים — שופרסל',
-        urlType: 'api',
-    };
-};

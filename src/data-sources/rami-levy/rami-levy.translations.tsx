@@ -5,7 +5,7 @@
  * Icons are LucideIcon components (not JSX elements).
  */
 
-import { LinkIcon, SearchIcon } from 'lucide-react';
+import { SearchIcon } from 'lucide-react';
 import type { ToolTranslation } from '@/data-sources/types';
 import type { RamiLevyToolName } from './tools';
 
@@ -13,9 +13,5 @@ export const ramiLevyTranslations: Partial<Record<RamiLevyToolName, ToolTranslat
     searchRamiLevyProducts: {
         name: 'חיפוש מוצרים ברמי לוי',
         icon: SearchIcon,
-    },
-    generateRamiLevySourceUrl: {
-        name: 'יצירת קישור לרמי לוי',
-        icon: LinkIcon,
     },
 };

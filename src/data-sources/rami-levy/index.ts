@@ -7,7 +7,7 @@
 
 import type { DataSourceDefinition } from '@/data-sources/types';
 import { ShoppingCartIcon, TagIcon } from 'lucide-react';
-import { RamiLevyTools, ramiLevySourceResolvers } from './tools';
+import { RamiLevyTools, ramiLevySourceConfigs } from './tools';
 import {
     createRamiLevyAgent,
     RAMI_LEVY_AGENT_NAME,
@@ -37,11 +37,11 @@ export const RamiLevyDataSource = {
     routingHint: 'מחירי מוצרים ברמי לוי — חיפוש מוצרים לפי שם או ברקוד, מחירים, מותגים, ומחלקות בקטלוג רמי לוי אונליין',
 
     tools: RamiLevyTools,
-    sourceResolvers: ramiLevySourceResolvers,
+    sourceResolvers: {},
     translations: ramiLevyTranslations,
 
     landing: {
-        logo: '/rami-levy-logo.svg',
+        logo: '/rami-levy-logo.png',
         description: 'רמי לוי — חיפוש מוצרים ומחירים בקטלוג הסופרמרקט',
         stats: [
             { label: 'מוצרים', value: '30K+', icon: ShoppingCartIcon },
@@ -68,7 +68,7 @@ export const RamiLevyDataSource = {
 } satisfies DataSourceDefinition<typeof RamiLevyTools>;
 
 // Re-export tools and types for convenience
-export { RamiLevyTools, type RamiLevyToolName, ramiLevySourceResolvers } from './tools';
+export { RamiLevyTools, type RamiLevyToolName, ramiLevySourceConfigs } from './tools';
 export { createRamiLevyAgent } from './rami-levy.agent';
 export { ramiLevyTranslations } from './rami-levy.translations';
 export { ramiLevyDisplayLabel, ramiLevyDisplayIcon, ramiLevyBadgeConfig } from './rami-levy.display';

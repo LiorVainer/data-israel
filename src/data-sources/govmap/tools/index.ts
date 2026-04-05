@@ -5,12 +5,12 @@
  * New layers spread their tools here.
  */
 
-import type { ToolSourceResolver } from '@/data-sources/types';
+import type { ToolSourceConfig } from '@/data-sources/types';
 
 // Layer re-exports
-export { NadlanTools, type NadlanToolName, nadlanSourceResolvers } from './nadlan';
+export { NadlanTools, type NadlanToolName, nadlanSourceConfigs } from './nadlan';
 
-import { NadlanTools, nadlanSourceResolvers } from './nadlan';
+import { NadlanTools, nadlanSourceConfigs } from './nadlan';
 
 /** All GovMap tools across all layers */
 export const GovmapTools = {
@@ -20,7 +20,7 @@ export const GovmapTools = {
 /** Union of all GovMap tool names */
 export type GovmapToolName = keyof typeof GovmapTools;
 
-/** Aggregated source resolvers from all layers */
-export const govmapSourceResolvers: Partial<Record<GovmapToolName, ToolSourceResolver>> = {
-    ...nadlanSourceResolvers,
+/** Aggregated declarative source configs from all layers */
+export const govmapSourceConfigs: Partial<Record<GovmapToolName, ToolSourceConfig>> = {
+    ...nadlanSourceConfigs,
 };

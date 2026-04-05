@@ -11,6 +11,7 @@ export {
     commonSuccessOutput,
     commonErrorOutput,
     toolOutputSchema,
+    type CommonToolInput,
     type ToolOutputSchemaType,
 } from './tool-schemas';
 
@@ -27,7 +28,13 @@ export type {
 } from './display.types';
 
 // Tool types
-export type { ToolSource, ToolSourceResolver, ToolResourceExtractor, ToolTranslation } from './tool.types';
+export type {
+    ToolSource,
+    ToolSourceConfig,
+    ToolSourceResolver,
+    ToolResourceExtractor,
+    ToolTranslation,
+} from './tool.types';
 
 // Data source definition
 export type { DataSourceDefinition } from './data-source.types';

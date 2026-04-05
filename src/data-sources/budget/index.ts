@@ -46,8 +46,8 @@ export const BudgetDataSource = {
     },
 
     landing: {
-        category: 'government' as const,
-        order: 2,
+        category: 'economy' as const,
+        order: 1,
     },
 
     routingHint:

@@ -1,48 +1,46 @@
 /**
- * IL Health Tools
+ * Unified Health Tools
  *
- * Re-exports all health tools and collects source URL resolvers.
+ * Aggregates tools from both sub-domains (drugs + overview-data)
+ * into a single HealthTools object with merged source configs and resolvers.
  */
 
-import type { ToolSourceResolver } from '@/data-sources/types';
+import type { ToolSourceConfig, ToolSourceResolver } from '@/data-sources/types';
 
-// Tool imports
-import { getAvailableSubjects } from './get-available-subjects.tool';
-import { getHealthMetadata } from './get-health-metadata.tool';
-import { getHealthData } from './get-health-data.tool';
-import { getHealthLinks } from './get-health-links.tool';
-import { generateHealthSourceUrl } from './generate-source-url.tool';
-
-// Re-exports
-export { getAvailableSubjects } from './get-available-subjects.tool';
-export { getHealthMetadata } from './get-health-metadata.tool';
-export { getHealthData } from './get-health-data.tool';
-export { getHealthLinks } from './get-health-links.tool';
-export { generateHealthSourceUrl } from './generate-source-url.tool';
+import { DrugsTools, drugsSourceResolvers } from './drugs';
+import { HealthTools as OverviewDataTools, overviewDataSourceConfigs } from './overview-data';
 
 // ============================================================================
-// Collected tool object
+// Merged tool object
 // ============================================================================
 
-/** All Health tools as a single object */
+/** All Health tools (drugs + overview-data) as a single object */
 export const HealthTools = {
-    getAvailableSubjects,
-    getHealthMetadata,
-    getHealthData,
-    getHealthLinks,
-    generateHealthSourceUrl,
+    ...DrugsTools,
+    ...OverviewDataTools,
 };
 
-/** Union of all Health tool names, derived from the HealthTools object */
+/** Union of all Health tool names */
 export type HealthToolName = keyof typeof HealthTools;
 
 // ============================================================================
-// Source URL resolvers (co-located in tool files)
+// Merged source URL configs and resolvers
 // ============================================================================
 
-import { resolveSourceUrl as getHealthDataResolver } from './get-health-data.tool';
-
-/** Collected source resolvers for Health tools */
-export const healthSourceResolvers: Partial<Record<HealthToolName, ToolSourceResolver>> = {
-    getHealthData: getHealthDataResolver,
+/** Declarative source configs for Health tools (overview-data) */
+export const healthSourceConfigs: Partial<Record<HealthToolName, ToolSourceConfig>> = {
+    ...overviewDataSourceConfigs,
 };
+
+/** Custom source resolvers for Health tools (drugs — tool-specific field access) */
+export const healthSourceResolvers: Partial<Record<HealthToolName, ToolSourceResolver>> = {
+    ...drugsSourceResolvers,
+};
+
+// Re-export sub-domain tools for direct access
+export { DrugsTools, type DrugsToolName, drugsSourceResolvers } from './drugs';
+export {
+    HealthTools as OverviewDataTools,
+    type HealthToolName as OverviewDataToolName,
+    overviewDataSourceConfigs,
+} from './overview-data';

@@ -6,7 +6,7 @@
  */
 
 import type { DataSourceDefinition } from '@/data-sources/types';
-import { ShufersalTools, shufersalSourceResolvers } from './tools';
+import { ShufersalTools, shufersalSourceConfigs } from './tools';
 import {
     createShufersalAgent,
     SHUFERSAL_AGENT_NAME,
@@ -37,12 +37,12 @@ export const ShufersalDataSource = {
         'מוצרים ומחירים בשופרסל — חיפוש מוצרים לפי שם או ברקוד, מחירים בשקלים, יצרנים ומותגים באתר שופרסל אונליין',
 
     tools: ShufersalTools,
-    sourceResolvers: shufersalSourceResolvers,
+    sourceResolvers: {},
     translations: shufersalTranslations,
 } satisfies DataSourceDefinition<typeof ShufersalTools>;
 
 // Re-export tools and types for convenience
-export { ShufersalTools, type ShufersalToolName, shufersalSourceResolvers } from './tools';
+export { ShufersalTools, type ShufersalToolName, shufersalSourceConfigs } from './tools';
 export { createShufersalAgent } from './shufersal.agent';
 export { shufersalTranslations } from './shufersal.translations';
 export { shufersalDisplayLabel, shufersalDisplayIcon, shufersalBadgeConfig } from './shufersal.display';

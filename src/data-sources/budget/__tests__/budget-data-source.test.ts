@@ -134,38 +134,48 @@ describe('BudgetKey data source contract', () => {
         expect(agent.id).toBe('budgetAgent');
     });
 
-    it('source resolvers return null for missing input', () => {
+    it('source resolvers return empty array for missing input', () => {
+        const emptyInput = { searchedResourceName: '' };
+        const failedOutput = { success: false as const, error: 'test' };
         for (const resolver of Object.values(BudgetDataSource.sourceResolvers)) {
             if (!resolver) continue;
-            expect(resolver({}, {})).toBeNull();
+            expect(resolver(emptyInput, failedOutput)).toEqual([]);
         }
     });
 
-    it('source resolvers return ToolSource for valid input', () => {
+    it('source resolvers return ToolSource[] for valid input', () => {
+        // Budget resolvers access MCP-specific fields via getString() beyond CommonToolInput
+        const infoInput = { searchedResourceName: 'test', dataset: 'budget_items_data' };
+        const searchInput = { searchedResourceName: 'test', q: 'חינוך', dataset: 'budget_items_data' };
+        const queryInput = { searchedResourceName: 'test', dataset: 'budget_items_data' };
+        const queryOutput = {
+            success: false as const,
+            error: 'test',
+            download_url: 'https://next.obudget.org/download',
+        };
+        const emptyOutput = { success: false as const, error: 'test' };
+
         const infoResolver = BudgetDataSource.sourceResolvers.budgetkey_DatasetInfo;
         if (infoResolver) {
-            const result = infoResolver({ dataset: 'budget_items_data' }, {});
-            expect(result).not.toBeNull();
-            expect(result).toHaveProperty('url');
-            expect(result).toHaveProperty('title');
-            expect(result).toHaveProperty('urlType');
+            const result = infoResolver(infoInput, emptyOutput);
+            expect(result.length).toBeGreaterThan(0);
+            expect(result[0]).toHaveProperty('url');
+            expect(result[0]).toHaveProperty('title');
+            expect(result[0]).toHaveProperty('urlType');
         }
 
         const searchResolver = BudgetDataSource.sourceResolvers.budgetkey_DatasetFullTextSearch;
         if (searchResolver) {
-            const result = searchResolver({ q: 'חינוך', dataset: 'budget_items_data' }, {});
-            expect(result).not.toBeNull();
-            expect(result).toHaveProperty('url');
+            const result = searchResolver(searchInput, emptyOutput);
+            expect(result.length).toBeGreaterThan(0);
+            expect(result[0]).toHaveProperty('url');
         }
 
         const queryResolver = BudgetDataSource.sourceResolvers.budgetkey_DatasetDBQuery;
         if (queryResolver) {
-            const result = queryResolver(
-                { dataset: 'budget_items_data' },
-                { download_url: 'https://next.obudget.org/download' },
-            );
-            expect(result).not.toBeNull();
-            expect(result?.urlType).toBe('api');
+            const result = queryResolver(queryInput, queryOutput);
+            expect(result.length).toBeGreaterThan(0);
+            expect(result[0]?.urlType).toBe('api');
         }
     });
 

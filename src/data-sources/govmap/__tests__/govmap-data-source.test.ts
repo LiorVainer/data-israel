@@ -109,8 +109,8 @@ describe('GovMap data source contract', () => {
         }
     });
 
-    it('all sourceResolver keys exist in tools', () => {
-        for (const key of Object.keys(GovmapDataSource.sourceResolvers)) {
+    it('all sourceConfig keys exist in tools', () => {
+        for (const key of Object.keys(GovmapDataSource.sourceConfigs ?? {})) {
             expect(GovmapDataSource.tools).toHaveProperty(key);
         }
     });
@@ -120,34 +120,11 @@ describe('GovMap data source contract', () => {
         expect(agent.id).toBe('govmapAgent');
     });
 
-    it('source resolvers return null for failed output', () => {
-        for (const resolver of Object.values(GovmapDataSource.sourceResolvers)) {
-            if (!resolver) continue;
-            expect(resolver({}, { success: false })).toBeNull();
-        }
-    });
-
-    it('source resolvers return ToolSource for valid output with portalUrl or apiUrl', () => {
-        for (const resolver of Object.values(GovmapDataSource.sourceResolvers)) {
-            if (!resolver) continue;
-            // Test with portalUrl (used by findRecentDeals, etc.)
-            const portalResult = resolver(
-                { searchedResourceName: 'test' },
-                { success: true, portalUrl: 'https://www.govmap.gov.il/?lay=REALESTATE' },
-            );
-            // Test with apiUrl (used by getStreetDeals, etc.)
-            const apiResult = resolver(
-                { searchedResourceName: 'test' },
-                { success: true, apiUrl: 'https://www.govmap.gov.il/api/real-estate/street-deals/123' },
-            );
-            // At least one should succeed
-            const result = portalResult ?? apiResult;
-            expect(result).not.toBeNull();
-            if (result) {
-                expect(result).toHaveProperty('url');
-                expect(result).toHaveProperty('title');
-                expect(result).toHaveProperty('urlType');
-            }
+    it('sourceConfigs have Hebrew title strings', () => {
+        for (const config of Object.values(GovmapDataSource.sourceConfigs ?? {})) {
+            expect(config).toBeDefined();
+            expect(typeof config?.title).toBe('string');
+            expect(config?.title.length).toBeGreaterThan(0);
         }
     });
 
@@ -178,7 +155,6 @@ describe('GovMap data source contract', () => {
             'getNadlanValuationComparables',
             'getNadlanMarketActivity',
             'getNadlanDealStatistics',
-            'generateNadlanSourceUrl',
         ];
         for (const name of expectedTools) {
             expect(GovmapDataSource.tools).toHaveProperty(name);

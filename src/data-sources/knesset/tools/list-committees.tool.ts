@@ -9,21 +9,6 @@ import { z } from 'zod';
 import { knessetApi } from '../api/knesset.client';
 import { buildKnessetUrl, KNESSET_ENTITIES } from '../api/knesset.endpoints';
 import { commonToolInput, toolOutputSchema } from '@/data-sources/types';
-import type { ToolSourceResolver } from '@/data-sources/types';
-
-// ============================================================================
-// Helpers
-// ============================================================================
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-    return typeof value === 'object' && value !== null;
-}
-
-function getString(obj: unknown, key: string): string | undefined {
-    if (!isRecord(obj)) return undefined;
-    const val = obj[key];
-    return typeof val === 'string' ? val : undefined;
-}
 
 // ============================================================================
 // Schemas
@@ -97,18 +82,3 @@ export const listKnessetCommittees = createTool({
         }
     },
 });
-
-// ============================================================================
-// Source URL Resolver
-// ============================================================================
-
-export const resolveSourceUrl: ToolSourceResolver = (_input, output) => {
-    const apiUrl = getString(output, 'apiUrl');
-    if (!apiUrl) return null;
-    const name = getString(_input, 'searchedResourceName');
-    return {
-        url: apiUrl,
-        title: name ? `ועדות כנסת — ${name}` : 'ועדות כנסת',
-        urlType: 'api',
-    };
-};

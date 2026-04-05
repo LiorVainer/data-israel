@@ -48,12 +48,14 @@ function getFirstItemUrl(output: unknown): string | undefined {
 /** Resolver for DatasetInfo — links to the portal search page */
 const resolveDatasetInfo: ToolSourceResolver = (input, _output) => {
     const dataset = getString(input, 'dataset');
-    if (!dataset) return null;
-    return {
-        url: `${BUDGET_PORTAL_URL}/s?q=${encodeURIComponent(dataset)}`,
-        title: `מאגר: ${dataset}`,
-        urlType: 'portal',
-    };
+    if (!dataset) return [];
+    return [
+        {
+            url: `${BUDGET_PORTAL_URL}/s?q=${encodeURIComponent(dataset)}`,
+            title: `מאגר: ${dataset}`,
+            urlType: 'portal',
+        },
+    ];
 };
 
 /** Resolver for DatasetFullTextSearch — uses item_url from first result, falls back to search */
@@ -64,21 +66,25 @@ const resolveDatasetFullTextSearch: ToolSourceResolver = (input, output) => {
     // Try to get a direct item link from the first result
     const itemUrl = getFirstItemUrl(output);
     if (itemUrl) {
-        return {
-            url: itemUrl,
-            title: q ? `חיפוש: ${q}` : `מאגר: ${dataset ?? 'תקציב'}`,
-            urlType: 'portal',
-        };
+        return [
+            {
+                url: itemUrl,
+                title: q ? `חיפוש: ${q}` : `מאגר: ${dataset ?? 'תקציב'}`,
+                urlType: 'portal',
+            },
+        ];
     }
 
     // Fallback to search page
-    if (!q && !dataset) return null;
+    if (!q && !dataset) return [];
     const searchTerm = q ?? dataset ?? '';
-    return {
-        url: `${BUDGET_PORTAL_URL}/s?q=${encodeURIComponent(searchTerm)}`,
-        title: q ? `חיפוש: ${q}` : `מאגר: ${dataset}`,
-        urlType: 'portal',
-    };
+    return [
+        {
+            url: `${BUDGET_PORTAL_URL}/s?q=${encodeURIComponent(searchTerm)}`,
+            title: q ? `חיפוש: ${q}` : `מאגר: ${dataset}`,
+            urlType: 'portal',
+        },
+    ];
 };
 
 /** Resolver for DatasetDBQuery — uses item_url from rows, download_url, or search fallback */
@@ -86,31 +92,37 @@ const resolveDatasetDBQuery: ToolSourceResolver = (input, output) => {
     // Try direct item link from first row
     const itemUrl = getFirstItemUrl(output);
     if (itemUrl) {
-        return {
-            url: itemUrl,
-            title: 'תוצאת שאילתה',
-            urlType: 'portal',
-        };
+        return [
+            {
+                url: itemUrl,
+                title: 'תוצאת שאילתה',
+                urlType: 'portal',
+            },
+        ];
     }
 
     // Try download URL
     const downloadUrl = getString(output, 'download_url');
     if (downloadUrl) {
-        return {
-            url: downloadUrl,
-            title: 'הורדת תוצאות השאילתה',
-            urlType: 'api',
-        };
+        return [
+            {
+                url: downloadUrl,
+                title: 'הורדת תוצאות השאילתה',
+                urlType: 'api',
+            },
+        ];
     }
 
     // Fallback to search
     const dataset = getString(input, 'dataset');
-    if (!dataset) return null;
-    return {
-        url: `${BUDGET_PORTAL_URL}/s?q=${encodeURIComponent(dataset)}`,
-        title: `שאילתה: ${dataset}`,
-        urlType: 'portal',
-    };
+    if (!dataset) return [];
+    return [
+        {
+            url: `${BUDGET_PORTAL_URL}/s?q=${encodeURIComponent(dataset)}`,
+            title: `שאילתה: ${dataset}`,
+            urlType: 'portal',
+        },
+    ];
 };
 
 export const budgetSourceResolvers: Partial<Record<BudgetToolName, ToolSourceResolver>> = {

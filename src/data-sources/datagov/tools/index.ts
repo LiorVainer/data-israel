@@ -9,13 +9,20 @@ import type { ToolSourceResolver } from '@/data-sources/types';
 
 import { searchDatasets } from './search-datasets.tool';
 import { listAllDatasets } from './list-all-datasets.tool';
-import { getDatasetDetails, resolveSourceUrl as getDatasetDetailsResolver } from './get-dataset-details.tool';
+import {
+    getDatasetDetails,
+    resolveSourceUrl as getDatasetDetailsResolver,
+    type GetDatasetDetailsInput,
+    type GetDatasetDetailsOutput,
+} from './get-dataset-details.tool';
 import { getDatasetActivity } from './get-dataset-activity.tool';
 import { getDatasetSchema } from './get-dataset-schema.tool';
 import { listOrganizations } from './list-organizations.tool';
 import {
     getOrganizationDetails,
     resolveSourceUrl as getOrganizationDetailsResolver,
+    type GetOrganizationDetailsInput,
+    type GetOrganizationDetailsOutput,
 } from './get-organization-details.tool';
 import { getOrganizationActivity } from './get-organization-activity.tool';
 import { listGroups } from './list-groups.tool';
@@ -24,14 +31,17 @@ import { searchResources } from './search-resources.tool';
 import {
     getResourceDetails,
     resolveSourceUrl as getResourceDetailsResolver,
+    type GetResourceDetailsInput,
+    type GetResourceDetailsOutput,
 } from './get-resource-details.tool';
 import {
     queryDatastoreResource,
     resolveSourceUrl as queryDatastoreResourceResolver,
+    type QueryDatastoreResourceInput,
+    type QueryDatastoreResourceOutput,
 } from './query-datastore-resource.tool';
 import { getStatus } from './get-status.tool';
 import { listLicenses } from './list-licenses.tool';
-import { generateDataGovSourceUrl } from './generate-source-url.tool';
 
 export {
     searchDatasets,
@@ -49,7 +59,6 @@ export {
     queryDatastoreResource,
     getStatus,
     listLicenses,
-    generateDataGovSourceUrl,
 };
 
 /** All DataGov tools keyed by tool ID */
@@ -69,18 +78,33 @@ export const DataGovTools = {
     queryDatastoreResource,
     getStatus,
     listLicenses,
-    generateDataGovSourceUrl,
 };
 
 /** Union of all DataGov tool names */
 export type DataGovToolName = keyof typeof DataGovTools;
 
-/** Source URL resolvers for DataGov tools that produce source links */
+/**
+ * Custom source URL resolvers for DataGov tools that need typed access to nested output.
+ * Each resolver uses tool-specific generic params internally; the record widens to
+ * ToolSourceResolver for registry integration (safe — runtime values match specific types).
+ */
 export const datagovSourceResolvers: Partial<Record<DataGovToolName, ToolSourceResolver>> = {
-    getDatasetDetails: getDatasetDetailsResolver,
-    getOrganizationDetails: getOrganizationDetailsResolver,
-    getResourceDetails: getResourceDetailsResolver,
-    queryDatastoreResource: queryDatastoreResourceResolver,
+    getDatasetDetails: getDatasetDetailsResolver as ToolSourceResolver,
+    getOrganizationDetails: getOrganizationDetailsResolver as ToolSourceResolver,
+    getResourceDetails: getResourceDetailsResolver as ToolSourceResolver,
+    queryDatastoreResource: queryDatastoreResourceResolver as ToolSourceResolver,
+};
+
+// Re-export typed resolver input/output types for downstream consumers
+export type {
+    GetDatasetDetailsInput,
+    GetDatasetDetailsOutput,
+    GetOrganizationDetailsInput,
+    GetOrganizationDetailsOutput,
+    GetResourceDetailsInput,
+    GetResourceDetailsOutput,
+    QueryDatastoreResourceInput,
+    QueryDatastoreResourceOutput,
 };
 
 // ============================================================================

@@ -32,8 +32,8 @@ src/data-sources/
 │   ├── {source}.types.ts           # API response types
 │   └── {source}.endpoints.ts       # Base URLs, path builders
 ├── tools/
-│   ├── {tool-name}.tool.ts         # Tool def + optional resolveSourceUrl export
-│   └── index.ts                    # {Source}Tools object + {Source}ToolName type
+│   ├── {tool-name}.tool.ts         # Tool def + optional typed resolveSourceUrl export
+│   └── index.ts                    # {Source}Tools object + {Source}ToolName type + sourceConfigs
 ├── __tests__/
 │   └── {source}-data-source.test.ts # Contract tests (REQUIRED)
 ├── {source}.agent.ts               # Agent factory + system prompt instructions
@@ -67,17 +67,47 @@ const outputSchema = toolOutputSchema({
 - `toolOutputSchema()` handles the discriminated union + error shape automatically
 - `externalUrls` (apiUrl, portalUrl) is included in success/error via `commonSuccessOutput`
 
-### Step 3: Co-locate source URL resolvers
+### Step 3: Configure source URL resolution
 
-In each `.tool.ts` that generates source URLs, export a resolver:
+Source URLs are resolved via two mechanisms (both defined in `tools/index.ts`):
+
+#### Standard: Declarative `sourceConfigs`
+
+Most tools use `sourceConfigs` — just a Hebrew title. The registry auto-generates a resolver that reads `apiUrl` and `portalUrl` from the tool's output.
 
 ```typescript
-export const resolveSourceUrl: ToolSourceResolver = (input, output) => {
-  const apiUrl = getString(output, 'apiUrl');
-  if (!apiUrl) return null;
-  return { url: apiUrl, title: '...', urlType: 'api' };
+// tools/index.ts
+import type { ToolSourceConfig } from '@/data-sources/types';
+
+export const mySourceConfigs: Partial<Record<MyToolName, ToolSourceConfig>> = {
+  getMyData: { title: 'נתוני מקור' },
+  searchMyData: { title: 'חיפוש במקור' },
 };
 ```
+
+#### Custom: `ToolSourceResolver<TInput, TOutput>` with typed schemas
+
+For tools that need non-standard URL logic (e.g., building URLs from input fields), export a typed resolver from the `.tool.ts` file:
+
+```typescript
+// tools/my-tool.tool.ts
+import type { ToolSourceResolver } from '@/data-sources/types';
+
+export type MyToolInput = z.infer<typeof myToolInputSchema>;
+export type MyToolOutput = z.infer<typeof myToolOutputSchema>;
+
+export const resolveSourceUrl: ToolSourceResolver<MyToolInput, MyToolOutput> = (input, output) => {
+  if (!output.success) return [];
+  return [
+    { url: buildMyUrl(input.id), title: `מקור — ${input.name}`, urlType: 'api' },
+  ];
+};
+```
+
+Key differences from standard configs:
+- Returns `ToolSource[]` (array, not `| null`)
+- Generic type params provide full type safety over input/output schemas
+- Collected into `sourceResolvers` in the DataSourceDefinition (overrides `sourceConfigs` for the same tool)
 
 ### Step 4: Create translations with LucideIcon
 
@@ -106,7 +136,8 @@ export const MyDataSource = {
   display: { label: '...', icon: MyIcon, badge: { ... } },
   routingHint: 'Hebrew description of when to route to this agent',
   tools: MySourceTools,
-  sourceResolvers: { toolA: resolveSourceUrlA },
+  sourceConfigs: mySourceConfigs,                      // declarative (standard tools)
+  sourceResolvers: { toolA: resolveSourceUrlA },       // custom overrides only
   translations: myTranslations,
 } satisfies DataSourceDefinition<typeof MySourceTools>;
 ```
@@ -155,8 +186,21 @@ describe('{Source} data source contract', () => {
     }
   });
 
+  it('all sourceConfigs keys exist in tools', () => {
+    for (const key of Object.keys(MyDataSource.sourceConfigs ?? {})) {
+      expect(MyDataSource.tools).toHaveProperty(key);
+    }
+  });
+
+  it('sourceConfigs have Hebrew title strings', () => {
+    for (const config of Object.values(MyDataSource.sourceConfigs ?? {})) {
+      expect(config.title).toBeTypeOf('string');
+      expect(config.title.length).toBeGreaterThan(0);
+    }
+  });
+
   it('all sourceResolver keys exist in tools', () => {
-    for (const key of Object.keys(MyDataSource.sourceResolvers)) {
+    for (const key of Object.keys(MyDataSource.sourceResolvers ?? {})) {
       expect(MyDataSource.tools).toHaveProperty(key);
     }
   });
@@ -166,9 +210,9 @@ describe('{Source} data source contract', () => {
     expect(agent.id).toBe('mySourceAgent');
   });
 
-  it('source resolvers return null for failed output', () => {
-    for (const resolver of Object.values(MyDataSource.sourceResolvers)) {
-      expect(resolver({}, { success: false })).toBeNull();
+  it('source resolvers return empty array for failed output', () => {
+    for (const resolver of Object.values(MyDataSource.sourceResolvers ?? {})) {
+      expect(resolver({}, { success: false })).toEqual([]);
     }
   });
 
@@ -216,15 +260,15 @@ landing?: {
   logo: string;              // Path to SVG in /public
   description: string;       // Hebrew one-liner
   stats: { label: string; value: string; icon: LucideIcon }[];
-  category: LandingCategory; // 'government' | 'economy' | 'health'
+  category: LandingCategory; // 'general' | 'economy' | 'health'
   order: number;             // Sort within category
 }
 ```
 
-Categories are defined in `display.types.ts` as `LANDING_CATEGORIES`:
-- `government` — "ממשל ותקציב" (order 1)
-- `economy` — "כלכלה ונדל\"ן" (order 2)
-- `health` — "בריאות" (order 3)
+Categories are defined in `display.types.ts` as `DATA_SOURCES_CATEGORIES`:
+- `general` — "מידע כללי" (order 1) — datagov, govmap, knesset, cbs
+- `economy` — "כלכלה ותקציב" (order 2) — budget, shufersal, rami-levy
+- `health` — "בריאות" (order 3) — drugs, health
 
 ## Resource Extractors
 
@@ -257,8 +301,8 @@ The `formatInput`/`formatOutput` fields are optional and no longer used by the U
 - `searchedResourceName` is **input-only** — never echo it in output schemas
 - Translation icons are `LucideIcon` components, not JSX elements
 - Use `toolOutputSchema({...successFields})` — don't repeat error shapes
-- Source URL resolvers are per-tool (co-located), not a central switch
-- `DataSourceDefinition` is generic over `TTools` — keys in `sourceResolvers` and `translations` are type-checked
+- Source URLs use declarative `sourceConfigs` for standard tools; custom `sourceResolvers` only when non-standard URL logic is needed
+- `DataSourceDefinition` is generic over `TTools` — keys in `sourceConfigs`, `sourceResolvers`, and `translations` are type-checked
 - `routingHint` is auto-injected into the routing agent's system prompt via `buildRoutingHints()`
 - `DataSource` type union: `'cbs' | 'datagov' | 'budget' | 'knesset' | 'govmap' | 'drugs' | 'health' | 'shufersal' | 'rami-levy'`
 - Registry is split: `registry.ts` (client-safe) and `registry.server.ts` (server-only agent refs)

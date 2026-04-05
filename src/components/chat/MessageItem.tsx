@@ -13,8 +13,7 @@ import {
     AgentsDisplayMap,
     CLIENT_TOOL_NAMES,
     getToolDataSource,
-    resolveToolSourceUrl,
-    SOURCE_URL_TOOL_NAMES,
+    resolveToolSourceUrls,
     toToolPartType,
     toToolPartTypeSet,
 } from '@/data-sources/registry';
@@ -22,15 +21,11 @@ import type { DisplayChartInput } from '@/lib/tools/client/display-chart';
 import { UIMessage } from 'ai';
 
 /**
- * Tool-prefixed type names for client-side tools and source URL tools.
+ * Tool-prefixed type names for client-side tools.
  * These tools are excluded from the server-side tool call timeline
- * because they render their own UI (charts) or are handled separately (sources).
+ * because they render their own UI (charts) or are handled separately.
  */
-const CLIENT_TOOL_TYPES = toToolPartTypeSet([...CLIENT_TOOL_NAMES, ...SOURCE_URL_TOOL_NAMES]);
-
-/** Tool types that generate source URLs from dedicated tool results */
-const SOURCE_TOOL_TYPES = toToolPartTypeSet(SOURCE_URL_TOOL_NAMES);
-const SOURCE_TOOL_NAMES_SET = new Set<string>(SOURCE_URL_TOOL_NAMES);
+const CLIENT_TOOL_TYPES = toToolPartTypeSet([...CLIENT_TOOL_NAMES]);
 
 /** suggestFollowUps part type — consumed by ChatThread for the Suggestions UI, not rendered in message body */
 const SUGGEST_FOLLOW_UPS_TYPE = toToolPartType('suggestFollowUps');
@@ -119,84 +114,33 @@ export function MessageItem({ message, isLastMessage, isStreaming, onRegenerate 
         .filter((part): part is SourceUrlUIPart => part.type === 'source-url')
         .map((p) => ({ ...p, urlType: 'portal' as const }));
 
-    // Source URLs from dedicated source URL tools (generateDataGovSourceUrl, generateCbsSourceUrl)
-    const dedicatedSourceParts: EnrichedSourceUrl[] = [];
-    for (const part of message.parts) {
-        if (!SOURCE_TOOL_TYPES.has(part.type) || !('state' in part)) continue;
-        const toolPart = part as ToolCallPart;
-        if (toolPart.state !== 'output-available') continue;
-        const output = toolPart.output as { success: boolean; url: string; title?: string } | undefined;
-        if (!output?.success) continue;
-        const toolName = part.type.replace('tool-', '');
-        dedicatedSourceParts.push({
-            type: 'source-url' as const,
-            sourceId: toolPart.toolCallId ?? '',
-            url: output.url,
-            title: output.title,
-            dataSource: getToolDataSource(toolName),
-            urlType: 'portal' as const,
-        });
-    }
-
-    // Auto-resolved source URLs from data tool outputs (searchDatasets, getCbsSeriesData, etc.)
-    // Scans both direct tool parts AND sub-agent tool results inside data-tool-agent parts.
+    // Auto-resolved source URLs from tool outputs (direct + sub-agent)
     const autoSourceParts: EnrichedSourceUrl[] = [];
     for (const part of message.parts) {
-        // Direct tool parts (pre-delegation path)
         if (isToolPart(part) && !CLIENT_TOOL_TYPES.has(part.type)) {
             const toolPart = part as ToolCallPart;
             if (toolPart.state !== 'output-available') continue;
-
-            const resolved = resolveToolSourceUrl(part.type, toolPart.input, toolPart.output);
-            if (!resolved) continue;
-
             const toolName = part.type.replace('tool-', '');
-            autoSourceParts.push({
-                type: 'source-url' as const,
-                sourceId: toolPart.toolCallId ?? `auto-${part.type}`,
-                url: resolved.url,
-                title: resolved.title,
-                dataSource: getToolDataSource(toolName),
-                urlType: resolved.urlType,
-            });
-            continue;
-        }
-
-        // Sub-agent tool results inside data-tool-agent parts
-        if (isAgentDataPart(part)) {
-            const agentName = part.data.id;
-            const agentDs = AgentsDisplayMap[agentName as keyof typeof AgentsDisplayMap]?.dataSource;
-
-            for (const toolResult of part.data.toolResults) {
-                // Check for dedicated source URL tools (generateShufersalSourceUrl, etc.)
-                if (SOURCE_TOOL_NAMES_SET.has(toolResult.toolName)) {
-                    const output = toolResult.result as { success?: boolean; url?: string; title?: string } | undefined;
-                    if (output?.success && output.url) {
-                        autoSourceParts.push({
-                            type: 'source-url' as const,
-                            sourceId: toolResult.toolCallId ?? `dedicated-${toolResult.toolName}`,
-                            url: output.url,
-                            title: output.title,
-                            dataSource: agentDs ?? getToolDataSource(toolResult.toolName),
-                            urlType: 'portal' as const,
-                        });
-                    }
-                    continue;
-                }
-
-                // Auto-resolve source URLs from data tool outputs
-                const toolType = `tool-${toolResult.toolName}`;
-                const resolved = resolveToolSourceUrl(toolType, toolResult.args, toolResult.result);
-                if (!resolved) continue;
-
+            for (const source of resolveToolSourceUrls(part.type, toolPart.input, toolPart.output)) {
                 autoSourceParts.push({
                     type: 'source-url' as const,
-                    sourceId: toolResult.toolCallId ?? `auto-${toolType}`,
-                    url: resolved.url,
-                    title: resolved.title,
-                    dataSource: agentDs ?? getToolDataSource(toolResult.toolName),
-                    urlType: resolved.urlType,
+                    sourceId: toolPart.toolCallId ?? `auto-${part.type}`,
+                    dataSource: getToolDataSource(toolName),
+                    ...source,
                 });
+            }
+        } else if (isAgentDataPart(part)) {
+            const agentDs = AgentsDisplayMap[part.data.id as keyof typeof AgentsDisplayMap]?.dataSource;
+            for (const tr of part.data.toolResults) {
+                const toolType = `tool-${tr.toolName}`;
+                for (const source of resolveToolSourceUrls(toolType, tr.args, tr.result)) {
+                    autoSourceParts.push({
+                        type: 'source-url' as const,
+                        sourceId: tr.toolCallId ?? `auto-${toolType}`,
+                        dataSource: agentDs ?? getToolDataSource(tr.toolName),
+                        ...source,
+                    });
+                }
             }
         }
     }
@@ -205,7 +149,7 @@ export function MessageItem({ message, isLastMessage, isStreaming, onRegenerate 
     const seenUrls = new Set<string>();
     const seenTitles = new Set<string>();
     const allSources: EnrichedSourceUrl[] = [];
-    for (const source of [...nativeSourceParts, ...dedicatedSourceParts, ...autoSourceParts]) {
+    for (const source of [...nativeSourceParts, ...autoSourceParts]) {
         if (seenUrls.has(source.url)) continue;
         if (source.title && seenTitles.has(source.title)) continue;
         seenUrls.add(source.url);
