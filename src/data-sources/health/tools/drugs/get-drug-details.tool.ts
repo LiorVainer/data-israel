@@ -27,8 +27,7 @@ export const getDrugDetailsOutputSchema = toolOutputSchema({
     activeIngredients: z.array(
         z.object({
             name: z.string(),
-            strength: z.string(),
-            unit: z.string(),
+            dosage: z.string(),
         }),
     ),
     atcClassifications: z.array(
@@ -38,22 +37,17 @@ export const getDrugDetailsOutputSchema = toolOutputSchema({
         }),
     ),
     administrationRoute: z.string(),
-    manufacturer: z.object({
-        name: z.string(),
-        country: z.string(),
-    }),
+    manufacturer: z.string(),
     packages: z.array(
         z.object({
-            name: z.string(),
-            quantity: z.number(),
-            price: z.number().nullable(),
-            healthBasketPrice: z.number().nullable(),
+            description: z.string(),
+            unitPrice: z.number().nullable(),
+            maxPrice: z.number().nullable(),
         }),
     ),
     prescription: z.boolean(),
     healthBasket: z.boolean(),
-    brochureUrl: z.string().nullable(),
-    leafletUrl: z.string().nullable(),
+    indication: z.string().nullable(),
     registrationDate: z.string(),
     cancelDate: z.string().nullable(),
 });
@@ -90,33 +84,27 @@ export const getDrugDetails = createTool({
                 success: true as const,
                 registrationNumber: drug.dragRegNum,
                 hebrewName: drug.dragHebName,
-                englishName: drug.dragEngName,
-                activeIngredients: (drug.activeIngredients ?? []).map((ai) => ({
-                    name: ai.name,
-                    strength: ai.strength,
-                    unit: ai.unit,
+                englishName: drug.dragEnName,
+                activeIngredients: (drug.activeMetirals ?? []).map((ai) => ({
+                    name: ai.ingredientsDesc,
+                    dosage: ai.dosage,
                 })),
-                atcClassifications: (drug.atcList ?? []).map((atc) => ({
-                    code: atc.atcCode,
-                    name: atc.atcName,
+                atcClassifications: (drug.atc ?? []).map((atc) => ({
+                    code: atc.atc5Code ?? atc.atc4Code,
+                    name: atc.atc5Name ?? atc.atc4Name,
                 })),
-                administrationRoute: drug.matanName,
-                manufacturer: {
-                    name: drug.manufacturer?.name ?? '',
-                    country: drug.manufacturer?.country ?? '',
-                },
+                administrationRoute: drug.usageFormHeb,
+                manufacturer: drug.regOwnerName ?? '',
                 packages: (drug.packages ?? []).map((pkg) => ({
-                    name: pkg.packageName,
-                    quantity: pkg.quantity,
-                    price: pkg.price,
-                    healthBasketPrice: pkg.healthBasketPrice,
+                    description: pkg.packageDesc,
+                    unitPrice: pkg.unitPrice,
+                    maxPrice: pkg.packageMaxPrice,
                 })),
-                prescription: drug.prescription,
-                healthBasket: drug.healthServices,
-                brochureUrl: drug.bpiLink,
-                leafletUrl: drug.pilLink,
-                registrationDate: drug.registrationDate,
-                cancelDate: drug.cancelDate,
+                prescription: drug.isPrescription,
+                healthBasket: drug.health,
+                indication: drug.dragIndication ?? null,
+                registrationDate: drug.regDate ? new Date(drug.regDate).toISOString().split('T')[0] : '',
+                cancelDate: drug.bitulDate === '01/01/1900' ? null : drug.bitulDate,
                 apiUrl,
                 portalUrl,
             };

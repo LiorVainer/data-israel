@@ -2,7 +2,7 @@ import { defineConfig } from 'vitest/config';
 import path from 'node:path';
 import { readFileSync, existsSync } from 'node:fs';
 
-// Load .env into process.env for eval tests that need API keys
+// Load .env into process.env for API validation tests that need env vars
 const envPath = path.resolve(__dirname, '.env');
 if (existsSync(envPath)) {
     for (const line of readFileSync(envPath, 'utf-8').split('\n')) {
@@ -30,15 +30,9 @@ export default defineConfig({
     },
     test: {
         environment: 'node',
-        include: ['**/__tests__/**/*.test.ts', '**/__tests__/**/*.test.tsx'],
-        exclude: [
-            'node_modules',
-            '.next',
-            'mcp-ref',
-            'components-ref',
-            '.claude/worktrees',
-            '**/*-api-validation.test.ts',
-        ],
+        include: ['**/*-api-validation.test.ts'],
+        exclude: ['node_modules', '.next', 'mcp-ref', 'components-ref'],
         passWithNoTests: true,
+        testTimeout: 30_000,
     },
 });

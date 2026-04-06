@@ -13,6 +13,7 @@
     "vibecheck": "npx vibechck .",
     "mastra:dev": "npx I actualylmastra dev --env .env",
     "test": "vitest run",
+    "test:api": "vitest run --config vitest.api.config.ts",
     "test:watch": "vitest",
     "eval:routing": "vitest run src/agents/evals/__tests__/routing-agent.eval.ts --config vitest.eval.config.ts",
     "eval:datagov": "vitest run src/agents/evals/__tests__/datagov-agent.eval.ts --config vitest.eval.config.ts",
@@ -143,5 +144,10 @@
     "typescript-eslint": "^8.30.1",
     "vitest": "^4.0.18"
   },
-  "packageManager": "pnpm@10.5.0"
+  "packageManager": "pnpm@10.5.0",
+  "pnpm": {
+    "patchedDependencies": {
+      "@mastra/core": "patches/@mastra__core.patch"
+    }
+  }
 }

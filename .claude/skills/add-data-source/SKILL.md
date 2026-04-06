@@ -110,7 +110,19 @@ Run these checks in order:
 tsc --noEmit          # Type check
 npm run build         # Build
 vitest run            # Tests (contract tests must pass)
+npm run test:api      # API validation tests (live API schema checks)
 ```
+
+### API Validation Tests (REQUIRED)
+
+Create `{source}/__tests__/{source}-api-validation.test.ts` that calls each tool's `execute()` with real API inputs and validates the result against the declared `outputSchema`. This catches schema drift when external APIs change shape.
+
+- One `it()` per tool, 30s timeout, `describe.sequential`
+- Use minimal inputs with small limits (`maxResults: 3`)
+- Always include `searchedResourceName: 'test'`
+- Both success and error responses are valid — validates schema conformance, not data
+- For multi-layer sources, create one test file per sub-API folder
+- See `src/data-sources/CLAUDE.md` Step 9 for the full template
 
 Verify manually:
 - Landing page shows the new data source card in the correct category tab
@@ -129,6 +141,7 @@ When adding a domain as a subfolder within an existing data source (like `health
 5. Update parent agent instructions with new domain section
 6. Update parent routing hint to cover new capabilities
 7. **Do NOT** add a new entry to `DataSource` type or registry — the parent handles registration
+8. Create `{source}/__tests__/{source}-api-validation.test.ts` (or add tests to the parent's existing API validation file) covering the new domain's tools
 
 ## Additional Resources
 

@@ -35,8 +35,7 @@ export const searchDrugBySymptomOutputSchema = toolOutputSchema({
             administrationRoute: z.string().nullable(),
         }),
     ),
-    totalCount: z.number(),
-    currentPage: z.number(),
+    totalResults: z.number(),
 });
 
 // ============================================================================
@@ -70,19 +69,20 @@ export const searchDrugBySymptom = createTool({
                 };
             }
 
+            const totalResults = result.results[0]?.results ?? result.results.length;
+
             return {
                 success: true as const,
                 drugs: result.results.map((d) => ({
                     registrationNumber: d.dragRegNum ?? '',
                     hebrewName: d.dragHebName ?? '',
-                    englishName: d.dragEngName ?? '',
-                    activeIngredients: d.activeIngredients ?? '',
+                    englishName: d.dragEnName ?? '',
+                    activeIngredients: d.activeComponentsDisplayName ?? '',
                     prescription: d.prescription ?? false,
-                    healthBasket: d.healthServices ?? false,
-                    administrationRoute: d.matanName ?? '',
+                    healthBasket: d.health ?? false,
+                    administrationRoute: d.route ?? '',
                 })),
-                totalCount: result.totalCount,
-                currentPage: result.currentPage,
+                totalResults,
                 apiUrl,
             };
         } catch (error) {

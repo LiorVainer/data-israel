@@ -35,7 +35,7 @@ export const getBillInfoOutputSchema = toolOutputSchema({
         knessetNum: z.number(),
         subTypeDesc: z.string(),
         statusId: z.number(),
-        privateNumber: z.string().nullable(),
+        privateNumber: z.union([z.string(), z.number()]).nullable(),
         committeeId: z.number().nullable(),
         publicationDate: z.string().nullable(),
         publicationSeriesDesc: z.string().nullable(),

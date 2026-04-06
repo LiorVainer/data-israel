@@ -231,6 +231,38 @@ describe('{Source} data source contract', () => {
 
 **Every new data source MUST have these contract tests.** They ensure the `DataSourceDefinition` interface is properly satisfied and prevent regressions.
 
+### Step 9: Write API validation tests (REQUIRED)
+
+Create `{source}/__tests__/{source}-api-validation.test.ts` — one file per sub-API folder (e.g., `health/tools/drugs/`, `health/tools/overview-data/`) or per general API folder. These tests hit **real external APIs** and validate that tool outputs match declared schemas.
+
+```typescript
+import { describe, it, expect } from 'vitest';
+// Import tools and their output schemas from the tool files
+import { myTool, myToolOutputSchema } from '../tools/my-tool.tool';
+
+describe.sequential('{Source} API validation', () => {
+  it('myTool output matches schema', async () => {
+    const result = await myTool.execute(
+      { searchedResourceName: 'test', /* minimal valid inputs */ },
+      {} as any,
+    );
+    const parsed = myToolOutputSchema.safeParse(result);
+    if (!parsed.success) console.error(parsed.error.issues);
+    expect(parsed.success).toBe(true);
+  }, 30_000);
+});
+```
+
+Key rules:
+- **One test per tool** — every tool in the data source must have a test case
+- **Real APIs, not mocked** — the point is to catch schema drift when external APIs change
+- **Both success and error are valid** — the test validates schema conformance, not data correctness
+- **30s timeout** per test — external APIs can be slow
+- **`describe.sequential`** — avoid concurrent requests to the same API host
+- **Small limits** — use `maxResults: 3`, `limit: 3` to minimize API load
+- **Excluded from default test run** — these files are excluded in `vitest.config.ts` and run on-demand via `npm run test:api`
+- **Budget excluded** — MCP-based source has dynamic tools, no API validation tests needed
+
 ## MCPClient Pattern (Budget Source)
 
 The budget source connects to a hosted MCP endpoint instead of defining custom Mastra tools. Tools are auto-discovered at agent creation time via `MCPClient.listTools()`.

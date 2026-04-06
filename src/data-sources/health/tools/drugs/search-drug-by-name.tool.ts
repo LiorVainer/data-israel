@@ -40,8 +40,7 @@ export const searchDrugByNameOutputSchema = toolOutputSchema({
             administrationRoute: z.string().nullable(),
         }),
     ),
-    totalCount: z.number(),
-    currentPage: z.number(),
+    totalResults: z.number(),
 });
 
 // ============================================================================
@@ -74,20 +73,21 @@ export const searchDrugByName = createTool({
                 };
             }
 
+            const totalResults = result.results[0]?.results ?? result.results.length;
+
             return {
                 success: true as const,
                 drugs: result.results.map((d) => ({
                     registrationNumber: d.dragRegNum,
                     hebrewName: d.dragHebName,
-                    englishName: d.dragEngName,
-                    activeIngredients: d.activeIngredients,
+                    englishName: d.dragEnName,
+                    activeIngredients: d.activeComponentsDisplayName ?? null,
                     prescription: d.prescription,
-                    healthBasket: d.healthServices,
-                    manufacturer: d.manufacturer,
-                    administrationRoute: d.matanName,
+                    healthBasket: d.health,
+                    manufacturer: d.dragRegOwner,
+                    administrationRoute: d.route,
                 })),
-                totalCount: result.totalCount,
-                currentPage: result.currentPage,
+                totalResults,
                 apiUrl,
             };
         } catch (error) {

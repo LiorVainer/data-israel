@@ -22,8 +22,8 @@ export const listLicensesOutputSchema = toolOutputSchema({
             id: z.string(),
             title: z.string(),
             url: z.string(),
-            isOkdCompliant: z.boolean(),
-            isOsiCompliant: z.boolean(),
+            isOkdCompliant: z.boolean().optional(),
+            isOsiCompliant: z.boolean().optional(),
         }),
     ),
 });

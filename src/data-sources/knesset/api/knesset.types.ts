@@ -33,8 +33,8 @@ export interface KnsBill {
     SubTypeDesc: string;
     /** Bill status ID */
     StatusID: number;
-    /** Private bill number */
-    PrivateNumber: string | null;
+    /** Private bill number (API returns string or number) */
+    PrivateNumber: string | number | null;
     /** Committee ID handling the bill */
     CommitteeID: number | null;
     /** Publication date (ISO string) */

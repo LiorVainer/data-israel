@@ -20,7 +20,7 @@ const billSummarySchema = z.object({
     knessetNum: z.number(),
     subTypeDesc: z.string(),
     statusId: z.number(),
-    privateNumber: z.string().nullable(),
+    privateNumber: z.union([z.string(), z.number()]).nullable(),
     publicationDate: z.string().nullable(),
 });
 

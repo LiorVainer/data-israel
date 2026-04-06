@@ -1,0 +1,42 @@
+diff --git a/dist/chunk-IYSW4VN7.js b/dist/chunk-IYSW4VN7.js
+index d3fee532b2ac8bb2a7b5df456493a64508d4c71d..fbf5ebea74faa89cc230d949ef382558850b54ae 100644
+--- a/dist/chunk-IYSW4VN7.js
++++ b/dist/chunk-IYSW4VN7.js
+@@ -20822,12 +20822,12 @@ ${errorMessages}`,
+         const agentInputSchema = z.object({
+           prompt: z.string().describe("The prompt to send to the agent"),
+           // Using .nullish() instead of .optional() because OpenAI sends null for unfilled optional fields
+-          threadId: z.string().nullish().describe("Thread ID for conversation continuity for memory messages"),
+-          resourceId: z.string().nullish().describe("Resource/user identifier for memory messages"),
+-          instructions: z.string().nullish().describe(
++          threadId: z.string().optional().describe("Thread ID for conversation continuity for memory messages"),
++          resourceId: z.string().optional().describe("Resource/user identifier for memory messages"),
++          instructions: z.string().optional().describe(
+             "Additional instructions to append to the agent instructions. Only provide if you have specific guidance beyond what the agent already knows. Leave empty in most cases."
+           ),
+-          maxSteps: z.number().min(3).nullish().describe("Maximum number of execution steps for the sub-agent")
++          maxSteps: z.number().min(3).optional().describe("Maximum number of execution steps for the sub-agent")
+           // using minimum of 3 to ensure if the agent has a tool call, the llm gets executed again after the tool call step, using the tool call result
+           // to return a proper llm response
+         });
+diff --git a/dist/chunk-QLC3UBDY.cjs b/dist/chunk-QLC3UBDY.cjs
+index cabe99810b79295e38c6f58a603c0bd41cbc9eb6..ec9fe81b8832c7284425ef7f7a3fcbbe1a0dbdd7 100644
+--- a/dist/chunk-QLC3UBDY.cjs
++++ b/dist/chunk-QLC3UBDY.cjs
+@@ -20847,12 +20847,12 @@ ${errorMessages}`,
+         const agentInputSchema = v4.z.object({
+           prompt: v4.z.string().describe("The prompt to send to the agent"),
+           // Using .nullish() instead of .optional() because OpenAI sends null for unfilled optional fields
+-          threadId: v4.z.string().nullish().describe("Thread ID for conversation continuity for memory messages"),
+-          resourceId: v4.z.string().nullish().describe("Resource/user identifier for memory messages"),
+-          instructions: v4.z.string().nullish().describe(
++          threadId: v4.z.string().optional().describe("Thread ID for conversation continuity for memory messages"),
++          resourceId: v4.z.string().optional().describe("Resource/user identifier for memory messages"),
++          instructions: v4.z.string().optional().describe(
+             "Additional instructions to append to the agent instructions. Only provide if you have specific guidance beyond what the agent already knows. Leave empty in most cases."
+           ),
+-          maxSteps: v4.z.number().min(3).nullish().describe("Maximum number of execution steps for the sub-agent")
++          maxSteps: v4.z.number().min(3).optional().describe("Maximum number of execution steps for the sub-agent")
+           // using minimum of 3 to ensure if the agent has a tool call, the llm gets executed again after the tool call step, using the tool call result
+           // to return a proper llm response
+         });

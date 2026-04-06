@@ -78,69 +78,89 @@ export interface DrugsAutocompleteResponse {
 export interface DrugSearchResultItem {
     dragRegNum: string;
     dragHebName: string;
-    dragEngName: string;
-    activeIngredients: string;
-    bpiLink: string | null;
-    pilLink: string | null;
-    healthServices: boolean;
+    dragEnName: string;
+    activeComponents: { componentName: string }[];
+    activeComponentsDisplayName: string;
     prescription: boolean;
-    images: string[];
-    atcCode: string;
-    matanName: string;
-    manufacturer: string;
+    health: boolean;
+    dragRegOwner: string;
+    route: string;
+    dosageForm: string;
+    secondarySymptom: string;
+    images: { url: string }[];
+    /** Total pages for this search */
+    pages: number;
+    /** Total matching results */
+    results: number;
 }
 
-/** Paginated search response */
+/** Search response — pagination info is per-item (pages, results fields) */
 export interface DrugsSearchResponse {
+    hasNonSubsDrugs: boolean;
     results: DrugSearchResultItem[];
-    currentPage: number;
-    totalCount: number;
 }
 
 /** Comprehensive drug details */
 export interface DrugDetails {
     dragRegNum: string;
     dragHebName: string;
-    dragEngName: string;
-    activeIngredients: DrugActiveIngredient[];
-    atcList: DrugAtcEntry[];
-    matanName: string;
-    manufacturer: DrugManufacturer;
+    dragEnName: string;
+    activeMetirals: DrugActiveIngredient[];
+    atc: DrugAtcEntry[];
+    usageFormHeb: string;
+    regOwnerName: string;
+    regManufactureName: string;
     packages: DrugPackage[];
-    healthServices: boolean;
-    prescription: boolean;
-    bpiLink: string | null;
-    pilLink: string | null;
-    images: string[];
-    registrationDate: string;
-    cancelDate: string | null;
+    health: boolean;
+    isPrescription: boolean;
+    brochure: DrugBrochure[] | null;
+    images: { url: string; updateDate?: number }[];
+    regDate: number;
+    bitulDate: string | null;
+    dosageForm: string;
+    dragIndication: string | null;
+    maxPrice: number | null;
+    limitations: string | null;
+    manufacturers: DrugManufacturerEntry[];
 }
 
 /** Active ingredient */
 export interface DrugActiveIngredient {
-    name: string;
-    strength: string;
-    unit: string;
+    ingredientsDesc: string;
+    dosage: string;
 }
 
 /** ATC classification entry */
 export interface DrugAtcEntry {
-    atcCode: string;
-    atcName: string;
+    atc4Code: string;
+    atc4Name: string;
+    atc5Code: string;
+    atc5Name: string;
 }
 
-/** Drug manufacturer info */
-export interface DrugManufacturer {
-    name: string;
-    country: string;
+/** Brochure/leaflet entry */
+export interface DrugBrochure {
+    lng: string | null;
+    url: string;
+    updateDate: number | null;
+    type: string;
+    display: string;
+    updateDateFormat: string;
+}
+
+/** Manufacturer entry in details */
+export interface DrugManufacturerEntry {
+    manufactureName: string;
+    manufactureSite: string;
 }
 
 /** Drug package info */
 export interface DrugPackage {
-    packageName: string;
-    quantity: number;
-    price: number | null;
-    healthBasketPrice: number | null;
+    isPrescription: boolean;
+    packageDesc: string;
+    packMaterialDesc: string;
+    unitPrice: number | null;
+    packageMaxPrice: number | null;
 }
 
 /** Symptom category from hierarchy */
