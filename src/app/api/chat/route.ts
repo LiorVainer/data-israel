@@ -455,38 +455,38 @@ export async function POST(req: Request) {
 
         return createUIMessageStreamResponse({
             stream,
-            consumeSseStream: async ({ stream: sseStream }) => {
-                try {
-                    const streamContext = await getResumableStreamContext(after);
-                    if (!streamContext || !threadId) return;
-
-                    const streamId = generateId();
-                    // Wrap in Promise to catch Redis-level rejections (e.g. max request size)
-                    // that fire inside the redis client before our try/catch can intercept.
-                    await Promise.resolve(streamContext.createNewResumableStream(streamId, () => sseStream)).catch(
-                        (err: unknown) => {
-                            const msg = err instanceof Error ? err.message : String(err);
-                            if (msg.includes('max request size exceeded')) {
-                                console.warn(
-                                    '[resumable-stream] Stream too large for Redis storage, skipping resumable save',
-                                );
-                            } else {
-                                throw err;
-                            }
-                        },
-                    );
-                    await setActiveStreamId(threadId, streamId);
-                } catch (error: unknown) {
-                    // Silently handle Redis size limit errors — stream still works for the
-                    // active client, it just won't be resumable for oversized responses.
-                    const message = error instanceof Error ? error.message : String(error);
-                    if (message.includes('max request size exceeded')) {
-                        console.warn('[resumable-stream] Stream too large for Redis storage, skipping resumable save');
-                    } else {
-                        console.error('[resumable-stream] consumeSseStream error:', message);
-                    }
-                }
-            },
+            // consumeSseStream: async ({ stream: sseStream }) => {
+            //     try {
+            //         const streamContext = await getResumableStreamContext(after);
+            //         if (!streamContext || !threadId) return;
+            //
+            //         const streamId = generateId();
+            //         // Wrap in Promise to catch Redis-level rejections (e.g. max request size)
+            //         // that fire inside the redis client before our try/catch can intercept.
+            //         await Promise.resolve(streamContext.createNewResumableStream(streamId, () => sseStream)).catch(
+            //             (err: unknown) => {
+            //                 const msg = err instanceof Error ? err.message : String(err);
+            //                 if (msg.includes('max request size exceeded')) {
+            //                     console.warn(
+            //                         '[resumable-stream] Stream too large for Redis storage, skipping resumable save',
+            //                     );
+            //                 } else {
+            //                     throw err;
+            //                 }
+            //             },
+            //         );
+            //         await setActiveStreamId(threadId, streamId);
+            //     } catch (error: unknown) {
+            //         // Silently handle Redis size limit errors — stream still works for the
+            //         // active client, it just won't be resumable for oversized responses.
+            //         const message = error instanceof Error ? error.message : String(error);
+            //         if (message.includes('max request size exceeded')) {
+            //             console.warn('[resumable-stream] Stream too large for Redis storage, skipping resumable save');
+            //         } else {
+            //             console.error('[resumable-stream] consumeSseStream error:', message);
+            //         }
+            //     }
+            // },
         });
     } catch (error) {
         return NextResponse.json(

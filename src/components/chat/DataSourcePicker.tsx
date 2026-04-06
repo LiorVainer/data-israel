@@ -1,6 +1,6 @@
 'use client';
 
-import { type ComponentProps, createContext, useContext, useState } from 'react';
+import { type ComponentProps, createContext, memo, useContext, useMemo, useState } from 'react';
 import { CheckIcon, DatabaseIcon } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
@@ -83,14 +83,17 @@ export function DataSourcePicker({
     const allSelected = enabledSources.length === totalSources;
     const noneSelected = enabledSources.length === 0;
 
-    const ctx: DataSourcePickerContextValue = {
-        enabledSources,
-        allSelected,
-        noneSelected,
-        onToggle,
-        onSelectAll,
-        onUnselectAll,
-    };
+    const ctx = useMemo<DataSourcePickerContextValue>(
+        () => ({
+            enabledSources,
+            allSelected,
+            noneSelected,
+            onToggle,
+            onSelectAll,
+            onUnselectAll,
+        }),
+        [enabledSources, allSelected, noneSelected, onToggle, onSelectAll, onUnselectAll],
+    );
 
     if (isMobile) {
         return (
@@ -139,7 +142,10 @@ export type DataSourcePickerContentProps = {
     footerLabel?: React.ReactNode;
 };
 
-export function DataSourcePickerContent({ className, footerLabel }: DataSourcePickerContentProps) {
+export const DataSourcePickerContent = memo(function DataSourcePickerContent({
+    className,
+    footerLabel,
+}: DataSourcePickerContentProps) {
     const isMobile = useIsMobile();
     const { enabledSources, allSelected, noneSelected, onToggle, onSelectAll, onUnselectAll } =
         useDataSourcePickerContext();
@@ -220,7 +226,7 @@ export function DataSourcePickerContent({ className, footerLabel }: DataSourcePi
             {content}
         </DialogContent>
     );
-}
+});
 
 // ---------------------------------------------------------------------------
 // Helper: get trigger label from enabledSources

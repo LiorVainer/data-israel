@@ -1,6 +1,7 @@
 'use client';
 
-import { useMemo } from 'react';
+import { memo, useMemo } from 'react';
+import styles from './MessageItem.module.css';
 import { ToolCallParts } from './ToolCallParts';
 import { TextMessagePart } from './TextMessagePart';
 import { ReasoningPart } from './ReasoningPart';
@@ -108,7 +109,12 @@ export interface MessageItemProps {
     onRegenerate: () => void;
 }
 
-export function MessageItem({ message, isLastMessage, isStreaming, onRegenerate }: MessageItemProps) {
+export const MessageItem = memo(function MessageItem({
+    message,
+    isLastMessage,
+    isStreaming,
+    onRegenerate,
+}: MessageItemProps) {
     // Native source-url parts (from AI SDK stream protocol)
     const nativeSourceParts: EnrichedSourceUrl[] = message.parts
         .filter((part): part is SourceUrlUIPart => part.type === 'source-url')
@@ -192,7 +198,7 @@ export function MessageItem({ message, isLastMessage, isStreaming, onRegenerate 
     }, [isLastMessage, isStreaming, message.parts, segments]);
 
     return (
-        <div className='animate-in fade-in slide-in-from-bottom-2 flex flex-col gap-6 duration-300'>
+        <div className={`animate-in fade-in slide-in-from-bottom-2 duration-300 ${styles.messageItem}`}>
             {segments.map((segment, segIdx) => {
                 if (segment.kind === 'tool-group') {
                     // Check if any tool in this group is active
@@ -280,4 +286,4 @@ export function MessageItem({ message, isLastMessage, isStreaming, onRegenerate 
             {!(isLastMessage && isStreaming) && <SourcesPart sources={allSources} />}
         </div>
     );
-}
+});

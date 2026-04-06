@@ -1,5 +1,6 @@
 'use client';
 
+import { memo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { PROMPTS_EXAMPLES } from '@/constants/prompts';
@@ -12,7 +13,7 @@ interface SuggestionsProps {
     loading?: boolean;
 }
 
-export function Suggestions({ onClick, suggestions, loading }: SuggestionsProps) {
+export const Suggestions = memo(function Suggestions({ onClick, suggestions, loading }: SuggestionsProps) {
     if (loading) {
         return (
             <div className='flex w-full gap-2' dir='rtl'>
@@ -48,4 +49,4 @@ export function Suggestions({ onClick, suggestions, loading }: SuggestionsProps)
             </div>
         </div>
     );
-}
+});

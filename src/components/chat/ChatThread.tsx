@@ -147,6 +147,7 @@ export function ChatThread({ id }: ChatThreadProps) {
         messages: [] as UIMessage[],
         transport,
         resume: true,
+        experimental_throttle: 50,
         onError: (error) => {
             console.error('[ChatThread] useChat error:', error.message);
             toast.error('חלה שגיאה. נסו שוב או פתחו שיחה חדשה.');
@@ -247,8 +248,6 @@ export function ChatThread({ id }: ChatThreadProps) {
         [lastAssistantMessage],
     );
 
-    console.log({ messages });
-
     return (
         <div className='relative h-full w-full overflow-hidden'>
             <div className='mx-auto px-4 md:px-0 pb-4 md:pb-6 relative h-full w-full pt-14 md:pt-6'>
@@ -269,7 +268,7 @@ export function ChatThread({ id }: ChatThreadProps) {
                                         key={message.id}
                                         message={message}
                                         isLastMessage={messageIndex === messages.length - 1}
-                                        isStreaming={isStreaming}
+                                        isStreaming={isStreaming && messageIndex === messages.length - 1}
                                         onRegenerate={regenerate}
                                     />
                                 ))}

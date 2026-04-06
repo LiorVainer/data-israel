@@ -10,11 +10,7 @@
  * reaches the threshold and no text has been produced yet.
  */
 
-import type {
-    Processor,
-    ProcessInputStepArgs,
-    ProcessInputStepResult,
-} from '@mastra/core/processors';
+import type { Processor, ProcessInputStepArgs, ProcessInputStepResult } from '@mastra/core/processors';
 
 /**
  * After `stepThreshold` steps with tool calls but no text output,

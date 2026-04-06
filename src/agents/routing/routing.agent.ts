@@ -9,13 +9,11 @@ import { Agent } from '@mastra/core/agent';
 import { Memory } from '@mastra/memory';
 import { ConvexVector } from '@mastra/convex';
 import { openrouter } from '@openrouter/ai-sdk-provider';
-import { PromptInjectionDetector, UnicodeNormalizer, SystemPromptScrubber } from '@mastra/core/processors';
 import { getMastraModelId } from '../model';
-import { ROUTING_CONFIG, buildRoutingInstructions } from './config';
+import { buildRoutingInstructions, ROUTING_CONFIG } from './config';
 import { AgentConfig } from '../agent.config';
 import { AGENT_SCORERS } from '../evals/eval.config';
 import { ClientTools } from '@/lib/tools/client';
-import { TruncateToolResultsProcessor } from '../processors/truncate-tool-results.processor';
 import { ENV } from '@/lib/env';
 import { createCbsAgent } from '@/data-sources/cbs';
 import { createDatagovAgent } from '@/data-sources/datagov';
@@ -67,23 +65,8 @@ export function createRoutingAgent(modelId: string, subAgents: Record<string, Ag
             ...ClientTools,
         },
         scorers: AGENT_SCORERS,
-        inputProcessors: [
-            new UnicodeNormalizer({ stripControlChars: true, collapseWhitespace: true }),
-            new PromptInjectionDetector({
-                model: GUARD_MODEL,
-                threshold: 0.8,
-                strategy: 'block',
-                detectionTypes: ['injection', 'jailbreak', 'system-override'],
-            }),
-        ],
-        outputProcessors: [
-            new SystemPromptScrubber({
-                model: GUARD_MODEL,
-                strategy: 'redact',
-                redactionMethod: 'remove',
-            }),
-            new TruncateToolResultsProcessor(),
-        ],
+        inputProcessors: [],
+        outputProcessors: [],
     });
 }
 

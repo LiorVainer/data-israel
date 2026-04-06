@@ -1,7 +1,7 @@
 'use client';
 
 import type { ChatStatus } from 'ai';
-import type { MouseEvent } from 'react';
+import { memo, type MouseEvent } from 'react';
 import {
     PromptInput,
     PromptInputFooter,
@@ -29,7 +29,7 @@ interface InputSectionProps {
     onUnselectAllSources: () => void;
 }
 
-export function InputSection({
+export const InputSection = memo(function InputSection({
     onSubmit,
     status,
     onStop,
@@ -83,4 +83,4 @@ export function InputSection({
             </PromptInput>
         </div>
     );
-}
+});
