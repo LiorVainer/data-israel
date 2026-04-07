@@ -4,8 +4,8 @@
  * Streaming endpoint using Mastra agent network
  */
 
-import { createUIMessageStreamResponse, generateId, StopCondition, UIMessage } from 'ai';
-import { after, NextResponse } from 'next/server';
+import { createUIMessageStreamResponse, StopCondition, UIMessage } from 'ai';
+import { NextResponse } from 'next/server';
 import { getMastraWithModels, mastra } from '@/agents/mastra';
 import { handleChatStream } from '@mastra/ai-sdk';
 import { toAISdkV5Messages } from '@mastra/ai-sdk/ui';
@@ -22,11 +22,12 @@ import {
     isToolPart,
     type ToolCallPart,
 } from '@/components/chat/types';
-import { clearActiveStreamId, getResumableStreamContext, setActiveStreamId } from '@/lib/redis/resumable-stream';
+import { clearActiveStreamId } from '@/lib/redis/resumable-stream';
 import { ALL_DATA_SOURCE_IDS, type DataSource } from '@/data-sources/registry';
 import { sendPushToUser } from '@/lib/push/send-notification';
 import { stripToolResult, TOOL_ARGS_KEEP_FIELDS } from '@/agents/processors/truncate-tool-results.processor';
 import { pick } from 'es-toolkit';
+import { type GoogleGenerativeAIProviderOptions } from '@ai-sdk/google';
 
 const { CHAT } = AgentConfig;
 
@@ -362,6 +363,29 @@ export async function POST(req: Request) {
             agentId: 'routingAgent',
             params: enhancedParams,
             defaultOptions: {
+                // OpenRouter reasoning/thinking control (via @openrouter/ai-sdk-provider).
+                // Docs: https://openrouter.ai/docs/guides/best-practices/reasoning-tokens
+                //
+                // For Gemini thinking models, use `max_tokens` (maps to thinkingBudget):
+                //   max_tokens: 1024   — limit thinking tokens
+                //
+                // For OpenAI-style models (o3, gpt-5), use `effort`:
+                //   effort: 'none' | 'minimal' | 'low' | 'medium' | 'high' | 'xhigh'
+                //
+                providerOptions: {
+                    // openrouter: {
+                    //     reasoning: {
+                    //         max_tokens: 1024, // for Gemini thinking models
+                    //         // effort: 'low', // for OpenAI-style reasoning models
+                    //         // exclude: true,  // hide reasoning from response
+                    //     },
+                    // },
+                    google: {
+                        thinkingConfig: {
+                            thinkingLevel: 'minimal',
+                        },
+                    } satisfies GoogleGenerativeAIProviderOptions,
+                },
                 toolCallConcurrency: CHAT.TOOL_CALL_CONCURRENCY,
                 delegation: {
                     onDelegationStart: async () => {
