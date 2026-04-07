@@ -1,19 +1,44 @@
 import type { AvailableModel } from '@/agents/agent.config';
 import { AgentsDisplayMap } from '@/data-sources/registry';
+import type { LucideIcon } from 'lucide-react';
 
-/** Agent configuration for the admin panel */
-export const AGENT_CONFIGS = [
-    { id: 'routing', label: 'סוכן ניתוב', dialogTitle: 'Routing Agent', icon: AgentsDisplayMap.routingAgent.icon },
-    {
-        id: 'datagov',
-        label: 'סוכן data.gov.il',
-        dialogTitle: 'DataGov Agent',
-        icon: AgentsDisplayMap.datagovAgent.icon,
-    },
-    { id: 'cbs', label: 'סוכן הלמ"ס', dialogTitle: 'CBS Agent', icon: AgentsDisplayMap.cbsAgent.icon },
-] as const;
+/** A single agent config entry for the admin panel */
+export interface AgentConfig {
+    id: string;
+    label: string;
+    dialogTitle: string;
+    icon: LucideIcon;
+}
 
-export type AgentId = (typeof AGENT_CONFIGS)[number]['id'];
+/** Agent ID type — dynamic, derived from registry */
+export type AgentId = string;
+
+/** Routing agent config (always first in the admin panel) */
+export const ROUTING_AGENT_CONFIG: AgentConfig = {
+    id: 'routing',
+    label: AgentsDisplayMap.routingAgent.label,
+    dialogTitle: 'Routing Agent',
+    icon: AgentsDisplayMap.routingAgent.icon,
+};
+
+/** Sub-agent configs — derived from registry entries that have a dataSource */
+export const SUB_AGENT_CONFIGS: readonly AgentConfig[] = Object.entries(AgentsDisplayMap)
+    .filter(([key, info]) => key !== 'routingAgent' && info.dataSource)
+    .map(([key, info]) => ({
+        id: key,
+        label: info.label,
+        dialogTitle: `${info.label} Agent`,
+        icon: info.icon,
+    }));
+
+/** All agent configs — routing first, then sub-agents */
+export const ALL_AGENT_CONFIGS: readonly AgentConfig[] = [ROUTING_AGENT_CONFIG, ...SUB_AGENT_CONFIGS];
+
+/**
+ * @deprecated Use ALL_AGENT_CONFIGS, ROUTING_AGENT_CONFIG, or SUB_AGENT_CONFIGS instead.
+ * Kept for backward compatibility during transition.
+ */
+export const AGENT_CONFIGS = ALL_AGENT_CONFIGS;
 
 /** Client-safe default model ID (first model in the static config) */
 export const CLIENT_DEFAULT_MODEL = 'google/gemini-3-flash-preview';

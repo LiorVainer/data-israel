@@ -104,8 +104,11 @@ export interface UseOpenRouterModelsResult {
 export function useOpenRouterModels(): UseOpenRouterModelsResult {
     const { data, isLoading, error, refetch } = useQuery<AvailableModel[], Error>({
         queryKey: ['openrouter-models'],
-        staleTime: 5 * 60 * 1000,
         queryFn: fetchOpenRouterModels,
+        staleTime: 5 * 60 * 1000,
+        gcTime: 10 * 60 * 1000,
+        retry: 1,
+        retryDelay: 5_000,
     });
 
     return {
