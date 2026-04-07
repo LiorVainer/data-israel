@@ -147,10 +147,13 @@ describe('getMastraWithModels', () => {
         expect(result).toHaveProperty('_isMastra', true);
     });
 
-    it('caches instance for same config', async () => {
+    it('returns fresh Mastra instance each call (sub-agents are cached, not the wrapper)', async () => {
         const first = await getMastraWithModels(config);
         const second = await getMastraWithModels(config);
-        expect(first).toBe(second); // Same reference
+        // Mastra instances are always fresh (cheap to create),
+        // but sub-agents inside are cached by (agentId, modelId) via LRU cache
+        expect(first).toHaveProperty('_isMastra', true);
+        expect(second).toHaveProperty('_isMastra', true);
     });
 
     it('creates new instance on config change', async () => {

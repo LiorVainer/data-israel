@@ -16,6 +16,7 @@ import { EnsureTextOutputProcessor } from '@/agents/processors/ensure-text-outpu
 import { FailedToolCallGuardProcessor } from '@/agents/processors/failed-tool-call-guard.processor';
 import { TruncateToolResultsProcessor } from '@/agents/processors/truncate-tool-results.processor';
 import { budgetMcpClient } from './budget.mcp';
+import { getOrFetchMcpTools } from '@/lib/cache/agent-cache';
 
 const { MEMORY } = AgentConfig;
 
@@ -92,7 +93,7 @@ export const BUDGET_AGENT_INSTRUCTIONS = `אתה סוכן מומחה לנתונ�
 
 /** Factory: creates a BudgetKey agent with the given Mastra model ID */
 export async function createBudgetAgent(modelId: string): Promise<Agent> {
-    const tools = await budgetMcpClient.listTools();
+    const tools = await getOrFetchMcpTools('budgetkey', () => budgetMcpClient.listTools());
 
     return new Agent({
         id: 'budgetAgent',

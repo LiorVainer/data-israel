@@ -17,6 +17,7 @@ import { createDatagovAgent } from '@/data-sources/datagov';
 import { dataSourceAgents } from '@/data-sources/registry.server';
 import { AGENT_ID_TO_SOURCE_ID, type DataSource } from '@/data-sources/registry';
 import { MASTRA_SCORERS } from './evals/eval.config';
+import { getOrCreateAgent } from '@/lib/cache/agent-cache';
 import { ENV } from '@/lib/env';
 
 const convexUrl = ENV.NEXT_PUBLIC_CONVEX_URL;
@@ -74,26 +75,16 @@ export interface AgentModelConfig {
     [key: string]: string;
 }
 
-// Cache: single entry (last config -> last Mastra instance)
-let cachedConfigKey: string | null = null;
-let cachedMastra: Mastra | null = null;
-
 /**
  * Creates (or returns cached) Mastra instance with the specified per-agent models.
  * Model IDs should be OpenRouter format (e.g., 'google/gemini-3-flash-preview').
  * The function prefixes them with 'openrouter/' for Mastra's model format.
  *
- * Async because some data sources (e.g., BudgetKey MCP) require async tool loading.
+ * Sub-agents are cached individually by (agentId, modelId) via LRU cache,
+ * so partial config or enabledSources changes only recreate affected agents.
+ * The Mastra instance itself is cheap to construct and always created fresh.
  */
 export async function getMastraWithModels(config: AgentModelConfig, enabledSources?: DataSource[]): Promise<Mastra> {
-    const configKey = JSON.stringify({ config, enabledSources: enabledSources?.slice().sort() });
-
-    if (cachedConfigKey === configKey && cachedMastra) {
-        return cachedMastra;
-    }
-
-    console.log({ config });
-
     // Filter data source agents when enabledSources is provided
     const filteredAgentEntries = Object.entries(dataSourceAgents).filter(([agentId]) => {
         if (!enabledSources?.length) return true;
@@ -101,13 +92,13 @@ export async function getMastraWithModels(config: AgentModelConfig, enabledSourc
         return dsId !== undefined && enabledSources.includes(dsId);
     });
 
-    // Build sub-agents from registry with per-source model overrides
-    // Some agent factories are async (MCP-based sources), so we await all of them
+    // Build sub-agents from registry with per-source model overrides.
+    // Each agent is individually cached by (agentId, modelId) — cache hits skip creation.
     const subAgentEntries = await Promise.all(
         filteredAgentEntries.map(async ([agentId, agentDef]) => {
             const dsId = AGENT_ID_TO_SOURCE_ID.get(agentId) ?? (agentId.replace('Agent', '') as DataSource);
-            const modelId = config[dsId] ?? config.routing;
-            const agent = await agentDef.createAgent(`openrouter/${modelId}`);
+            const modelId = `openrouter/${config[dsId] ?? config.routing}`;
+            const agent = await getOrCreateAgent(agentId, modelId, agentDef.createAgent);
             return [agentId, agent] as const;
         }),
     );
@@ -115,15 +106,10 @@ export async function getMastraWithModels(config: AgentModelConfig, enabledSourc
 
     const newRouting = createRoutingAgent(`openrouter/${config.routing}`, subAgents);
 
-    const newMastra = new Mastra({
+    return new Mastra({
         agents: { routingAgent: newRouting, ...subAgents },
         ...(storage && { storage }),
         ...(observability && { observability }),
         scorers: MASTRA_SCORERS,
     });
-
-    cachedConfigKey = configKey;
-    cachedMastra = newMastra;
-
-    return newMastra;
 }
