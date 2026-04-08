@@ -63,31 +63,27 @@ Before implementing a new data source, verify that the upstream API responds fro
 ```typescript
 // src/data-sources/{name}/api/{name}.client.ts
 import axios, { type AxiosInstance } from 'axios';
-import { getBrightDataAgent } from '@/lib/proxy/bright-data';
+import { getBrightDataProxyConfig } from '@/lib/proxy/bright-data';
 import { MY_BASE_URL } from './{name}.endpoints';
 
 // Opt into Israeli egress via Bright Data when BRIGHT_DATA_PROXY_URL is set.
-// `proxy: false` is required so axios does not layer its own proxy logic
-// on top of the HttpsProxyAgent.
-const brightDataAgent = getBrightDataAgent();
-
+// `getBrightDataProxyConfig()` returns axios's native proxy config (pure data,
+// isomorphic) or `false` when the env var is absent — both are valid values
+// for axios's `proxy` field, so the spread is unconditional.
 const myInstance: AxiosInstance = axios.create({
     baseURL: MY_BASE_URL,
     timeout: 30_000,
     headers: { Accept: 'application/json', 'User-Agent': 'DataIsrael-Agent/1.0' },
-    ...(brightDataAgent && {
-        httpsAgent: brightDataAgent,
-        httpAgent: brightDataAgent,
-        proxy: false as const,
-    }),
+    proxy: getBrightDataProxyConfig(),
 });
 ```
 
 **Rules:**
-- Only import `getBrightDataAgent` from `@/lib/proxy/bright-data` in the client file — never from tools, agents, or UI code.
+- Only import `getBrightDataProxyConfig` from `@/lib/proxy/bright-data` in the client file — never from tools, agents, or UI code.
+- **Do not use `httpsAgent`/`httpAgent` with `https-proxy-agent`** — that package statically imports Node `net`/`tls` and breaks the client bundle via the data-source registry chain. Stick to axios's native `proxy` field, which is isomorphic.
 - Bright Data billing is per GB, so **never proxy bulk-scraping endpoints** (full XML price dumps, archive downloads, etc.) — call out any large-payload endpoints in the proposal and keep them on direct egress with a separate scraping path.
 - If the API works fine from non-Israeli egress, do **not** wire the proxy. The ~150–300 ms proxy hop is pure cost for no benefit.
-- Add a comment above the conditional spread explaining *why* this specific client needs proxying, so future maintainers don't remove it.
+- Add a comment above the `proxy:` field explaining *why* this specific client needs proxying, so future maintainers don't remove it.
 
 ### Step 1: Create the folder
 

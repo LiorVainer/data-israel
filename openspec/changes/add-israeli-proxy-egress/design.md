@@ -54,11 +54,11 @@ To temporarily disable the proxy in a running deployment, the operator sets `BRI
 
 **Alternatives considered:**
 - *Separate `BRIGHT_DATA_ENABLED`*: rejected — see above.
-- *Treat any non-empty string as "on" including obvious junk*: the helper does not validate the URL beyond "non-empty"; `new URL(...)` inside `HttpsProxyAgent` will throw on malformed input and the error surfaces on first request, which is the correct failure mode (loud, early).
+- *Treat any non-empty string as "on" including obvious junk*: the helper does not validate the URL beyond "non-empty"; the global `URL` constructor will throw on malformed input and the error surfaces on first call, which is the correct failure mode (loud, early).
 
 ### Decision 3: Opt-in at each client, not global
 
-Only the three problematic clients import `getBrightDataAgent()` and wire it into their axios instance. The other data-source clients never touch the helper. This guarantees:
+Only the three problematic clients import `getBrightDataProxyConfig()` and wire it into their axios instance. The other data-source clients never touch the helper. This guarantees:
 - No accidental proxying of CBS / DataGov / Budget / GovMap / Drugs / Health.
 - No central "proxy routing" table to maintain.
 - The decision "this client needs Israeli egress" lives in the same file as the client itself, which is the obvious place to look for it.
@@ -67,16 +67,42 @@ Only the three problematic clients import `getBrightDataAgent()` and wire it int
 - *Global fetch interceptor that routes by hostname*: rejected — magic behavior at a distance, hard to reason about, risk of accidental match on wrong hosts.
 - *A `proxyClients.ts` allowlist*: rejected — same information as the imports, one more file to keep in sync.
 
-### Decision 4: Cache the `HttpsProxyAgent` instance
+### Decision 4: Cache the parsed `AxiosProxyConfig`
 
-`getBrightDataAgent()` caches the agent in a module-level `let` on first call. Reasons:
-- `HttpsProxyAgent` maintains a connection pool internally; re-creating it per request defeats keep-alive.
-- The three client modules are imported once per Node process; they call `getBrightDataAgent()` during `axios.create()` at module load. One creation per process is correct.
-- The cache is reset on fresh Fluid Compute cold starts, which is fine — Bright Data's CONNECT handshake is ~100 ms, negligible compared to the first cold-start cost anyway.
+`getBrightDataProxyConfig()` caches the parsed config in a module-level `let` on first call. Reasons:
+- URL parsing is cheap but not free; once per process is enough.
+- The three client modules are imported once per Node process; they call `getBrightDataProxyConfig()` during `axios.create()` at module load. One parse per process is correct.
+- The cache is reset on fresh Fluid Compute cold starts, which is fine.
 
-### Decision 5: `proxy: false` is mandatory alongside `httpsAgent`
+### Decision 5: Axios native `proxy` field, NOT `https-proxy-agent`
 
-Confirmed from axios docs (via Context7): when supplying a custom `httpsAgent`, axios still runs its own proxy layer unless `proxy: false` is set explicitly. Without it, axios would try to layer its default proxy config (from `HTTP_PROXY` env var, for example) on top of our `HttpsProxyAgent`, producing unpredictable routing. The spec requires all three modified clients to spread `{ httpsAgent, httpAgent, proxy: false }` together as an atomic unit.
+**Rejected:** `httpsAgent: new HttpsProxyAgent(url)` with `proxy: false`.
+
+**Reason:** `https-proxy-agent@9` (and its transitive dependency `agent-base@9`) unconditionally `import * as net from 'net'` and `import * as tls from 'tls'` at the top of their dist files. Turbopack cannot tree-shake these out because the imports are static and unconditional. The `src/data-sources/registry.ts` module is imported by `ChatThread.tsx` (a client component) for tool metadata purposes, and the registry transitively imports every data-source's tool file, which imports the client file, which imports our helper. That means any static reference to `https-proxy-agent` in the helper leaks `net`/`tls` into the **client bundle** and breaks the Turbopack build with `Module not found: Can't resolve 'net'`.
+
+This was confirmed empirically: the first build attempt on Vercel (commit `3730fe1`) failed with exactly this error, with the full client-side import trace reaching `https-proxy-agent` via `rami-levy.client.ts`.
+
+**Documentation check (Context7):**
+- **Bright Data docs** (via `/websites/brightdata`) — every Node.js example uses a full URL string, no `HttpsProxyAgent` anywhere. Country targeting (`-country-il`) is a username suffix inside that URL.
+- **Axios docs** (via `/websites/axios-http`) — `proxy: { protocol, host, port, auth }` is a first-class documented option, explicitly framed as a peer alternative to `httpsAgent`: *"Disable if supplying a custom httpAgent/httpsAgent to manage proxying requests."*
+- **Next.js 16.1.1 docs** (via `/vercel/next.js/v16.1.1`) — `serverExternalPackages` only affects **Server Components bundling**, not the client bundle, so it would not fix our failure. `import 'server-only'` would force a refactor of the data-source registry (out of scope for this change).
+
+**Adopted:** parse the URL into axios's documented `proxy` object shape via the isomorphic `URL` API, and spread it directly:
+
+```ts
+axios.create({
+  baseURL: ...,
+  proxy: getBrightDataProxyConfig(), // AxiosProxyConfig | false
+});
+```
+
+Axios's browser adapter silently ignores the `proxy` field; its Node adapter handles HTTPS-over-HTTP CONNECT tunneling internally when the target URL is HTTPS and the proxy uses `protocol: 'http'`. Zero Node-only imports in our helper, zero client-bundle pollution, same wire-level behavior as `HttpsProxyAgent` (HTTP CONNECT + `Proxy-Authorization: Basic <base64(user:pass)>`).
+
+**Alternatives considered and rejected:**
+- *Dynamic `import('https-proxy-agent')`* — would defer the static analysis, but Turbopack still sees it and tries to bundle. Also complicates the helper (has to become async, can't be called at `axios.create()` time).
+- *`serverExternalPackages: ['https-proxy-agent']`* in `next.config.ts` — only affects Server Components bundle per Next.js docs; doesn't help client bundle, and the error is in the client bundle.
+- *`import 'server-only'` in `bright-data.ts`* — correct Next.js pattern, but would force a refactor so data-source tool files don't import clients at module top. Significant architectural change outside this proposal's scope.
+- *Webpack/Turbopack alias mapping `https-proxy-agent` to a no-op in the client* — workable but brittle and hides the real problem (a Node-only package in a client-reachable graph).
 
 ## Risks / Trade-offs
 

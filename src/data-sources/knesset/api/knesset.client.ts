@@ -7,7 +7,7 @@
 
 import axios, { type AxiosInstance } from 'axios';
 import { sleep } from '@/lib/utils/sleep';
-import { getBrightDataAgent } from '@/lib/proxy/bright-data';
+import { getBrightDataProxyConfig } from '@/lib/proxy/bright-data';
 import { KNESSET_BASE_URL } from './knesset.endpoints';
 import type {
     ODataCollectionResponse,
@@ -23,10 +23,9 @@ import { POSITION_IDS, CURRENT_KNESSET_NUM } from './knesset.types';
 // ============================================================================
 
 // Knesset OData geo-blocks non-Israeli egress — route through Bright Data IL
-// when BRIGHT_DATA_PROXY_URL is configured. `proxy: false` is required so
-// axios does not layer its own proxy config on top of the HttpsProxyAgent.
-const brightDataAgent = getBrightDataAgent();
-
+// when BRIGHT_DATA_PROXY_URL is set. Uses axios's native proxy field (pure
+// data, isomorphic) so the helper module does not pull Node-only packages
+// like https-proxy-agent into the client bundle via the data-source registry.
 const knessetInstance: AxiosInstance = axios.create({
     baseURL: KNESSET_BASE_URL,
     timeout: 30_000,
@@ -34,11 +33,7 @@ const knessetInstance: AxiosInstance = axios.create({
         Accept: 'application/json',
         'User-Agent': 'DataIsrael-Agent/1.0',
     },
-    ...(brightDataAgent && {
-        httpsAgent: brightDataAgent,
-        httpAgent: brightDataAgent,
-        proxy: false as const,
-    }),
+    proxy: getBrightDataProxyConfig(),
 });
 
 // ============================================================================

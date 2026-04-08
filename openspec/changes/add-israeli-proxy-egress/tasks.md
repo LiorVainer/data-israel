@@ -6,17 +6,17 @@
 
 ## 2. Dependencies and shared helper
 
-- [x] 2.1 Add `https-proxy-agent` to `package.json` via `pnpm add https-proxy-agent` (repo uses pnpm).
-- [x] 2.2 Create `src/lib/proxy/bright-data.ts` exporting `getBrightDataAgent(): HttpsProxyAgent<string> | null`. Behavior: returns `null` when `process.env.BRIGHT_DATA_PROXY_URL` is unset or empty; otherwise constructs and caches a singleton `HttpsProxyAgent(url)`.
-- [x] 2.3 Add JSDoc to `getBrightDataAgent()` documenting: (a) only Knesset/Shufersal/Rami Levy may use it; (b) must be combined with `proxy: false` in axios configs; (c) URL-encoding rule for the password.
+- [x] 2.1 Use axios's native `proxy` field — no new runtime dependency. (Earlier attempt with `https-proxy-agent@^9` broke the Turbopack client bundle because it transitively imports `net`/`tls`; reverted in follow-up commit.)
+- [x] 2.2 Create `src/lib/proxy/bright-data.ts` exporting `getBrightDataProxyConfig(): AxiosProxyConfig | false`. Behavior: returns `false` when `process.env.BRIGHT_DATA_PROXY_URL` is unset or empty; otherwise parses the URL with the isomorphic `URL` API and caches the resulting `AxiosProxyConfig` at module scope.
+- [x] 2.3 Add JSDoc to `getBrightDataProxyConfig()` documenting: (a) only Knesset/Shufersal/Rami Levy may use it; (b) pass directly to axios's `proxy:` field (do NOT combine with `httpsAgent`/`httpAgent`); (c) URL-encoding rule for the password; (d) why `https-proxy-agent` is intentionally not used.
 - [x] 2.4 Document `BRIGHT_DATA_PROXY_URL` in `.env.example` with a placeholder and a comment linking to the Bright Data dashboard.
 
 ## 3. Wire proxy into each problematic client
 
-- [x] 3.1 Edit `src/data-sources/knesset/api/knesset.client.ts`: import `getBrightDataAgent`, call it once at module scope, spread `{ httpsAgent: agent, httpAgent: agent, proxy: false as const }` into the existing `axios.create()` options when `agent !== null`. Do not change timeouts, headers, retry logic, or rate limiting.
+- [x] 3.1 Edit `src/data-sources/knesset/api/knesset.client.ts`: import `getBrightDataProxyConfig`, set `proxy: getBrightDataProxyConfig()` on the existing `axios.create()` options. Do not change timeouts, headers, retry logic, or rate limiting.
 - [x] 3.2 Edit `src/data-sources/shufersal/api/shufersal.client.ts`: same pattern.
 - [x] 3.3 Edit `src/data-sources/rami-levy/api/rami-levy.client.ts`: same pattern.
-- [x] 3.4 Verify no other data-source client (`cbs`, `datagov`, `budget`, `govmap`, `drugs`, `health`) imports `getBrightDataAgent` — grep to confirm.
+- [x] 3.4 Verify no other data-source client (`cbs`, `datagov`, `budget`, `govmap`, `drugs`, `health`) imports `getBrightDataProxyConfig` — grep to confirm.
 
 ## 4. Next.js verification route
 

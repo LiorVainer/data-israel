@@ -19,31 +19,38 @@ The system SHALL expose exactly one environment variable, `BRIGHT_DATA_PROXY_URL
 - **WHEN** a developer searches the codebase for an enable/disable toggle for the proxy
 - **THEN** the only configuration surface SHALL be the presence or absence of `BRIGHT_DATA_PROXY_URL`
 
-### Requirement: Bright Data Agent Helper
+### Requirement: Bright Data Proxy Config Helper
 
-The system SHALL provide a module `src/lib/proxy/bright-data.ts` that exports a function `getBrightDataAgent()` returning either a cached `HttpsProxyAgent<string>` instance or `null`, and this function SHALL be the single construction point for the proxy agent used anywhere in the application.
+The system SHALL provide a module `src/lib/proxy/bright-data.ts` that exports a function `getBrightDataProxyConfig()` returning either a cached `AxiosProxyConfig` object or the literal `false`, and this function SHALL be the single construction point for the Bright Data proxy configuration used anywhere in the application. The helper SHALL contain zero imports of Node-only packages (no `https-proxy-agent`, no `http`, no `net`, no `tls`) so that it remains safe to include in a client-reachable module graph.
 
-#### Scenario: Returns null when env var is absent
+#### Scenario: Returns false when env var is absent
 - **WHEN** `process.env.BRIGHT_DATA_PROXY_URL` is `undefined` or empty
-- **THEN** `getBrightDataAgent()` SHALL return `null`
+- **THEN** `getBrightDataProxyConfig()` SHALL return the literal `false`
 
-#### Scenario: Returns a singleton when env var is present
+#### Scenario: Returns a cached AxiosProxyConfig when env var is present
 - **WHEN** `process.env.BRIGHT_DATA_PROXY_URL` is a non-empty string
-- **AND** `getBrightDataAgent()` is called two or more times in the same process
-- **THEN** the function SHALL return the same `HttpsProxyAgent` instance on every call (cached at module scope)
+- **AND** `getBrightDataProxyConfig()` is called two or more times in the same process
+- **THEN** the function SHALL return the same `AxiosProxyConfig` object on every call (cached at module scope)
 
-#### Scenario: Constructs agent from the full URL string
-- **WHEN** `getBrightDataAgent()` is called for the first time with a valid URL in the env var
-- **THEN** the function SHALL pass the URL directly to `new HttpsProxyAgent(url)` without parsing, rebuilding, or transforming it
+#### Scenario: Parses the URL via the standard URL API
+- **WHEN** `getBrightDataProxyConfig()` is called for the first time with a valid URL in the env var
+- **THEN** the function SHALL use the global `URL` constructor to parse the value
+- **AND** SHALL decode percent-encoded username and password via `decodeURIComponent`
+- **AND** SHALL populate an `AxiosProxyConfig` with `protocol` (scheme minus the colon), `host`, `port`, and `auth: { username, password }`
 
 #### Scenario: Malformed URL surfaces loudly
-- **WHEN** `BRIGHT_DATA_PROXY_URL` is present but malformed
-- **THEN** the first proxied HTTP request SHALL throw an error originating from `HttpsProxyAgent` or the underlying URL parser
+- **WHEN** `BRIGHT_DATA_PROXY_URL` is present but not a valid URL
+- **THEN** the first call to `getBrightDataProxyConfig()` SHALL throw an error originating from the `URL` constructor
 - **AND** the system SHALL NOT silently fall back to direct egress
+
+#### Scenario: Helper is fully isomorphic
+- **WHEN** the helper module is included in a client bundle via the data-source registry chain
+- **THEN** the bundler SHALL NOT attempt to resolve any Node-only module (`net`, `tls`, `http`, `https`, `https-proxy-agent`, `agent-base`, etc.)
+- **AND** the build SHALL succeed
 
 ### Requirement: Selective Client Opt-In
 
-Only the three data-source clients whose upstream APIs require Israeli egress SHALL import `getBrightDataAgent()`: Knesset (`src/data-sources/knesset/api/knesset.client.ts`), Shufersal (`src/data-sources/shufersal/api/shufersal.client.ts`), and Rami Levy (`src/data-sources/rami-levy/api/rami-levy.client.ts`). All other data-source clients (CBS, DataGov, Budget, GovMap, Drugs, Health, and any other grocery chains) SHALL NOT import the helper.
+Only the three data-source clients whose upstream APIs require Israeli egress SHALL import `getBrightDataProxyConfig()`: Knesset (`src/data-sources/knesset/api/knesset.client.ts`), Shufersal (`src/data-sources/shufersal/api/shufersal.client.ts`), and Rami Levy (`src/data-sources/rami-levy/api/rami-levy.client.ts`). All other data-source clients (CBS, DataGov, Budget, GovMap, Drugs, Health) SHALL NOT import the helper.
 
 #### Scenario: Non-Israeli clients never pay the proxy hop
 - **WHEN** a chat query triggers the CBS, DataGov, Budget, GovMap, Drugs, or Health agent
@@ -52,24 +59,24 @@ Only the three data-source clients whose upstream APIs require Israeli egress SH
 
 #### Scenario: Adding a new proxied client is an explicit edit
 - **WHEN** a future data source is identified as needing Israeli egress
-- **THEN** enabling the proxy for it SHALL require an explicit import of `getBrightDataAgent` in that client's file
+- **THEN** enabling the proxy for it SHALL require an explicit import of `getBrightDataProxyConfig` in that client's file
 - **AND** SHALL NOT happen via a centralized allowlist, hostname match, or middleware interception
 
-### Requirement: Axios Integration Pattern
+### Requirement: Axios Native Proxy Integration Pattern
 
-When a data-source client uses the Bright Data agent, it SHALL spread the agent into its `axios.create()` options as all three of `httpsAgent`, `httpAgent`, and `proxy: false`, together, in a single conditional spread. The `proxy: false` entry is mandatory whenever a custom `httpsAgent` is supplied, to prevent axios from layering its own proxy resolution on top of the configured agent.
+When a data-source client uses the Bright Data proxy, it SHALL pass the return value of `getBrightDataProxyConfig()` directly to axios's native `proxy` field inside `axios.create()`. The client SHALL NOT use `httpsAgent`, `httpAgent`, or any variant of `https-proxy-agent` — that package statically imports Node built-ins (`net`, `tls`) and would leak into the client bundle through the data-source registry import chain.
 
-#### Scenario: Agent available → full spread applied
-- **WHEN** `getBrightDataAgent()` returns a non-null agent
-- **THEN** the client's axios instance SHALL be configured with `httpsAgent: agent`, `httpAgent: agent`, and `proxy: false`
-
-#### Scenario: Agent null → no proxy fields set
-- **WHEN** `getBrightDataAgent()` returns `null`
-- **THEN** the client's axios instance SHALL be configured without `httpsAgent`, `httpAgent`, or `proxy` fields, identical to the pre-change configuration
+#### Scenario: Proxy field set directly
+- **WHEN** the proxy wiring is added to a client
+- **THEN** the client's axios instance SHALL be configured with `proxy: getBrightDataProxyConfig()` and nothing else (no `httpsAgent`, no `httpAgent`)
 
 #### Scenario: Existing client options preserved
 - **WHEN** the proxy wiring is added to an existing client
 - **THEN** the client's existing `baseURL`, `timeout`, `headers`, retry wrapper, and rate-limit wrapper SHALL remain unchanged
+
+#### Scenario: No https-proxy-agent dependency
+- **WHEN** the project dependency tree is inspected
+- **THEN** `https-proxy-agent` SHALL NOT appear in `package.json` runtime dependencies introduced by this change
 
 ### Requirement: Credential Hygiene
 
@@ -90,7 +97,7 @@ The system SHALL provide a disposable Next.js App Router route handler at `src/a
 
 #### Scenario: Route verifies Israeli egress
 - **WHEN** the route is called with `BRIGHT_DATA_PROXY_URL` set in the current environment
-- **THEN** it SHALL make a request to `https://geo.brdtest.com/welcome.txt` through the agent
+- **THEN** it SHALL make a request to `https://geo.brdtest.com/welcome.txt` through axios with `proxy: getBrightDataProxyConfig()`
 - **AND** the JSON response SHALL include the raw body and a parsed country code that operators can inspect to confirm egress originates from Israel
 
 #### Scenario: Route verifies each proxied client
@@ -98,7 +105,7 @@ The system SHALL provide a disposable Next.js App Router route handler at `src/a
 - **THEN** the route SHALL additionally execute one real request against each of the Knesset, Shufersal, and Rami Levy clients
 - **AND** SHALL return for each client a per-check object containing status, duration, a short success/error summary, and a sample of the returned data shape
 
-#### Scenario: Route degrades gracefully when agent is missing
+#### Scenario: Route degrades gracefully when proxy is missing
 - **WHEN** the route is called with `BRIGHT_DATA_PROXY_URL` unset or empty
 - **THEN** the JSON response SHALL clearly indicate `proxyConfigured: false`
 - **AND** SHALL still attempt each of the four checks so the operator can compare direct-egress behavior

@@ -10,17 +10,17 @@ The rest of the solution (signing up with Bright Data, choosing pay-as-you-go re
 
 - **ADDED** a new `proxy-egress` capability that owns the rule for how data-source clients opt into proxy egress.
 - **ADDED** a single environment variable `BRIGHT_DATA_PROXY_URL` (full URL with embedded credentials, e.g. `http://brd-customer-hl_xxx-zone-residential_il-country-il:PASSWORD@brd.superproxy.io:33335`). No separate `BRIGHTDATA_CUSTOMER_ID`, `BRIGHTDATA_ZONE_PASSWORD`, `BRIGHTDATA_HOST`, etc.
-- **ADDED** a shared helper `src/lib/proxy/bright-data.ts` exporting `getBrightDataAgent()` which:
-  - Returns `null` when `BRIGHT_DATA_PROXY_URL` is unset or empty (proxy disabled, default dev/CI behavior).
-  - Returns a cached singleton `HttpsProxyAgent` when the env var is set.
+- **ADDED** a shared helper `src/lib/proxy/bright-data.ts` exporting `getBrightDataProxyConfig()` which:
+  - Returns `false` (axios's "disabled proxy" sentinel) when `BRIGHT_DATA_PROXY_URL` is unset or empty.
+  - Returns a cached `AxiosProxyConfig` (parsed from the URL via the isomorphic `URL` API) when the env var is set.
   - Auto-enables: no separate `BRIGHT_DATA_ENABLED` flag. Presence of the URL is the kill switch.
 - **ADDED** opt-in wiring inside three existing axios instances only:
   - `src/data-sources/knesset/api/knesset.client.ts` — `knessetInstance`
   - `src/data-sources/shufersal/api/shufersal.client.ts` — `shufersalInstance`
   - `src/data-sources/rami-levy/api/rami-levy.client.ts` — `ramiLevyInstance`
 
-  Each client spreads `{ httpsAgent, httpAgent, proxy: false }` into its existing `axios.create()` call when the helper returns a non-null agent. **All other data-source clients remain untouched.**
-- **ADDED** `https-proxy-agent` as a runtime dependency.
+  Each client sets `proxy: getBrightDataProxyConfig()` on its existing `axios.create()` call. **All other data-source clients remain untouched.**
+- **NO new runtime dependencies.** Uses axios's native `proxy` field — no `https-proxy-agent`. That package transitively imports Node built-ins (`net`, `tls`), which Turbopack cannot keep out of the client bundle because the data-source registry is imported by client components, so any static reference to `https-proxy-agent` in a client-reachable module breaks the build.
 - **ADDED** a disposable Next.js App Router route handler `src/app/api/debug/bright-data/route.ts` that verifies `geo.brdtest.com/welcome.txt` returns an Israeli IP and that each of the three clients returns a real response. Mirrors the style of the existing `src/app/api/debug/upstream-probe/route.ts`. Marked as temporary in its header and deleted after rollout is verified.
 
 ## Impact
@@ -29,7 +29,7 @@ The rest of the solution (signing up with Bright Data, choosing pay-as-you-go re
 - **Affected code:**
   - New: `src/lib/proxy/bright-data.ts`, `src/app/api/debug/bright-data/route.ts` (temporary)
   - Modified: `src/data-sources/knesset/api/knesset.client.ts`, `src/data-sources/shufersal/api/shufersal.client.ts`, `src/data-sources/rami-levy/api/rami-levy.client.ts`
-  - `package.json` — add `https-proxy-agent` dependency
+  - `package.json` — no new dependency (uses built-in axios `proxy` field)
   - `.env.example` — document `BRIGHT_DATA_PROXY_URL`
 - **Affected infra:** Vercel env var `BRIGHT_DATA_PROXY_URL` must be set in Preview + Production. Absence of the var means clients egress directly (same behavior as today).
 - **Cost:** Bright Data pay-as-you-go residential, realistic usage ≤ 1 GB/month = ≤ $4/month. $5 signup credit covers initial testing.

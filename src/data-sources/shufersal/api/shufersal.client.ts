@@ -10,7 +10,7 @@
 
 import axios, { type AxiosInstance } from 'axios';
 import { sleep } from '@/lib/utils/sleep';
-import { getBrightDataAgent } from '@/lib/proxy/bright-data';
+import { getBrightDataProxyConfig } from '@/lib/proxy/bright-data';
 import { SHUFERSAL_BASE_URL, SHUFERSAL_SEARCH_PATH } from './shufersal.endpoints';
 import type { ShufersalSearchResponse, ShufersalProduct } from './shufersal.types';
 
@@ -19,10 +19,9 @@ import type { ShufersalSearchResponse, ShufersalProduct } from './shufersal.type
 // ============================================================================
 
 // Shufersal's online store appears to geo-gate its search API — route through
-// Bright Data IL when BRIGHT_DATA_PROXY_URL is configured. `proxy: false` is
-// required so axios does not layer its own proxy on top of the HttpsProxyAgent.
-const brightDataAgent = getBrightDataAgent();
-
+// Bright Data IL when BRIGHT_DATA_PROXY_URL is set. Uses axios's native proxy
+// field (pure data, isomorphic) so the helper module does not pull Node-only
+// packages into the client bundle via the data-source registry.
 const shufersalInstance: AxiosInstance = axios.create({
     baseURL: SHUFERSAL_BASE_URL,
     timeout: 30_000,
@@ -31,11 +30,7 @@ const shufersalInstance: AxiosInstance = axios.create({
         'x-requested-with': 'XMLHttpRequest',
         'User-Agent': 'DataIsrael-Agent/1.0',
     },
-    ...(brightDataAgent && {
-        httpsAgent: brightDataAgent,
-        httpAgent: brightDataAgent,
-        proxy: false as const,
-    }),
+    proxy: getBrightDataProxyConfig(),
 });
 
 // ============================================================================

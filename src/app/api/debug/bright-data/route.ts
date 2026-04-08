@@ -29,7 +29,7 @@ import { NextResponse } from 'next/server';
 import { knessetApi } from '@/data-sources/knesset/api/knesset.client';
 import { shufersalApi } from '@/data-sources/shufersal/api/shufersal.client';
 import { ramiLevyApi } from '@/data-sources/rami-levy/api/rami-levy.client';
-import { getBrightDataAgent } from '@/lib/proxy/bright-data';
+import { getBrightDataProxyConfig } from '@/lib/proxy/bright-data';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -54,13 +54,13 @@ async function timeIt<T>(fn: () => Promise<T>): Promise<{ value?: T; error?: Err
 }
 
 async function checkGeoBrdTest(): Promise<CheckResult> {
-    const agent = getBrightDataAgent();
+    const proxy = getBrightDataProxyConfig();
     const { value, error, durationMs } = await timeIt(async () => {
         const res = await axios.get<string>('https://geo.brdtest.com/welcome.txt', {
             timeout: 15_000,
             responseType: 'text',
             transformResponse: (d: unknown) => (typeof d === 'string' ? d : String(d)),
-            ...(agent && { httpsAgent: agent, httpAgent: agent, proxy: false as const }),
+            proxy,
         });
         return res.data;
     });

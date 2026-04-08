@@ -71,27 +71,22 @@ Before scaffolding any files, verify how the upstream API behaves from non-Israe
    - Timeouts only from non-IL egress
 3. Compare against the same request from an Israeli network.
 
-**If the API needs Israeli egress**, the client MUST route through the Bright Data proxy helper at `src/lib/proxy/bright-data.ts` — the same pattern used by `knesset`, `shufersal`, and `rami-levy`. The client file spreads a conditional agent into `axios.create()`:
+**If the API needs Israeli egress**, the client MUST route through the Bright Data proxy helper at `src/lib/proxy/bright-data.ts` — the same pattern used by `knesset`, `shufersal`, and `rami-levy`. The client file uses axios's native `proxy` field:
 
 ```typescript
-import { getBrightDataAgent } from '@/lib/proxy/bright-data';
-
-const brightDataAgent = getBrightDataAgent();
+import { getBrightDataProxyConfig } from '@/lib/proxy/bright-data';
 
 const myInstance = axios.create({
     baseURL: MY_BASE_URL,
     timeout: 30_000,
     headers: { /* ... */ },
-    ...(brightDataAgent && {
-        httpsAgent: brightDataAgent,
-        httpAgent: brightDataAgent,
-        proxy: false as const,
-    }),
+    proxy: getBrightDataProxyConfig(), // AxiosProxyConfig | false — both valid
 });
 ```
 
 See `src/data-sources/CLAUDE.md` → **"Step 0: Check Israeli egress reachability"** for the full rules, including:
-- Only the client file may import `getBrightDataAgent`
+- Only the client file may import `getBrightDataProxyConfig`
+- **Do not** use `https-proxy-agent` / `httpsAgent` — it leaks Node `net`/`tls` into the client bundle via the registry chain. Always use axios's native `proxy` field.
 - Never proxy bulk-scraping endpoints (per-GB billing blows up)
 - Skip the proxy if the API works fine from any IP — the ~150–300 ms hop is pure cost
 
