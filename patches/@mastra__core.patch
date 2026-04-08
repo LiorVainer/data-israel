@@ -40,3 +40,61 @@ index cabe99810b79295e38c6f58a603c0bd41cbc9eb6..ec9fe81b8832c7284425ef7f7a3fcbbe
            // using minimum of 3 to ensure if the agent has a tool call, the llm gets executed again after the tool call step, using the tool call result
            // to return a proper llm response
          });
+diff --git a/dist/chunk-FWDG2WUV.js b/dist/chunk-FWDG2WUV.js
+--- a/dist/chunk-FWDG2WUV.js
++++ b/dist/chunk-FWDG2WUV.js
+@@ -30,8 +30,8 @@
+       }
+       if (isZodObject(schema)) {
+         this.originalTool.inputSchema = schema.extend({
+-          suspendedToolRunId: z.string().describe("The runId of the suspended tool").nullable().optional(),
+-          resumeData: z.any().describe("The resumeData object created from the resumeSchema of suspended tool").optional()
++          suspendedToolRunId: z.string().describe("The runId of the suspended tool").optional(),
++          resumeData: z.string().describe("The resumeData object created from the resumeSchema of suspended tool (JSON-encoded)").optional()
+         });
+       } else {
+         const jsonSchema2 = standardSchemaToJSONSchema(schema, { io: "input" });
+@@ -39,11 +39,12 @@
+           jsonSchema2.properties = {
+             ...jsonSchema2.properties,
+             suspendedToolRunId: {
+-              type: ["string", "null"],
++              type: "string",
+               description: "The runId of the suspended tool"
+             },
+             resumeData: {
+-              description: "The resumeData object created from the resumeSchema of suspended tool"
++              type: "string",
++              description: "The resumeData object created from the resumeSchema of suspended tool (JSON-encoded)"
+             }
+           };
+           this.originalTool.inputSchema = toStandardSchema(jsonSchema2);
+diff --git a/dist/chunk-R2V6BCYX.cjs b/dist/chunk-R2V6BCYX.cjs
+--- a/dist/chunk-R2V6BCYX.cjs
++++ b/dist/chunk-R2V6BCYX.cjs
+@@ -32,8 +32,8 @@
+       }
+       if (chunkRLPRSIR2_cjs.isZodObject(schema)) {
+         this.originalTool.inputSchema = schema.extend({
+-          suspendedToolRunId: v4.z.string().describe("The runId of the suspended tool").nullable().optional(),
+-          resumeData: v4.z.any().describe("The resumeData object created from the resumeSchema of suspended tool").optional()
++          suspendedToolRunId: v4.z.string().describe("The runId of the suspended tool").optional(),
++          resumeData: v4.z.string().describe("The resumeData object created from the resumeSchema of suspended tool (JSON-encoded)").optional()
+         });
+       } else {
+         const jsonSchema2 = chunkXB4FLS7A_cjs.standardSchemaToJSONSchema(schema, { io: "input" });
+@@ -41,11 +41,12 @@
+           jsonSchema2.properties = {
+             ...jsonSchema2.properties,
+             suspendedToolRunId: {
+-              type: ["string", "null"],
++              type: "string",
+               description: "The runId of the suspended tool"
+             },
+             resumeData: {
+-              description: "The resumeData object created from the resumeSchema of suspended tool"
++              type: "string",
++              description: "The resumeData object created from the resumeSchema of suspended tool (JSON-encoded)"
+             }
+           };
+           this.originalTool.inputSchema = chunkXB4FLS7A_cjs.toStandardSchema(jsonSchema2);
