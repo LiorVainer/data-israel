@@ -27,6 +27,7 @@ Before writing any code, ask the user ALL of the following questions. Present th
 - **API method**: Does the API use GET or POST requests?
 - **Authentication**: Does the API require auth (API key, token, none)?
 - **Hebrew label**: What Hebrew name should appear in the UI? (e.g., "תחבורה ציבורית")
+- **Israeli egress required?** Does the API respond correctly from non-Israeli IPs (Vercel's default regions)? Some Israeli APIs geo-block, return HTML/XML fallbacks, or silently empty results outside Israel — see **Step 1.5** below to verify before implementing.
 
 ### Group 2: Structure & Architecture
 
@@ -55,6 +56,46 @@ Before writing any code, ask the user ALL of the following questions. Present th
 - **Landing category**: Which tab on the landing page? (`general`, `economy`, `health`)
 - **Logo file**: Does the user have a logo image to place in `/public/`?
 - **Suggestion prompts**: 2-4 example Hebrew prompts for the empty conversation UI
+
+## Step 1.5: Check Israeli egress reachability (BEFORE writing code)
+
+Before scaffolding any files, verify how the upstream API behaves from non-Israeli egress. This decision affects the client file template (with-proxy vs direct) and must be captured in the OpenSpec proposal.
+
+**How to test:**
+
+1. Add a one-off probe to `src/app/api/debug/upstream-probe/route.ts` (or hit the endpoint directly from a non-IL machine / Vercel Preview).
+2. Look for any of these geo-gating signals:
+   - HTTP 403, 451, or a Cloudflare/Akamai challenge page
+   - HTML body when JSON was expected
+   - Empty `{ value: [] }` / `{ results: [] }` arrays that should contain data
+   - Timeouts only from non-IL egress
+3. Compare against the same request from an Israeli network.
+
+**If the API needs Israeli egress**, the client MUST route through the Bright Data proxy helper at `src/lib/proxy/bright-data.ts` — the same pattern used by `knesset`, `shufersal`, and `rami-levy`. The client file spreads a conditional agent into `axios.create()`:
+
+```typescript
+import { getBrightDataAgent } from '@/lib/proxy/bright-data';
+
+const brightDataAgent = getBrightDataAgent();
+
+const myInstance = axios.create({
+    baseURL: MY_BASE_URL,
+    timeout: 30_000,
+    headers: { /* ... */ },
+    ...(brightDataAgent && {
+        httpsAgent: brightDataAgent,
+        httpAgent: brightDataAgent,
+        proxy: false as const,
+    }),
+});
+```
+
+See `src/data-sources/CLAUDE.md` → **"Step 0: Check Israeli egress reachability"** for the full rules, including:
+- Only the client file may import `getBrightDataAgent`
+- Never proxy bulk-scraping endpoints (per-GB billing blows up)
+- Skip the proxy if the API works fine from any IP — the ~150–300 ms hop is pure cost
+
+If proxying is needed, mention it explicitly in the OpenSpec proposal's `proposal.md` and `design.md` (it affects risks, cost estimates, and the client file template).
 
 ## Step 2: Create OpenSpec Proposal
 

@@ -1,0 +1,36 @@
+# Change: Route Israel-gated data-source clients through a single proxy URL
+
+## Why
+
+Three data-source clients (Knesset OData, Shufersal, Rami Levy) return empty, HTML error pages, or time out when called from non-Israeli egress IPs (Vercel's default regions). The app needs Israeli egress for those specific clients only, while the other six data sources (CBS, DataGov, Budget, GovMap, Drugs, Health) must continue to egress directly with zero added latency.
+
+The rest of the solution (signing up with Bright Data, choosing pay-as-you-go residential IL, creating a zone) happens outside the repo. The in-repo surface should be **one environment variable** — a full proxy URL — that developers paste once and forget.
+
+## What Changes
+
+- **ADDED** a new `proxy-egress` capability that owns the rule for how data-source clients opt into proxy egress.
+- **ADDED** a single environment variable `BRIGHT_DATA_PROXY_URL` (full URL with embedded credentials, e.g. `http://brd-customer-hl_xxx-zone-residential_il-country-il:PASSWORD@brd.superproxy.io:33335`). No separate `BRIGHTDATA_CUSTOMER_ID`, `BRIGHTDATA_ZONE_PASSWORD`, `BRIGHTDATA_HOST`, etc.
+- **ADDED** a shared helper `src/lib/proxy/bright-data.ts` exporting `getBrightDataAgent()` which:
+  - Returns `null` when `BRIGHT_DATA_PROXY_URL` is unset or empty (proxy disabled, default dev/CI behavior).
+  - Returns a cached singleton `HttpsProxyAgent` when the env var is set.
+  - Auto-enables: no separate `BRIGHT_DATA_ENABLED` flag. Presence of the URL is the kill switch.
+- **ADDED** opt-in wiring inside three existing axios instances only:
+  - `src/data-sources/knesset/api/knesset.client.ts` — `knessetInstance`
+  - `src/data-sources/shufersal/api/shufersal.client.ts` — `shufersalInstance`
+  - `src/data-sources/rami-levy/api/rami-levy.client.ts` — `ramiLevyInstance`
+
+  Each client spreads `{ httpsAgent, httpAgent, proxy: false }` into its existing `axios.create()` call when the helper returns a non-null agent. **All other data-source clients remain untouched.**
+- **ADDED** `https-proxy-agent` as a runtime dependency.
+- **ADDED** a disposable Next.js App Router route handler `src/app/api/debug/bright-data/route.ts` that verifies `geo.brdtest.com/welcome.txt` returns an Israeli IP and that each of the three clients returns a real response. Mirrors the style of the existing `src/app/api/debug/upstream-probe/route.ts`. Marked as temporary in its header and deleted after rollout is verified.
+
+## Impact
+
+- **Affected specs:** new capability `proxy-egress`. No modifications to `agent-tools`.
+- **Affected code:**
+  - New: `src/lib/proxy/bright-data.ts`, `src/app/api/debug/bright-data/route.ts` (temporary)
+  - Modified: `src/data-sources/knesset/api/knesset.client.ts`, `src/data-sources/shufersal/api/shufersal.client.ts`, `src/data-sources/rami-levy/api/rami-levy.client.ts`
+  - `package.json` — add `https-proxy-agent` dependency
+  - `.env.example` — document `BRIGHT_DATA_PROXY_URL`
+- **Affected infra:** Vercel env var `BRIGHT_DATA_PROXY_URL` must be set in Preview + Production. Absence of the var means clients egress directly (same behavior as today).
+- **Cost:** Bright Data pay-as-you-go residential, realistic usage ≤ 1 GB/month = ≤ $4/month. $5 signup credit covers initial testing.
+- **Non-goals:** No broader proxy framework, no routing middleware, no per-request country switching, no proxy for non-Israeli APIs. Single URL, three clients, auto-detect.

@@ -44,6 +44,51 @@ src/data-sources/
 
 ## Adding a New Data Source
 
+### Step 0: Check Israeli egress reachability (BEFORE writing any code)
+
+Before implementing a new data source, verify that the upstream API responds from **non-Israeli egress** (Vercel's default regions). Some Israeli APIs geo-block, geo-degrade, or silently return HTML / Atom XML instead of JSON when called from outside Israel. If the API only works reliably from Israel, the client MUST route through the Bright Data proxy.
+
+**How to check:**
+
+1. From a non-Israeli network (your Vercel Preview URL, or a non-IL VPS, or add the API to `src/app/api/debug/upstream-probe/route.ts`), issue a representative request.
+2. Compare against the same request from an Israeli IP.
+3. Any of the following indicates geo-gating:
+   - HTTP 403, 451, or Cloudflare/Akamai challenge page
+   - HTML body when JSON was expected
+   - Empty `{ value: [] }` / `{ results: [] }` responses that should contain data
+   - Timeouts that only occur from non-IL
+
+**If the API needs Israeli egress**, wire the client through the Bright Data proxy helper (same pattern used by `knesset`, `shufersal`, and `rami-levy`):
+
+```typescript
+// src/data-sources/{name}/api/{name}.client.ts
+import axios, { type AxiosInstance } from 'axios';
+import { getBrightDataAgent } from '@/lib/proxy/bright-data';
+import { MY_BASE_URL } from './{name}.endpoints';
+
+// Opt into Israeli egress via Bright Data when BRIGHT_DATA_PROXY_URL is set.
+// `proxy: false` is required so axios does not layer its own proxy logic
+// on top of the HttpsProxyAgent.
+const brightDataAgent = getBrightDataAgent();
+
+const myInstance: AxiosInstance = axios.create({
+    baseURL: MY_BASE_URL,
+    timeout: 30_000,
+    headers: { Accept: 'application/json', 'User-Agent': 'DataIsrael-Agent/1.0' },
+    ...(brightDataAgent && {
+        httpsAgent: brightDataAgent,
+        httpAgent: brightDataAgent,
+        proxy: false as const,
+    }),
+});
+```
+
+**Rules:**
+- Only import `getBrightDataAgent` from `@/lib/proxy/bright-data` in the client file — never from tools, agents, or UI code.
+- Bright Data billing is per GB, so **never proxy bulk-scraping endpoints** (full XML price dumps, archive downloads, etc.) — call out any large-payload endpoints in the proposal and keep them on direct egress with a separate scraping path.
+- If the API works fine from non-Israeli egress, do **not** wire the proxy. The ~150–300 ms proxy hop is pure cost for no benefit.
+- Add a comment above the conditional spread explaining *why* this specific client needs proxying, so future maintainers don't remove it.
+
 ### Step 1: Create the folder
 
 Create `src/data-sources/{name}/` following the structure above.
