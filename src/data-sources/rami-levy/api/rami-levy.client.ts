@@ -19,14 +19,24 @@ import type { RamiLevyCatalogResponse, RamiLevyProduct } from './rami-levy.types
 // through Bright Data IL when BRIGHT_DATA_PROXY_URL is set. Uses axios's
 // native proxy field (pure data, isomorphic) so the helper module does not
 // pull Node-only packages into the client bundle via the data-source registry.
+//
+// Headers mimic a real browser session: even with an Israeli residential IP,
+// the origin's bot detection returns HTTP 402 for requests missing Origin,
+// Referer, and a browser-like User-Agent. These headers match what the
+// upstream-probe route uses and what a real rami-levy.co.il browser session
+// sends to /api/catalog.
 const ramiLevyInstance: AxiosInstance = axios.create({
     baseURL: RAMI_LEVY_BASE_URL,
     timeout: 15_000,
     headers: {
         'Content-Type': 'application/json;charset=UTF-8',
-        Accept: 'application/json',
+        Accept: 'application/json, text/plain, */*',
+        'Accept-Language': 'he-IL,he;q=0.9,en;q=0.8',
+        Origin: 'https://www.rami-levy.co.il',
+        Referer: 'https://www.rami-levy.co.il/he/online/search',
         locale: 'he',
-        'User-Agent': 'DataIsrael-Agent/1.0',
+        'User-Agent':
+            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
     },
     proxy: getBrightDataProxyConfig(),
 });
