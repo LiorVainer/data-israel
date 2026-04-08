@@ -71,8 +71,12 @@ Before scaffolding any files, verify how the upstream API behaves from non-Israe
    - Timeouts only from non-IL egress
 3. Compare against the same request from an Israeli network.
 
-**If the API needs Israeli egress**, the client MUST route through the Bright Data proxy helper at `src/lib/proxy/bright-data.ts` — the same pattern used by `knesset`, `shufersal`, and `rami-levy`. The client file uses axios's native `proxy` field:
+**If the API needs Israeli egress**, the client MUST route through the Bright Data proxy helper at `src/lib/proxy/bright-data.ts`. Two zones are available:
 
+- **Residential zone** (`BRIGHT_DATA_PROXY_URL` → `getBrightDataProxyConfig`) — cheap, used by Knesset and Shufersal. Start here.
+- **Web Unlocker zone** (`BRIGHT_DATA_UNLOCKER_URL` → `getBrightDataUnlockerProxyConfig`) — higher per-request cost, handles TLS fingerprinting and bot-score rotation server-side. Used by Rami Levy, which flags generic residential IPs with HTTP 402.
+
+Standard case (most sources):
 ```typescript
 import { getBrightDataProxyConfig } from '@/lib/proxy/bright-data';
 
@@ -80,14 +84,33 @@ const myInstance = axios.create({
     baseURL: MY_BASE_URL,
     timeout: 30_000,
     headers: { /* ... */ },
-    proxy: getBrightDataProxyConfig(), // AxiosProxyConfig | false — both valid
+    proxy: getBrightDataProxyConfig(), // AxiosProxyConfig | false
+});
+```
+
+Bot-protected case (upgrade only if the residential zone is blocked by a WAF):
+```typescript
+import {
+    getBrightDataProxyConfig,
+    getBrightDataUnlockerProxyConfig,
+} from '@/lib/proxy/bright-data';
+
+const unlockerProxy = getBrightDataUnlockerProxyConfig();
+const proxy = unlockerProxy !== false ? unlockerProxy : getBrightDataProxyConfig();
+
+const myInstance = axios.create({
+    baseURL: MY_BASE_URL,
+    timeout: 30_000,
+    headers: { /* ... */ },
+    proxy,
 });
 ```
 
 See `src/data-sources/CLAUDE.md` → **"Step 0: Check Israeli egress reachability"** for the full rules, including:
-- Only the client file may import `getBrightDataProxyConfig`
+- Only the client file may import the proxy helpers
 - **Do not** use `https-proxy-agent` / `httpsAgent` — it leaks Node `net`/`tls` into the client bundle via the registry chain. Always use axios's native `proxy` field.
-- Never proxy bulk-scraping endpoints (per-GB billing blows up)
+- Start with the residential zone; only upgrade to the Web Unlocker zone after `/api/debug/bright-data` proves residential gets blocked and unlocker succeeds
+- Never proxy bulk-scraping endpoints (per-GB / per-request billing blows up)
 - Skip the proxy if the API works fine from any IP — the ~150–300 ms hop is pure cost
 
 If proxying is needed, mention it explicitly in the OpenSpec proposal's `proposal.md` and `design.md` (it affects risks, cost estimates, and the client file template).

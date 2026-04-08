@@ -29,13 +29,13 @@ import { NextResponse } from 'next/server';
 import { knessetApi } from '@/data-sources/knesset/api/knesset.client';
 import { shufersalApi } from '@/data-sources/shufersal/api/shufersal.client';
 import { ramiLevyApi } from '@/data-sources/rami-levy/api/rami-levy.client';
-import { getBrightDataProxyConfig } from '@/lib/proxy/bright-data';
+import { getBrightDataProxyConfig, getBrightDataUnlockerProxyConfig } from '@/lib/proxy/bright-data';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 type CheckResult = {
-    id: 'geo-brdtest' | 'knesset' | 'shufersal' | 'rami-levy';
+    id: 'geo-brdtest-residential' | 'geo-brdtest-unlocker' | 'knesset' | 'shufersal' | 'rami-levy';
     ok: boolean;
     durationMs: number;
     summary: Record<string, unknown> | null;
@@ -53,8 +53,20 @@ async function timeIt<T>(fn: () => Promise<T>): Promise<{ value?: T; error?: Err
     }
 }
 
-async function checkGeoBrdTest(): Promise<CheckResult> {
-    const proxy = getBrightDataProxyConfig();
+async function checkGeoBrdTest(
+    id: 'geo-brdtest-residential' | 'geo-brdtest-unlocker',
+    proxy: ReturnType<typeof getBrightDataProxyConfig>,
+): Promise<CheckResult> {
+    if (proxy === false) {
+        return {
+            id,
+            ok: false,
+            durationMs: 0,
+            summary: { note: 'proxy env var not set' },
+            error: null,
+        };
+    }
+
     const { value, error, durationMs } = await timeIt(async () => {
         const res = await axios.get<string>('https://geo.brdtest.com/welcome.txt', {
             timeout: 15_000,
@@ -67,7 +79,7 @@ async function checkGeoBrdTest(): Promise<CheckResult> {
 
     if (error || value === undefined) {
         return {
-            id: 'geo-brdtest',
+            id,
             ok: false,
             durationMs,
             summary: null,
@@ -77,20 +89,22 @@ async function checkGeoBrdTest(): Promise<CheckResult> {
 
     // Body shape from Bright Data is a short human-readable line containing
     // country and city, e.g.:
-    //   "Country: IL\nCity: Tel Aviv\nIP: 31.154.x.x"
+    //   "Country: IL\nCity: Tel Aviv\nIP: 31.154.x.x\nASN: AS1234 ..."
     const body = String(value);
     const country = /Country:\s*([A-Z]{2})/i.exec(body)?.[1] ?? null;
     const city = /City:\s*([^\n\r]+)/i.exec(body)?.[1]?.trim() ?? null;
     const ip = /IP:\s*([0-9a-fA-F.:]+)/i.exec(body)?.[1] ?? null;
+    const asn = /ASN[^:]*:\s*([^\n\r]+)/i.exec(body)?.[1]?.trim() ?? null;
 
     return {
-        id: 'geo-brdtest',
+        id,
         ok: country === 'IL',
         durationMs,
         summary: {
             country,
             city,
             ip,
+            asn,
             rawBody: body.length > 500 ? `${body.slice(0, 500)}…` : body,
         },
         error: null,
@@ -171,12 +185,30 @@ async function checkRamiLevy(): Promise<CheckResult> {
 }
 
 export async function GET(): Promise<NextResponse> {
-    const proxyUrl = process.env.BRIGHT_DATA_PROXY_URL;
-    const proxyConfigured = typeof proxyUrl === 'string' && proxyUrl.trim().length > 0;
+    const residentialUrl = process.env.BRIGHT_DATA_PROXY_URL;
+    const unlockerUrl = process.env.BRIGHT_DATA_UNLOCKER_URL;
+    const residentialConfigured = typeof residentialUrl === 'string' && residentialUrl.trim().length > 0;
+    const unlockerConfigured = typeof unlockerUrl === 'string' && unlockerUrl.trim().length > 0;
 
-    const checks = await Promise.all([checkGeoBrdTest(), checkKnesset(), checkShufersal(), checkRamiLevy()]);
+    const residentialProxy = getBrightDataProxyConfig();
+    const unlockerProxy = getBrightDataUnlockerProxyConfig();
 
-    const allPassed = checks.every((c) => c.ok);
+    const checks = await Promise.all([
+        checkGeoBrdTest('geo-brdtest-residential', residentialProxy),
+        checkGeoBrdTest('geo-brdtest-unlocker', unlockerProxy),
+        checkKnesset(),
+        checkShufersal(),
+        checkRamiLevy(),
+    ]);
+
+    // A check is considered "passed" when ok === true. Unset-proxy checks
+    // (ok === false with no error) are not counted as failures for allPassed
+    // purposes when their zone isn't even configured.
+    const allPassed = checks.every((c) => {
+        if (c.id === 'geo-brdtest-residential' && !residentialConfigured) return true;
+        if (c.id === 'geo-brdtest-unlocker' && !unlockerConfigured) return true;
+        return c.ok;
+    });
 
     return NextResponse.json(
         {
@@ -186,7 +218,10 @@ export async function GET(): Promise<NextResponse> {
                 vercelRegion: process.env.VERCEL_REGION ?? null,
                 nodeEnv: process.env.NODE_ENV,
             },
-            proxyConfigured,
+            zones: {
+                residentialConfigured,
+                unlockerConfigured,
+            },
             allPassed,
             checks,
         },

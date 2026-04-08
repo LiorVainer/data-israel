@@ -58,7 +58,11 @@ Before implementing a new data source, verify that the upstream API responds fro
    - Empty `{ value: [] }` / `{ results: [] }` responses that should contain data
    - Timeouts that only occur from non-IL
 
-**If the API needs Israeli egress**, wire the client through the Bright Data proxy helper (same pattern used by `knesset`, `shufersal`, and `rami-levy`):
+**If the API needs Israeli egress**, wire the client through the Bright Data proxy helper. Two zones are available, pick based on the upstream's gating level:
+
+### Standard case — residential zone (Knesset, Shufersal pattern)
+
+For targets that only check egress country:
 
 ```typescript
 // src/data-sources/{name}/api/{name}.client.ts
@@ -66,10 +70,10 @@ import axios, { type AxiosInstance } from 'axios';
 import { getBrightDataProxyConfig } from '@/lib/proxy/bright-data';
 import { MY_BASE_URL } from './{name}.endpoints';
 
-// Opt into Israeli egress via Bright Data when BRIGHT_DATA_PROXY_URL is set.
-// `getBrightDataProxyConfig()` returns axios's native proxy config (pure data,
-// isomorphic) or `false` when the env var is absent — both are valid values
-// for axios's `proxy` field, so the spread is unconditional.
+// Opt into Israeli residential egress via Bright Data when
+// BRIGHT_DATA_PROXY_URL is set. `getBrightDataProxyConfig()` returns
+// axios's native proxy config (pure data, isomorphic) or `false` when the
+// env var is absent — both are valid values for axios's `proxy` field.
 const myInstance: AxiosInstance = axios.create({
     baseURL: MY_BASE_URL,
     timeout: 30_000,
@@ -78,12 +82,36 @@ const myInstance: AxiosInstance = axios.create({
 });
 ```
 
+### Bot-protected case — Web Unlocker zone with residential fallback (Rami Levy pattern)
+
+If the residential zone passes the geo check but the upstream still returns bot-detection errors (HTTP 402, HTML challenges, Cloudflare pages), switch to the Web Unlocker zone. It handles TLS fingerprinting, IP reputation rotation, and JS challenges server-side. It costs more per request but is the only reliable bypass when residential IPs are blocked.
+
+```typescript
+import {
+    getBrightDataProxyConfig,
+    getBrightDataUnlockerProxyConfig,
+} from '@/lib/proxy/bright-data';
+
+// Prefer the Web Unlocker zone; fall back to residential if unlocker isn't
+// configured. Document WHY this specific client needs the unlocker.
+const unlockerProxy = getBrightDataUnlockerProxyConfig();
+const myProxy = unlockerProxy !== false ? unlockerProxy : getBrightDataProxyConfig();
+
+const myInstance: AxiosInstance = axios.create({
+    baseURL: MY_BASE_URL,
+    timeout: 30_000,
+    headers: { /* ... */ },
+    proxy: myProxy,
+});
+```
+
 **Rules:**
-- Only import `getBrightDataProxyConfig` from `@/lib/proxy/bright-data` in the client file — never from tools, agents, or UI code.
+- Only import `getBrightDataProxyConfig` / `getBrightDataUnlockerProxyConfig` from `@/lib/proxy/bright-data` in the client file — never from tools, agents, or UI code.
 - **Do not use `httpsAgent`/`httpAgent` with `https-proxy-agent`** — that package statically imports Node `net`/`tls` and breaks the client bundle via the data-source registry chain. Stick to axios's native `proxy` field, which is isomorphic.
-- Bright Data billing is per GB, so **never proxy bulk-scraping endpoints** (full XML price dumps, archive downloads, etc.) — call out any large-payload endpoints in the proposal and keep them on direct egress with a separate scraping path.
+- **Start with residential**. Only upgrade a specific client to the unlocker zone once the debug route (`/api/debug/bright-data`) proves that the residential zone gets blocked while the unlocker zone succeeds.
+- Bright Data billing is per GB (residential) or per-request (unlocker). **Never proxy bulk-scraping endpoints** (full XML price dumps, archive downloads, etc.) — call them out in the proposal and keep them on direct egress with a separate scraping path.
 - If the API works fine from non-Israeli egress, do **not** wire the proxy. The ~150–300 ms proxy hop is pure cost for no benefit.
-- Add a comment above the `proxy:` field explaining *why* this specific client needs proxying, so future maintainers don't remove it.
+- Add a comment above the `proxy:` field explaining *why* this specific client needs proxying (and which zone), so future maintainers don't remove it.
 
 ### Step 1: Create the folder
 

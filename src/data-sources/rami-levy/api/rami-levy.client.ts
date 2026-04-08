@@ -7,7 +7,7 @@
 
 import axios, { type AxiosInstance } from 'axios';
 import { sleep } from '@/lib/utils/sleep';
-import { getBrightDataProxyConfig } from '@/lib/proxy/bright-data';
+import { getBrightDataProxyConfig, getBrightDataUnlockerProxyConfig } from '@/lib/proxy/bright-data';
 import { RAMI_LEVY_BASE_URL, RAMI_LEVY_CATALOG_PATH, RAMI_LEVY_DEFAULT_STORE_ID } from './rami-levy.endpoints';
 import type { RamiLevyCatalogResponse, RamiLevyProduct } from './rami-levy.types';
 
@@ -15,16 +15,22 @@ import type { RamiLevyCatalogResponse, RamiLevyProduct } from './rami-levy.types
 // Axios Instance
 // ============================================================================
 
-// Rami Levy's catalog API appears to geo-gate non-Israeli egress — route
-// through Bright Data IL when BRIGHT_DATA_PROXY_URL is set. Uses axios's
-// native proxy field (pure data, isomorphic) so the helper module does not
-// pull Node-only packages into the client bundle via the data-source registry.
+// Rami Levy requires BOTH Israeli egress AND bot-detection bypass. The generic
+// residential pool (BRIGHT_DATA_PROXY_URL) geo-passes the request but still
+// returns HTTP 402 because the Bright Data residential IPs are flagged by
+// rami-levy's WAF. Prefer the Web Unlocker zone (BRIGHT_DATA_UNLOCKER_URL)
+// which handles TLS fingerprinting and IP reputation rotation server-side,
+// with fallback to the residential zone if the unlocker env var is unset.
 //
-// Headers mimic a real browser session: even with an Israeli residential IP,
-// the origin's bot detection returns HTTP 402 for requests missing Origin,
-// Referer, and a browser-like User-Agent. These headers match what the
-// upstream-probe route uses and what a real rami-levy.co.il browser session
-// sends to /api/catalog.
+// Browser-like headers remain important so that if the unlocker forwards them
+// verbatim, the origin's secondary checks (Origin/Referer/UA) also pass.
+//
+// Uses axios's native proxy field (pure data, isomorphic) so this file does
+// not pull Node-only packages into the client bundle via the data-source
+// registry. Do not add httpsAgent/httpAgent/HttpsProxyAgent here.
+const unlockerProxy = getBrightDataUnlockerProxyConfig();
+const ramiLevyProxy = unlockerProxy !== false ? unlockerProxy : getBrightDataProxyConfig();
+
 const ramiLevyInstance: AxiosInstance = axios.create({
     baseURL: RAMI_LEVY_BASE_URL,
     timeout: 15_000,
@@ -38,7 +44,7 @@ const ramiLevyInstance: AxiosInstance = axios.create({
         'User-Agent':
             'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
     },
-    proxy: getBrightDataProxyConfig(),
+    proxy: ramiLevyProxy,
 });
 
 // ============================================================================

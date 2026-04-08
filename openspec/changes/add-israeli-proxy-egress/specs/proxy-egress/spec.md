@@ -2,45 +2,58 @@
 
 ## ADDED Requirements
 
-### Requirement: Single Proxy URL Environment Variable
+### Requirement: Dual Proxy URL Environment Variables
 
-The system SHALL expose exactly one environment variable, `BRIGHT_DATA_PROXY_URL`, that contains a full HTTP proxy URL (including scheme, embedded basic-auth credentials, host, and port) used to egress Israel-gated data-source API calls. No additional environment variables (customer ID, zone name, password, host, port, country, enabled-flag) SHALL be defined to configure the same proxy.
+The system SHALL expose exactly two environment variables for proxy configuration: `BRIGHT_DATA_PROXY_URL` (the residential zone, used for geo-gated targets) and `BRIGHT_DATA_UNLOCKER_URL` (the Web Unlocker zone, used for targets whose WAF blocks generic residential IPs). Each contains a full HTTP proxy URL with embedded basic-auth credentials. No additional environment variables (customer ID, zone name, password, host, port, country, enabled-flag) SHALL be defined to configure the same proxies.
 
-#### Scenario: Unset env var disables proxy
-- **WHEN** `BRIGHT_DATA_PROXY_URL` is unset or equal to the empty string
+#### Scenario: Both env vars unset disables proxying entirely
+- **WHEN** both `BRIGHT_DATA_PROXY_URL` and `BRIGHT_DATA_UNLOCKER_URL` are unset or empty
 - **THEN** the system SHALL treat proxying as disabled and all data-source clients SHALL egress directly (identical to pre-change behavior)
 
-#### Scenario: Set env var enables proxy for opt-in clients
-- **WHEN** `BRIGHT_DATA_PROXY_URL` is set to a non-empty value
-- **THEN** the system SHALL route only the Knesset, Shufersal, and Rami Levy clients through the configured proxy
-- **AND** all other data-source clients SHALL continue to egress directly
+#### Scenario: Residential only — Knesset, Shufersal, and Rami Levy all use residential
+- **WHEN** `BRIGHT_DATA_PROXY_URL` is set and `BRIGHT_DATA_UNLOCKER_URL` is unset
+- **THEN** the Knesset and Shufersal clients SHALL use the residential zone
+- **AND** the Rami Levy client SHALL fall back to the residential zone (and will fail with the same bot-detection error as before if the WAF blocks the IP)
+
+#### Scenario: Unlocker only — Knesset and Shufersal egress directly, Rami Levy uses unlocker
+- **WHEN** `BRIGHT_DATA_PROXY_URL` is unset and `BRIGHT_DATA_UNLOCKER_URL` is set
+- **THEN** the Knesset and Shufersal clients SHALL egress directly (residential helper returns `false`)
+- **AND** the Rami Levy client SHALL use the Web Unlocker zone
+
+#### Scenario: Both set — recommended production configuration
+- **WHEN** both `BRIGHT_DATA_PROXY_URL` and `BRIGHT_DATA_UNLOCKER_URL` are set
+- **THEN** the Knesset and Shufersal clients SHALL use the residential zone
+- **AND** the Rami Levy client SHALL use the Web Unlocker zone
 
 #### Scenario: No secondary enable flag exists
 - **WHEN** a developer searches the codebase for an enable/disable toggle for the proxy
-- **THEN** the only configuration surface SHALL be the presence or absence of `BRIGHT_DATA_PROXY_URL`
+- **THEN** the only configuration surface SHALL be the presence or absence of the two URL environment variables
 
-### Requirement: Bright Data Proxy Config Helper
+### Requirement: Bright Data Proxy Config Helpers
 
-The system SHALL provide a module `src/lib/proxy/bright-data.ts` that exports a function `getBrightDataProxyConfig()` returning either a cached `AxiosProxyConfig` object or the literal `false`, and this function SHALL be the single construction point for the Bright Data proxy configuration used anywhere in the application. The helper SHALL contain zero imports of Node-only packages (no `https-proxy-agent`, no `http`, no `net`, no `tls`) so that it remains safe to include in a client-reachable module graph.
+The system SHALL provide a module `src/lib/proxy/bright-data.ts` that exports two functions: `getBrightDataProxyConfig()` (reads `BRIGHT_DATA_PROXY_URL`, the residential zone) and `getBrightDataUnlockerProxyConfig()` (reads `BRIGHT_DATA_UNLOCKER_URL`, the Web Unlocker zone). Both SHALL return either a cached `AxiosProxyConfig` object or the literal `false`. These SHALL be the only construction points for Bright Data proxy configurations used anywhere in the application. The module SHALL contain zero imports of Node-only packages (no `https-proxy-agent`, no `http`, no `net`, no `tls`) so that it remains safe to include in a client-reachable module graph.
 
-#### Scenario: Returns false when env var is absent
+#### Scenario: Each helper returns false when its env var is absent
 - **WHEN** `process.env.BRIGHT_DATA_PROXY_URL` is `undefined` or empty
 - **THEN** `getBrightDataProxyConfig()` SHALL return the literal `false`
+- **WHEN** `process.env.BRIGHT_DATA_UNLOCKER_URL` is `undefined` or empty
+- **THEN** `getBrightDataUnlockerProxyConfig()` SHALL return the literal `false`
 
-#### Scenario: Returns a cached AxiosProxyConfig when env var is present
-- **WHEN** `process.env.BRIGHT_DATA_PROXY_URL` is a non-empty string
-- **AND** `getBrightDataProxyConfig()` is called two or more times in the same process
+#### Scenario: Each helper returns a cached AxiosProxyConfig when its env var is present
+- **WHEN** either env var is a non-empty string
+- **AND** the corresponding helper is called two or more times in the same process
 - **THEN** the function SHALL return the same `AxiosProxyConfig` object on every call (cached at module scope)
+- **AND** the two helpers SHALL maintain independent caches (setting one env var SHALL NOT affect the other helper's return value)
 
 #### Scenario: Parses the URL via the standard URL API
-- **WHEN** `getBrightDataProxyConfig()` is called for the first time with a valid URL in the env var
+- **WHEN** either helper is called for the first time with a valid URL in its env var
 - **THEN** the function SHALL use the global `URL` constructor to parse the value
 - **AND** SHALL decode percent-encoded username and password via `decodeURIComponent`
 - **AND** SHALL populate an `AxiosProxyConfig` with `protocol` (scheme minus the colon), `host`, `port`, and `auth: { username, password }`
 
 #### Scenario: Malformed URL surfaces loudly
-- **WHEN** `BRIGHT_DATA_PROXY_URL` is present but not a valid URL
-- **THEN** the first call to `getBrightDataProxyConfig()` SHALL throw an error originating from the `URL` constructor
+- **WHEN** either env var is present but not a valid URL
+- **THEN** the first call to the corresponding helper SHALL throw an error originating from the `URL` constructor
 - **AND** the system SHALL NOT silently fall back to direct egress
 
 #### Scenario: Helper is fully isomorphic
@@ -50,16 +63,27 @@ The system SHALL provide a module `src/lib/proxy/bright-data.ts` that exports a 
 
 ### Requirement: Selective Client Opt-In
 
-Only the three data-source clients whose upstream APIs require Israeli egress SHALL import `getBrightDataProxyConfig()`: Knesset (`src/data-sources/knesset/api/knesset.client.ts`), Shufersal (`src/data-sources/shufersal/api/shufersal.client.ts`), and Rami Levy (`src/data-sources/rami-levy/api/rami-levy.client.ts`). All other data-source clients (CBS, DataGov, Budget, GovMap, Drugs, Health) SHALL NOT import the helper.
+Only the three data-source clients whose upstream APIs require Israeli egress SHALL import the proxy helpers: Knesset (`src/data-sources/knesset/api/knesset.client.ts`) and Shufersal (`src/data-sources/shufersal/api/shufersal.client.ts`) import only `getBrightDataProxyConfig`; Rami Levy (`src/data-sources/rami-levy/api/rami-levy.client.ts`) imports BOTH helpers and prefers the unlocker with residential fallback. All other data-source clients (CBS, DataGov, Budget, GovMap, Drugs, Health) SHALL NOT import either helper.
 
 #### Scenario: Non-Israeli clients never pay the proxy hop
 - **WHEN** a chat query triggers the CBS, DataGov, Budget, GovMap, Drugs, or Health agent
 - **THEN** the outbound HTTP request SHALL NOT traverse `brd.superproxy.io` or any Bright Data infrastructure
 - **AND** request latency SHALL NOT be affected by proxy configuration
 
+#### Scenario: Rami Levy prefers unlocker with residential fallback
+- **WHEN** the Rami Levy client is initialized
+- **THEN** it SHALL call `getBrightDataUnlockerProxyConfig()` first
+- **AND** if the result is not `false`, use it as the axios `proxy` value
+- **AND** if the result is `false`, fall back to `getBrightDataProxyConfig()` as the axios `proxy` value
+
+#### Scenario: Knesset and Shufersal never use the unlocker zone
+- **WHEN** the Knesset or Shufersal client is initialized
+- **THEN** it SHALL only call `getBrightDataProxyConfig()` (residential)
+- **AND** SHALL NOT import `getBrightDataUnlockerProxyConfig`
+
 #### Scenario: Adding a new proxied client is an explicit edit
 - **WHEN** a future data source is identified as needing Israeli egress
-- **THEN** enabling the proxy for it SHALL require an explicit import of `getBrightDataProxyConfig` in that client's file
+- **THEN** enabling the proxy for it SHALL require an explicit import of `getBrightDataProxyConfig` (or `getBrightDataUnlockerProxyConfig` for bot-protected targets) in that client's file
 - **AND** SHALL NOT happen via a centralized allowlist, hostname match, or middleware interception
 
 ### Requirement: Axios Native Proxy Integration Pattern
@@ -82,10 +106,11 @@ When a data-source client uses the Bright Data proxy, it SHALL pass the return v
 
 The `BRIGHT_DATA_PROXY_URL` value SHALL NOT be committed to the repository under any circumstances and SHALL be documented as a placeholder in `.env.example` with a comment indicating the URL-encoding rule for special characters in the password.
 
-#### Scenario: .env.example contains only a placeholder
+#### Scenario: .env.example contains only placeholders
 - **WHEN** `.env.example` is inspected
-- **THEN** it SHALL contain a `BRIGHT_DATA_PROXY_URL=` entry with an obviously fake placeholder value (e.g., `http://brd-customer-XXX-zone-YYY-country-il:REPLACE_ME@brd.superproxy.io:33335`)
-- **AND** SHALL include a comment referencing the URL-encoding requirement for `@`, `:`, `#`, `/`, and `?` in passwords
+- **THEN** it SHALL contain both `BRIGHT_DATA_PROXY_URL=` and `BRIGHT_DATA_UNLOCKER_URL=` entries with empty values
+- **AND** SHALL include comments referencing the URL-encoding requirement for `@`, `:`, `#`, `/`, and `?` in passwords
+- **AND** SHALL explain which data sources use each zone (Knesset/Shufersal → residential; Rami Levy → unlocker with residential fallback)
 
 #### Scenario: .env.local is git-ignored
 - **WHEN** `.env.local` exists with a real `BRIGHT_DATA_PROXY_URL`

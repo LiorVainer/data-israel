@@ -58,7 +58,7 @@ To temporarily disable the proxy in a running deployment, the operator sets `BRI
 
 ### Decision 3: Opt-in at each client, not global
 
-Only the three problematic clients import `getBrightDataProxyConfig()` and wire it into their axios instance. The other data-source clients never touch the helper. This guarantees:
+Only the three problematic clients import the proxy helpers and wire them into their axios instance. The other data-source clients never touch the helpers. This guarantees:
 - No accidental proxying of CBS / DataGov / Budget / GovMap / Drugs / Health.
 - No central "proxy routing" table to maintain.
 - The decision "this client needs Israeli egress" lives in the same file as the client itself, which is the obvious place to look for it.
@@ -67,14 +67,34 @@ Only the three problematic clients import `getBrightDataProxyConfig()` and wire 
 - *Global fetch interceptor that routes by hostname*: rejected — magic behavior at a distance, hard to reason about, risk of accidental match on wrong hosts.
 - *A `proxyClients.ts` allowlist*: rejected — same information as the imports, one more file to keep in sync.
 
-### Decision 4: Cache the parsed `AxiosProxyConfig`
+### Decision 4: Cache the parsed `AxiosProxyConfig` per helper
 
-`getBrightDataProxyConfig()` caches the parsed config in a module-level `let` on first call. Reasons:
-- URL parsing is cheap but not free; once per process is enough.
-- The three client modules are imported once per Node process; they call `getBrightDataProxyConfig()` during `axios.create()` at module load. One parse per process is correct.
-- The cache is reset on fresh Fluid Compute cold starts, which is fine.
+Each helper (`getBrightDataProxyConfig`, `getBrightDataUnlockerProxyConfig`) caches its parsed config in a dedicated module-level `let` on first call. Reasons:
+- URL parsing is cheap but not free; once per process per zone is enough.
+- The three client modules are imported once per Node process; they call the helpers during `axios.create()` at module load. One parse per process per zone is correct.
+- The two caches are independent, so setting one env var never affects the other helper's return value.
+- The caches reset on fresh Fluid Compute cold starts, which is fine.
 
-### Decision 5: Axios native `proxy` field, NOT `https-proxy-agent`
+### Decision 5a: Two zones — residential for geo-gating, Web Unlocker for WAF-protected targets
+
+Initial assumption was that a single residential zone would handle all three problem sources. Empirical testing via `/api/debug/bright-data` proved that:
+- **Knesset** + **Shufersal**: residential zone succeeds (they only check egress country).
+- **Rami Levy**: residential zone passes the geo check but the origin returns HTTP 402. Direct curl from the same Israeli residential ISP (the user's home IP) returns HTTP 200 with 125 products using identical headers — proving it's the Bright Data residential IP *pool* being flagged, not the request shape. Rami Levy's WAF specifically fingerprints and blocks Bright Data's shared residential pool.
+
+The fix is a **second Bright Data zone** — the Web Unlocker product — which handles TLS fingerprinting, IP reputation rotation, Cloudflare clearance, and JS challenges server-side. It's accessible via the same `brd.superproxy.io:33335` proxy endpoint as the residential zone, just with a different zone name in the username.
+
+**Zone assignment:**
+- Knesset, Shufersal → `BRIGHT_DATA_PROXY_URL` (residential, ~$4/GB, cheap)
+- Rami Levy → `BRIGHT_DATA_UNLOCKER_URL` (Web Unlocker, ~$1.50/1,000 req, bot-bypass) with fallback to residential if unlocker env var is unset
+
+**Alternatives considered:**
+- *Single zone for all three*: rejected empirically — Rami Levy blocks the residential pool.
+- *Web Unlocker zone for all three*: rejected on cost — Knesset and Shufersal would pay $1.50/1,000 req instead of ~$0 at their traffic level, and they don't need the bot-bypass features.
+- *REST API `/unblocker/req` (async) with polling*: rejected for latency — 2-10s per request vs ~300 ms through the proxy URL. Reserved as Plan B if the proxy-URL mode of the Web Unlocker zone turns out not to activate the full bypass pipeline.
+- *`@brightdata/sdk` npm package*: rejected because its `client.scrape(url, options)` signature does not document support for POST bodies or custom request headers — Rami Levy requires both.
+- *Skipping Rami Levy entirely*: rejected — the user wants coverage. If Plan B is also needed it can be done as a follow-up without architectural changes.
+
+### Decision 5b: Axios native `proxy` field, NOT `https-proxy-agent`
 
 **Rejected:** `httpsAgent: new HttpsProxyAgent(url)` with `proxy: false`.
 
