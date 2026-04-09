@@ -79,6 +79,7 @@ export async function POST(req: Request) {
 
         const t0 = isDev ? performance.now() : 0;
         const stream = await handleChatStream<AppUIMessage>({
+            version: 'v6',
             mastra: dynamicMastra,
             agentId: 'routingAgent',
             params: streamParams,
