@@ -44,74 +44,70 @@ src/data-sources/
 
 ## Adding a New Data Source
 
-### Step 0: Check Israeli egress reachability (BEFORE writing any code)
+### Step 0: Classify the upstream's proxy tier (BEFORE writing any code)
 
-Before implementing a new data source, verify that the upstream API responds from **non-Israeli egress** (Vercel's default regions). Some Israeli APIs geo-block, geo-degrade, or silently return HTML / Atom XML instead of JSON when called from outside Israel. If the API only works reliably from Israel, the client MUST route through the Bright Data proxy.
+Before implementing a new data source, determine whether the upstream API requires proxying and — if so — which Bright Data zone. Use the **classification script** rather than guessing: it runs the same request through four egress paths in parallel and recommends a tier.
 
-**How to check:**
+```bash
+pnpm classify-source --url=https://api.example.gov.il/v1/resource
+# For POST endpoints:
+pnpm classify-source \
+  --url=https://www.example.co.il/api/search \
+  --method=POST \
+  --body='{"q":"חלב"}' \
+  --headers='{"locale":"he"}'
+```
 
-1. From a non-Israeli network (your Vercel Preview URL, or a non-IL VPS, or add the API to `src/app/api/debug/upstream-probe/route.ts`), issue a representative request.
-2. Compare against the same request from an Israeli IP.
-3. Any of the following indicates geo-gating:
-   - HTTP 403, 451, or Cloudflare/Akamai challenge page
-   - HTML body when JSON was expected
-   - Empty `{ value: [] }` / `{ results: [] }` responses that should contain data
-   - Timeouts that only occur from non-IL
+The script requires `BRIGHT_DATA_PROBE_URL` in `.env` (a Bright Data proxy URL forced to a NON-Israeli country — see `.env.example` for details). This is crucial because testing from your own Israeli home ISP would falsely report every geo-gated endpoint as "works fine" — the whole point of the probe is to **simulate Vercel's non-Israeli egress** without physically being outside Israel.
 
-**If the API needs Israeli egress**, wire the client through the Bright Data proxy helper. Two zones are available, pick based on the upstream's gating level:
+**The four probes:**
+1. **`direct`** — from your local machine (establishes the baseline "correct" response)
+2. **`non-il`** — through `BRIGHT_DATA_PROBE_URL` (simulates Vercel egress)
+3. **`residential`** — through `BRIGHT_DATA_PROXY_URL` (IL residential zone)
+4. **`unlocker`** — through `BRIGHT_DATA_UNLOCKER_URL` (Web Unlocker)
 
-### Standard case — residential zone (Knesset, Shufersal pattern)
+**The recommendation maps directly to a PROXY_ROUTING tier:**
+- `direct` → API works from any egress; no proxy needed
+- `residential` → geo-gated only; IL residential zone is sufficient
+- `unlocker` → bot-detection; needs Web Unlocker
 
-For targets that only check egress country:
+Paste the recommended tier into `src/data-sources/proxy-routing.ts` and continue with Step 1. The routing registry is the single source of truth — data-source client files never hardcode their proxy config; they just call `resolveProxyConfig(PROXY_ROUTING['my-source'])`.
+
+**Client file wiring — always reads from PROXY_ROUTING**
+
+Every data-source client that needs a proxy follows the same pattern — read its tier from the declarative `PROXY_ROUTING` registry and pass it through `resolveProxyConfig`. You do NOT write per-client proxy logic.
 
 ```typescript
 // src/data-sources/{name}/api/{name}.client.ts
 import axios, { type AxiosInstance } from 'axios';
-import { getBrightDataProxyConfig } from '@/lib/proxy/bright-data';
+import { resolveProxyConfig } from '@/lib/proxy/bright-data';
+import { PROXY_ROUTING } from '@/data-sources/proxy-routing';
 import { MY_BASE_URL } from './{name}.endpoints';
 
-// Opt into Israeli residential egress via Bright Data when
-// BRIGHT_DATA_PROXY_URL is set. `getBrightDataProxyConfig()` returns
-// axios's native proxy config (pure data, isomorphic) or `false` when the
-// env var is absent — both are valid values for axios's `proxy` field.
+// Routing tier comes from the declarative PROXY_ROUTING registry.
+// To change which zone this client uses, edit proxy-routing.ts — not this file.
 const myInstance: AxiosInstance = axios.create({
     baseURL: MY_BASE_URL,
     timeout: 30_000,
     headers: { Accept: 'application/json', 'User-Agent': 'DataIsrael-Agent/1.0' },
-    proxy: getBrightDataProxyConfig(),
+    proxy: resolveProxyConfig(PROXY_ROUTING['my-source-id']),
 });
 ```
 
-### Bot-protected case — Web Unlocker zone with residential fallback (Rami Levy pattern)
+`resolveProxyConfig` handles the three tiers transparently:
+- `'direct'` → returns `false` (axios proxy disabled)
+- `'residential'` → returns the `BRIGHT_DATA_PROXY_URL` config (guaranteed present — env.ts marks it required)
+- `'unlocker'` → returns the `BRIGHT_DATA_UNLOCKER_URL` config (guaranteed present — env.ts marks it required)
 
-If the residential zone passes the geo check but the upstream still returns bot-detection errors (HTTP 402, HTML challenges, Cloudflare pages), switch to the Web Unlocker zone. It handles TLS fingerprinting, IP reputation rotation, and JS challenges server-side. It costs more per request but is the only reliable bypass when residential IPs are blocked.
-
-```typescript
-import {
-    getBrightDataProxyConfig,
-    getBrightDataUnlockerProxyConfig,
-} from '@/lib/proxy/bright-data';
-
-// Prefer the Web Unlocker zone; fall back to residential if unlocker isn't
-// configured. Document WHY this specific client needs the unlocker.
-const unlockerProxy = getBrightDataUnlockerProxyConfig();
-const myProxy = unlockerProxy !== false ? unlockerProxy : getBrightDataProxyConfig();
-
-const myInstance: AxiosInstance = axios.create({
-    baseURL: MY_BASE_URL,
-    timeout: 30_000,
-    headers: { /* ... */ },
-    proxy: myProxy,
-});
-```
+Both env vars are **required at startup** by `src/lib/env.ts`. If either is missing the app refuses to start — there is no silent "direct egress" fallback. This is intentional: a missing proxy env var in production would silently break rami-levy / knesset / shufersal and mask the misconfiguration.
 
 **Rules:**
-- Only import `getBrightDataProxyConfig` / `getBrightDataUnlockerProxyConfig` from `@/lib/proxy/bright-data` in the client file — never from tools, agents, or UI code.
+- Only import `resolveProxyConfig` and `PROXY_ROUTING` in client files — never from tools, agents, or UI code.
 - **Do not use `httpsAgent`/`httpAgent` with `https-proxy-agent`** — that package statically imports Node `net`/`tls` and breaks the client bundle via the data-source registry chain. Stick to axios's native `proxy` field, which is isomorphic.
-- **Start with residential**. Only upgrade a specific client to the unlocker zone once the debug route (`/api/debug/bright-data`) proves that the residential zone gets blocked while the unlocker zone succeeds.
+- **Start with the `direct` tier**. Only upgrade after `pnpm classify-source` recommends `residential` or `unlocker`.
 - Bright Data billing is per GB (residential) or per-request (unlocker). **Never proxy bulk-scraping endpoints** (full XML price dumps, archive downloads, etc.) — call them out in the proposal and keep them on direct egress with a separate scraping path.
-- If the API works fine from non-Israeli egress, do **not** wire the proxy. The ~150–300 ms proxy hop is pure cost for no benefit.
-- Add a comment above the `proxy:` field explaining *why* this specific client needs proxying (and which zone), so future maintainers don't remove it.
+- If `classify-source` says the API works fine from non-Israeli egress, do **not** wire the proxy. The ~150–300 ms proxy hop is pure cost for no benefit.
+- When upgrading a client's tier because of an empirical failure, add a comment above the `proxy:` field explaining *why* (e.g., "HTTP 402 from residential pool — Rami-Levy's WAF flags Bright Data IPs") so future maintainers don't revert the tier.
 
 ### Step 1: Create the folder
 

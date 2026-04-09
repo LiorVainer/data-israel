@@ -36,6 +36,22 @@ export const EnvSchema = z.object({
     VERCEL_GIT_COMMIT_SHA: z.string().optional(),
     NEXT_PUBLIC_SITE_URL: z.string().default('https://data-israel.org'),
     NEXT_PUBLIC_BIT_DONATE_URL: z.string().optional(),
+
+    // =======================
+    // Bright Data Proxies (Israeli egress for Knesset/Shufersal/Rami Levy)
+    // =======================
+    // Full proxy URL from Bright Data dashboard. Shape:
+    //   http://brd-customer-<id>-zone-<zone>-country-il:<password>@brd.superproxy.io:33335
+    // Required in all environments (dev, preview, production). Missing = startup failure,
+    // not silent "direct egress" fallback, so misconfiguration surfaces immediately.
+    BRIGHT_DATA_PROXY_URL: z.string().min(1, 'BRIGHT_DATA_PROXY_URL is required (Bright Data residential zone)'),
+    BRIGHT_DATA_UNLOCKER_URL: z
+        .string()
+        .min(1, 'BRIGHT_DATA_UNLOCKER_URL is required (Bright Data Web Unlocker zone)'),
+    // Dev-only: non-Israeli country probe URL for `pnpm classify-source`. NEVER set
+    // in Vercel production. Used to simulate non-IL egress from a dev machine that
+    // is physically in Israel. Optional here so production starts cleanly without it.
+    BRIGHT_DATA_PROBE_URL: z.string().optional(),
 });
 
 export type Env = z.infer<typeof EnvSchema>;

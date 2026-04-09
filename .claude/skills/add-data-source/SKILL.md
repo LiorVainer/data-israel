@@ -57,61 +57,55 @@ Before writing any code, ask the user ALL of the following questions. Present th
 - **Logo file**: Does the user have a logo image to place in `/public/`?
 - **Suggestion prompts**: 2-4 example Hebrew prompts for the empty conversation UI
 
-## Step 1.5: Check Israeli egress reachability (BEFORE writing code)
+## Step 1.5: Classify the upstream's proxy tier (BEFORE writing code)
 
-Before scaffolding any files, verify how the upstream API behaves from non-Israeli egress. This decision affects the client file template (with-proxy vs direct) and must be captured in the OpenSpec proposal.
+Before scaffolding any files, run the classification script to determine whether the new source needs a proxy and — if so — which Bright Data zone. This decision must be captured in the OpenSpec proposal.
 
-**How to test:**
+**Command:**
+```bash
+pnpm classify-source --url=https://api.example.gov.il/v1/resource
 
-1. Add a one-off probe to `src/app/api/debug/upstream-probe/route.ts` (or hit the endpoint directly from a non-IL machine / Vercel Preview).
-2. Look for any of these geo-gating signals:
-   - HTTP 403, 451, or a Cloudflare/Akamai challenge page
-   - HTML body when JSON was expected
-   - Empty `{ value: [] }` / `{ results: [] }` arrays that should contain data
-   - Timeouts only from non-IL egress
-3. Compare against the same request from an Israeli network.
+# For POST endpoints with JSON body:
+pnpm classify-source \
+  --url=https://www.example.co.il/api/search \
+  --method=POST \
+  --body='{"q":"חלב"}' \
+  --headers='{"locale":"he"}'
+```
 
-**If the API needs Israeli egress**, the client MUST route through the Bright Data proxy helper at `src/lib/proxy/bright-data.ts`. Two zones are available:
+The script requires `BRIGHT_DATA_PROBE_URL` in `.env` (a Bright Data proxy URL forced to a **non-Israeli** country — see `.env.example`). This is crucial because testing only from your local Israeli ISP would falsely report every geo-gated endpoint as "works fine." The probe URL simulates Vercel's non-Israeli egress without requiring you to physically be outside Israel.
 
-- **Residential zone** (`BRIGHT_DATA_PROXY_URL` → `getBrightDataProxyConfig`) — cheap, used by Knesset and Shufersal. Start here.
-- **Web Unlocker zone** (`BRIGHT_DATA_UNLOCKER_URL` → `getBrightDataUnlockerProxyConfig`) — higher per-request cost, handles TLS fingerprinting and bot-score rotation server-side. Used by Rami Levy, which flags generic residential IPs with HTTP 402.
+**The script's recommendation maps directly to a `PROXY_ROUTING` tier:**
+- `direct` → no proxy needed, works from any egress
+- `residential` → geo-gated only, IL residential zone suffices
+- `unlocker` → bot-detection, needs Web Unlocker
 
-Standard case (most sources):
-```typescript
-import { getBrightDataProxyConfig } from '@/lib/proxy/bright-data';
+**Paste the recommended tier into `src/data-sources/proxy-routing.ts`:**
+```ts
+export const PROXY_ROUTING = {
+    // ... existing entries ...
+    '<your-new-source-id>': 'direct', // or 'residential' / 'unlocker'
+} as const satisfies Record<DataSource, ProxyTier>;
+```
+
+**Then in your client file:**
+```ts
+import { resolveProxyConfig } from '@/lib/proxy/bright-data';
+import { PROXY_ROUTING } from '@/data-sources/proxy-routing';
 
 const myInstance = axios.create({
     baseURL: MY_BASE_URL,
     timeout: 30_000,
     headers: { /* ... */ },
-    proxy: getBrightDataProxyConfig(), // AxiosProxyConfig | false
+    proxy: resolveProxyConfig(PROXY_ROUTING['<your-new-source-id>']),
 });
 ```
 
-Bot-protected case (upgrade only if the residential zone is blocked by a WAF):
-```typescript
-import {
-    getBrightDataProxyConfig,
-    getBrightDataUnlockerProxyConfig,
-} from '@/lib/proxy/bright-data';
-
-const unlockerProxy = getBrightDataUnlockerProxyConfig();
-const proxy = unlockerProxy !== false ? unlockerProxy : getBrightDataProxyConfig();
-
-const myInstance = axios.create({
-    baseURL: MY_BASE_URL,
-    timeout: 30_000,
-    headers: { /* ... */ },
-    proxy,
-});
-```
-
-See `src/data-sources/CLAUDE.md` → **"Step 0: Check Israeli egress reachability"** for the full rules, including:
-- Only the client file may import the proxy helpers
-- **Do not** use `https-proxy-agent` / `httpsAgent` — it leaks Node `net`/`tls` into the client bundle via the registry chain. Always use axios's native `proxy` field.
-- Start with the residential zone; only upgrade to the Web Unlocker zone after `/api/debug/bright-data` proves residential gets blocked and unlocker succeeds
+See `src/data-sources/CLAUDE.md` → **"Step 0: Classify the upstream's proxy tier"** for the full workflow, including:
+- How the four probes work and why the non-IL probe is the key one
+- **Do not** use `https-proxy-agent` / `httpsAgent` — it leaks Node `net`/`tls` into the client bundle via the registry chain. Always use axios's native `proxy` field (which `resolveProxyConfig` returns).
 - Never proxy bulk-scraping endpoints (per-GB / per-request billing blows up)
-- Skip the proxy if the API works fine from any IP — the ~150–300 ms hop is pure cost
+- If `classify-source` says `direct`, don't wire any proxy — the hop is pure cost
 
 If proxying is needed, mention it explicitly in the OpenSpec proposal's `proposal.md` and `design.md` (it affects risks, cost estimates, and the client file template).
 

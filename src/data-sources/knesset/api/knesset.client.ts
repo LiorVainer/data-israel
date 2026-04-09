@@ -7,7 +7,8 @@
 
 import axios, { type AxiosInstance } from 'axios';
 import { sleep } from '@/lib/utils/sleep';
-import { getBrightDataProxyConfig } from '@/lib/proxy/bright-data';
+import { resolveProxyConfig } from '@/lib/proxy/bright-data';
+import { PROXY_ROUTING } from '@/data-sources/proxy-routing';
 import { KNESSET_BASE_URL } from './knesset.endpoints';
 import type {
     ODataCollectionResponse,
@@ -22,10 +23,12 @@ import { POSITION_IDS, CURRENT_KNESSET_NUM } from './knesset.types';
 // Axios Instance
 // ============================================================================
 
-// Knesset OData geo-blocks non-Israeli egress — route through Bright Data IL
-// when BRIGHT_DATA_PROXY_URL is set. Uses axios's native proxy field (pure
-// data, isomorphic) so the helper module does not pull Node-only packages
-// like https-proxy-agent into the client bundle via the data-source registry.
+// Knesset OData geo-gates non-Israeli egress. The routing tier comes from
+// the declarative PROXY_ROUTING registry (src/data-sources/proxy-routing.ts)
+// — adding or changing a data source's proxy requirements happens in that
+// one file, not here. Uses axios's native proxy field (pure data, isomorphic)
+// so this file does not pull Node-only packages into the client bundle via
+// the data-source registry chain.
 const knessetInstance: AxiosInstance = axios.create({
     baseURL: KNESSET_BASE_URL,
     timeout: 30_000,
@@ -33,7 +36,7 @@ const knessetInstance: AxiosInstance = axios.create({
         Accept: 'application/json',
         'User-Agent': 'DataIsrael-Agent/1.0',
     },
-    proxy: getBrightDataProxyConfig(),
+    proxy: resolveProxyConfig(PROXY_ROUTING.knesset),
 });
 
 // ============================================================================

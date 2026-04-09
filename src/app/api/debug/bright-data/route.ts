@@ -24,7 +24,7 @@
  * Data rollout is verified in Production.
  */
 
-import axios from 'axios';
+import axios, { type AxiosProxyConfig } from 'axios';
 import { NextResponse } from 'next/server';
 import { knessetApi } from '@/data-sources/knesset/api/knesset.client';
 import { shufersalApi } from '@/data-sources/shufersal/api/shufersal.client';
@@ -55,18 +55,8 @@ async function timeIt<T>(fn: () => Promise<T>): Promise<{ value?: T; error?: Err
 
 async function checkGeoBrdTest(
     id: 'geo-brdtest-residential' | 'geo-brdtest-unlocker',
-    proxy: ReturnType<typeof getBrightDataProxyConfig>,
+    proxy: AxiosProxyConfig,
 ): Promise<CheckResult> {
-    if (proxy === false) {
-        return {
-            id,
-            ok: false,
-            durationMs: 0,
-            summary: { note: 'proxy env var not set' },
-            error: null,
-        };
-    }
-
     const { value, error, durationMs } = await timeIt(async () => {
         const res = await axios.get<string>('https://geo.brdtest.com/welcome.txt', {
             timeout: 15_000,
@@ -198,11 +188,9 @@ async function checkRamiLevy(): Promise<CheckResult> {
 }
 
 export async function GET(): Promise<NextResponse> {
-    const residentialUrl = process.env.BRIGHT_DATA_PROXY_URL;
-    const unlockerUrl = process.env.BRIGHT_DATA_UNLOCKER_URL;
-    const residentialConfigured = typeof residentialUrl === 'string' && residentialUrl.trim().length > 0;
-    const unlockerConfigured = typeof unlockerUrl === 'string' && unlockerUrl.trim().length > 0;
-
+    // Both proxy URLs are required at startup by src/lib/env.ts validation —
+    // if either were missing, the app would never have reached this route
+    // handler. Safe to call the helpers unconditionally here.
     const residentialProxy = getBrightDataProxyConfig();
     const unlockerProxy = getBrightDataUnlockerProxyConfig();
 
@@ -214,14 +202,7 @@ export async function GET(): Promise<NextResponse> {
         checkRamiLevy(),
     ]);
 
-    // A check is considered "passed" when ok === true. Unset-proxy checks
-    // (ok === false with no error) are not counted as failures for allPassed
-    // purposes when their zone isn't even configured.
-    const allPassed = checks.every((c) => {
-        if (c.id === 'geo-brdtest-residential' && !residentialConfigured) return true;
-        if (c.id === 'geo-brdtest-unlocker' && !unlockerConfigured) return true;
-        return c.ok;
-    });
+    const allPassed = checks.every((c) => c.ok);
 
     return NextResponse.json(
         {
@@ -230,10 +211,6 @@ export async function GET(): Promise<NextResponse> {
                 vercelEnv: process.env.VERCEL_ENV ?? null,
                 vercelRegion: process.env.VERCEL_REGION ?? null,
                 nodeEnv: process.env.NODE_ENV,
-            },
-            zones: {
-                residentialConfigured,
-                unlockerConfigured,
             },
             allPassed,
             checks,

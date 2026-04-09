@@ -22,7 +22,8 @@
     "optimize-prompts:routing": "tsx --env-file=.env src/scripts/optimize-prompts.ts routingAgent --local",
     "optimize-prompts:routing:prod": "tsx --env-file=.env.prod src/scripts/optimize-prompts.ts routingAgent --local",
     "optimize-prompts:datagov": "tsx --env-file=.env src/scripts/optimize-prompts.ts datagovAgent --local",
-    "optimize-prompts:cbs": "tsx --env-file=.env src/scripts/optimize-prompts.ts cbsAgent --local"
+    "optimize-prompts:cbs": "tsx --env-file=.env src/scripts/optimize-prompts.ts cbsAgent --local",
+    "classify-source": "tsx --env-file=.env src/scripts/classify-source.ts"
   },
   "dependencies": {
     "@ai-sdk-tools/devtools": "^1.2.0",

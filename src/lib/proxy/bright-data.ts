@@ -1,20 +1,20 @@
 /**
  * Bright Data Proxy Config — Israeli egress for geo-gated APIs.
  *
- * This module returns axios-native proxy configs built from environment
- * variables. It exists to route a narrow set of data-source clients
- * (Knesset OData, Shufersal, Rami Levy) through Bright Data zones whose
- * exit nodes live in Israel. All other data-source clients MUST continue
- * to egress directly and MUST NOT import this helper.
+ * This module returns axios-native proxy configs parsed from the Bright
+ * Data URLs declared in `src/lib/env.ts`. It exists to route a narrow set
+ * of data-source clients (Knesset OData, Shufersal, Rami Levy) through
+ * Bright Data zones whose exit nodes live in Israel. All other data-source
+ * clients MUST continue to egress directly and MUST NOT import from here.
  *
- * ## Two zones, two helpers
+ * ## Two zones
  *
- * 1. **Residential zone** (`BRIGHT_DATA_PROXY_URL` → `getBrightDataProxyConfig`)
+ * 1. **Residential zone** (`BRIGHT_DATA_PROXY_URL`)
  *    Generic Israeli residential IP pool — cheapest ($4/GB PAYG). Used for
  *    geo-gated targets that only check the IP's country: Knesset OData,
- *    Shufersal online store, and as a fallback for Rami Levy.
+ *    Shufersal online store.
  *
- * 2. **Web Unlocker zone** (`BRIGHT_DATA_UNLOCKER_URL` → `getBrightDataUnlockerProxyConfig`)
+ * 2. **Web Unlocker zone** (`BRIGHT_DATA_UNLOCKER_URL`)
  *    Bot-detection bypass product — higher per-request cost but handles
  *    TLS fingerprinting, Cloudflare clearance, JS challenges, and IP
  *    reputation rotation server-side. Used exclusively for targets whose
@@ -22,8 +22,21 @@
  *
  *    The unlocker zone is ALSO accessible via the same `brd.superproxy.io:33335`
  *    endpoint as the residential zone, just with a different zone name in
- *    the username. The helper shape is therefore identical to the
- *    residential one — only the env var it reads is different.
+ *    the username. The helper shape is therefore identical — only the env
+ *    var it reads is different.
+ *
+ * ## Env guarantees
+ *
+ * Both `BRIGHT_DATA_PROXY_URL` and `BRIGHT_DATA_UNLOCKER_URL` are **required**
+ * in `src/lib/env.ts`. If either is missing, the app fails to start with a
+ * clear error — there is no silent "direct egress" fallback. This is
+ * intentional: a missing proxy env var would mask geo-block failures and
+ * make debugging harder.
+ *
+ * As a result, the helpers in this module unconditionally return an
+ * `AxiosProxyConfig` (not `AxiosProxyConfig | false`). The only way to opt
+ * out of proxying is to assign a client the `'direct'` tier in
+ * `src/data-sources/proxy-routing.ts`.
  *
  * ## Why axios's native `proxy` option (and not HttpsProxyAgent)
  *
@@ -38,21 +51,6 @@
  * the library runs server-side; in the browser adapter the `proxy` field
  * is silently ignored. This module is therefore fully isomorphic.
  *
- * ## Configuration
- *
- *   BRIGHT_DATA_PROXY_URL=http://brd-customer-<id>-zone-<residential-zone>-country-il:<password>@brd.superproxy.io:33335
- *   BRIGHT_DATA_UNLOCKER_URL=http://brd-customer-<id>-zone-<unlocker-zone>:<password>@brd.superproxy.io:33335
- *
- * Presence of each variable is its own kill switch:
- * - Unset or empty → the corresponding helper returns `false` (axios's "disabled proxy" sentinel).
- * - Set           → the helper returns a parsed `AxiosProxyConfig`.
- *
- * There is no separate enable flag, no split customer-id / zone / password
- * variables, and no runtime validation beyond "is parseable as a URL".
- * Malformed URLs throw on first call (via `new URL(...)`), which is the
- * correct failure mode for a geo-unblocking helper — silent direct egress
- * would mask the original geo-block error we are trying to fix.
- *
  * ## URL encoding
  *
  * The password portion of each URL is inside userinfo and therefore must
@@ -62,35 +60,35 @@
  * the decoded credentials (axios base64-encodes them verbatim into the
  * `Proxy-Authorization` header).
  *
- * ## Axios usage
+ * ## Usage
  *
- *   import { getBrightDataProxyConfig, getBrightDataUnlockerProxyConfig } from '@/lib/proxy/bright-data';
+ *   import { resolveProxyConfig } from '@/lib/proxy/bright-data';
+ *   import { PROXY_ROUTING } from '@/data-sources/proxy-routing';
  *
- *   // Residential (Knesset, Shufersal):
- *   axios.create({ baseURL: ..., proxy: getBrightDataProxyConfig() });
+ *   axios.create({
+ *     baseURL: ...,
+ *     proxy: resolveProxyConfig(PROXY_ROUTING['my-source-id']),
+ *   });
  *
- *   // Unlocker with residential fallback (Rami Levy):
- *   const unlocker = getBrightDataUnlockerProxyConfig();
- *   const proxy = unlocker !== false ? unlocker : getBrightDataProxyConfig();
- *   axios.create({ baseURL: ..., proxy });
- *
- * Do not combine this with `httpsAgent`/`httpAgent` — axios will ignore the
- * `proxy` field when a custom `httpsAgent` is set.
+ * Do not combine the result with `httpsAgent`/`httpAgent` — axios will
+ * ignore the `proxy` field when a custom `httpsAgent` is set.
  *
  * ## Allowed callers
  *
- * - `src/data-sources/knesset/api/knesset.client.ts`    (residential)
- * - `src/data-sources/shufersal/api/shufersal.client.ts` (residential)
- * - `src/data-sources/rami-levy/api/rami-levy.client.ts` (unlocker, fallback residential)
- * - `src/app/api/debug/bright-data/route.ts`             (both, for verification)
+ * - `src/data-sources/knesset/api/knesset.client.ts`    (via PROXY_ROUTING.knesset)
+ * - `src/data-sources/shufersal/api/shufersal.client.ts` (via PROXY_ROUTING.shufersal)
+ * - `src/data-sources/rami-levy/api/rami-levy.client.ts` (via PROXY_ROUTING['rami-levy'])
+ * - `src/app/api/debug/bright-data/route.ts`             (direct, for verification)
  *
- * Do not import this helper from any other module.
+ * Do not import from any other module.
  */
 
 import type { AxiosProxyConfig } from 'axios';
+import { ENV } from '@/lib/env';
+import type { ProxyTier } from '@/data-sources/proxy-routing';
 
-let cachedResidentialConfig: AxiosProxyConfig | false | undefined;
-let cachedUnlockerConfig: AxiosProxyConfig | false | undefined;
+let cachedResidentialConfig: AxiosProxyConfig | undefined;
+let cachedUnlockerConfig: AxiosProxyConfig | undefined;
 
 function parseProxyUrl(url: string): AxiosProxyConfig {
     const parsed = new URL(url);
@@ -110,53 +108,75 @@ function parseProxyUrl(url: string): AxiosProxyConfig {
 
 /**
  * Return a cached axios proxy config parsed from `BRIGHT_DATA_PROXY_URL`
- * (the residential zone), or `false` when the env var is unset / empty.
- *
- * `false` is axios's native sentinel for "disable proxying", so callers
- * can spread the return value into `axios.create({ proxy })` unconditionally.
- *
- * The result is cached at module scope so the URL is parsed once per Node
- * process (Vercel Fluid Compute warm instances).
+ * (the residential zone). The env var is required at startup, so this
+ * function always returns a valid `AxiosProxyConfig`. The result is cached
+ * at module scope — parsed once per Node process.
  */
-export function getBrightDataProxyConfig(): AxiosProxyConfig | false {
+export function getBrightDataProxyConfig(): AxiosProxyConfig {
     if (cachedResidentialConfig !== undefined) {
         return cachedResidentialConfig;
     }
-
-    const url = process.env.BRIGHT_DATA_PROXY_URL;
-    if (!url || url.trim().length === 0) {
-        cachedResidentialConfig = false;
-        return cachedResidentialConfig;
-    }
-
-    cachedResidentialConfig = parseProxyUrl(url);
+    cachedResidentialConfig = parseProxyUrl(ENV.BRIGHT_DATA_PROXY_URL);
     return cachedResidentialConfig;
 }
 
 /**
  * Return a cached axios proxy config parsed from `BRIGHT_DATA_UNLOCKER_URL`
- * (the Web Unlocker zone), or `false` when the env var is unset / empty.
- *
- * Used exclusively by `rami-levy.client.ts`, which falls back to
- * `getBrightDataProxyConfig()` when this returns `false`. That way the
- * unlocker is optional: if the operator hasn't provisioned the unlocker
- * zone, rami-levy still attempts the residential path (and will hit the
- * same bot-detection 402 as before, but the failure mode is identical to
- * the pre-unlocker state — no new breakage).
- *
- * The parse/cache behavior is identical to `getBrightDataProxyConfig`.
+ * (the Web Unlocker zone). The env var is required at startup, so this
+ * function always returns a valid `AxiosProxyConfig`. The result is cached
+ * at module scope — parsed once per Node process.
  */
-export function getBrightDataUnlockerProxyConfig(): AxiosProxyConfig | false {
+export function getBrightDataUnlockerProxyConfig(): AxiosProxyConfig {
     if (cachedUnlockerConfig !== undefined) {
         return cachedUnlockerConfig;
     }
-
-    const url = process.env.BRIGHT_DATA_UNLOCKER_URL;
-    if (!url || url.trim().length === 0) {
-        cachedUnlockerConfig = false;
-        return cachedUnlockerConfig;
-    }
-
-    cachedUnlockerConfig = parseProxyUrl(url);
+    cachedUnlockerConfig = parseProxyUrl(ENV.BRIGHT_DATA_UNLOCKER_URL);
     return cachedUnlockerConfig;
+}
+
+/**
+ * Resolve a `ProxyTier` (from `src/data-sources/proxy-routing.ts`) into an
+ * axios `proxy` field value. Central dispatcher so data-source clients
+ * don't need to know which env var corresponds to which tier — they just
+ * look up their tier in `PROXY_ROUTING` and pass it here.
+ *
+ * Tier semantics:
+ * - `direct`      → `false`                         (axios proxy disabled)
+ * - `residential` → BRIGHT_DATA_PROXY_URL config    (always defined server-side, env-guaranteed)
+ * - `unlocker`    → BRIGHT_DATA_UNLOCKER_URL config (always defined server-side, env-guaranteed)
+ *
+ * ## Client-bundle safety
+ *
+ * This function no-ops when called in a browser context (`typeof window !== 'undefined'`)
+ * and returns `false`. Reasoning:
+ *
+ * 1. Data-source axios clients call `resolveProxyConfig` at **module load**
+ *    inside `axios.create({ proxy: ... })`. They have to, because axios's
+ *    native `proxy` field is set once per instance.
+ * 2. The data-source registry (`src/data-sources/registry.ts`) is imported
+ *    by client components (e.g. `ChatThread.tsx`) for tool metadata. This
+ *    transitively pulls every data-source client into the browser bundle.
+ * 3. On the server, `ENV.BRIGHT_DATA_PROXY_URL` and `ENV.BRIGHT_DATA_UNLOCKER_URL`
+ *    are guaranteed present by `src/lib/env.ts` validation at startup.
+ * 4. On the client, Next.js only exposes `NEXT_PUBLIC_*` env vars to the
+ *    browser. Both proxy URLs are undefined in the client bundle, which
+ *    would make `parseProxyUrl(undefined)` throw at module load.
+ *
+ * The guard makes this moot: client-side the helper returns `false`, axios
+ * instances get `proxy: false`, and no env read ever happens in the browser.
+ * Proxying only matters for server-side HTTP calls anyway, so this is the
+ * correct semantic behavior, not just a workaround.
+ */
+export function resolveProxyConfig(tier: ProxyTier): AxiosProxyConfig | false {
+    if (typeof window !== 'undefined') {
+        return false;
+    }
+    switch (tier) {
+        case 'direct':
+            return false;
+        case 'residential':
+            return getBrightDataProxyConfig();
+        case 'unlocker':
+            return getBrightDataUnlockerProxyConfig();
+    }
 }

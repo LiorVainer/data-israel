@@ -7,7 +7,8 @@
 
 import axios, { type AxiosInstance } from 'axios';
 import { sleep } from '@/lib/utils/sleep';
-import { getBrightDataProxyConfig, getBrightDataUnlockerProxyConfig } from '@/lib/proxy/bright-data';
+import { resolveProxyConfig } from '@/lib/proxy/bright-data';
+import { PROXY_ROUTING } from '@/data-sources/proxy-routing';
 import { RAMI_LEVY_BASE_URL, RAMI_LEVY_CATALOG_PATH, RAMI_LEVY_DEFAULT_STORE_ID } from './rami-levy.endpoints';
 import type { RamiLevyCatalogResponse, RamiLevyProduct } from './rami-levy.types';
 
@@ -15,22 +16,22 @@ import type { RamiLevyCatalogResponse, RamiLevyProduct } from './rami-levy.types
 // Axios Instance
 // ============================================================================
 
-// Rami Levy requires BOTH Israeli egress AND bot-detection bypass. The generic
-// residential pool (BRIGHT_DATA_PROXY_URL) geo-passes the request but still
-// returns HTTP 402 because the Bright Data residential IPs are flagged by
-// rami-levy's WAF. Prefer the Web Unlocker zone (BRIGHT_DATA_UNLOCKER_URL)
-// which handles TLS fingerprinting and IP reputation rotation server-side,
-// with fallback to the residential zone if the unlocker env var is unset.
+// Rami Levy requires BOTH Israeli egress AND bot-detection bypass. The
+// generic residential pool geo-passes but returns HTTP 402 because the
+// Bright Data residential IPs are flagged by rami-levy's WAF. The routing
+// tier `unlocker` (see src/data-sources/proxy-routing.ts) sends requests
+// through the Web Unlocker zone which handles TLS fingerprinting and IP
+// reputation rotation server-side. Both BRIGHT_DATA_PROXY_URL and
+// BRIGHT_DATA_UNLOCKER_URL are required at startup (src/lib/env.ts) so
+// there is no fallback — misconfiguration fails fast.
 //
-// Browser-like headers remain important so that if the unlocker forwards them
-// verbatim, the origin's secondary checks (Origin/Referer/UA) also pass.
+// Browser-like headers remain important so that if the unlocker forwards
+// them verbatim, the origin's secondary checks (Origin/Referer/UA) also
+// pass.
 //
-// Uses axios's native proxy field (pure data, isomorphic) so this file does
-// not pull Node-only packages into the client bundle via the data-source
-// registry. Do not add httpsAgent/httpAgent/HttpsProxyAgent here.
-const unlockerProxy = getBrightDataUnlockerProxyConfig();
-const ramiLevyProxy = unlockerProxy !== false ? unlockerProxy : getBrightDataProxyConfig();
-
+// Uses axios's native proxy field (pure data, isomorphic) so this file
+// does not pull Node-only packages into the client bundle via the
+// data-source registry. Do not add httpsAgent/httpAgent/HttpsProxyAgent.
 const ramiLevyInstance: AxiosInstance = axios.create({
     baseURL: RAMI_LEVY_BASE_URL,
     timeout: 15_000,
@@ -44,7 +45,7 @@ const ramiLevyInstance: AxiosInstance = axios.create({
         'User-Agent':
             'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
     },
-    proxy: ramiLevyProxy,
+    proxy: resolveProxyConfig(PROXY_ROUTING['rami-levy']),
 });
 
 // ============================================================================

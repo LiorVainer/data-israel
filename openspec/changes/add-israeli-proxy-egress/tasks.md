@@ -13,10 +13,22 @@
 
 ## 3. Wire proxy into each problematic client
 
-- [x] 3.1 Edit `src/data-sources/knesset/api/knesset.client.ts`: import `getBrightDataProxyConfig`, set `proxy: getBrightDataProxyConfig()` on the existing `axios.create()` options. Do not change timeouts, headers, retry logic, or rate limiting.
-- [x] 3.2 Edit `src/data-sources/shufersal/api/shufersal.client.ts`: same pattern as Knesset.
-- [x] 3.3 Edit `src/data-sources/rami-levy/api/rami-levy.client.ts`: import BOTH helpers, prefer the unlocker with a residential fallback — `const proxy = unlocker !== false ? unlocker : residential;` — then set `proxy:` on `axios.create()`. Keep the browser-like headers (Origin, Referer, User-Agent, Accept-Language) so that if the unlocker forwards them verbatim, the origin's secondary checks also pass.
-- [x] 3.4 Verify no other data-source client (`cbs`, `datagov`, `budget`, `govmap`, `drugs`, `health`) imports either proxy helper — grep to confirm.
+- [x] 3.1 Edit `src/data-sources/knesset/api/knesset.client.ts`: import `resolveProxyConfig` and `PROXY_ROUTING`, set `proxy: resolveProxyConfig(PROXY_ROUTING.knesset)` on the existing `axios.create()` options. Do not change timeouts, headers, retry logic, or rate limiting.
+- [x] 3.2 Edit `src/data-sources/shufersal/api/shufersal.client.ts`: same pattern with `PROXY_ROUTING.shufersal`.
+- [x] 3.3 Edit `src/data-sources/rami-levy/api/rami-levy.client.ts`: same pattern with `PROXY_ROUTING['rami-levy']` (which resolves to `unlocker`). Keep the browser-like headers (Origin, Referer, User-Agent, Accept-Language) so that if the unlocker forwards them verbatim, the origin's secondary checks also pass.
+- [x] 3.4 Verify no other data-source client (`cbs`, `datagov`, `budget`, `govmap`, `drugs`, `health`) imports `resolveProxyConfig`, `PROXY_ROUTING`, or the underlying proxy helpers — grep to confirm.
+- [x] 3.5 Add `src/data-sources/proxy-routing.ts` — declarative `PROXY_ROUTING` registry typed against the `DataSource` union via `satisfies`. Include `getProxyTier(source)` lookup helper.
+- [x] 3.6 Add `resolveProxyConfig(tier)` dispatcher to `src/lib/proxy/bright-data.ts` that maps each `ProxyTier` to the right config (direct → false, residential → `getBrightDataProxyConfig()`, unlocker → `getBrightDataUnlockerProxyConfig()`). Add `typeof window !== 'undefined'` no-op guard so the client bundle never reads undefined env vars. Both env vars are declared required in `src/lib/env.ts` so their presence is guaranteed server-side — no fallback logic.
+
+## 3b. Classification CLI script (for future data sources)
+
+- [x] 3b.1 Create `src/scripts/classify-source.ts` — a CLI that takes `--url`, `--method`, `--body`, `--headers` and runs four probes in parallel (direct, non-IL via `BRIGHT_DATA_PROBE_URL`, IL residential, Web Unlocker).
+- [x] 3b.2 Implement fuzzy comparison: same HTTP status class, body size ratio within [0.33, 3.0], same content-type family, no bot-block signatures in HTML bodies.
+- [x] 3b.3 Implement classification logic: direct fails → unreachable-from-baseline; direct ≡ non-il → direct; direct ≡ residential → residential; direct ≡ unlocker → unlocker; nothing matches → unreachable. The script imports `ENV` from `@/lib/env` (no direct `process.env` reads) and asserts `BRIGHT_DATA_PROBE_URL` is set at startup with a clear error message if missing.
+- [x] 3b.4 Output a paste-ready `PROXY_ROUTING` entry on success; exit non-zero on unreachable.
+- [x] 3b.5 Add `classify-source` npm script to `package.json` (tsx, reads `.env`).
+- [x] 3b.6 Document `BRIGHT_DATA_PROBE_URL` in `.env.example` as a dev-only variable with instructions to use the residential zone with a `-country-us` (or similar non-IL) suffix in the username.
+- [x] 3b.7 Update `src/data-sources/CLAUDE.md` Step 0 and `.claude/skills/add-data-source/SKILL.md` Step 1.5 to reference the classify script instead of the ad-hoc `upstream-probe` route approach.
 
 ## 4. Next.js verification route
 
