@@ -8,6 +8,14 @@ on:
 jobs:
   check-and-test:
     runs-on: ubuntu-latest
+    # Dummy Bright Data proxy URLs so env.ts validation passes during test
+    # module loads. Tests never actually make requests through these URLs
+    # (real proxy traffic is exercised in the test:api suite, not the default
+    # suite). They just need to be non-empty strings satisfying the z.string()
+    # minimum validation in src/lib/env.ts.
+    env:
+      BRIGHT_DATA_PROXY_URL: http://ci-dummy:ci-dummy@brd.superproxy.io:33335
+      BRIGHT_DATA_UNLOCKER_URL: http://ci-dummy:ci-dummy@brd.superproxy.io:33335
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
