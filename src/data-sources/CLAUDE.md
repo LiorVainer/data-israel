@@ -46,68 +46,9 @@ src/data-sources/
 
 ### Step 0: Classify the upstream's proxy tier (BEFORE writing any code)
 
-Before implementing a new data source, determine whether the upstream API requires proxying and — if so — which Bright Data zone. Use the **classification script** rather than guessing: it runs the same request through four egress paths in parallel and recommends a tier.
+Before implementing a new data source, run `pnpm classify-source --url=...` to determine whether the upstream needs a proxy and which Bright Data tier (`direct` / `residential` / `unlocker`) to use. Add the result to `src/data-sources/proxy-routing.ts` and read it via `resolveProxyConfig(PROXY_ROUTING[...])` in the client file.
 
-```bash
-pnpm classify-source --url=https://api.example.gov.il/v1/resource
-# For POST endpoints:
-pnpm classify-source \
-  --url=https://www.example.co.il/api/search \
-  --method=POST \
-  --body='{"q":"חלב"}' \
-  --headers='{"locale":"he"}'
-```
-
-The script requires `BRIGHT_DATA_PROBE_URL` in `.env` (a Bright Data proxy URL forced to a NON-Israeli country — see `.env.example` for details). This is crucial because testing from your own Israeli home ISP would falsely report every geo-gated endpoint as "works fine" — the whole point of the probe is to **simulate Vercel's non-Israeli egress** without physically being outside Israel.
-
-**The four probes:**
-1. **`direct`** — from your local machine (establishes the baseline "correct" response)
-2. **`non-il`** — through `BRIGHT_DATA_PROBE_URL` (simulates Vercel egress)
-3. **`residential`** — through `BRIGHT_DATA_PROXY_URL` (IL residential zone)
-4. **`unlocker`** — through `BRIGHT_DATA_UNLOCKER_URL` (Web Unlocker)
-
-**The recommendation maps directly to a PROXY_ROUTING tier:**
-- `direct` → API works from any egress; no proxy needed
-- `residential` → geo-gated only; IL residential zone is sufficient
-- `unlocker` → bot-detection; needs Web Unlocker
-
-Paste the recommended tier into `src/data-sources/proxy-routing.ts` and continue with Step 1. The routing registry is the single source of truth — data-source client files never hardcode their proxy config; they just call `resolveProxyConfig(PROXY_ROUTING['my-source'])`.
-
-**Client file wiring — always reads from PROXY_ROUTING**
-
-Every data-source client that needs a proxy follows the same pattern — read its tier from the declarative `PROXY_ROUTING` registry and pass it through `resolveProxyConfig`. You do NOT write per-client proxy logic.
-
-```typescript
-// src/data-sources/{name}/api/{name}.client.ts
-import axios, { type AxiosInstance } from 'axios';
-import { resolveProxyConfig } from '@/lib/proxy/bright-data';
-import { PROXY_ROUTING } from '@/data-sources/proxy-routing';
-import { MY_BASE_URL } from './{name}.endpoints';
-
-// Routing tier comes from the declarative PROXY_ROUTING registry.
-// To change which zone this client uses, edit proxy-routing.ts — not this file.
-const myInstance: AxiosInstance = axios.create({
-    baseURL: MY_BASE_URL,
-    timeout: 30_000,
-    headers: { Accept: 'application/json', 'User-Agent': 'DataIsrael-Agent/1.0' },
-    proxy: resolveProxyConfig(PROXY_ROUTING['my-source-id']),
-});
-```
-
-`resolveProxyConfig` handles the three tiers transparently:
-- `'direct'` → returns `false` (axios proxy disabled)
-- `'residential'` → returns the `BRIGHT_DATA_PROXY_URL` config (guaranteed present — env.ts marks it required)
-- `'unlocker'` → returns the `BRIGHT_DATA_UNLOCKER_URL` config (guaranteed present — env.ts marks it required)
-
-Both env vars are **required at startup** by `src/lib/env.ts`. If either is missing the app refuses to start — there is no silent "direct egress" fallback. This is intentional: a missing proxy env var in production would silently break rami-levy / knesset / shufersal and mask the misconfiguration.
-
-**Rules:**
-- Only import `resolveProxyConfig` and `PROXY_ROUTING` in client files — never from tools, agents, or UI code.
-- **Do not use `httpsAgent`/`httpAgent` with `https-proxy-agent`** — that package statically imports Node `net`/`tls` and breaks the client bundle via the data-source registry chain. Stick to axios's native `proxy` field, which is isomorphic.
-- **Start with the `direct` tier**. Only upgrade after `pnpm classify-source` recommends `residential` or `unlocker`.
-- Bright Data billing is per GB (residential) or per-request (unlocker). **Never proxy bulk-scraping endpoints** (full XML price dumps, archive downloads, etc.) — call them out in the proposal and keep them on direct egress with a separate scraping path.
-- If `classify-source` says the API works fine from non-Israeli egress, do **not** wire the proxy. The ~150–300 ms proxy hop is pure cost for no benefit.
-- When upgrading a client's tier because of an empirical failure, add a comment above the `proxy:` field explaining *why* (e.g., "HTTP 402 from residential pool — Rami-Levy's WAF flags Bright Data IPs") so future maintainers don't revert the tier.
+> See `.claude/rules/data-sources-proxy.md` for the full classification workflow, four-probe model, client wiring template, and hard rules (no `https-proxy-agent`, no bulk-scraping through proxy, billing notes) — loads automatically when editing any `*.client.ts` file under `src/data-sources/**` or the `proxy-routing.ts` registry.
 
 ### Step 1: Create the folder
 
@@ -298,35 +239,9 @@ describe('{Source} data source contract', () => {
 
 ### Step 9: Write API validation tests (REQUIRED)
 
-Create `{source}/__tests__/{source}-api-validation.test.ts` — one file per sub-API folder (e.g., `health/tools/drugs/`, `health/tools/overview-data/`) or per general API folder. These tests hit **real external APIs** and validate that tool outputs match declared schemas.
+Create `{source}/__tests__/{source}-api-validation.test.ts` — one file per sub-API folder or per general API folder. These tests hit **real external APIs** and validate that tool outputs match their declared schemas (catches schema drift when upstream APIs change).
 
-```typescript
-import { describe, it, expect } from 'vitest';
-// Import tools and their output schemas from the tool files
-import { myTool, myToolOutputSchema } from '../tools/my-tool.tool';
-
-describe.sequential('{Source} API validation', () => {
-  it('myTool output matches schema', async () => {
-    const result = await myTool.execute(
-      { searchedResourceName: 'test', /* minimal valid inputs */ },
-      {} as any,
-    );
-    const parsed = myToolOutputSchema.safeParse(result);
-    if (!parsed.success) console.error(parsed.error.issues);
-    expect(parsed.success).toBe(true);
-  }, 30_000);
-});
-```
-
-Key rules:
-- **One test per tool** — every tool in the data source must have a test case
-- **Real APIs, not mocked** — the point is to catch schema drift when external APIs change
-- **Both success and error are valid** — the test validates schema conformance, not data correctness
-- **30s timeout** per test — external APIs can be slow
-- **`describe.sequential`** — avoid concurrent requests to the same API host
-- **Small limits** — use `maxResults: 3`, `limit: 3` to minimize API load
-- **Excluded from default test run** — these files are excluded in `vitest.config.ts` and run on-demand via `npm run test:api`
-- **Budget excluded** — MCP-based source has dynamic tools, no API validation tests needed
+> See `.claude/rules/data-sources-api-tests.md` for the full template and hard rules (`describe.sequential`, 30s timeout, small limits, excluded from default run, etc.) — loads automatically when editing any `*-api-validation.test.ts` file under `src/data-sources/**/__tests__/`.
 
 ## MCPClient Pattern (Budget Source)
 

@@ -76,6 +76,17 @@
           }
         ]
       }
+    ],
+    "InstructionsLoaded": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "test -f \"$CLAUDE_PROJECT_DIR/.claude/hooks/instructions-loaded.ts\" && npx tsx \"$CLAUDE_PROJECT_DIR/.claude/hooks/instructions-loaded.ts\" || exit 0"
+          }
+        ]
+      }
     ]
   }
 }
