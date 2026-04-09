@@ -2,7 +2,10 @@
  * Bright Data Proxy Config — Israeli egress for geo-gated APIs.
  *
  * This module returns axios-native proxy configs parsed from the Bright
- * Data URLs declared in `src/lib/env.ts`. It exists to route a narrow set
+ * Data URLs declared in `src/lib/env.ts`. It reads those URLs directly
+ * from `process.env` at use-site (not through the `ENV` export of
+ * `@/lib/env`) so that tests which mock `@/lib/env` don't break the proxy
+ * path — see the per-function docs below. It exists to route a narrow set
  * of data-source clients (Knesset OData, Shufersal, Rami Levy) through
  * Bright Data zones whose exit nodes live in Israel. All other data-source
  * clients MUST continue to egress directly and MUST NOT import from here.
@@ -84,7 +87,6 @@
  */
 
 import type { AxiosProxyConfig } from 'axios';
-import { ENV } from '@/lib/env';
 import type { ProxyTier } from '@/data-sources/proxy-routing';
 
 let cachedResidentialConfig: AxiosProxyConfig | undefined;
@@ -108,29 +110,47 @@ function parseProxyUrl(url: string): AxiosProxyConfig {
 
 /**
  * Return a cached axios proxy config parsed from `BRIGHT_DATA_PROXY_URL`
- * (the residential zone). The env var is required at startup, so this
- * function always returns a valid `AxiosProxyConfig`. The result is cached
- * at module scope — parsed once per Node process.
+ * (the residential zone). The env var is required at startup (validated by
+ * `src/lib/env.ts`), so this function always returns a valid `AxiosProxyConfig`
+ * in production. The result is cached at module scope — parsed once per
+ * Node process.
+ *
+ * Reads `process.env` directly rather than `ENV` from `@/lib/env` so that
+ * tests which mock `@/lib/env` don't accidentally blank out the proxy URL
+ * here. `vitest.config.ts` loads `.env` into `process.env` at startup, so
+ * the test suite picks up the real values without needing per-test mocks.
  */
 export function getBrightDataProxyConfig(): AxiosProxyConfig {
     if (cachedResidentialConfig !== undefined) {
         return cachedResidentialConfig;
     }
-    cachedResidentialConfig = parseProxyUrl(ENV.BRIGHT_DATA_PROXY_URL);
+    const url = process.env.BRIGHT_DATA_PROXY_URL;
+    if (!url) {
+        throw new Error(
+            'BRIGHT_DATA_PROXY_URL is missing from process.env — src/lib/env.ts validation should have caught this at startup',
+        );
+    }
+    cachedResidentialConfig = parseProxyUrl(url);
     return cachedResidentialConfig;
 }
 
 /**
  * Return a cached axios proxy config parsed from `BRIGHT_DATA_UNLOCKER_URL`
- * (the Web Unlocker zone). The env var is required at startup, so this
- * function always returns a valid `AxiosProxyConfig`. The result is cached
- * at module scope — parsed once per Node process.
+ * (the Web Unlocker zone). Same contract as `getBrightDataProxyConfig` —
+ * reads `process.env` directly to stay out of the `@/lib/env` mock path
+ * used by tests.
  */
 export function getBrightDataUnlockerProxyConfig(): AxiosProxyConfig {
     if (cachedUnlockerConfig !== undefined) {
         return cachedUnlockerConfig;
     }
-    cachedUnlockerConfig = parseProxyUrl(ENV.BRIGHT_DATA_UNLOCKER_URL);
+    const url = process.env.BRIGHT_DATA_UNLOCKER_URL;
+    if (!url) {
+        throw new Error(
+            'BRIGHT_DATA_UNLOCKER_URL is missing from process.env — src/lib/env.ts validation should have caught this at startup',
+        );
+    }
+    cachedUnlockerConfig = parseProxyUrl(url);
     return cachedUnlockerConfig;
 }
 
@@ -156,8 +176,9 @@ export function getBrightDataUnlockerProxyConfig(): AxiosProxyConfig {
  * 2. The data-source registry (`src/data-sources/registry.ts`) is imported
  *    by client components (e.g. `ChatThread.tsx`) for tool metadata. This
  *    transitively pulls every data-source client into the browser bundle.
- * 3. On the server, `ENV.BRIGHT_DATA_PROXY_URL` and `ENV.BRIGHT_DATA_UNLOCKER_URL`
- *    are guaranteed present by `src/lib/env.ts` validation at startup.
+ * 3. On the server, `process.env.BRIGHT_DATA_PROXY_URL` and
+ *    `process.env.BRIGHT_DATA_UNLOCKER_URL` are guaranteed present by
+ *    `src/lib/env.ts` validation at startup.
  * 4. On the client, Next.js only exposes `NEXT_PUBLIC_*` env vars to the
  *    browser. Both proxy URLs are undefined in the client bundle, which
  *    would make `parseProxyUrl(undefined)` throw at module load.
