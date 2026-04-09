@@ -96,15 +96,28 @@ async function checkGeoBrdTest(
     const ip = /IP:\s*([0-9a-fA-F.:]+)/i.exec(body)?.[1] ?? null;
     const asn = /ASN[^:]*:\s*([^\n\r]+)/i.exec(body)?.[1]?.trim() ?? null;
 
+    // The residential zone has `-country-il` forced in its username so we
+    // assert IL. The unlocker zone has no country targeting configured, so
+    // Web Unlocker auto-selects based on the target domain — for generic
+    // probes like geo.brdtest.com it may return any country. We still mark
+    // the unlocker check as "ok" as long as a geo payload came back.
+    const ok = id === 'geo-brdtest-residential' ? country === 'IL' : country !== null;
+
+    const note =
+        id === 'geo-brdtest-unlocker' && country !== 'IL'
+            ? 'Web Unlocker has no country targeting — Web Unlocker auto-selects by target domain. Non-IL exit for a non-Israeli probe is expected; rami-levy.co.il traffic still gets an Israeli IP because the domain is .co.il.'
+            : undefined;
+
     return {
         id,
-        ok: country === 'IL',
+        ok,
         durationMs,
         summary: {
             country,
             city,
             ip,
             asn,
+            ...(note && { note }),
             rawBody: body.length > 500 ? `${body.slice(0, 500)}…` : body,
         },
         error: null,
