@@ -2,7 +2,7 @@
 
 import { SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar } from '@/components/ui/sidebar';
 import { SignedIn, SignedOut, useClerk } from '@clerk/nextjs';
-import { ChevronsUpDown, LogOut, LucideLogIn, Moon, Settings, Sun } from 'lucide-react';
+import { ChevronsUpDown, LogOut, LucideLogIn, Moon, Settings, ShieldIcon, Sun } from 'lucide-react';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -117,11 +117,17 @@ export function NavUser() {
                                     {isAdmin && (
                                         <DropdownMenuItem className='cursor-pointer' asChild onClick={closeSidebar}>
                                             <Link href='/admin'>
-                                                <Settings />
+                                                <ShieldIcon />
                                                 פאנל ניהול
                                             </Link>
                                         </DropdownMenuItem>
                                     )}
+                                    <DropdownMenuItem className='cursor-pointer' asChild onClick={closeSidebar}>
+                                        <Link href='/settings'>
+                                            <Settings />
+                                            הגדרות
+                                        </Link>
+                                    </DropdownMenuItem>
                                     <DropdownMenuItem className='cursor-pointer' onClick={toggleTheme}>
                                         {isDarkMode ? <Sun /> : <Moon />}
                                         {isDarkMode ? 'מצב בהיר' : 'מצב כהה'}

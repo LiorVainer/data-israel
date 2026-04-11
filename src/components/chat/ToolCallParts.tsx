@@ -7,8 +7,22 @@ import { useAutoOpen } from './use-auto-open';
 import type { UIMessage } from 'ai';
 import type { ToolCallPart } from './types';
 import { getToolStatus, isAgentDataPart } from './types';
-import { getToolInfo } from './MessageToolCalls';
+import { getToolInfo } from '@/lib/utils/tool-info';
 import { type GroupedToolCall, ToolCallStep, type ToolResource } from './ToolCallStep';
+import { getAllResourceExtractors } from '@/data-sources/registry';
+
+/** Cached per-source resource extractors — populated once on first use */
+let _cachedExtractors: Record<
+    string,
+    (input: unknown, output: unknown) => { name?: string; url?: string } | null
+> | null = null;
+
+function getResourceExtractors() {
+    if (!_cachedExtractors) {
+        _cachedExtractors = getAllResourceExtractors();
+    }
+    return _cachedExtractors;
+}
 
 function isRecord(value: unknown): value is Record<string, unknown> {
     return typeof value === 'object' && value !== null;
@@ -23,13 +37,26 @@ function getString(obj: unknown, key: string): string | undefined {
 /**
  * Extracts a ToolResource from a tool call's input and output.
  *
- * Resolves a display name from (in priority order):
+ * First tries a per-source extractor (registered via DataSourceDefinition.resourceExtractors).
+ * Falls back to generic extraction logic:
  *   1. input.searchedResourceName (input-only field)
  *   2. input.query / input.q  (search tools)
  *   3. input.path             (catalog-by-path tools)
  *   4. output nested titles   (dataset.title, organization.title)
  */
-function extractToolResource(input: unknown, output: unknown): ToolResource | null {
+function extractToolResource(toolKey: string, input: unknown, output: unknown): ToolResource | null {
+    // Try per-source extractor first
+    const extractor = getResourceExtractors()[toolKey];
+    if (extractor) {
+        const result = extractor(input, output);
+        if (result) {
+            return { url: result.url ?? '', name: result.name };
+        }
+        // Extractor returned null — skip the generic fallback for this tool
+        // (the source explicitly declared no resource could be extracted)
+    }
+
+    // Generic fallback for tools without a per-source extractor
     const apiUrl = getString(output, 'apiUrl');
 
     const name =
@@ -84,11 +111,23 @@ function buildAgentInternalCallsMap(allParts: UIMessage['parts']): Map<string, A
         const agentName = data.id;
         if (!agentName) continue;
 
-        // Build set of completed tool call IDs for isComplete derivation
-        const completedIds = new Set(data.toolResults.map((tr) => tr.toolCallId));
+        // Union tool calls/results from the current step buffer AND all archived steps.
+        // Mastra's transformer clears `data.toolCalls`/`data.toolResults` at every
+        // `step-finish` and moves the data into `data.steps[i]`. Once the sub-agent
+        // finishes, the top-level arrays are empty — reading only those causes the
+        // AgentInternalCallsChain to disappear after completion.
+        const allCalls = [...data.toolCalls];
+        const allResults = [...data.toolResults];
+        for (const step of data.steps ?? []) {
+            if (step.toolCalls?.length) allCalls.push(...step.toolCalls);
+            if (step.toolResults?.length) allResults.push(...step.toolResults);
+        }
 
-        const calls: AgentInternalToolCall[] = data.toolCalls.map((tc) => {
-            const matchingResult = data.toolResults.find((tr) => tr.toolCallId === tc.toolCallId);
+        // Build set of completed tool call IDs for isComplete derivation
+        const completedIds = new Set(allResults.map((tr) => tr.toolCallId));
+
+        const calls: AgentInternalToolCall[] = allCalls.map((tc) => {
+            const matchingResult = allResults.find((tr) => tr.toolCallId === tc.toolCallId);
             const result = matchingResult?.result;
 
             return {
@@ -96,7 +135,8 @@ function buildAgentInternalCallsMap(allParts: UIMessage['parts']): Map<string, A
                 toolCallId: tc.toolCallId,
                 searchedResourceName:
                     getString(result, 'searchedResourceName') ?? getString(tc.args, 'searchedResourceName'),
-                success: typeof result?.success === 'boolean' ? result.success : undefined,
+                success:
+                    typeof result?.success === 'boolean' ? result.success : result?.error === true ? false : undefined,
                 error: getString(result, 'error'),
                 isComplete: completedIds.has(tc.toolCallId),
             };
@@ -186,7 +226,7 @@ function groupToolCalls(
         const isCompleted = status === 'complete' && !isFailed;
 
         // Extract resource from tool input + output
-        const resource = extractToolResource(part.input, part.output);
+        const resource = extractToolResource(toolKey, part.input, part.output);
 
         // Look up internal tool calls for sub-agent tools from data-tool-agent parts
         const agentName = toolKey.startsWith('agent-') ? toolKey.replace('agent-', '') : undefined;

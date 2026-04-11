@@ -21,6 +21,8 @@ export default defineConfig([
         'next-env.d.ts',
         // Service worker — plain JS with browser SW globals (self, clients) not known to ESLint:
         'public/sw.js',
+        // Claude Code tooling files — live outside the TS project, parser errors otherwise:
+        '.claude/**',
     ]),
     js.configs.recommended,
     ...tsEslint.configs.recommended,

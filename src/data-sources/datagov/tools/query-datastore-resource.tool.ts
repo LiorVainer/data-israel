@@ -129,27 +129,18 @@ export const queryDatastoreResource = createTool({
 });
 
 // ============================================================================
-// Source URL Resolver
+// Source URL Resolver (custom — appends query text to title)
 // ============================================================================
 
-function isRecord(value: unknown): value is Record<string, unknown> {
-    return typeof value === 'object' && value !== null;
-}
-
-function getString(obj: unknown, key: string): string | undefined {
-    if (!isRecord(obj)) return undefined;
-    const val = obj[key];
-    return typeof val === 'string' ? val : undefined;
-}
-
 /** Co-located source URL resolver for queryDatastoreResource */
-export const resolveSourceUrl: ToolSourceResolver = (input, output) => {
-    if (!isRecord(output) || output.success !== true) return null;
-    const apiUrl = getString(output, 'apiUrl');
-    if (!apiUrl) return null;
-    const resourceName = getString(input, 'searchedResourceName');
-    const query = getString(input, 'q');
-    let title = resourceName ? `שאילתת נתונים — ${resourceName}` : 'שאילתת נתונים';
-    if (query) title += ` (${query})`;
-    return { url: apiUrl, title, urlType: 'api' };
+export const resolveSourceUrl: ToolSourceResolver<QueryDatastoreResourceInput, QueryDatastoreResourceOutput> = (
+    input,
+    output,
+) => {
+    if (!output.success) return [];
+    const apiUrl = output.apiUrl;
+    if (!apiUrl) return [];
+    let title = input.searchedResourceName ? `שאילתת נתונים — ${input.searchedResourceName}` : 'שאילתת נתונים';
+    if (input.q) title += ` (${input.q})`;
+    return [{ url: apiUrl, title, urlType: 'api' }];
 };

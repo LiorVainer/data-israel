@@ -21,7 +21,7 @@ import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupTextarea } fro
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 import type { ChatStatus, FileUIPart } from 'ai';
-import { ArrowLeft, ImageIcon, Loader2Icon, MicIcon, PaperclipIcon, PlusIcon, SquareIcon, XIcon } from 'lucide-react';
+import { ArrowUp, ImageIcon, Loader2Icon, MicIcon, PaperclipIcon, PlusIcon, SquareIcon, XIcon } from 'lucide-react';
 import { nanoid } from 'nanoid';
 import {
     type ChangeEvent,
@@ -698,7 +698,7 @@ export const PromptInput = ({
                 type='file'
             />
             <form className={cn(className)} onSubmit={handleSubmit} ref={formRef} {...props}>
-                <InputGroup className='overflow-hidden bg-background p-2 rounded-full gap-2'>{children}</InputGroup>
+                <InputGroup className='overflow-hidden bg-background p-2 rounded-md gap-2'>{children}</InputGroup>
             </form>
         </>
     );
@@ -873,7 +873,7 @@ export const PromptInputSubmit = ({
     children,
     ...props
 }: PromptInputSubmitProps) => {
-    let Icon = <ArrowLeft className='size-4' />;
+    let Icon = <ArrowUp className='size-4' />;
 
     if (status === 'submitted') {
         Icon = <Loader2Icon className='size-4 animate-spin' />;

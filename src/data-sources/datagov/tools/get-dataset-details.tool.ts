@@ -122,30 +122,18 @@ export const getDatasetDetails = createTool({
 });
 
 // ============================================================================
-// Source URL Resolver
+// Source URL Resolver (custom — extracts dataset.title from nested output)
 // ============================================================================
 
-function isRecord(value: unknown): value is Record<string, unknown> {
-    return typeof value === 'object' && value !== null;
-}
-
-function getString(obj: unknown, key: string): string | undefined {
-    if (!isRecord(obj)) return undefined;
-    const val = obj[key];
-    return typeof val === 'string' ? val : undefined;
-}
-
 /** Co-located source URL resolver for getDatasetDetails */
-export const resolveSourceUrl: ToolSourceResolver = (input, output) => {
-    if (!isRecord(output) || output.success !== true) return null;
-    const portalUrl = getString(output, 'portalUrl');
-    if (!portalUrl) return null;
-    const dataset = isRecord(output) ? output.dataset : undefined;
-    const title = getString(dataset, 'title') ?? getString(input, 'searchedResourceName');
-    const name = getString(dataset, 'name');
-    return {
-        url: portalUrl,
-        title: title ?? name ?? 'מאגר מידע - data.gov.il',
-        urlType: 'portal',
-    };
+export const resolveSourceUrl: ToolSourceResolver<GetDatasetDetailsInput, GetDatasetDetailsOutput> = (
+    input,
+    output,
+) => {
+    if (!output.success) return [];
+    const portalUrl = output.portalUrl;
+    if (!portalUrl) return [];
+    const title = output.dataset.title || input.searchedResourceName;
+    const name = output.dataset.name;
+    return [{ url: portalUrl, title: title ?? name ?? 'מאגר מידע - data.gov.il', urlType: 'portal' }];
 };

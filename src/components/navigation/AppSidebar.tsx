@@ -1,6 +1,7 @@
 'use client';
 
 import * as React from 'react';
+import { memo } from 'react';
 import {
     Sidebar,
     SidebarContent,
@@ -64,7 +65,7 @@ function SidebarLogo() {
  * Navigates to the landing page on click.
  * Must be rendered inside SidebarProvider.
  */
-function HomeLogoButton() {
+const HomeLogoButton = memo(function HomeLogoButton() {
     const router = useRouter();
     const pathname = usePathname();
     const { open, isMobile, openMobile } = useSidebar();
@@ -85,7 +86,7 @@ function HomeLogoButton() {
             <Logo className='size-5' />
         </Button>
     );
-}
+});
 
 /**
  * Floating new-thread button visible only when sidebar is closed and not on landing page.

@@ -1,6 +1,11 @@
 {
   "version": 1,
   "skills": {
+    "israeli-grocery-price-intelligence": {
+      "source": "skills-il/food-and-dining",
+      "sourceType": "github",
+      "computedHash": "cc3b5c1eb7cfb4b4d4e0ff77c7a375d629c03487e24a0c90e99defa9a9f3147e"
+    },
     "mastra": {
       "source": "mastra-ai/skills",
       "sourceType": "github",

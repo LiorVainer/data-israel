@@ -28,10 +28,7 @@ export const TOOL_RESULT_KEEP_NESTED = {
 } satisfies Record<string, readonly string[]>;
 
 /** Fields preserved from tool call args (inputs) */
-export const TOOL_ARGS_KEEP_FIELDS = [
-    'searchedResourceName',
-    'q',
-] as const;
+export const TOOL_ARGS_KEEP_FIELDS = ['searchedResourceName', 'q'] as const;
 
 /**
  * Strip a tool result to only UI-required fields.
@@ -77,49 +74,25 @@ function stripPartsToolData(parts: unknown[]): void {
         if (typeof part !== 'object' || part === null) continue;
         const p = part as Record<string, unknown>;
 
-        // Handle tool-invocation parts (sub-agent tool calls)
-        // Skip agent delegation results (tool-agent-*) — they're small and
-        // contain subAgentThreadId needed by enrichWithSubAgentData on recall.
+        // Handle tool-invocation parts
         if (p.type === 'tool-invocation') {
             const inv = p.toolInvocation as Record<string, unknown> | undefined;
             if (inv?.state === 'result' && inv.result != null && typeof inv.result === 'object') {
                 const toolName = inv.toolName as string | undefined;
-                if (!toolName?.startsWith('agent-')) {
+                if (toolName?.startsWith('agent-')) {
+                    // Agent delegation results: strip bulky subAgentToolResults
+                    // (already stored in sub-agent's own thread, reconstructed on recall
+                    // via enrichWithSubAgentData). Keep text + thread pointers only.
+                    const agentResult = inv.result as Record<string, unknown>;
+                    delete agentResult.subAgentToolResults;
+                } else {
                     inv.result = stripToolResult(inv.result as Record<string, unknown>);
                 }
             }
         }
 
-        // Handle data-tool-agent parts (routing agent stores sub-agent streaming data)
-        if (p.type === 'data-tool-agent' || p.type === 'data') {
-            const data = (p.data ?? p) as Record<string, unknown>;
-
-            // Strip toolCalls args
-            if (Array.isArray(data.toolCalls)) {
-                for (const tc of data.toolCalls as Record<string, unknown>[]) {
-                    if (tc.args != null && typeof tc.args === 'object') {
-                        tc.args = stripToolArgs(tc.args as Record<string, unknown>);
-                    }
-                }
-            }
-
-            // Strip toolResults args + result
-            if (Array.isArray(data.toolResults)) {
-                for (const tr of data.toolResults as Record<string, unknown>[]) {
-                    if (tr.result != null && typeof tr.result === 'object') {
-                        tr.result = stripToolResult(tr.result as Record<string, unknown>);
-                    }
-                    if (tr.args != null && typeof tr.args === 'object') {
-                        tr.args = stripToolArgs(tr.args as Record<string, unknown>);
-                    }
-                }
-            }
-
-            // Strip steps array (not needed for UI — only toolCalls/toolResults matter)
-            if (Array.isArray(data.steps)) {
-                data.steps = [];
-            }
-        }
+        // data-tool-agent parts are removed entirely in processOutputResult
+        // (streaming artifacts reconstructed on recall). No per-field stripping needed.
     }
 }
 
@@ -141,7 +114,10 @@ export class TruncateToolResultsProcessor implements Processor {
                 for (const inv of invocations) {
                     if (inv.state === 'result' && inv.result != null && typeof inv.result === 'object') {
                         const toolName = inv.toolName as string | undefined;
-                        if (!toolName?.startsWith('agent-')) {
+                        if (toolName?.startsWith('agent-')) {
+                            const agentResult = inv.result as Record<string, unknown>;
+                            delete agentResult.subAgentToolResults;
+                        } else {
                             inv.result = stripToolResult(inv.result as Record<string, unknown>);
                         }
                     }
@@ -152,6 +128,13 @@ export class TruncateToolResultsProcessor implements Processor {
             const parts = msg.content?.parts;
             if (Array.isArray(parts)) {
                 stripPartsToolData(parts);
+
+                // Remove data-tool-agent parts entirely — they are streaming
+                // artifacts reconstructed on recall via enrichWithSubAgentData().
+                // Keeping them wastes ~67% of routing agent memory.
+                msg.content.parts = parts.filter(
+                    (p: unknown) => (p as Record<string, unknown>).type !== 'data-tool-agent',
+                );
             }
         }
         return messages;

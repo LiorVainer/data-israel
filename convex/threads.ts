@@ -294,6 +294,70 @@ export const getThreadContextWindow = query({
 });
 
 /**
+ * Returns the enabled data sources for a thread.
+ *
+ * Looks up the thread_settings record by threadId using the `by_thread_id` index.
+ * Returns the enabledSources array, or null if no settings are stored (meaning defaults apply).
+ *
+ * @param threadId - The thread UUID
+ * @returns Array of enabled source IDs, or null if no custom settings
+ */
+export const getThreadSettings = query({
+    args: { threadId: v.string() },
+    handler: async (ctx, { threadId }) => {
+        const record = await ctx.db
+            .query('thread_settings')
+            .withIndex('by_thread_id', (q) => q.eq('threadId', threadId))
+            .unique();
+
+        return record?.enabledSources ?? null;
+    },
+});
+
+/**
+ * Upserts thread-level data source settings.
+ *
+ * If enabledSources is empty, deletes the record (empty = default = no storage needed).
+ * Otherwise, inserts or updates the record with the new enabledSources array.
+ *
+ * @param threadId - The thread UUID
+ * @param enabledSources - Array of enabled data source IDs
+ */
+export const upsertThreadSettings = mutation({
+    args: {
+        threadId: v.string(),
+        enabledSources: v.array(v.string()),
+    },
+    handler: async (ctx, { threadId, enabledSources }) => {
+        const existing = await ctx.db
+            .query('thread_settings')
+            .withIndex('by_thread_id', (q) => q.eq('threadId', threadId))
+            .unique();
+
+        // Empty array means "use defaults" — no need to store
+        if (enabledSources.length === 0) {
+            if (existing) {
+                await ctx.db.delete(existing._id);
+            }
+            return;
+        }
+
+        if (existing) {
+            await ctx.db.patch(existing._id, {
+                enabledSources,
+                updatedAt: Date.now(),
+            });
+        } else {
+            await ctx.db.insert('thread_settings', {
+                threadId,
+                enabledSources,
+                updatedAt: Date.now(),
+            });
+        }
+    },
+});
+
+/**
  * Upserts accumulated token billing for a thread.
  *
  * One record per thread — each turn adds to the running total.

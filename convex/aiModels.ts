@@ -64,3 +64,47 @@ export const upsert = mutation({
         return ctx.db.insert('ai_models', { agentId, modelId, updatedAt, updatedBy });
     },
 });
+
+/**
+ * Bulk upsert AI model configurations for multiple agents.
+ * Admin-guarded: checks user's role in the Convex users table.
+ *
+ * Updates all specified agents to the same model in a single transaction.
+ */
+export const bulkUpsert = mutation({
+    args: {
+        agentIds: v.array(v.string()),
+        modelId: v.string(),
+    },
+    handler: async (ctx, { agentIds, modelId }) => {
+        const identity = await ctx.auth.getUserIdentity();
+        if (!identity) {
+            throw new Error('Authentication required');
+        }
+
+        const user = await ctx.db
+            .query('users')
+            .withIndex('by_clerk_id', (q) => q.eq('clerkId', identity.subject))
+            .first();
+
+        if (!user || user.role !== 'admin') {
+            throw new Error('Admin access required');
+        }
+
+        const updatedBy = identity.subject;
+        const updatedAt = Date.now();
+
+        for (const agentId of agentIds) {
+            const existing = await ctx.db
+                .query('ai_models')
+                .withIndex('by_agent_id', (q) => q.eq('agentId', agentId))
+                .unique();
+
+            if (existing) {
+                await ctx.db.patch(existing._id, { modelId, updatedAt, updatedBy });
+            } else {
+                await ctx.db.insert('ai_models', { agentId, modelId, updatedAt, updatedBy });
+            }
+        }
+    },
+});

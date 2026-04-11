@@ -7,13 +7,17 @@
  */
 
 import { Mastra } from '@mastra/core';
+import type { Agent } from '@mastra/core/agent';
 import { ConvexStore } from '@mastra/convex';
 import { Observability, SamplingStrategyType } from '@mastra/observability';
 import { SentryExporter } from '@mastra/sentry';
 import { routingAgent, createRoutingAgent } from './routing/routing.agent';
+import { createCbsAgent } from '@/data-sources/cbs';
+import { createDatagovAgent } from '@/data-sources/datagov';
 import { dataSourceAgents } from '@/data-sources/registry.server';
-import type { DataSourceId } from '@/data-sources/registry';
+import { AGENT_ID_TO_SOURCE_ID, type DataSource } from '@/data-sources/registry';
 import { MASTRA_SCORERS } from './evals/eval.config';
+import { getOrCreateAgent } from '@/lib/cache/agent-cache';
 import { ENV } from '@/lib/env';
 
 const convexUrl = ENV.NEXT_PUBLIC_CONVEX_URL;
@@ -50,11 +54,12 @@ const observability = sentryDsn
       })
     : undefined;
 
-/** Static default agents (backward compat) — explicit keys for AgentName derivation */
+/** Static default agents (backward compat) — explicit keys for AgentName derivation.
+ *  Uses direct sync imports (not registry) because registry.createAgent may be async for MCP sources. */
 export const agents = {
     routingAgent,
-    cbsAgent: dataSourceAgents.cbsAgent.createAgent(`openrouter/${ENV.AI_DEFAULT_MODEL_ID}`),
-    datagovAgent: dataSourceAgents.datagovAgent.createAgent(`openrouter/${ENV.AI_DEFAULT_MODEL_ID}`),
+    cbsAgent: createCbsAgent(`openrouter/${ENV.AI_DEFAULT_MODEL_ID}`),
+    datagovAgent: createDatagovAgent(`openrouter/${ENV.AI_DEFAULT_MODEL_ID}`),
 };
 
 export const mastra = new Mastra({
@@ -70,44 +75,41 @@ export interface AgentModelConfig {
     [key: string]: string;
 }
 
-// Cache: single entry (last config -> last Mastra instance)
-let cachedConfigKey: string | null = null;
-let cachedMastra: Mastra | null = null;
-
 /**
  * Creates (or returns cached) Mastra instance with the specified per-agent models.
  * Model IDs should be OpenRouter format (e.g., 'google/gemini-3-flash-preview').
  * The function prefixes them with 'openrouter/' for Mastra's model format.
+ *
+ * Sub-agents are cached individually by (agentId, modelId) via LRU cache,
+ * so partial config or enabledSources changes only recreate affected agents.
+ * The Mastra instance itself is cheap to construct and always created fresh.
  */
-export function getMastraWithModels(config: AgentModelConfig): Mastra {
-    const configKey = JSON.stringify(config);
+export async function getMastraWithModels(config: AgentModelConfig, enabledSources?: DataSource[]): Promise<Mastra> {
+    // Filter data source agents when enabledSources is provided
+    const filteredAgentEntries = Object.entries(dataSourceAgents).filter(([agentId]) => {
+        if (!enabledSources?.length) return true;
+        const dsId = AGENT_ID_TO_SOURCE_ID.get(agentId);
+        return dsId !== undefined && enabledSources.includes(dsId);
+    });
 
-    if (cachedConfigKey === configKey && cachedMastra) {
-        return cachedMastra;
-    }
-
-    console.log({ config });
-
-    // Build sub-agents from registry with per-source model overrides
-    const subAgents: Record<string, ReturnType<(typeof dataSourceAgents)['cbsAgent']['createAgent']>> = {};
-    for (const [agentId, agentDef] of Object.entries(dataSourceAgents)) {
-        // Look up model by data source ID (e.g., 'cbs', 'datagov') or fall back to routing model
-        const dsId = agentId.replace('Agent', '') as DataSourceId;
-        const modelId = config[dsId] ?? config.routing;
-        subAgents[agentId] = agentDef.createAgent(`openrouter/${modelId}`);
-    }
+    // Build sub-agents from registry with per-source model overrides.
+    // Each agent is individually cached by (agentId, modelId) — cache hits skip creation.
+    const subAgentEntries = await Promise.all(
+        filteredAgentEntries.map(async ([agentId, agentDef]) => {
+            const dsId = AGENT_ID_TO_SOURCE_ID.get(agentId) ?? (agentId.replace('Agent', '') as DataSource);
+            const modelId = `openrouter/${config[dsId] ?? config.routing}`;
+            const agent = await getOrCreateAgent(agentId, modelId, agentDef.createAgent);
+            return [agentId, agent] as const;
+        }),
+    );
+    const subAgents: Record<string, Agent> = Object.fromEntries(subAgentEntries);
 
     const newRouting = createRoutingAgent(`openrouter/${config.routing}`, subAgents);
 
-    const newMastra = new Mastra({
+    return new Mastra({
         agents: { routingAgent: newRouting, ...subAgents },
         ...(storage && { storage }),
         ...(observability && { observability }),
         scorers: MASTRA_SCORERS,
     });
-
-    cachedConfigKey = configKey;
-    cachedMastra = newMastra;
-
-    return newMastra;
 }

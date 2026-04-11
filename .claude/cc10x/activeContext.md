@@ -1,9 +1,25 @@
 # Active Context
 
 ## Current Work
-- **Feature**: Agent Evals — Mastra scorer system for agent quality monitoring
-- **Branch**: `feat/add-agent-evals`
-- **Status**: COMPLETE — all 8 tasks implemented and verified
+- **Feature**: Admin Dashboard Analytics (add-admin-dashboard-analytics)
+- **Status**: COMPLETE — all code implemented, automated verification passed (tsc, build, lint, vibecheck, tests). Manual testing pending.
+
+## Recent Changes
+- `src/app/admin/page.tsx` — Refactored: added Tabs (מודלים/אנליטקות), widened to max-w-5xl
+- `src/components/admin/AnalyticsDashboard.tsx` — NEW: dashboard with time-range selector, KPI row, user/guest breakdown, 4 Recharts charts, wired to `api.analytics.*`
+- `src/components/admin/StatCard.tsx` — NEW: reusable stat card
+- `src/components/admin/UserGuestBreakdownCard.tsx` — NEW: user/guest breakdown card
+- `src/components/admin/charts/` — NEW: ThreadOriginChart, ThreadsOverTimeChart, TokenUsageChart, AgentDelegationChart
+- `convex/analytics.ts` — NEW: 5 analytics query functions
+- `src/constants/prompt-cards.ts` — NEW: shared PROMPT_CARDS constant
+- `src/components/ui/tabs.tsx` — NEW: shadcn Tabs component
+
+## Active Decisions
+| Decision | Choice | Why |
+|----------|--------|-----|
+| Convex queries | `useQuery(api.analytics.*)` (generated API) | Type-safe, no makeFunctionReference needed |
+| Charts | Recharts with ResponsiveContainer | User preference, composable React components |
+| Mobile | `useIsMobile()` + responsive grids | Existing pattern in project |
 
 ## Code Review: app/admin/page.tsx (2026-03-04)
 

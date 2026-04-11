@@ -5,8 +5,9 @@
  * Exports a DataSourceDefinition that can be registered in the central registry.
  */
 
+import { DatabaseIcon, BuildingIcon, FileIcon } from 'lucide-react';
 import type { DataSourceDefinition } from '@/data-sources/types';
-import { DataGovTools, datagovSourceResolvers } from './tools';
+import { DataGovTools, datagovSourceResolvers, datagovResourceExtractors } from './tools';
 import { datagovAgentDisplay, datagovBadgeConfig } from './datagov.display';
 import { datagovTranslations } from './datagov.translations';
 import {
@@ -36,9 +37,22 @@ export const DataGovDataSource = {
     routingHint:
         'נתוני ממשל פתוחים מאתר data.gov.il — מאגרי נתונים, ארגונים, קבוצות, תגיות, משאבים ושאילתות DataStore.',
 
+    landing: {
+        logo: '/datagov-logo.svg',
+        description: 'פורטל הנתונים הפתוחים של ממשלת ישראל — מאגרי מידע, ארגונים וקבצים',
+        stats: [
+            { label: 'מאגרי מידע', value: '1,500+', icon: DatabaseIcon },
+            { label: 'ארגונים', value: '80+', icon: BuildingIcon },
+            { label: 'קבצים', value: '10,000+', icon: FileIcon },
+        ],
+        category: 'general',
+        order: 1,
+    },
+
     tools: DataGovTools,
     sourceResolvers: datagovSourceResolvers,
     translations: datagovTranslations,
+    resourceExtractors: datagovResourceExtractors,
 } satisfies DataSourceDefinition<typeof DataGovTools>;
 
 export type { DataGovToolName } from './tools';

@@ -46,6 +46,45 @@ vi.mock('@openrouter/ai-sdk-provider', () => ({
     },
 }));
 
+vi.mock('@mastra/mcp', () => ({
+    MCPClient: class MockMCPClient {
+        constructor() {}
+        async listTools() {
+            return {
+                budgetkey_DatasetInfo: { name: 'budgetkey_DatasetInfo' },
+                budgetkey_DatasetFullTextSearch: { name: 'budgetkey_DatasetFullTextSearch' },
+                budgetkey_DatasetDBQuery: { name: 'budgetkey_DatasetDBQuery' },
+            };
+        }
+        async disconnect() {}
+    },
+}));
+
+vi.mock('@mastra/core/evals', () => {
+    const createChainable = (): Record<string, unknown> => {
+        const proxy: Record<string, unknown> = new Proxy(
+            {},
+            {
+                get: () => vi.fn(() => proxy),
+            },
+        );
+        return proxy;
+    };
+    return {
+        createScorer: vi.fn(() => createChainable()),
+    };
+});
+
+vi.mock('@mastra/evals/scorers/prebuilt', () => ({
+    createAnswerRelevancyScorer: vi.fn(() => ({})),
+    createCompletenessScorer: vi.fn(() => ({})),
+    createHallucinationScorer: vi.fn(() => ({})),
+}));
+
+vi.mock('@mastra/evals/scorers/utils', () => ({
+    extractToolResults: vi.fn(),
+}));
+
 vi.mock('@/lib/env', () => ({
     ENV: {
         AI_DEFAULT_MODEL_ID: 'test/model',

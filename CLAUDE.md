@@ -25,7 +25,7 @@ Keep this managed block so 'openspec update' can refresh the instructions.
 
 ## Project Overview
 
-This is an **Israeli Open Data AI Agent** built with Next.js 16 and designed to chat with users about Israeli open data from data.gov.il and the Central Bureau of Statistics (CBS). The project uses:
+This is an **Israeli Open Data AI Agent** built with Next.js 16 and designed to chat with users about Israeli open data from 8 government and public sources (data.gov.il, CBS, BudgetKey, Nadlan, Israel Drugs, IL Health, Grocery Prices, and Knesset). The project uses:
 - **Next.js 16.1.1** with App Router architecture
 - **React 19.2.3** with Server Components
 - **TypeScript 5** with strict type checking
@@ -38,9 +38,6 @@ The agent architecture is **tool-first**: rather than hallucinating dataset info
 
 ## Development Commands
 
-### use pnpm to install dependencies, already installed in the environment
-### Dont Change the `ui/` and `ai-elements/` folders files unless instructed.
-
 ### Running the Application
 ```bash
 npm run dev      # Start development server at localhost:3000
@@ -48,31 +45,23 @@ npm run build    # Build production bundle
 npm start        # Start production server
 ```
 
+### Convex Backend
+```bash
+npx convex dev   # Start Convex dev server + regenerate `convex/_generated/api`
+```
+> See `.claude/rules/convex-codegen.md` — loads automatically when editing anything under `convex/` or `src/**/*.ts{,x}`.
+
 ### Code Quality & Verification
-- No `any` or `as` type abuses were introduced
 ```bash
 npm run lint       # Run ESLint
 npm run vibecheck  # Run vibecheck code quality analyzer
 tsc                # Type-check without emitting
 ```
+> See `.claude/rules/typescript-strict.md` for strict-mode and `any`/`as` rules — loads automatically when editing TypeScript files.
 
-## ⚠️ CRITICAL: Post-Tool Call Verification
+## Post-Change Verification
 
-**After EVERY tool call that modifies code, you MUST run the following commands in sequence:**
-
-```bash
-npm run build     # Verify the build succeeds
-npm run lint      # Check for linting issues
-npm run vibecheck # Run code quality checks
-```
-
-**Do not skip this step.** These commands ensure:
-- ✅ The build compiles successfully
-- ✅ No ESLint violations were introduced
-- ✅ Code quality standards are maintained
-- ✅ No TypeScript errors exist
-
-If any command fails, fix the issues before proceeding.
+Hooks auto-run ESLint --fix per edit and a quality gate (tsc + vibecheck + tests) on Stop. For major changes, also run: `npm run build`
 
 ## Architecture
 
@@ -98,9 +87,19 @@ src/                              # Application source code
 │   │   └── response-length-validator.processor.ts
 │   └── network/
 │       ├── model.ts              # Model ID factory (getMastraModelId, getAiSdkModelId)
-│       ├── routing/              # Routing agent (orchestrator, delegates to sub-agents)
-│       ├── datagov/              # DataGov sub-agent (16 tools, data.gov.il CKAN API)
-│       └── cbs/                  # CBS sub-agent (9 tools, Central Bureau of Statistics)
+│       └── routing/              # Routing agent (orchestrator, delegates to sub-agents)
+│
+├── data-sources/                 # Self-contained data source modules
+│   ├── types/                    # Shared types (DataSourceDefinition, ToolTranslation, etc.)
+│   ├── registry.ts               # Client-safe aggregation (tools, translations, resolvers)
+│   ├── registry.server.ts        # Server-only agent references (@mastra/core/agent)
+│   ├── cbs/                      # CBS (9 tools, Central Bureau of Statistics)
+│   ├── datagov/                  # DataGov (16 tools, data.gov.il CKAN API)
+│   ├── budget/                   # BudgetKey (3 MCP tools, state budget 1997-2025)
+│   ├── govmap/                   # GovMap (8 tools, multi-layer geospatial — nadlan primary)
+│   ├── drugs/                    # Drugs (8 tools, pharmaceutical database)
+│   ├── health/                   # Health (5 tools, MOH dashboards)
+│   └── grocery/                  # Grocery (5 tools, supermarket prices)
 │
 ├── constants/                    # Application constants
 │   ├── agents-display.ts         # Agent display configurations
@@ -131,12 +130,7 @@ src/                              # Application source code
 │
 ├── lib/
 │   ├── tools/
-│   │   ├── datagov/              # 16 data.gov.il tools (search, details, schema, etc.)
-│   │   ├── cbs/                  # 9 CBS tools (catalog, series, prices, localities)
-│   │   └── client/               # 3 client-side chart tools (bar, line, pie)
-│   ├── api/
-│   │   ├── data-gov/             # CKAN API client (data.gov.il)
-│   │   └── cbs/                  # CBS API client
+│   │   └── client/               # 4 client-side tools (bar, line, pie charts + suggestions)
 │   ├── redis/                    # Redis/Upstash rate limiting & caching
 │   └── convex/                   # Convex client utilities
 │
@@ -180,96 +174,19 @@ openspec/                         # OpenSpec workflow (root level)
 └── changes/                      # Active change proposals
 ```
 
-### Agent Network Flow
+### Agent Network & Streaming
 
-The routing agent **delegates** to specialized sub-agents via Mastra's agent network (`agents: { datagovAgent, cbsAgent }`). Sub-agents run as tool calls (`tool-agent-datagovAgent`, `tool-agent-cbsAgent`) with their own memory threads.
+The routing agent **delegates** to 7 specialized sub-agents via Mastra's agent network. Each sub-agent runs as a tool call (`tool-agent-<agentId>`) with its own Convex memory thread, linked back via `subAgentThreadId`. On page reload, `enrichWithSubAgentData()` in `GET /api/chat` uses two-pass recall to reconstruct sub-agent tool-call artifacts for the UI.
 
-```
-User (/) → submit message → crypto.randomUUID() → /chat/:id?new
-                                                        ↓
-                                              useChat + DefaultChatTransport
-                                              body: { messages, memory: { thread: id, resource }, model }
-                                                        ↓
-                                              POST /api/chat
-                                              handleChatStream(mastra, 'routingAgent', params)
-                                                        ↓
-                                              ┌─── Routing Agent (סוכן ניתוב) ───┐
-                                              │  Client Tools (4) + Agent Delegation │
-                                              │  Memory: Convex Vector + Storage  │
-                                              │  Decides intent → delegates       │
-                                              └───────────────────────────────────┘
-                                                        ↓
-                              ┌──────────────────────────┼──────────────────────┐
-                              ↓                          ↓                      ↓
-                    datagovAgent (sub-agent)     cbsAgent (sub-agent)    Client Tools (direct)
-                    16 tools + own memory        9 tools + own memory    Charts + suggestFollowUps
-                    data.gov.il CKAN             CBS Statistics
-                    ↓                            ↓
-                    Stores results in            Stores results in
-                    separate Convex thread       separate Convex thread
-                              ↓                          ↓
-                              └──────── Final Hebrew response ────────→ Stream to UI
-```
+> See `.claude/rules/agent-network.md` for the full architecture (agent table, streaming protocol, `handleChatStream`, memory model, processors) — loads automatically when editing files under `src/agents/**`, `src/app/api/chat/**`, or `src/constants/prompts.ts`.
 
-### Agents
+### Chat UI Rendering & Navigation
 
-| Agent | Hebrew Name | Tools | Role |
-|-------|-------------|-------|------|
-| `routingAgent` | סוכן ניתוב | 4 direct + 2 sub-agents | Orchestrator — delegates to sub-agents, manages memory, creates charts |
-| `datagovAgent` | סוכן data.gov.il | 16 | Israeli open data search (CKAN API) — runs as sub-agent |
-| `cbsAgent` | סוכן הלמ"ס | 9 | Central Bureau of Statistics (series, prices, localities) — runs as sub-agent |
+Chat pages live at `/chat/:id` with UUID-based threads. New conversations use a `?new` query param to skip message fetching (avoids a loading skeleton flash). Message rendering goes through `MessageItem` → `segmentMessageParts()` → `ToolCallParts` / `TextMessagePart` / `ChartRenderer`. Source URLs come from three sources and are deduplicated by URL + title.
 
-### Streaming Architecture (handleChatStream)
+**Branding**: Site is named "סוכני המידע הציבורי" (used in layout metadata, sidebar, hero).
 
-When the routing agent delegates to a sub-agent, Mastra's `handleChatStream` emits two companion message parts:
-
-1. **`tool-agent-<name>`** — Standard tool call part (input: prompt, output: `{ text, subAgentThreadId, subAgentResourceId }`)
-2. **`data-tool-agent`** — Streaming-only artifact containing the sub-agent's internal `toolCalls`, `toolResults`, and `steps`
-
-The `data-tool-agent` parts are **not stored in memory** — they are streaming artifacts only. On page reload, `enrichWithSubAgentData()` in `GET /api/chat` reconstructs them via two-pass recall:
-
-1. Scan recalled messages for `tool-agent-*` parts with `subAgentThreadId`
-2. Fetch each sub-agent's separate memory thread via `memory.recall()`
-3. Extract tool invocations and reconstruct `data-tool-agent` parts
-
-### UI Rendering Pipeline (MessageItem)
-
-`MessageItem` orchestrates all message rendering via `segmentMessageParts()`, which groups consecutive server-side tool parts into `tool-group` segments (absorbing step-boundary parts like reasoning and empty text between tools). Client tools (charts, source URLs) are excluded from tool groups and rendered separately.
-
-**Render branches by segment type:**
-- **tool-group** → `ToolCallParts` → `ChainOfThought` timeline with grouped steps and progress stats
-- **text** → `TextMessagePart` (markdown with regenerate action on last message)
-- **reasoning** → `ReasoningPart` (thinking indicator)
-- **chart tools** (displayBarChart/Line/Pie) → `ChartRenderer` / `ChartLoadingState` / `ChartError`
-
-**Sub-agent tool calls** (`ToolCallParts`): `buildAgentInternalCallsMap()` scans `data-tool-agent` parts to extract internal tool calls, then `groupToolCalls()` merges them with agent-level parts for the timeline UI.
-
-**Source URL collection** (3 sources, deduplicated by URL + title):
-1. Native `source-url` parts from AI SDK stream
-2. Dedicated source URL tools (`generateDataGovSourceUrl`, `generateCbsSourceUrl`)
-3. Auto-resolved from data tool outputs via `resolveToolSourceUrl()` (scans both direct tools and sub-agent results inside `data-tool-agent` parts)
-
-Key types in `src/components/chat/types.ts`:
-- `AgentDataPart` / `isAgentDataPart()` — typed shape and guard for `data-tool-agent` parts
-- `ToolCallPart` / `getToolStatus()` — tool state handling (active/complete)
-- `SourceUrlUIPart` — unified source URL shape
-
-### Navigation & Chat Loading
-
-- **Branding**: Site is named "סוכני המידע הציבורי" (used in layout metadata, sidebar, hero)
-- **New conversations**: Created via `crypto.randomUUID()` + `router.push(/chat/${id}?new)`. The `?new` query param tells ChatThread to skip message fetching (no loading skeleton flash). On first message send, `?new` is removed from URL via `replaceState`.
-- **Existing conversations**: ChatThread fetches saved messages via `useQuery` → shows `MessageListSkeleton` while loading → then renders messages. `EmptyConversation` only shows when query is not fetching and messages are empty.
-- **Chat page**: Client component (`'use client'`) using `useParams()` to avoid Suspense boundary flash from async server components.
-- **Sidebar inset buttons**: `HomeLogoButton` (logo → landing page) and `NewThreadButton` (new chat) sit next to `SidebarTrigger`. All hidden when sidebar is open; `HomeLogoButton` also hidden on landing page. Buttons have shadow on mobile for visibility.
-- **Source URL deduplication**: `MessageItem` deduplicates sources by both URL and title to prevent duplicate chips.
-
-### Memory & Storage
-
-- **Instance-level storage**: `ConvexStore` on the Mastra instance (all agents inherit)
-- **Vector search**: `ConvexVector` on routing agent for semantic recall (topK: 3)
-- **Thread management**: UUID-based, passed from frontend via `memory: { thread, resource }`
-- **Convex deployment**: `decisive-alpaca-889.convex.cloud`
-- **Graceful fallback**: If Convex env vars are missing, storage/vector are disabled (in-memory only)
+> See `.claude/rules/chat-rendering.md` for the full pipeline (segmentation, tool-group grouping, `buildAgentInternalCallsMap`, source URL collection, `?new` param, sidebar button visibility, key types) — loads automatically when editing files under `src/components/chat/**` or `src/app/(main)/chat/**`.
 
 ### Integrations
 
@@ -308,63 +225,19 @@ The project uses Geist font family (Geist Sans + Geist Mono) loaded via `next/fo
 - `--font-geist-sans`
 - `--font-geist-mono`
 
-## TypeScript Guidelines
-
-### Type Safety Rules
-1. **Minimize `as` type assertions** - Use proper type guards and inference instead
-2. **Avoid `any` type** - Use `unknown` or proper types
-3. **Always run `tsc` after changes** - Verify no new errors were introduced
-4. **Strict mode enabled** - All strict TypeScript checks are active
-
-### Common Patterns
-- Use type inference where possible
-- Prefer interfaces for object shapes
-- Use `Readonly<>` for immutable props
-- Leverage TypeScript's utility types (e.g., `Pick`, `Omit`, `Partial`)
-
-## AI Agent Implementation
-
-The agent uses **Mastra 1.1** with AI SDK v6 tools. Key implementation details:
-
-- **Framework**: Mastra agent network with `handleChatStream` for streaming
-- **Model**: OpenRouter provider, default `google/gemini-3-flash-preview`
-- **Architecture**: Routing agent delegates to sub-agents (`datagovAgent`, `cbsAgent`) via `agents: {}` — not direct tool registration
-- **Routing agent tools**: 4 direct (displayBarChart, displayLineChart, displayPieChart, suggestFollowUps) + 2 sub-agents
-- **Sub-agent tools**: DataGov (16 tools), CBS (9 tools) — each with own memory thread
-- **Processors**: `ToolResultSummarizerProcessor` converts raw API results to Hebrew summaries
-- **Memory**: Persistent threads via `@mastra/convex` (ConvexStore + ConvexVector). Sub-agents store results in separate threads linked via `subAgentThreadId`
-- **Two-pass recall**: `GET /api/chat` fetches routing agent thread, then sub-agent threads to reconstruct internal tool call data for UI
-- **Chat routing**: UUID-based threads at `/chat/:id`, new conversations use `?new` query param to skip message loading
-
-### Data Sources
+## Data Sources
 - **data.gov.il**: CKAN API at `https://data.gov.il/api/3` (datasets, organizations, groups, tags, resources, DataStore)
 - **CBS (הלמ"ס)**: Statistical series, price indices, CPI calculations, locality dictionary
+- **BudgetKey**: MCP endpoint at `https://next.obudget.org/mcp` (state budget, contracts, tenders, entities, revenues)
+- **GovMap**: REST API at `https://www.govmap.gov.il/api/` (real estate transactions, price trends, valuations — multi-layer geospatial)
+- **Israel Drugs**: REST API at `https://israeldrugs.health.gov.il/GovServiceList/IDRServer` (drug registry, generics, health basket)
+- **IL Health**: REST API at `https://datadashboard.health.gov.il/api` (public health dashboards, HMO data, service quality)
+- **Grocery Prices**: XML feeds from supermarket chains (Shufersal, Rami Levy, Yochananof, Victory, Osher Ad, Tiv Taam)
+- **Knesset** *(planned)*: OData at `http://knesset.gov.il/Odata/ParliamentInfo.svc` (bills, committees, members)
 - **Convex RAG**: Semantic search over synced datasets (OpenRouter embeddings)
-
-## Code Review Checklist
-
-Before committing changes:
-- [ ] Run `npm run build` to verify build succeeds
-- [ ] Run `npm run lint` to check for linting issues
-- [ ] Run `npm run vibecheck` for code quality validation
-- [ ] Test in browser at `localhost:3000`
-- [ ] Verify type assertions (`as`) are necessary
-- [ ] Ensure no `any` types were added
-- [ ] Check that Server Components don't use client-only hooks
 
 ## OpenSpec Workflow
 
-This project uses OpenSpec for specification-driven development. When working on new features or architectural changes:
+This project uses OpenSpec for specification-driven development. See `openspec/AGENTS.md` for detailed instructions on creating proposals and managing specifications.
 
-1. **Check for existing specs**: Read `openspec/AGENTS.md` first
-2. **Create proposals**: Use OpenSpec workflow for new capabilities
-3. **Reference the spec**: `openspec/specs/` is the authoritative source for agent design
-4. **Validate changes**: Run `openspec validate --strict` before implementation
-5. When Implementing, always give each major task (e.g 1.0 - 2.0) to a separate subagent.
-6. When implementing, always follow the tasks in the relevant `tasks.md` file.
-7. When implementing, always mark tasks as done in the relevant `tasks.md` file.
-8. When implementing, always use the advanced typescript-pro subagent.
-9. **Notion Sync (Task Updates)**: When completing tasks in `**/tasks.md`, use the **Notion MCP server** (`mcp__claude_ai_Notion__notion-update-page`) to update the corresponding task page in the "OpenSpec Changes" database (data source: `collection://61973df7-c1a4-49d0-8baf-7fbf2d714968`). Match pages by the `Change ID` property (equals the openspec change folder name). Update the page content's checklists and set the `Status` property to reflect progress (`To Do` → `In Progress` → `Done`). When fully complete, also set `Completed Date` to the current date.
-10. **Notion Sync (New Plans)**: When creating a new openspec proposal/plan, use the **Notion MCP server** (`mcp__claude_ai_Notion__notion-create-pages`) to create a corresponding page in the "OpenSpec Changes" database (data source: `collection://61973df7-c1a4-49d0-8baf-7fbf2d714968`). Set properties: `Name` (descriptive title), `Change ID` (openspec folder name), `Category` (one of: Backend, Frontend, Full Stack, Infrastructure, DevOps, UI/UX, Bug Fix, Refactor), `Priority` (High/Medium/Low), `Status` (`To Do`), and leave `Completed Date` empty. Add the tasks.md checklist items as page content. The database lives under the "Data Israel" project page (`31d6dd80-0603-81c9-8114-c4444cd24106`).
-
-See `openspec/AGENTS.md` for detailed instructions on creating proposals and managing specifications.
+> See `.claude/rules/openspec-workflow.md` for implementation rules (subagent-per-task, task marking, Notion sync details) — loads automatically when editing `openspec/changes/**/{tasks,proposal,design}.md` or `openspec/specs/**`.

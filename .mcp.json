@@ -9,22 +9,28 @@
       "url": "http://localhost:8603/mcp"
     },
     "next-devtools": {
-      "command": "npx",
+      "command": "cmd",
       "args": [
+        "/c",
+        "npx",
         "-y",
         "next-devtools-mcp@latest"
       ]
     },
     "shadcn": {
-      "command": "npx",
+      "command": "cmd",
       "args": [
+        "/c",
+        "npx",
         "shadcn@latest",
         "mcp"
       ]
     },
     "convex": {
-      "command": "npx",
+      "command": "cmd",
       "args": [
+        "/c",
+        "npx",
         "-y",
         "convex@latest",
         "mcp",

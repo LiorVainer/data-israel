@@ -48,9 +48,12 @@ vi.mock('@/lib/env', () => ({
 
 vi.mock('@mastra/core/evals', () => {
     const createChainable = (): Record<string, unknown> => {
-        const proxy: Record<string, unknown> = new Proxy({}, {
-            get: () => vi.fn(() => proxy),
-        });
+        const proxy: Record<string, unknown> = new Proxy(
+            {},
+            {
+                get: () => vi.fn(() => proxy),
+            },
+        );
         return proxy;
     };
     return {
@@ -117,28 +120,40 @@ describe('DataGov data source contract', () => {
         expect(agent.id).toBe('datagovAgent');
     });
 
-    it('source resolvers return null for failed output', () => {
+    it('source resolvers return empty array for failed output', () => {
         for (const resolver of Object.values(DataGovDataSource.sourceResolvers)) {
             if (!resolver) continue;
-            expect(resolver({}, { success: false })).toBeNull();
+            const result = resolver({ searchedResourceName: '' }, { success: false, error: 'test error', apiUrl: '' });
+            expect(result).toEqual([]);
         }
     });
 
-    it('source resolvers return ToolSource for valid output with portalUrl or apiUrl', () => {
+    it('source resolvers return ToolSource[] for valid output with portalUrl or apiUrl', () => {
         for (const [key, resolver] of Object.entries(DataGovDataSource.sourceResolvers)) {
             if (!resolver) continue;
 
             // queryDatastoreResource uses apiUrl, others use portalUrl
+            // Dataset/resource/org resolvers access nested fields (e.g., output.dataset.title)
             const output =
                 key === 'queryDatastoreResource'
-                    ? { success: true, apiUrl: 'https://data.gov.il/api/3/action/datastore_search' }
-                    : { success: true, portalUrl: 'https://data.gov.il/he/datasets/org/dataset' };
+                    ? { success: true as const, apiUrl: 'https://data.gov.il/api/3/action/datastore_search' }
+                    : {
+                          success: true as const,
+                          portalUrl: 'https://data.gov.il/he/datasets/org/dataset',
+                          dataset: { title: 'test', name: 'test' },
+                          organization: { title: 'test', name: 'test' },
+                          resource: { name: 'test' },
+                      };
 
-            const result = resolver({ searchedResourceName: 'test' }, output);
-            expect(result).not.toBeNull();
-            expect(result).toHaveProperty('url');
-            expect(result).toHaveProperty('title');
-            expect(result).toHaveProperty('urlType');
+            // Test with partial mock output — cast through unknown since tests don't construct full discriminated union
+            const result = resolver(
+                { searchedResourceName: 'test' },
+                output as unknown as Parameters<typeof resolver>[1],
+            );
+            expect(result.length).toBeGreaterThan(0);
+            expect(result[0]).toHaveProperty('url');
+            expect(result[0]).toHaveProperty('title');
+            expect(result[0]).toHaveProperty('urlType');
         }
     });
 
@@ -178,7 +193,6 @@ describe('DataGov data source contract', () => {
             'queryDatastoreResource',
             'getStatus',
             'listLicenses',
-            'generateDataGovSourceUrl',
         ];
         for (const name of expectedTools) {
             expect(DataGovDataSource.tools).toHaveProperty(name);

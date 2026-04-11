@@ -1,0 +1,92 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "startup|compact|clear",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/reinject-context.sh\""
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Read|Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "test -f \"$CLAUDE_PROJECT_DIR/.claude/hooks/hooks.ts\" && npx tsx \"$CLAUDE_PROJECT_DIR/.claude/hooks/hooks.ts\" __run_hook PreToolUse \"Read|Edit|Write\" \"0\" || exit 0"
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "test -f \"$CLAUDE_PROJECT_DIR/.claude/hooks/hooks.ts\" && npx tsx \"$CLAUDE_PROJECT_DIR/.claude/hooks/hooks.ts\" __run_hook PreToolUse \"Bash\" \"1\" || exit 0"
+          }
+        ]
+      },
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "test -f \"$CLAUDE_PROJECT_DIR/.claude/hooks/hooks.ts\" && npx tsx \"$CLAUDE_PROJECT_DIR/.claude/hooks/hooks.ts\" __run_hook PreToolUse \"Edit|Write\" \"2\" || exit 0"
+          },
+          {
+            "type": "command",
+            "command": "test -f \"$CLAUDE_PROJECT_DIR/.claude/hooks/hooks.ts\" && npx tsx \"$CLAUDE_PROJECT_DIR/.claude/hooks/hooks.ts\" __run_hook PreToolUse \"Edit|Write\" \"3\" || exit 0"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "test -f \"$CLAUDE_PROJECT_DIR/.claude/hooks/hooks.ts\" && npx tsx \"$CLAUDE_PROJECT_DIR/.claude/hooks/hooks.ts\" __run_hook PostToolUse \"Edit|Write\" \"0\" || exit 0"
+          }
+        ]
+      }
+    ],
+    "Notification": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "test -f \"$CLAUDE_PROJECT_DIR/.claude/hooks/hooks.ts\" && npx tsx \"$CLAUDE_PROJECT_DIR/.claude/hooks/hooks.ts\" __run_hook Notification \"\" \"0\" || exit 0"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "test -f \"$CLAUDE_PROJECT_DIR/.claude/hooks/hooks.ts\" && npx tsx \"$CLAUDE_PROJECT_DIR/.claude/hooks/hooks.ts\" __run_hook Stop \"\" \"0\" || exit 0"
+          }
+        ]
+      }
+    ],
+    "InstructionsLoaded": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "test -f \"$CLAUDE_PROJECT_DIR/.claude/hooks/instructions-loaded.ts\" && npx tsx \"$CLAUDE_PROJECT_DIR/.claude/hooks/instructions-loaded.ts\" || exit 0"
+          }
+        ]
+      }
+    ]
+  }
+}

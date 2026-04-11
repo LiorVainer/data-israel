@@ -9,21 +9,6 @@ import { z } from 'zod';
 import { cbsApi } from '../../api/cbs.client';
 import { buildSeriesUrl, CBS_SERIES_PATHS } from '../../api/cbs.endpoints';
 import { commonToolInput, toolOutputSchema } from '@/data-sources/types';
-import type { ToolSourceResolver } from '@/data-sources/types';
-
-// ============================================================================
-// Helpers
-// ============================================================================
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-    return typeof value === 'object' && value !== null;
-}
-
-function getString(obj: unknown, key: string): string | undefined {
-    if (!isRecord(obj)) return undefined;
-    const val = obj[key];
-    return typeof val === 'string' ? val : undefined;
-}
 
 // ============================================================================
 // Schemas
@@ -143,19 +128,3 @@ export const getCbsSeriesDataByPath = createTool({
         }
     },
 });
-
-// ============================================================================
-// Source URL Resolver
-// ============================================================================
-
-/** Source URL resolver — co-located with the tool that produces the data */
-export const resolveSourceUrl: ToolSourceResolver = (input, output) => {
-    const apiUrl = getString(output, 'apiUrl');
-    if (!apiUrl) return null;
-    const name = getString(input, 'searchedResourceName');
-    return {
-        url: apiUrl,
-        title: name ? `סדרה סטטיסטית — ${name}` : 'סדרה סטטיסטית - הלמ"ס',
-        urlType: 'api',
-    };
-};

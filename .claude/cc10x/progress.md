@@ -69,10 +69,16 @@
 - [x] Task 8: Verification (tsc 0 errors, build pass, lint pass, 14 tests pass)
 
 ## add-resumable-streaming
-- [x] Research: AI SDK resumable streams docs (context7)
-- [x] Research: Mastra workflow streaming docs (context7)
-- [x] Research: GitHub examples (octocode) - Vercel official, AIMOverse, VoltAgent
-- [x] Research: Workflow DevKit (useworkflow.dev) - evaluated and rejected
-- [x] Proposal created and validated
-- [x] User decisions incorporated (Upstash, Redis for activeStreamId, 10min TTL, no cancellation)
-- [ ] Awaiting user approval to implement
+- [x] Research, proposal created, awaiting implementation
+
+## add-admin-dashboard-analytics — Tasks 1-6 COMPLETE
+- [x] 1.1 recharts@3.8.0 installed via pnpm
+- [x] 1.2 shadcn tabs → src/components/ui/tabs.tsx
+- [x] 1.3 src/constants/prompt-cards.ts — PromptCard + PROMPT_CARDS exported
+- [x] 1.4 EmptyConversation.tsx imports from @/constants/prompt-cards
+- [x] 2.x convex/analytics.ts — 5 analytics query functions
+- [x] 3.1-3.4 Admin page Tabs refactor + AnalyticsDashboard + time-range selector
+- [x] 4.1-4.5 StatCard + UserGuestBreakdownCard + KPI row + breakdown wired to Convex
+- [x] 5.1-5.7 Charts: ThreadOriginChart, ThreadsOverTimeChart, TokenUsageChart, AgentDelegationChart — all wired, Hebrew labels, CSS-var colors
+- [x] 6.1-6.3 Mobile responsiveness: isMobile-driven heights/margins/grids/legend positions
+- Verification: tsc exit 0, build exit 0, 40/40 tests pass, ESLint 0 errors

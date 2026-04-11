@@ -1,0 +1,7 @@
+.messageItem {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  content-visibility: auto;
+  contain-intrinsic-size: 0 120px;
+}

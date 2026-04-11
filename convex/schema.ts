@@ -174,6 +174,26 @@ export default defineSchema({
     }).index('by_created', ['createdAt']),
 
     /**
+     * Thread settings table - stores per-thread data source preferences.
+     * When enabledSources is empty (default state), the record is deleted to save storage.
+     */
+    thread_settings: defineTable({
+        threadId: v.string(),
+        enabledSources: v.array(v.string()),
+        updatedAt: v.number(),
+    }).index('by_thread_id', ['threadId']),
+
+    /**
+     * User settings table - stores per-user default data source preferences.
+     * When defaultEnabledSources is empty (default state), the record is deleted to save storage.
+     */
+    user_settings: defineTable({
+        userId: v.string(),
+        defaultEnabledSources: v.array(v.string()),
+        updatedAt: v.number(),
+    }).index('by_user_id', ['userId']),
+
+    /**
      * Mastra tables - used by @mastra/convex for agent memory, threads, and storage
      */
     mastra_threads: mastraThreadsTable,

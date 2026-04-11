@@ -79,30 +79,18 @@ export const getOrganizationDetails = createTool({
 });
 
 // ============================================================================
-// Source URL Resolver
+// Source URL Resolver (custom — extracts organization.title from nested output)
 // ============================================================================
 
-function isRecord(value: unknown): value is Record<string, unknown> {
-    return typeof value === 'object' && value !== null;
-}
-
-function getString(obj: unknown, key: string): string | undefined {
-    if (!isRecord(obj)) return undefined;
-    const val = obj[key];
-    return typeof val === 'string' ? val : undefined;
-}
-
 /** Co-located source URL resolver for getOrganizationDetails */
-export const resolveSourceUrl: ToolSourceResolver = (input, output) => {
-    if (!isRecord(output) || output.success !== true) return null;
-    const portalUrl = getString(output, 'portalUrl');
-    if (!portalUrl) return null;
-    const org = isRecord(output) ? output.organization : undefined;
-    const title = getString(org, 'title') ?? getString(input, 'searchedResourceName');
-    const name = getString(org, 'name');
-    return {
-        url: portalUrl,
-        title: title ?? name ?? 'ארגון - data.gov.il',
-        urlType: 'portal',
-    };
+export const resolveSourceUrl: ToolSourceResolver<GetOrganizationDetailsInput, GetOrganizationDetailsOutput> = (
+    input,
+    output,
+) => {
+    if (!output.success) return [];
+    const portalUrl = output.portalUrl;
+    if (!portalUrl) return [];
+    const title = output.organization.title || input.searchedResourceName;
+    const name = output.organization.name;
+    return [{ url: portalUrl, title: title ?? name ?? 'ארגון - data.gov.il', urlType: 'portal' }];
 };

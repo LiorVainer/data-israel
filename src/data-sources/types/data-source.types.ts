@@ -8,8 +8,8 @@
 import type { Agent } from '@mastra/core/agent';
 import type { Tool } from '@mastra/core/tools';
 import type { LucideIcon } from 'lucide-react';
-import type { ToolSourceResolver, ToolTranslation } from './tool.types';
-import type { DataSourceConfig } from './display.types';
+import type { ToolResourceExtractor, ToolSourceConfig, ToolSourceResolver, ToolTranslation } from './tool.types';
+import type { DataSourceConfig, LandingConfig, SuggestionsConfig } from './display.types';
 
 export interface DataSourceDefinition<TTools extends Record<string, Tool<any, any, any, any, any, any, any>>> {
     /** Unique key — 'cbs' | 'datagov' | future sources */
@@ -25,8 +25,8 @@ export interface DataSourceDefinition<TTools extends Record<string, Tool<any, an
         description: string;
         /** System prompt / instructions */
         instructions: string;
-        /** Factory function to create agent with a specific model */
-        createAgent: (modelId: string) => Agent;
+        /** Factory function to create agent with a specific model (may be async for MCP-based sources) */
+        createAgent: (modelId: string) => Agent | Promise<Agent>;
     };
 
     /** UI display metadata */
@@ -48,9 +48,21 @@ export interface DataSourceDefinition<TTools extends Record<string, Tool<any, an
     /** All Mastra tools for this data source */
     tools: TTools;
 
-    /** Per-tool source URL resolvers (keys must be tool names from TTools) */
-    sourceResolvers: Partial<Record<keyof TTools & string, ToolSourceResolver>>;
+    /** Declarative source URL configs — registry auto-generates resolvers */
+    sourceConfigs?: Partial<Record<keyof TTools & string, ToolSourceConfig>>;
+
+    /** Per-tool source URL resolvers (keys must be tool names from TTools) — use sourceConfigs for standard tools */
+    sourceResolvers?: Partial<Record<keyof TTools & string, ToolSourceResolver>>;
 
     /** Per-tool Hebrew translations (keys must be tool names from TTools) */
     translations: Partial<Record<keyof TTools & string, ToolTranslation>>;
+
+    /** Per-tool resource extractors for ChainOfThought UI chips */
+    resourceExtractors?: Partial<Record<keyof TTools & string, ToolResourceExtractor>>;
+
+    /** Optional landing page display config */
+    landing?: LandingConfig;
+
+    /** Optional example prompts for empty conversation */
+    suggestions?: SuggestionsConfig;
 }

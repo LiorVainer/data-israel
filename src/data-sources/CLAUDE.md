@@ -8,13 +8,19 @@ Self-contained data source modules. Each folder provides everything needed: API 
 src/data-sources/
 ├── types/                          # Shared types & Zod schema fragments
 │   ├── data-source.types.ts        # DataSourceDefinition<TTools> interface
-│   ├── tool.types.ts               # ToolSourceResolver, ToolTranslation, ToolIOMap
+│   ├── tool.types.ts               # ToolSourceResolver, ToolTranslation, ToolResourceExtractor
 │   ├── tool-schemas.ts             # commonToolInput, externalUrls, toolOutputSchema()
-│   ├── display.types.ts            # AgentDisplayInfo, DataSource, DataSourceConfig
+│   ├── display.types.ts            # AgentDisplayInfo, DataSource, DataSourceConfig, LANDING_CATEGORIES
 │   └── index.ts                    # Re-exports
-├── registry.ts                     # Collects all sources, exports aggregated tools/agents/translations
-├── cbs/                            # CBS data source
-└── datagov/                        # DataGov data source
+├── registry.ts                     # Client-safe aggregation (tools, translations, resolvers, extractors)
+├── registry.server.ts              # Server-only agent references (@mastra/core/agent)
+├── cbs/                            # CBS data source (9 tools)
+├── datagov/                        # DataGov data source (16 tools)
+├── budget/                         # BudgetKey data source (3 MCP tools)
+├── govmap/                         # GovMap multi-layer data source (8 tools, real estate layer)
+├── drugs/                          # Israel Drugs data source (8 tools)
+├── health/                         # IL Health data source (5 tools)
+└── grocery/                        # Grocery Prices data source (5 tools)
 ```
 
 ## Per-Source Folder Structure
@@ -26,8 +32,8 @@ src/data-sources/
 │   ├── {source}.types.ts           # API response types
 │   └── {source}.endpoints.ts       # Base URLs, path builders
 ├── tools/
-│   ├── {tool-name}.tool.ts         # Tool def + optional resolveSourceUrl export
-│   └── index.ts                    # {Source}Tools object + {Source}ToolName type
+│   ├── {tool-name}.tool.ts         # Tool def + optional typed resolveSourceUrl export
+│   └── index.ts                    # {Source}Tools object + {Source}ToolName type + sourceConfigs
 ├── __tests__/
 │   └── {source}-data-source.test.ts # Contract tests (REQUIRED)
 ├── {source}.agent.ts               # Agent factory + system prompt instructions
@@ -37,6 +43,12 @@ src/data-sources/
 ```
 
 ## Adding a New Data Source
+
+### Step 0: Classify the upstream's proxy tier (BEFORE writing any code)
+
+Before implementing a new data source, run `pnpm classify-source --url=...` to determine whether the upstream needs a proxy and which Bright Data tier (`direct` / `residential` / `unlocker`) to use. Add the result to `src/data-sources/proxy-routing.ts` and read it via `resolveProxyConfig(PROXY_ROUTING[...])` in the client file.
+
+> See `.claude/rules/data-sources-proxy.md` for the full classification workflow, four-probe model, client wiring template, and hard rules (no `https-proxy-agent`, no bulk-scraping through proxy, billing notes) — loads automatically when editing any `*.client.ts` file under `src/data-sources/**` or the `proxy-routing.ts` registry.
 
 ### Step 1: Create the folder
 
@@ -61,19 +73,51 @@ const outputSchema = toolOutputSchema({
 - `toolOutputSchema()` handles the discriminated union + error shape automatically
 - `externalUrls` (apiUrl, portalUrl) is included in success/error via `commonSuccessOutput`
 
-### Step 3: Co-locate source URL resolvers
+### Step 3: Configure source URL resolution
 
-In each `.tool.ts` that generates source URLs, export a resolver:
+Source URLs are resolved via two mechanisms (both defined in `tools/index.ts`):
+
+#### Standard: Declarative `sourceConfigs`
+
+Most tools use `sourceConfigs` — just a Hebrew title. The registry auto-generates a resolver that reads `apiUrl` and `portalUrl` from the tool's output.
 
 ```typescript
-export const resolveSourceUrl: ToolSourceResolver = (input, output) => {
-  const apiUrl = getString(output, 'apiUrl');
-  if (!apiUrl) return null;
-  return { url: apiUrl, title: '...', urlType: 'api' };
+// tools/index.ts
+import type { ToolSourceConfig } from '@/data-sources/types';
+
+export const mySourceConfigs: Partial<Record<MyToolName, ToolSourceConfig>> = {
+  getMyData: { title: 'נתוני מקור' },
+  searchMyData: { title: 'חיפוש במקור' },
 };
 ```
 
+#### Custom: `ToolSourceResolver<TInput, TOutput>` with typed schemas
+
+For tools that need non-standard URL logic (e.g., building URLs from input fields), export a typed resolver from the `.tool.ts` file:
+
+```typescript
+// tools/my-tool.tool.ts
+import type { ToolSourceResolver } from '@/data-sources/types';
+
+export type MyToolInput = z.infer<typeof myToolInputSchema>;
+export type MyToolOutput = z.infer<typeof myToolOutputSchema>;
+
+export const resolveSourceUrl: ToolSourceResolver<MyToolInput, MyToolOutput> = (input, output) => {
+  if (!output.success) return [];
+  return [
+    { url: buildMyUrl(input.id), title: `מקור — ${input.name}`, urlType: 'api' },
+  ];
+};
+```
+
+Key differences from standard configs:
+- Returns `ToolSource[]` (array, not `| null`)
+- Generic type params provide full type safety over input/output schemas
+- Collected into `sourceResolvers` in the DataSourceDefinition (overrides `sourceConfigs` for the same tool)
+
 ### Step 4: Create translations with LucideIcon
+
+`ToolTranslation` requires only `name` + `icon`. The optional `formatInput`/`formatOutput` fields are legacy and not used by the rendering pipeline.
 
 ```typescript
 // {source}.translations.tsx
@@ -84,8 +128,6 @@ export const translations: Partial<Record<ToolName, ToolTranslation>> = {
   myTool: {
     name: 'Hebrew name',
     icon: SearchIcon,       // LucideIcon component, NOT <SearchIcon />
-    formatInput: (input) => '...',
-    formatOutput: (output) => '...',
   },
 };
 ```
@@ -100,12 +142,28 @@ export const MyDataSource = {
   display: { label: '...', icon: MyIcon, badge: { ... } },
   routingHint: 'Hebrew description of when to route to this agent',
   tools: MySourceTools,
-  sourceResolvers: { toolA: resolveSourceUrlA },
+  sourceConfigs: mySourceConfigs,                      // declarative (standard tools)
+  sourceResolvers: { toolA: resolveSourceUrlA },       // custom overrides only
   translations: myTranslations,
 } satisfies DataSourceDefinition<typeof MySourceTools>;
 ```
 
-### Step 6: Register in registry
+### Step 6: Add suggestions (optional but recommended)
+
+Add a `suggestions` config to your `DataSourceDefinition` with 2-4 Hebrew example prompts. These appear in the empty conversation UI, grouped by landing category tabs.
+
+```typescript
+suggestions: {
+  prompts: [
+    { label: 'Short Hebrew label', prompt: 'Full Hebrew prompt text', icon: SearchIcon },
+    { label: 'Another label', prompt: 'Another prompt', icon: DatabaseIcon },
+  ],
+},
+```
+
+The suggestions are automatically picked up by `getDataSourcesWithSuggestions()` in the registry and displayed in `EmptyConversation` under the source's landing category tab (requires `landing` config to be set).
+
+### Step 7: Register in registry
 
 Add one import + spread in `src/data-sources/registry.ts`. The registry auto-wires:
 - Agent into `dataSourceAgents`
@@ -113,8 +171,9 @@ Add one import + spread in `src/data-sources/registry.ts`. The registry auto-wir
 - Translations (+ auto-generated `agent-*` entry) into `getAllTranslations()`
 - Source resolvers into `resolveToolSourceUrl()`
 - Routing hint into `buildRoutingHints()` (injected into routing agent prompt)
+- Suggestions into `getDataSourcesWithSuggestions()` (for empty conversation UI)
 
-### Step 7: Write contract tests (REQUIRED)
+### Step 8: Write contract tests (REQUIRED)
 
 Create `{source}/__tests__/{source}-data-source.test.ts` with these checks:
 
@@ -133,8 +192,21 @@ describe('{Source} data source contract', () => {
     }
   });
 
+  it('all sourceConfigs keys exist in tools', () => {
+    for (const key of Object.keys(MyDataSource.sourceConfigs ?? {})) {
+      expect(MyDataSource.tools).toHaveProperty(key);
+    }
+  });
+
+  it('sourceConfigs have Hebrew title strings', () => {
+    for (const config of Object.values(MyDataSource.sourceConfigs ?? {})) {
+      expect(config.title).toBeTypeOf('string');
+      expect(config.title.length).toBeGreaterThan(0);
+    }
+  });
+
   it('all sourceResolver keys exist in tools', () => {
-    for (const key of Object.keys(MyDataSource.sourceResolvers)) {
+    for (const key of Object.keys(MyDataSource.sourceResolvers ?? {})) {
       expect(MyDataSource.tools).toHaveProperty(key);
     }
   });
@@ -144,9 +216,9 @@ describe('{Source} data source contract', () => {
     expect(agent.id).toBe('mySourceAgent');
   });
 
-  it('source resolvers return null for failed output', () => {
-    for (const resolver of Object.values(MyDataSource.sourceResolvers)) {
-      expect(resolver({}, { success: false })).toBeNull();
+  it('source resolvers return empty array for failed output', () => {
+    for (const resolver of Object.values(MyDataSource.sourceResolvers ?? {})) {
+      expect(resolver({}, { success: false })).toEqual([]);
     }
   });
 
@@ -165,11 +237,84 @@ describe('{Source} data source contract', () => {
 
 **Every new data source MUST have these contract tests.** They ensure the `DataSourceDefinition` interface is properly satisfied and prevent regressions.
 
+### Step 9: Write API validation tests (REQUIRED)
+
+Create `{source}/__tests__/{source}-api-validation.test.ts` — one file per sub-API folder or per general API folder. These tests hit **real external APIs** and validate that tool outputs match their declared schemas (catches schema drift when upstream APIs change).
+
+> See `.claude/rules/data-sources-api-tests.md` for the full template and hard rules (`describe.sequential`, 30s timeout, small limits, excluded from default run, etc.) — loads automatically when editing any `*-api-validation.test.ts` file under `src/data-sources/**/__tests__/`.
+
+## MCPClient Pattern (Budget Source)
+
+The budget source connects to a hosted MCP endpoint instead of defining custom Mastra tools. Tools are auto-discovered at agent creation time via `MCPClient.listTools()`.
+
+```
+src/data-sources/budget/
+├── budget.mcp.ts              # MCPClient instance (url: https://next.obudget.org/mcp)
+├── budget.agent.ts            # Async agent factory (await listTools() → new Agent)
+├── budget.tools.ts            # Static tool name record (BudgetToolName type + BudgetToolNames)
+├── budget.display.ts          # AgentDisplayInfo + badge config
+├── budget.translations.tsx    # Hebrew tool translations
+├── budget.source-resolvers.ts # Source URL resolvers
+└── index.ts                   # Exports BudgetDataSource (no `satisfies` — tools are placeholders)
+```
+
+Key differences from standard sources:
+- `createAgent` returns `Promise<Agent>` (async) — the `DataSourceDefinition.agent.createAgent` type is `(modelId: string) => Agent | Promise<Agent>`
+- `tools` record contains placeholder values (`true`) for client-side registry key mapping — actual Tool objects come from MCP at runtime
+- No `satisfies DataSourceDefinition<...>` — type safety for keys is enforced by the `BudgetToolName` type instead
+
+## Landing Page Config
+
+`DataSourceDefinition` has an optional `landing` field for landing page display:
+
+```typescript
+landing?: {
+  logo: string;              // Path to SVG in /public
+  description: string;       // Hebrew one-liner
+  stats: { label: string; value: string; icon: LucideIcon }[];
+  category: LandingCategory; // 'general' | 'economy' | 'health'
+  order: number;             // Sort within category
+}
+```
+
+Categories are defined in `display.types.ts` as `DATA_SOURCES_CATEGORIES`:
+- `general` — "מידע כללי" (order 1) — datagov, govmap, knesset, cbs
+- `economy` — "כלכלה ותקציב" (order 2) — budget, shufersal, rami-levy
+- `health` — "בריאות" (order 3) — drugs, health
+
+## Resource Extractors
+
+Per-source `resourceExtractors` on `DataSourceDefinition` provide chip labels for ChainOfThought UI. Each extractor receives a tool's `(input, output)` and returns `{ name?: string; url?: string } | null`.
+
+```typescript
+resourceExtractors?: Partial<Record<keyof TTools & string, ToolResourceExtractor>>;
+```
+
+The registry aggregates all extractors via `getAllResourceExtractors()`. Sources that don't need custom extraction can omit the field (defaults to `{}`).
+
+## Simplified ToolTranslation
+
+The `ToolTranslation` interface requires only two fields:
+
+```typescript
+interface ToolTranslation {
+  name: string;       // Hebrew display name
+  icon: LucideIcon;   // Icon component for ChainOfThought UI
+  // Optional legacy fields (not used by rendering pipeline):
+  formatInput?: (input: unknown) => string | undefined;
+  formatOutput?: (output: unknown) => string | undefined;
+}
+```
+
+The `formatInput`/`formatOutput` fields are optional and no longer used by the UI. New data sources should only provide `name` and `icon`.
+
 ## Key Conventions
 
 - `searchedResourceName` is **input-only** — never echo it in output schemas
 - Translation icons are `LucideIcon` components, not JSX elements
 - Use `toolOutputSchema({...successFields})` — don't repeat error shapes
-- Source URL resolvers are per-tool (co-located), not a central switch
-- `DataSourceDefinition` is generic over `TTools` — keys in `sourceResolvers` and `translations` are type-checked
+- Source URLs use declarative `sourceConfigs` for standard tools; custom `sourceResolvers` only when non-standard URL logic is needed
+- `DataSourceDefinition` is generic over `TTools` — keys in `sourceConfigs`, `sourceResolvers`, and `translations` are type-checked
 - `routingHint` is auto-injected into the routing agent's system prompt via `buildRoutingHints()`
+- `DataSource` type union: `'cbs' | 'datagov' | 'budget' | 'knesset' | 'govmap' | 'drugs' | 'health' | 'shufersal' | 'rami-levy'`
+- Registry is split: `registry.ts` (client-safe) and `registry.server.ts` (server-only agent refs)
