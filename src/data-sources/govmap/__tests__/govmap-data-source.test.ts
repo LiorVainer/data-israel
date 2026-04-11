@@ -147,7 +147,7 @@ describe('GovMap data source contract', () => {
     });
 
     it('tools contain expected Nadlan tool names', () => {
-        const expectedTools = [
+        const expectedNadlanTools = [
             'autocompleteNadlanAddress',
             'findRecentNadlanDeals',
             'getStreetNadlanDeals',
@@ -156,7 +156,14 @@ describe('GovMap data source contract', () => {
             'getNadlanMarketActivity',
             'getNadlanDealStatistics',
         ];
-        for (const name of expectedTools) {
+        for (const name of expectedNadlanTools) {
+            expect(GovmapDataSource.tools).toHaveProperty(name);
+        }
+    });
+
+    it('tools contain expected Layers tool names', () => {
+        const expectedLayersTools = ['findNearbyServices', 'getParcelInfo', 'findNearbyTourism', 'getLocationContext'];
+        for (const name of expectedLayersTools) {
             expect(GovmapDataSource.tools).toHaveProperty(name);
         }
     });

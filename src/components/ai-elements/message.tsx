@@ -306,12 +306,12 @@ type StreamdownComponents = NonNullable<ComponentProps<typeof Streamdown>['compo
 const tableCellClassName = 'px-4 py-2 text-start';
 
 const rtlTableComponents: StreamdownComponents = {
-    th: ({ children, className: _cn, style: _style, ...props }: React.JSX.IntrinsicElements['th']) => (
+    th: ({ children, className: _cn, style: _style, ...props }) => (
         <th className={tableCellClassName} {...props}>
             {children}
         </th>
     ),
-    td: ({ children, className: _cn, style: _style, ...props }: React.JSX.IntrinsicElements['td']) => (
+    td: ({ children, className: _cn, style: _style, ...props }) => (
         <td className={tableCellClassName} {...props}>
             {children}
         </td>

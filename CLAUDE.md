@@ -96,7 +96,7 @@ src/                              # Application source code
 │   ├── cbs/                      # CBS (9 tools, Central Bureau of Statistics)
 │   ├── datagov/                  # DataGov (16 tools, data.gov.il CKAN API)
 │   ├── budget/                   # BudgetKey (3 MCP tools, state budget 1997-2025)
-│   ├── govmap/                   # GovMap (8 tools, multi-layer geospatial — nadlan primary)
+│   ├── govmap/                   # GovMap (11 tools, nadlan real estate + layers-catalog)
 │   ├── drugs/                    # Drugs (8 tools, pharmaceutical database)
 │   ├── health/                   # Health (5 tools, MOH dashboards)
 │   └── grocery/                  # Grocery (5 tools, supermarket prices)
@@ -229,7 +229,7 @@ The project uses Geist font family (Geist Sans + Geist Mono) loaded via `next/fo
 - **data.gov.il**: CKAN API at `https://data.gov.il/api/3` (datasets, organizations, groups, tags, resources, DataStore)
 - **CBS (הלמ"ס)**: Statistical series, price indices, CPI calculations, locality dictionary
 - **BudgetKey**: MCP endpoint at `https://next.obudget.org/mcp` (state budget, contracts, tenders, entities, revenues)
-- **GovMap**: REST API at `https://www.govmap.gov.il/api/` (real estate transactions, price trends, valuations — multi-layer geospatial)
+- **GovMap**: REST API at `https://www.govmap.gov.il/api/` (real estate transactions, price trends, valuations, nearby public services, land parcels, tourism/recreation, area demographics — multi-layer geospatial via layers-catalog)
 - **Israel Drugs**: REST API at `https://israeldrugs.health.gov.il/GovServiceList/IDRServer` (drug registry, generics, health basket)
 - **IL Health**: REST API at `https://datadashboard.health.gov.il/api` (public health dashboards, HMO data, service quality)
 - **Grocery Prices**: XML feeds from supermarket chains (Shufersal, Rami Levy, Yochananof, Victory, Osher Ad, Tiv Taam)

@@ -29,6 +29,25 @@ export type UrlParams = Record<string, UrlParamValue>;
 export type GovmapPath = string;
 
 // ============================================================================
+// Layers-Catalog Paths
+// ============================================================================
+
+export const GOVMAP_LAYERS_CATALOG_PATHS = {
+    ENTITIES_BY_POINT: '/layers-catalog/entitiesByPoint',
+    LAYER_METADATA: '/layers-catalog/layer',
+} as const;
+
+/**
+ * Builds the metadata URL for a specific layer.
+ *
+ * @param layerId - Layer identifier (case-sensitive)
+ * @returns Full URL for the layer metadata endpoint
+ */
+export function buildLayerMetadataUrl(layerId: string): string {
+    return buildGovmapUrl(`${GOVMAP_LAYERS_CATALOG_PATHS.LAYER_METADATA}/${encodeURIComponent(layerId)}/metadata`);
+}
+
+// ============================================================================
 // URL Builder Functions
 // ============================================================================
 
@@ -74,14 +93,22 @@ export function buildGovmapUrl(path: string, params?: UrlParams): string {
  *  - z=6    — zoom level (0-10, 6 = neighbourhood)
  *  - lay=LAYER — layer identifier
  */
-export function buildGovmapPortalUrl(longitude?: number, latitude?: number, query?: string, layer?: string): string {
+export function buildGovmapPortalUrl(
+    longitude?: number,
+    latitude?: number,
+    query?: string,
+    layers?: string | readonly string[],
+): string {
     const url = new URL(GOVMAP_PORTAL_BASE_URL);
     if (longitude !== undefined && latitude !== undefined) {
         url.searchParams.set('c', `${longitude},${latitude}`);
         url.searchParams.set('z', '6');
     }
-    if (layer) {
-        url.searchParams.set('lay', layer);
+    if (layers) {
+        const layerStr = typeof layers === 'string' ? layers : layers.join(',');
+        if (layerStr) {
+            url.searchParams.set('lay', layerStr);
+        }
     }
     if (query) {
         url.searchParams.set('q', query);

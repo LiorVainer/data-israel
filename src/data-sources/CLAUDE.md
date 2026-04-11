@@ -17,7 +17,7 @@ src/data-sources/
 ├── cbs/                            # CBS data source (9 tools)
 ├── datagov/                        # DataGov data source (16 tools)
 ├── budget/                         # BudgetKey data source (3 MCP tools)
-├── govmap/                         # GovMap multi-layer data source (8 tools, real estate layer)
+├── govmap/                         # GovMap multi-layer data source (11 tools, nadlan + layers-catalog)
 ├── drugs/                          # Israel Drugs data source (8 tools)
 ├── health/                         # IL Health data source (5 tools)
 └── grocery/                        # Grocery Prices data source (5 tools)

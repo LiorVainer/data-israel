@@ -5,7 +5,17 @@
  * Icons are LucideIcon components (not JSX elements).
  */
 
-import { BarChart2Icon, HomeIcon, MapPinIcon, SearchIcon, TrendingUpIcon } from 'lucide-react';
+import {
+    BarChart2Icon,
+    BuildingIcon,
+    HomeIcon,
+    HospitalIcon,
+    InfoIcon,
+    MapPinIcon,
+    PalmtreeIcon,
+    SearchIcon,
+    TrendingUpIcon,
+} from 'lucide-react';
 import type { ToolTranslation } from '@/data-sources/types';
 import type { GovmapToolName } from './tools';
 
@@ -117,5 +127,24 @@ export const govmapTranslations: Partial<Record<GovmapToolName, ToolTranslation>
             if (o.success === false && typeof o.error === 'string') return `שגיאה: ${o.error}`;
             return 'הסטטיסטיקה חושבה';
         },
+    },
+    // ========================================================================
+    // Layers Tools
+    // ========================================================================
+    findNearbyServices: {
+        name: 'שירותים ציבוריים קרובים',
+        icon: HospitalIcon,
+    },
+    getParcelInfo: {
+        name: 'מידע קרקעי (גוש/חלקה)',
+        icon: BuildingIcon,
+    },
+    findNearbyTourism: {
+        name: 'תיירות ופנאי קרובים',
+        icon: PalmtreeIcon,
+    },
+    getLocationContext: {
+        name: 'מידע אזורי',
+        icon: InfoIcon,
     },
 };

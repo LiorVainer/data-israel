@@ -53,13 +53,13 @@ This is not "just another AI chat". The agent:
 | **data.gov.il** | `datagovAgent` | 16 | CKAN REST | Israeli open data portal -- datasets, organizations, resources, DataStore queries |
 | **CBS (הלמ"ס)** | `cbsAgent` | 9 | REST | Central Bureau of Statistics -- time series, price indices, CPI, locality dictionary |
 | **BudgetKey** | `budgetAgent` | 3 | MCP (hosted) | State budget 1997-2025, procurement contracts, tenders, support programs, entities, revenues |
-| **Nadlan** | `nadlanAgent` | 8 | REST (GovMap) | Real estate transactions -- deals by address/neighborhood, price trends, valuations |
+| **GovMap** | `govmapAgent` | 11 | REST (GovMap) | Real estate (deals, trends, valuations) + nearby services, land parcels, tourism, area demographics |
 | **Israel Drugs** | `drugsAgent` | 8 | REST | Pharmaceutical database -- drug search, generic alternatives, health basket, ATC categories |
 | **IL Health** | `healthAgent` | 5 | REST | Ministry of Health dashboards -- HMO data, service quality, war casualties, child health |
 | **Grocery Prices** | `groceryAgent` | 5 | REST/XML | Supermarket price transparency -- product search, cross-chain comparison, promotions |
 | **Knesset** | `knessetAgent` | -- | OData | *(Planned)* Parliamentary data -- bills, committees, Knesset members |
 
-**54 data tools** + **4 client tools** (charts, follow-up suggestions) = **58 total tools**
+**57 data tools** + **4 client tools** (charts, follow-up suggestions) = **61 total tools**
 
 ## Tool-First Architecture
 
@@ -89,9 +89,9 @@ User Question (Hebrew)
         |
    +--------+--------+--------+--------+--------+--------+--------+
    |        |        |        |        |        |        |        |
- datagov  cbs    budget  nadlan  drugs  health grocery  Client
+ datagov  cbs    budget  govmap  drugs  health grocery  Client
  Agent    Agent  Agent   Agent  Agent  Agent   Agent    Tools
- 16 tools 9 tools 3 tools 8 tools 8 tools 5 tools 5 tools charts+suggestions
+ 16 tools 9 tools 3 tools 11 tools 8 tools 5 tools 5 tools charts+suggestions
    |        |      |        |       |       |       |
  CKAN    CBS    MCP     GovMap  MOH    MOH    XML
  API     API   endpoint  API    Drug   Dash   feeds
@@ -103,7 +103,7 @@ User Question (Hebrew)
 | **DataGov Agent** | Israeli open data via CKAN API (data.gov.il) |
 | **CBS Agent** | Central Bureau of Statistics (series, prices, localities) |
 | **Budget Agent** | State budget data via BudgetKey MCP (1997-2025) |
-| **Nadlan Agent** | Real estate transactions via GovMap |
+| **GovMap Agent** | Geospatial data via GovMap (real estate, services, parcels, tourism, demographics) |
 | **Drugs Agent** | Pharmaceutical database (Ministry of Health) |
 | **Health Agent** | Public health dashboards (Ministry of Health) |
 | **Grocery Agent** | Supermarket price transparency (XML feeds) |
