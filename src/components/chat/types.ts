@@ -127,6 +127,18 @@ export interface AgentDataToolResult {
 }
 
 /**
+ * A completed step archived inside `data.steps[]`.
+ *
+ * Mastra's transformer moves the current step's `toolCalls`/`toolResults`
+ * into `steps[i]` at `step-finish` and resets the top-level arrays to `[]`.
+ * Consumers must read from both top-level AND `steps[*]` to see the full picture.
+ */
+export interface AgentDataStep {
+    toolCalls?: AgentDataToolCall[];
+    toolResults?: AgentDataToolResult[];
+}
+
+/**
  * Data payload of a `data-tool-agent` part emitted by Mastra's handleChatStream.
  * Contains the sub-agent's aggregated tool calls, results, and execution metadata.
  */
@@ -137,12 +149,15 @@ export interface AgentDataPartData {
     status: 'running' | 'finished';
     /** Final text output from the sub-agent */
     text: string;
-    /** All tool calls the sub-agent initiated */
+    /**
+     * Tool calls for the current (not-yet-archived) step only.
+     * Mastra clears this at `step-finish` — always union with `steps[*].toolCalls`.
+     */
     toolCalls: AgentDataToolCall[];
-    /** All tool results the sub-agent received */
+    /** Tool results for the current step — same cleared-on-step-finish semantics. */
     toolResults: AgentDataToolResult[];
-    /** Raw step data */
-    steps: unknown[];
+    /** Archived completed steps. */
+    steps: AgentDataStep[];
     /** Why the sub-agent stopped */
     finishReason: string;
     /** Token usage */

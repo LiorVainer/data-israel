@@ -111,11 +111,23 @@ function buildAgentInternalCallsMap(allParts: UIMessage['parts']): Map<string, A
         const agentName = data.id;
         if (!agentName) continue;
 
-        // Build set of completed tool call IDs for isComplete derivation
-        const completedIds = new Set(data.toolResults.map((tr) => tr.toolCallId));
+        // Union tool calls/results from the current step buffer AND all archived steps.
+        // Mastra's transformer clears `data.toolCalls`/`data.toolResults` at every
+        // `step-finish` and moves the data into `data.steps[i]`. Once the sub-agent
+        // finishes, the top-level arrays are empty — reading only those causes the
+        // AgentInternalCallsChain to disappear after completion.
+        const allCalls = [...data.toolCalls];
+        const allResults = [...data.toolResults];
+        for (const step of data.steps ?? []) {
+            if (step.toolCalls?.length) allCalls.push(...step.toolCalls);
+            if (step.toolResults?.length) allResults.push(...step.toolResults);
+        }
 
-        const calls: AgentInternalToolCall[] = data.toolCalls.map((tc) => {
-            const matchingResult = data.toolResults.find((tr) => tr.toolCallId === tc.toolCallId);
+        // Build set of completed tool call IDs for isComplete derivation
+        const completedIds = new Set(allResults.map((tr) => tr.toolCallId));
+
+        const calls: AgentInternalToolCall[] = allCalls.map((tc) => {
+            const matchingResult = allResults.find((tr) => tr.toolCallId === tc.toolCallId);
             const result = matchingResult?.result;
 
             return {

@@ -136,8 +136,16 @@ export const MessageItem = memo(function MessageItem({
                 });
             }
         } else if (isAgentDataPart(part)) {
+            // Union top-level + step-archived results (Mastra clears the top-level
+            // arrays at step-finish and moves data into steps[i] — same fix as
+            // buildAgentInternalCallsMap in ToolCallParts.tsx).
+            const allResults = [...part.data.toolResults];
+            for (const step of part.data.steps ?? []) {
+                if (step.toolResults?.length) allResults.push(...step.toolResults);
+            }
+
             const agentDs = AgentsDisplayMap[part.data.id as keyof typeof AgentsDisplayMap]?.dataSource;
-            for (const tr of part.data.toolResults) {
+            for (const tr of allResults) {
                 const toolType = `tool-${tr.toolName}`;
                 for (const source of resolveToolSourceUrls(toolType, tr.args, tr.result)) {
                     autoSourceParts.push({
