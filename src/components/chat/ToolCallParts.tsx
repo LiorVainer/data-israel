@@ -5,7 +5,7 @@ import { ChainOfThought, ChainOfThoughtContent, ChainOfThoughtHeader } from '@/c
 import { Shimmer } from '@/components/ai-elements/shimmer';
 import { useAutoOpen } from './use-auto-open';
 import type { UIMessage } from 'ai';
-import type { ToolCallPart } from './types';
+import type { AgentDataToolCall, AgentDataToolResult, ToolCallPart } from './types';
 import { getToolStatus, isAgentDataPart } from './types';
 import { getToolInfo } from '@/lib/utils/tool-info';
 import { type GroupedToolCall, ToolCallStep, type ToolResource } from './ToolCallStep';
@@ -111,17 +111,20 @@ function buildAgentInternalCallsMap(allParts: UIMessage['parts']): Map<string, A
         const agentName = data.id;
         if (!agentName) continue;
 
-        // Union tool calls/results from the current step buffer AND all archived steps.
-        // Mastra's transformer clears `data.toolCalls`/`data.toolResults` at every
-        // `step-finish` and moves the data into `data.steps[i]`. Once the sub-agent
-        // finishes, the top-level arrays are empty — reading only those causes the
-        // AgentInternalCallsChain to disappear after completion.
-        const allCalls = [...data.toolCalls];
-        const allResults = [...data.toolResults];
+        // Union tool calls/results from all archived steps first, then the in-flight
+        // step buffer. Mastra's transformer pushes calls chronologically within a
+        // step and archives the buffer into `data.steps[i]` at `step-finish`, so
+        // the true chronological order is `steps[0..n-1]` then the current buffer.
+        // Reading the current buffer first caused the first-seen tool name to flip
+        // between renders during multi-step runs.
+        const allCalls: AgentDataToolCall[] = [];
+        const allResults: AgentDataToolResult[] = [];
         for (const step of data.steps ?? []) {
             if (step.toolCalls?.length) allCalls.push(...step.toolCalls);
             if (step.toolResults?.length) allResults.push(...step.toolResults);
         }
+        allCalls.push(...data.toolCalls);
+        allResults.push(...data.toolResults);
 
         // Build set of completed tool call IDs for isComplete derivation
         const completedIds = new Set(allResults.map((tr) => tr.toolCallId));
