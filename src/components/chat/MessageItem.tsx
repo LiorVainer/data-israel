@@ -6,6 +6,7 @@ import { ToolCallParts } from './ToolCallParts';
 import { TextMessagePart } from './TextMessagePart';
 import { ReasoningPart } from './ReasoningPart';
 import { SourcesPart } from './SourcesPart';
+import { FeedbackWidget } from './FeedbackWidget';
 import { LoadingShimmer } from './LoadingShimmer';
 import { ChartError, ChartLoadingState, ChartRenderer } from './ChartRenderer';
 import { GovMapEmbed, GovMapEmbedError, GovMapEmbedLoading } from './GovMapEmbed';
@@ -109,6 +110,8 @@ export interface MessageItemProps {
     isLastMessage: boolean;
     isStreaming: boolean;
     onRegenerate: () => void;
+    currentRating?: 'good' | 'bad' | null;
+    onRate?: (rating: 'good' | 'bad') => void;
 }
 
 export const MessageItem = memo(function MessageItem({
@@ -116,6 +119,8 @@ export const MessageItem = memo(function MessageItem({
     isLastMessage,
     isStreaming,
     onRegenerate,
+    currentRating,
+    onRate,
 }: MessageItemProps) {
     // Native source-url parts (from AI SDK stream protocol)
     const nativeSourceParts: EnrichedSourceUrl[] = message.parts
@@ -312,6 +317,10 @@ export const MessageItem = memo(function MessageItem({
 
             {/* Render collected sources only after the message is done streaming */}
             {!(isLastMessage && isStreaming) && <SourcesPart sources={allSources} />}
+
+            {message.role === 'assistant' && isLastMessage && !isStreaming && onRate && !currentRating && (
+                <FeedbackWidget currentRating={null} onRate={onRate} />
+            )}
         </div>
     );
 });

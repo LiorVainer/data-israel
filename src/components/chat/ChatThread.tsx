@@ -41,6 +41,14 @@ interface ChatThreadProps {
 
 const LOGIN_PROMPT_KEY = 'login-prompt-dismissed';
 
+function extractMessageText(message: UIMessage): string {
+    return message.parts
+        .filter((p): p is Extract<UIMessage['parts'][number], { type: 'text' }> => p.type === 'text')
+        .map((p) => p.text)
+        .join('\n')
+        .trim();
+}
+
 export function ChatThread({ id }: ChatThreadProps) {
     const { userId: clerkUserId, isLoaded: isAuthLoaded } = useAuth();
     const { guestId } = useUser();
@@ -57,6 +65,10 @@ export function ChatThread({ id }: ChatThreadProps) {
     const threadSettings = useConvexQuery(api.threads.getThreadSettings, { threadId: id });
     const userSettings = useConvexQuery(api.users.getUserSettings);
     const upsertThreadSettings = useMutation(api.threads.upsertThreadSettings);
+
+    const createAnswer = useMutation(api.ratings.createAnswer);
+    const upsertRating = useMutation(api.ratings.upsertRating);
+    const threadRatings = useConvexQuery(api.ratings.getRatingsForThread, userId ? { threadId: id, userId } : 'skip');
 
     const searchParams = useSearchParams();
     const [initialMessageData, , removeInitialMessage] = useSessionStorage<InitialMessageData>(INITIAL_MESSAGE_KEY);
@@ -226,6 +238,31 @@ export function ChatThread({ id }: ChatThreadProps) {
     //     );
     // }, [messages, clerkUserId, router]);
 
+    const prevStatus = useRef(status);
+    useEffect(() => {
+        const wasStreaming = prevStatus.current === 'streaming' || prevStatus.current === 'submitted';
+        prevStatus.current = status;
+
+        if (!wasStreaming || status !== 'ready') return;
+        if (!userId) return;
+
+        const lastAssistant = messages.filter((m) => m.role === 'assistant').at(-1);
+        const lastUser = messages.filter((m) => m.role === 'user').at(-1);
+        if (!lastAssistant || !lastUser) return;
+
+        const assistantResponse = extractMessageText(lastAssistant);
+        const userPrompt = extractMessageText(lastUser);
+        if (!assistantResponse) return;
+
+        void createAnswer({
+            threadId: id,
+            messageId: lastAssistant.id,
+            userId,
+            userPrompt,
+            assistantResponse,
+        });
+    }, [status, messages, userId, id, createAnswer]);
+
     const handleSend = useCallback(
         (text: string) => {
             if (!messages.length && startedAsNew.current) {
@@ -234,6 +271,14 @@ export function ChatThread({ id }: ChatThreadProps) {
             void sendMessage({ text });
         },
         [messages.length, id, sendMessage],
+    );
+
+    const handleRate = useCallback(
+        (messageId: string, rating: 'good' | 'bad') => {
+            if (!userId) return;
+            void upsertRating({ messageId, userId, rating });
+        },
+        [userId, upsertRating],
     );
 
     const isStreaming = status === 'submitted' || status === 'streaming';
@@ -270,6 +315,8 @@ export function ChatThread({ id }: ChatThreadProps) {
                                         isLastMessage={messageIndex === messages.length - 1}
                                         isStreaming={isStreaming && messageIndex === messages.length - 1}
                                         onRegenerate={regenerate}
+                                        currentRating={threadRatings?.[message.id] ?? null}
+                                        onRate={(rating) => handleRate(message.id, rating)}
                                     />
                                 ))}
                                 {status === 'submitted' && <LoadingShimmer />}

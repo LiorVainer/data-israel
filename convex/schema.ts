@@ -194,6 +194,35 @@ export default defineSchema({
     }).index('by_user_id', ['userId']),
 
     /**
+     * Answers table - stores answer snapshots for rating/feedback
+     */
+    answers: defineTable({
+        threadId: v.string(),
+        messageId: v.string(),
+        userId: v.string(),
+        userPrompt: v.string(),
+        assistantResponse: v.string(),
+        createdAt: v.number(),
+    })
+        .index('by_message_id', ['messageId'])
+        .index('by_thread', ['threadId'])
+        .index('by_created', ['createdAt']),
+
+    /**
+     * Answer ratings table - stores per-user thumbs up/down ratings on answers
+     */
+    answer_ratings: defineTable({
+        answerId: v.id('answers'),
+        userId: v.string(),
+        rating: v.union(v.literal('good'), v.literal('bad')),
+        createdAt: v.number(),
+        updatedAt: v.number(),
+    })
+        .index('by_answer_user', ['answerId', 'userId'])
+        .index('by_user', ['userId'])
+        .index('by_created', ['createdAt']),
+
+    /**
      * Mastra tables - used by @mastra/convex for agent memory, threads, and storage
      */
     mastra_threads: mastraThreadsTable,
