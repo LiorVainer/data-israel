@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next';
-import { Geist, Geist_Mono } from 'next/font/google';
+import { GeistSans } from 'geist/font/sans';
+import { GeistMono } from 'geist/font/mono';
 import { ClerkProvider } from '@clerk/nextjs';
 import ConvexClientProvider from '@/context/ConvexClientProvider';
 import QueryClientProvider from '@/context/QueryClientProvider';
@@ -11,16 +12,6 @@ import { Analytics } from '@vercel/analytics/next';
 import { SpeedInsights } from '@vercel/speed-insights/next';
 
 import './globals.css';
-
-const geistSans = Geist({
-    variable: '--font-geist-sans',
-    subsets: ['latin'],
-});
-
-const geistMono = Geist_Mono({
-    variable: '--font-geist-mono',
-    subsets: ['latin'],
-});
 
 const VERSION = process.env.VERCEL_GIT_COMMIT_SHA?.slice(0, 8) ?? Date.now().toString();
 
@@ -79,7 +70,7 @@ export default function RootLayout({
 }>) {
     return (
         <html lang='he' dir='rtl' suppressHydrationWarning>
-            <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+            <body className={`${GeistSans.variable} ${GeistMono.variable} antialiased`}>
                 <ClerkProvider>
                     <ThemeProvider>
                         <QueryClientProvider>
