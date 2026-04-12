@@ -92,26 +92,54 @@ export function buildGovmapUrl(path: string, params?: UrlParams): string {
  *  - c=X,Y  — center (ITM: X 100K-300K, Y 370K-810K)
  *  - z=6    — zoom level (0-10, 6 = neighbourhood)
  *  - lay=LAYER — layer identifier
+ *  - bs=LAYER|X,Y — selects a specific entity on the map (opens its popup)
  */
+export interface GovmapPortalUrlOptions {
+    longitude?: number;
+    latitude?: number;
+    query?: string;
+    layers?: string | readonly string[];
+    /** Zoom level 0-10 (default 6 = neighbourhood). Use 8-10 for a specific entity. */
+    zoom?: number;
+    /** Pre-select an entity: `{ layer: 'bus_stops', centroid: [x, y] }` -> `bs=bus_stops|x,y` */
+    selectedEntity?: { layer: string; centroid: [number, number] };
+}
+
+export function buildGovmapPortalUrl(options: GovmapPortalUrlOptions): string;
 export function buildGovmapPortalUrl(
     longitude?: number,
     latitude?: number,
     query?: string,
     layers?: string | readonly string[],
+): string;
+export function buildGovmapPortalUrl(
+    lonOrOpts?: number | GovmapPortalUrlOptions,
+    latitude?: number,
+    query?: string,
+    layers?: string | readonly string[],
 ): string {
+    const opts: GovmapPortalUrlOptions =
+        typeof lonOrOpts === 'object' && lonOrOpts !== null
+            ? lonOrOpts
+            : { longitude: lonOrOpts, latitude, query, layers };
+
     const url = new URL(GOVMAP_PORTAL_BASE_URL);
-    if (longitude !== undefined && latitude !== undefined) {
-        url.searchParams.set('c', `${longitude},${latitude}`);
-        url.searchParams.set('z', '6');
+    if (opts.longitude !== undefined && opts.latitude !== undefined) {
+        url.searchParams.set('c', `${opts.longitude},${opts.latitude}`);
+        url.searchParams.set('z', String(opts.zoom ?? 6));
     }
-    if (layers) {
-        const layerStr = typeof layers === 'string' ? layers : layers.join(',');
+    if (opts.layers) {
+        const layerStr = typeof opts.layers === 'string' ? opts.layers : opts.layers.join(',');
         if (layerStr) {
             url.searchParams.set('lay', layerStr);
         }
     }
-    if (query) {
-        url.searchParams.set('q', query);
+    if (opts.query) {
+        url.searchParams.set('q', opts.query);
+    }
+    if (opts.selectedEntity) {
+        const { layer, centroid } = opts.selectedEntity;
+        url.searchParams.set('bs', `${layer}|${centroid[0]},${centroid[1]}`);
     }
     return url.toString();
 }

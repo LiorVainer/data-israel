@@ -12,10 +12,14 @@ import { nadlanApi } from '@/data-sources/govmap/api/nadlan/nadlan.client';
 import { buildGovmapPortalUrl } from '@/data-sources/govmap/api/govmap.endpoints';
 import { queryAndCleanEntities } from '@/data-sources/govmap/api/layers/layers.client';
 import {
+    TOURISM_CATEGORIES_DESCRIBE,
+    TOURISM_CATEGORY_TO_LAYER_ID,
+    TOURISM_FILTER_SUFFIX,
     TOURISM_LAYER_IDS,
     cleanEntitySchema,
     emptyTourismResults,
     getTourismCategory,
+    tourismCategorySchema,
 } from '@/data-sources/govmap/api/layers/layers.constants';
 import { buildEntitiesByPointUrl } from '@/data-sources/govmap/api/layers/layers.endpoints';
 import { typedValues } from '@/lib/typescript/typed-object';
@@ -34,6 +38,16 @@ const inputSchema = z.object({
         .optional()
         .default(5000)
         .describe('רדיוס חיפוש במטרים (ברירת מחדל: 5000)'),
+    categories: z.array(tourismCategorySchema).optional().describe(TOURISM_CATEGORIES_DESCRIBE),
+    zoom: z
+        .number()
+        .int()
+        .min(0)
+        .max(10)
+        .optional()
+        .describe(
+            'רמת זום במפה (0-10). ברירת מחדל: 6 (שכונה). השתמש ב-8-10 כשהמשתמש מחפש מקום ספציפי, ו-4-6 לסקירה רחבה של אזור',
+        ),
     ...commonToolInput,
 });
 
@@ -59,11 +73,15 @@ export const findNearbyTourismOutputSchema = toolOutputSchema({
 
 export const findNearbyTourism = createTool({
     id: 'findNearbyTourism',
-    description: 'חיפוש אטרקציות תיירות ופנאי ליד כתובת — בתי מלון, צימרים, אטרקציות, יקבים, אתרי עתיקות, מתקני ספורט',
+    description: `חיפוש אטרקציות תיירות ופנאי ליד כתובת. ${TOURISM_FILTER_SUFFIX}`,
     inputSchema,
     outputSchema: findNearbyTourismOutputSchema,
-    execute: async ({ address, radius = 5000 }) => {
+    execute: async ({ address, radius = 5000, categories, zoom }) => {
         const apiUrl = buildEntitiesByPointUrl();
+        const layerIds =
+            categories && categories.length > 0
+                ? categories.map((c) => TOURISM_CATEGORY_TO_LAYER_ID[c])
+                : [...TOURISM_LAYER_IDS];
 
         try {
             const autocomplete = await nadlanApi.autocompleteAddress(address);
@@ -81,19 +99,33 @@ export const findNearbyTourism = createTool({
             }
 
             const point: [number, number] = [coords.longitude, coords.latitude];
-            const layerResults = await queryAndCleanEntities(point, TOURISM_LAYER_IDS, radius);
+            const layerResults = await queryAndCleanEntities(point, layerIds, radius);
 
             const tourism = emptyTourismResults();
+            let closestEntity: { layer: string; centroid: [number, number] } | undefined;
+            let closestDistance = Infinity;
 
             for (const [layerName, entities] of layerResults) {
                 const category = getTourismCategory(layerName);
                 if (category) {
                     tourism[category] = entities;
                 }
+                const first = entities[0];
+                if (first?.centroid && (first.distance ?? Infinity) < closestDistance) {
+                    closestDistance = first.distance ?? Infinity;
+                    closestEntity = { layer: layerName, centroid: first.centroid };
+                }
             }
 
             const totalFound = typedValues(tourism).reduce((sum, arr) => sum + arr.length, 0);
-            const portalUrl = buildGovmapPortalUrl(coords.longitude, coords.latitude, address, TOURISM_LAYER_IDS);
+            const portalUrl = buildGovmapPortalUrl({
+                longitude: coords.longitude,
+                latitude: coords.latitude,
+                query: address,
+                layers: layerIds,
+                zoom,
+                selectedEntity: closestEntity,
+            });
 
             return {
                 success: true as const,

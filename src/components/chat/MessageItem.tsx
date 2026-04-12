@@ -8,6 +8,7 @@ import { ReasoningPart } from './ReasoningPart';
 import { SourcesPart } from './SourcesPart';
 import { LoadingShimmer } from './LoadingShimmer';
 import { ChartError, ChartLoadingState, ChartRenderer } from './ChartRenderer';
+import { GovMapEmbed, GovMapEmbedError, GovMapEmbedLoading } from './GovMapEmbed';
 import type { EnrichedSourceUrl } from './types';
 import { getToolStatus, isAgentDataPart, isToolPart, SourceUrlUIPart, ToolCallPart } from './types';
 import {
@@ -19,6 +20,7 @@ import {
     toToolPartTypeSet,
 } from '@/data-sources/registry';
 import type { DisplayChartInput } from '@/lib/tools/client/display-chart';
+import type { DisplayGovmapInput } from '@/lib/tools/client/display-govmap.tool';
 import { UIMessage } from 'ai';
 
 /**
@@ -279,6 +281,24 @@ export const MessageItem = memo(function MessageItem({
                             const input = toolPart.input as Record<string, unknown>;
                             const chartData = { ...input, chartType } as DisplayChartInput;
                             return <ChartRenderer key={`${message.id}-${i}`} data={chartData} />;
+                        }
+
+                        return null;
+                    }
+                    case 'tool-displayGovmap': {
+                        const toolPart = part as ToolCallPart;
+
+                        if (toolPart.state === 'input-streaming') {
+                            return <GovMapEmbedLoading key={`${message.id}-${i}`} />;
+                        }
+
+                        if (toolPart.state === 'output-error') {
+                            return <GovMapEmbedError key={`${message.id}-${i}`} error={toolPart.errorText} />;
+                        }
+
+                        if (toolPart.state === 'input-available' || toolPart.state === 'output-available') {
+                            const input = toolPart.input as DisplayGovmapInput;
+                            return <GovMapEmbed key={`${message.id}-${i}`} {...input} />;
                         }
 
                         return null;

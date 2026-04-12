@@ -5,7 +5,7 @@
  * Icons are LucideIcon components (not JSX elements).
  */
 
-import { BarChart2Icon, LineChartIcon, LinkIcon, PieChartIcon } from 'lucide-react';
+import { BarChart2Icon, LineChartIcon, LinkIcon, MapIcon, PieChartIcon } from 'lucide-react';
 import type { ToolTranslation } from '@/data-sources/types';
 import type { ClientToolName } from './index';
 
@@ -21,6 +21,10 @@ export const clientTranslations: Partial<Record<ClientToolName, ToolTranslation>
     displayPieChart: {
         name: 'הצגת תרשים עוגה',
         icon: PieChartIcon,
+    },
+    displayGovmap: {
+        name: 'הצגת מפה',
+        icon: MapIcon,
     },
     suggestFollowUps: {
         name: 'הצעות המשך',

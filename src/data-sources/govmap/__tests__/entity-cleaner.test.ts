@@ -75,4 +75,25 @@ describe('cleanEntity', () => {
         expect(entity.name).toBe('מרכזית');
         expect(entity.address).toBe('תל אביב');
     });
+
+    it('preserves centroid when present', () => {
+        const entity = cleanEntity({
+            id: 456,
+            centroid: [182595.81, 655716.72],
+            geom: 'POINT(...)',
+            fields: [{ fieldName: 'שם', fieldValue: 'תחנה מרכזית', isVisible: true, fieldType: 1 }],
+        });
+
+        expect(entity.centroid).toEqual([182595.81, 655716.72]);
+    });
+
+    it('omits centroid when not in raw data', () => {
+        const entity = cleanEntity({
+            id: 789,
+            geom: 'POINT(...)',
+            fields: [{ fieldName: 'שם', fieldValue: 'תחנה מרכזית', isVisible: true, fieldType: 1 }],
+        });
+
+        expect(entity.centroid).toBeUndefined();
+    });
 });

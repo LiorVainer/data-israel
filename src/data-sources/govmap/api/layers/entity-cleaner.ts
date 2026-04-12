@@ -23,6 +23,7 @@ export type GovMapEntityField = z.infer<typeof GovMapEntityFieldSchema>;
  */
 export const GovMapLayerEntitySchema = z.object({
     id: z.union([z.string(), z.number()]).optional(),
+    centroid: z.tuple([z.number(), z.number()]).optional(),
     geom: z.string().optional(),
     fields: z.array(GovMapEntityFieldSchema).default([]),
     distance: z.number().optional(),
@@ -39,6 +40,7 @@ export type CleanEntity = {
     address?: string;
     fields: Record<string, FieldValue>;
     distance?: number;
+    centroid?: [number, number];
 };
 
 export type EntityCleanerOptions = {
@@ -148,6 +150,7 @@ export function mapLayerEntityToCleanEntity(entity: GovMapLayerEntity, options?:
         address,
         fields,
         ...(entity.distance !== undefined && { distance: Math.round(entity.distance) }),
+        ...(entity.centroid && { centroid: entity.centroid }),
     };
 }
 

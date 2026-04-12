@@ -659,6 +659,7 @@ export const CLIENT_TOOL_NAMES = [
     'displayBarChart',
     'displayLineChart',
     'displayPieChart',
+    'displayGovmap',
     'suggestFollowUps',
 ] as const;
 
