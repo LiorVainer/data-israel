@@ -127,7 +127,7 @@ export function ToolCallStep({ step }: ToolCallStepProps) {
                             target='_blank'
                             rel='noopener noreferrer'
                             className={cn(
-                                'rounded-sm px-1.5 py-0.5 text-[10px] font-medium transition-colors',
+                                'rounded-sm px-1.5 py-0.5 text-[12px] font-semibold transition-colors',
                                 dataSourceConfig.className,
                             )}
                             onClick={(e) => e.stopPropagation()}

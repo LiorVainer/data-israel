@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { ExternalLinkIcon, MapIcon } from 'lucide-react';
+import { useCallback, useRef, useState } from 'react';
+import { ExternalLinkIcon, LocateFixedIcon, MapIcon } from 'lucide-react';
 import { Shimmer } from '@/components/ai-elements/shimmer';
 import type { DisplayGovmapInput } from '@/lib/tools/client/display-govmap.tool';
 
@@ -35,6 +35,14 @@ export function GovMapEmbedError({ error }: { error?: string }) {
 
 export function GovMapEmbed({ portalUrl, title }: DisplayGovmapInput) {
     const [isLoading, setIsLoading] = useState(true);
+    const iframeRef = useRef<HTMLIFrameElement>(null);
+
+    const resetToOriginal = useCallback(() => {
+        if (iframeRef.current) {
+            iframeRef.current.src = portalUrl;
+            setIsLoading(true);
+        }
+    }, [portalUrl]);
 
     if (!isValidGovmapUrl(portalUrl)) {
         return <GovMapEmbedError error='כתובת מפה לא תקינה' />;
@@ -48,15 +56,25 @@ export function GovMapEmbed({ portalUrl, title }: DisplayGovmapInput) {
                         <MapIcon className='h-4 w-4 text-muted-foreground' />
                         <span>{title}</span>
                     </div>
-                    <a
-                        href={portalUrl}
-                        target='_blank'
-                        rel='noopener noreferrer'
-                        className='flex items-center gap-1 text-xs text-muted-foreground transition-colors hover:text-foreground'
-                    >
-                        <span>פתח ב-GovMap</span>
-                        <ExternalLinkIcon className='h-3 w-3' />
-                    </a>
+                    <div className='flex items-center divide-x divide-border '>
+                        <button
+                            type='button'
+                            onClick={resetToOriginal}
+                            className='flex cursor-pointer items-center gap-1 pe-2 text-xs text-muted-foreground transition-colors hover:text-foreground'
+                        >
+                            <span className='hidden sm:inline'>חזור למיקום</span>
+                            <LocateFixedIcon className='h-3.5 w-3.5 sm:h-3 sm:w-3' />
+                        </button>
+                        <a
+                            href={portalUrl}
+                            target='_blank'
+                            rel='noopener noreferrer'
+                            className='flex items-center gap-1 ps-2 text-xs text-muted-foreground transition-colors hover:text-foreground'
+                        >
+                            <span className='hidden sm:inline'>פתח ב-GovMap</span>
+                            <ExternalLinkIcon className='h-3.5 w-3.5 sm:h-3 sm:w-3' />
+                        </a>
+                    </div>
                 </div>
             )}
             <div className='relative'>
@@ -68,6 +86,7 @@ export function GovMapEmbed({ portalUrl, title }: DisplayGovmapInput) {
                     </div>
                 )}
                 <iframe
+                    ref={iframeRef}
                     src={portalUrl}
                     title={title || 'מפת GovMap'}
                     className='h-[400px] w-full'

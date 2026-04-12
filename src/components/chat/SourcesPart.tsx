@@ -40,7 +40,7 @@ const PROVIDER_DISPLAY: Record<
         tintClass: 'bg-badge-budget/10 text-badge-budget-foreground',
     },
     govmap: {
-        nameLabel: 'GovMap — govmap.gov.il',
+        nameLabel: 'המפה הממשלתית — govmap.gov.il',
         summaryLabel: DATA_SOURCE_CONFIG.govmap.nameLabel,
         borderClass: 'border-r-badge-govmap',
         tintClass: 'bg-badge-govmap/10 text-badge-govmap-foreground',

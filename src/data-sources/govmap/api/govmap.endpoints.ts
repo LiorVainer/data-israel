@@ -13,7 +13,7 @@
 export const GOVMAP_BASE_URL = 'https://www.govmap.gov.il/api';
 
 /** GovMap portal base URL (for source URL generation) */
-export const GOVMAP_PORTAL_BASE_URL = 'https://www.govmap.gov.il';
+export const GOVMAP_PORTAL_BASE_URL = 'https://govmap.gov.il';
 
 // ============================================================================
 // Type Definitions
