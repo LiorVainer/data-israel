@@ -59,3 +59,5 @@ certificates
 # Hook state (session-local)
 .claude/notion-pending.json
 .claude/rules.log
+
+graphify-out
