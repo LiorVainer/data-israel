@@ -4,12 +4,11 @@ import { useCallback, useRef, useState } from 'react';
 import { ExternalLinkIcon, LocateFixedIcon, MapIcon } from 'lucide-react';
 import { Shimmer } from '@/components/ai-elements/shimmer';
 import type { DisplayGovmapInput } from '@/lib/tools/client/display-govmap.tool';
-
-const GOVMAP_ORIGIN = 'https://www.govmap.gov.il';
+import { GOVMAP_PORTAL_BASE_URL } from '@/data-sources/govmap/api/govmap.endpoints';
 
 function isValidGovmapUrl(url: string): boolean {
     try {
-        return new URL(url).origin === GOVMAP_ORIGIN;
+        return new URL(url).origin === GOVMAP_PORTAL_BASE_URL;
     } catch {
         return false;
     }
