@@ -6,7 +6,7 @@
  */
 
 import { createUIMessageStreamResponse } from 'ai';
-import { NextResponse } from 'next/server';
+import { after, NextResponse } from 'next/server';
 import { mastra } from '@/agents/mastra';
 import { handleChatStream } from '@mastra/ai-sdk';
 import { toAISdkV5Messages } from '@mastra/ai-sdk/ui';
@@ -127,9 +127,16 @@ export async function POST(req: Request) {
                     void clearActiveStreamId(threadId);
 
                     if (userMessage) {
-                        void deferTitleGeneration(dynamicMastra, userMessage, threadId).catch((e: unknown) =>
-                            console.warn('[chat POST] deferred title generation failed:', e),
-                        );
+                        // `after()` keeps the function alive until the task completes,
+                        // so the title mutation actually runs on Vercel. A plain
+                        // fire-and-forget promise gets dropped when the response closes.
+                        after(async () => {
+                            try {
+                                await deferTitleGeneration(dynamicMastra, userMessage, threadId);
+                            } catch (e) {
+                                console.warn('[chat POST] deferred title generation failed:', e);
+                            }
+                        });
                     }
 
                     void sendPushToUser(userId, {
