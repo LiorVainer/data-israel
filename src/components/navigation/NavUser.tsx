@@ -77,35 +77,35 @@ export function NavUser() {
                                             {`${user.firstName?.at(0) ?? ''}${user.lastName?.at(0) ?? ''}`}
                                         </AvatarFallback>
                                     </Avatar>
-                                    <div className='grid flex-1 text-right text-sm leading-tight'>
+                                    <div className='grid flex-1 text-sm leading-tight'>
                                         <span className='truncate font-semibold'>{user.fullName}</span>
                                         <span className='truncate text-xs'>
                                             {user.primaryEmailAddress?.emailAddress}
                                         </span>
                                     </div>
-                                    <ChevronsUpDown className='mr-auto size-4' />
+
+                                    <ChevronsUpDown className='size-4 shrink-0' />
                                 </SidebarMenuButton>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent
                                 className='w-[--radix-dropdown-menu-trigger-width] min-w-56 rounded-lg bg-sidebar'
                                 side={isMobile ? 'bottom' : 'left'}
-                                align='end'
                                 sideOffset={4}
                             >
                                 <DropdownMenuLabel className='p-0 font-normal'>
-                                    <div className='flex items-center gap-2 px-1 py-1.5 text-right text-sm'>
-                                        <div className='grid flex-1 text-right text-sm leading-tight'>
+                                    <div className='flex items-center gap-2 px-1 py-1.5  text-sm'>
+                                        <Avatar className='h-8 w-8 rounded-lg'>
+                                            <AvatarImage src={user.imageUrl} alt={user.fullName ?? 'תמונת משתמש'} />
+                                            <AvatarFallback className='rounded-lg'>
+                                                {`${user.firstName?.at(0) ?? ''}${user.lastName?.at(0) ?? ''}`}
+                                            </AvatarFallback>
+                                        </Avatar>
+                                        <div className='grid flex-1 text-sm leading-tight'>
                                             <span className='truncate font-semibold'>{user.fullName}</span>
                                             <span className='truncate text-xs'>
                                                 {user.primaryEmailAddress?.emailAddress}
                                             </span>
                                         </div>
-                                        <Avatar className='h-8 w-8 rounded-lg'>
-                                            <AvatarFallback className='rounded-lg'>
-                                                {`${user.firstName?.at(0) ?? ''}${user.lastName?.at(0) ?? ''}`}
-                                            </AvatarFallback>
-                                            <AvatarImage src={user.imageUrl} alt={user.fullName ?? 'תמונת משתמש'} />
-                                        </Avatar>
                                     </div>
                                 </DropdownMenuLabel>
                                 <DropdownMenuSeparator />

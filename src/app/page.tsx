@@ -15,6 +15,7 @@ import { Footer } from '@/components/landing/Footer';
 import { ScrollToTop } from '@/components/ui/ScrollToTop';
 import { AmbientGlow } from '@/components/ui/AmbientGlow';
 import { SiteNotices } from '@/components/SiteNotices';
+import { HomeAnnouncementBadge } from '@/components/landing/HomeAnnouncementBadge';
 
 export default function Home() {
     const router = useRouter();
@@ -37,7 +38,7 @@ export default function Home() {
         <div ref={scrollRef} className='h-full w-full overflow-y-auto overflow-x-clip'>
             <SiteNotices />
 
-            <div className='relative flex min-h-dvh flex-col items-center justify-center px-4 md:px-0'>
+            <div className='relative flex min-h-dvh flex-col items-center justify-center px-4 md:px-0 justify-between'>
                 {/* GitHub link — top left corner */}
                 <a
                     href='https://github.com/LiorVainer/data-israel'
@@ -60,8 +61,9 @@ export default function Home() {
                         duration: 0.8,
                         ease: 'easeInOut',
                     }}
-                    className='relative z-10 flex flex-col gap-4 md:gap-6 w-full items-center justify-center'
+                    className='relative z-10 flex flex-col gap-4 md:gap-6 w-full items-center justify-center flex-1'
                 >
+                    <HomeAnnouncementBadge className='mb-4 md:mb-12 absolute top-14 z-10' />
                     <HeroSection onStartConversation={handleStartConversation} />
                 </motion.div>
 
@@ -76,16 +78,6 @@ export default function Home() {
                         pointerEvents={false}
                     />
                 </div>
-
-                {/* Beta label pinned to top of hero viewport */}
-                <motion.span
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: 1.2, duration: 0.6 }}
-                    className='absolute top-8 left-1/2 -translate-x-1/2 z-10 text-sm text-muted-foreground select-none'
-                >
-                    BETA
-                </motion.span>
 
                 {/* "Learn more" pinned to bottom of hero viewport */}
                 <motion.button

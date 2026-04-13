@@ -21,7 +21,6 @@ const CHART_MAX_DATA_POINTS = {
 export const displayBarChartInputSchema = z.object({
     title: z
         .string()
-        .optional()
         .describe(
             'Chart title in Hebrew. MUST include measurement units when applicable, e.g. "מחירי דלק (₪ לליטר)" or "אוכלוסייה לפי עיר (אלפים)"',
         ),
@@ -51,7 +50,9 @@ export const displayBarChartInputSchema = z.object({
         valueFormat: z
             .enum(['number', 'percent'])
             .default('number')
-            .describe('How to format values. Use "percent" when data represents percentages — adds % symbol to labels and axis.'),
+            .describe(
+                'How to format values. Use "percent" when data represents percentages — adds % symbol to labels and axis.',
+            ),
         layout: z.enum(['horizontal', 'vertical']).default('vertical').describe('Bar orientation'),
         groupMode: z.enum(['grouped', 'stacked']).default('grouped').describe('How to display multiple keys'),
         uniqueColors: z
@@ -113,7 +114,6 @@ Example data format:
 export const displayLineChartInputSchema = z.object({
     title: z
         .string()
-        .optional()
         .describe(
             'Chart title in Hebrew. MUST include measurement units when applicable, e.g. "מגמת מחירי דלק (₪ לליטר)" or "שינוי מדד המחירים (%)"',
         ),
@@ -139,7 +139,9 @@ export const displayLineChartInputSchema = z.object({
         valueFormat: z
             .enum(['number', 'percent'])
             .default('number')
-            .describe('How to format values. Use "percent" when data represents percentages — adds % symbol to labels and axis.'),
+            .describe(
+                'How to format values. Use "percent" when data represents percentages — adds % symbol to labels and axis.',
+            ),
         enableArea: z.boolean().default(false).describe('Fill area under line'),
         curve: z.enum(['linear', 'monotoneX', 'step']).default('monotoneX').describe('Line interpolation'),
     }),
@@ -183,7 +185,7 @@ Guidelines:
         return {
             rendered: true,
             chartType: 'line' as const,
-            title: input.title || 'תרשים קו',
+            title: input.title,
         };
     },
 });
@@ -195,7 +197,6 @@ Guidelines:
 export const displayPieChartInputSchema = z.object({
     title: z
         .string()
-        .optional()
         .describe(
             'Chart title in Hebrew. MUST include measurement units when applicable, e.g. "התפלגות הוצאות (₪)" or "נתח שוק (%)"',
         ),
@@ -246,7 +247,7 @@ Guidelines:
         return {
             rendered: true,
             chartType: 'pie' as const,
-            title: input.title || 'תרשים עוגה',
+            title: input.title,
         };
     },
 });

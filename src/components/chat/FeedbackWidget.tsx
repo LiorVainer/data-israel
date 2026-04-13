@@ -1,7 +1,8 @@
 'use client';
 
+import { MessageAction, MessageActions } from '@/components/ai-elements/message';
+import { ThumbsDown, ThumbsUp } from 'lucide-react';
 import { memo } from 'react';
-import { ThumbsUp, ThumbsDown } from 'lucide-react';
 
 interface FeedbackWidgetProps {
     currentRating: 'good' | 'bad' | null;
@@ -10,33 +11,25 @@ interface FeedbackWidgetProps {
 
 export const FeedbackWidget = memo(function FeedbackWidget({ currentRating, onRate }: FeedbackWidgetProps) {
     return (
-        <div className='mt-2 flex items-center gap-1.5'>
-            <button
-                type='button'
+        <MessageActions className='mt-2'>
+            <MessageAction
                 aria-pressed={currentRating === 'good'}
                 onClick={() => onRate('good')}
-                className={`inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs transition-colors ${
-                    currentRating === 'good'
-                        ? 'bg-muted text-foreground'
-                        : 'text-muted-foreground hover:bg-muted hover:text-foreground'
-                }`}
+                size='sm'
+                className={`border border-border text-muted-foreground ${currentRating === 'good' ? 'bg-muted text-foreground' : ''}`}
             >
-                <ThumbsUp className='size-3' />
-                <span>עזר לי</span>
-            </button>
-            <button
-                type='button'
+                <ThumbsUp className='size-3.5' />
+                <span>עזר</span>
+            </MessageAction>
+            <MessageAction
                 aria-pressed={currentRating === 'bad'}
                 onClick={() => onRate('bad')}
-                className={`inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs transition-colors ${
-                    currentRating === 'bad'
-                        ? 'bg-muted text-foreground'
-                        : 'text-muted-foreground hover:bg-muted hover:text-foreground'
-                }`}
+                size='sm'
+                className={`border border-border text-muted-foreground ${currentRating === 'bad' ? 'bg-muted text-foreground' : ''}`}
             >
-                <ThumbsDown className='size-3' />
+                <ThumbsDown className='size-3.5' />
                 <span>לא עזר</span>
-            </button>
-        </div>
+            </MessageAction>
+        </MessageActions>
     );
 });

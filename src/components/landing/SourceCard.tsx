@@ -17,7 +17,7 @@ export function SourceCard({ source }: SourceCardProps) {
     const DisplayIcon = display.icon;
 
     return (
-        <Card className='group relative overflow-hidden transition-shadow hover:shadow-md flex flex-col justify-between'>
+        <Card className='group relative overflow-hidden transition-shadow hover:shadow-md flex flex-col justify-between pb-2'>
             <CardHeader className='flex flex-col items-center gap-4'>
                 <a
                     href={badge.url}

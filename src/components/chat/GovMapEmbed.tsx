@@ -1,7 +1,8 @@
 'use client';
 
 import { useCallback, useRef, useState } from 'react';
-import { ExternalLinkIcon, LocateFixedIcon, MapIcon } from 'lucide-react';
+import { ChevronDown, ExternalLinkIcon, LocateFixedIcon, MapIcon } from 'lucide-react';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Shimmer } from '@/components/ai-elements/shimmer';
 import type { DisplayGovmapInput } from '@/lib/tools/client/display-govmap.tool';
 import { GOVMAP_PORTAL_BASE_URL } from '@/data-sources/govmap/api/govmap.endpoints';
@@ -34,6 +35,7 @@ export function GovMapEmbedError({ error }: { error?: string }) {
 
 export function GovMapEmbed({ portalUrl, title }: DisplayGovmapInput) {
     const [isLoading, setIsLoading] = useState(true);
+    const [open, setOpen] = useState(true);
     const iframeRef = useRef<HTMLIFrameElement>(null);
 
     const resetToOriginal = useCallback(() => {
@@ -47,15 +49,22 @@ export function GovMapEmbed({ portalUrl, title }: DisplayGovmapInput) {
         return <GovMapEmbedError error='כתובת מפה לא תקינה' />;
     }
 
+    const headerTitle = title || 'מפת GovMap';
+
     return (
-        <div className='w-full overflow-hidden rounded-lg border border-border'>
-            {title && (
-                <div className='flex items-center justify-between border-b border-border bg-muted/30 px-3 py-2'>
-                    <div className='flex items-center gap-2 text-sm font-medium'>
-                        <MapIcon className='h-4 w-4 text-muted-foreground' />
-                        <span>{title}</span>
-                    </div>
-                    <div className='flex items-center divide-x divide-border '>
+        <Collapsible
+            open={open}
+            onOpenChange={setOpen}
+            className='w-full overflow-hidden rounded-lg border border-border'
+        >
+            <div className='flex items-center justify-between border-b border-border bg-muted/30 px-3 py-2'>
+                <CollapsibleTrigger className='flex items-center gap-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground'>
+                    <MapIcon className='h-4 w-4' />
+                    <span>{headerTitle}</span>
+                    <ChevronDown className={`size-3.5 transition-transform ${open ? 'rotate-180' : ''}`} />
+                </CollapsibleTrigger>
+                <div className='flex items-center divide-x divide-border'>
+                    {open && (
                         <button
                             type='button'
                             onClick={resetToOriginal}
@@ -64,49 +73,38 @@ export function GovMapEmbed({ portalUrl, title }: DisplayGovmapInput) {
                             <span className='hidden sm:inline'>חזור למיקום</span>
                             <LocateFixedIcon className='h-3.5 w-3.5 sm:h-3 sm:w-3' />
                         </button>
-                        <a
-                            href={portalUrl}
-                            target='_blank'
-                            rel='noopener noreferrer'
-                            className='flex items-center gap-1 ps-2 text-xs text-muted-foreground transition-colors hover:text-foreground'
-                        >
-                            <span className='hidden sm:inline'>פתח ב-GovMap</span>
-                            <ExternalLinkIcon className='h-3.5 w-3.5 sm:h-3 sm:w-3' />
-                        </a>
-                    </div>
-                </div>
-            )}
-            <div className='relative'>
-                {isLoading && (
-                    <div className='absolute inset-0 z-10 flex items-center justify-center bg-muted/30'>
-                        <Shimmer as='span' duration={1.5}>
-                            טוען מפה...
-                        </Shimmer>
-                    </div>
-                )}
-                <iframe
-                    ref={iframeRef}
-                    src={portalUrl}
-                    title={title || 'מפת GovMap'}
-                    className='h-[400px] w-full'
-                    sandbox='allow-scripts allow-same-origin allow-popups'
-                    loading='lazy'
-                    onLoad={() => setIsLoading(false)}
-                />
-            </div>
-            {!title && (
-                <div className='flex justify-end border-t border-border px-3 py-1.5'>
+                    )}
                     <a
                         href={portalUrl}
                         target='_blank'
                         rel='noopener noreferrer'
-                        className='flex items-center gap-1 text-xs text-muted-foreground transition-colors hover:text-foreground'
+                        className='flex items-center gap-1 ps-2 text-xs text-muted-foreground transition-colors hover:text-foreground'
                     >
-                        <span>פתח ב-GovMap</span>
-                        <ExternalLinkIcon className='h-3 w-3' />
+                        <span className='hidden sm:inline'>פתח ב-GovMap</span>
+                        <ExternalLinkIcon className='h-3.5 w-3.5 sm:h-3 sm:w-3' />
                     </a>
                 </div>
-            )}
-        </div>
+            </div>
+            <CollapsibleContent>
+                <div className='relative'>
+                    {isLoading && (
+                        <div className='absolute inset-0 z-10 flex items-center justify-center bg-muted/30'>
+                            <Shimmer as='span' duration={1.5}>
+                                טוען מפה...
+                            </Shimmer>
+                        </div>
+                    )}
+                    <iframe
+                        ref={iframeRef}
+                        src={portalUrl}
+                        title={headerTitle}
+                        className='h-[400px] w-full'
+                        sandbox='allow-scripts allow-same-origin allow-popups'
+                        loading='lazy'
+                        onLoad={() => setIsLoading(false)}
+                    />
+                </div>
+            </CollapsibleContent>
+        </Collapsible>
     );
 }

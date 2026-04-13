@@ -32,7 +32,7 @@ export function HeroSection({ onStartConversation }: HeroSectionProps) {
     return (
         <div className='w-full max-w-4xl mx-auto text-center flex flex-col items-center justify-center gap-8 md:gap-12'>
             <motion.div
-                className='flex flex-col gap-2 md:gap-4 items-center'
+                className='relative flex flex-col gap-2 md:gap-4 items-center'
                 variants={fadeUpVariants}
                 initial='hidden'
                 animate='visible'
@@ -40,8 +40,8 @@ export function HeroSection({ onStartConversation }: HeroSectionProps) {
                 <Logo width={isMobile ? 50 : 60} aria-label='DataGov Logo' />
                 <h1 className='text-primary dark:text-logo-gradient-end font-bold md:text-lg'>דאטה ישראל</h1>
             </motion.div>
-            <div className='flex-shrink-0 flex flex-col items-center gap-18 md:gap-16 4xl:gap-20'>
-                <div className='flex flex-col gap-2'>
+            <div className='flex-shrink-0 flex flex-col items-center gap-8 md:gap-16 4xl:gap-20'>
+                <div className='flex flex-col gap-2 items-center'>
                     <HeroTitle line1='שואלים על ישראל.' line2='מקבלים נתונים רשמיים.' />
                     <div>
                         <HeroSubtitle>AI המחובר למאגרי מידע ציבוריים.</HeroSubtitle>
@@ -56,10 +56,10 @@ export function HeroSection({ onStartConversation }: HeroSectionProps) {
                 >
                     {onStartConversation && (
                         <CTAButton onClick={onStartConversation} className='min-w-52 md:min-w-52'>
-                            <span className='flex items-center font-bold gap-3 justify-center'>
+                            <div className='flex items-center gap-3 justify-center'>
                                 התחילו לשאול
                                 <ArrowLeft className='w-4 h-4' />
-                            </span>
+                            </div>
                         </CTAButton>
                     )}
                     <DonateDialog>
