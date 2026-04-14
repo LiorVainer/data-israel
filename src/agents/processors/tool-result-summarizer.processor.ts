@@ -3,6 +3,7 @@ import { generateText } from 'ai';
 import { createOpenRouter } from '@openrouter/ai-sdk-provider';
 import { MastraDBMessage } from '@mastra/core/agent/message-list';
 import { ENV } from '@/lib/env';
+import { serializeResult } from '@/agents/utils';
 
 export class ToolResultSummarizerProcessor implements Processor {
     id = 'tool-result-summarizer';
@@ -60,13 +61,12 @@ ${toolResults
         (tr) =>
             `📊 כלי: ${tr.toolName}
 תיאור: ${tr.toolDescription}
-תוצאה: ${JSON.stringify(tr.result, null, 2)}`,
+תוצאה: ${serializeResult(tr.result)}`,
     )
     .join('\n\n')}
 
 אנא סכם את התוצאות הללו בצורה מובנת ומשימושית, תוך שימוש בתיאורי הכלים להבנה טובה יותר.`,
                         });
-
 
                         // הוספת הסיכום כתשובה טקסט
                         if (lastMessage.content.parts) {
@@ -86,7 +86,7 @@ ${toolResults
                         console.error('Error summarizing tool results:', error);
                         // אם יש שגיאה, השתמש בתיקייה פשוטה עם תיאורים
                         const simpleText = toolResults
-                            .map((tr) => `**${tr.toolName}**\n_${tr.toolDescription}_\n\n${tr.result}`)
+                            .map((tr) => `**${tr.toolName}**\n_${tr.toolDescription}_\n\n${serializeResult(tr.result)}`)
                             .join('\n\n---\n\n');
 
                         if (lastMessage.content.parts) {

@@ -51,7 +51,7 @@ export const getStatus = createTool({
                     siteTitle: status.site_title,
                     siteDescription: status.site_description,
                     siteUrl: status.site_url,
-                    extensions: status.extensions,
+                    extensions: (status.extensions ?? []).slice(0, 50),
                 },
                 apiUrl,
             };

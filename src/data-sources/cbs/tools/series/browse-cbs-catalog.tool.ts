@@ -27,7 +27,7 @@ export const browseCbsCatalogInputSchema = z.object({
         .describe('First-level category code (required for level 2+). Get from level 1 results.'),
     language: z.enum(['he', 'en']).optional().describe('Response language (default: Hebrew)'),
     page: z.number().int().min(1).optional().describe('Page number (default 1)'),
-    pageSize: z.number().int().min(1).max(1000).optional().describe('Items per page (default 100, max 1000)'),
+    pageSize: z.number().int().min(1).max(100).optional().describe('Items per page (default 25, max 100)'),
     ...commonToolInput,
 });
 
@@ -58,7 +58,7 @@ export const browseCbsCatalog = createTool({
         'Browse the CBS (Central Bureau of Statistics) statistical catalog hierarchy. Start with level 1 to see top-level categories (e.g., population, economy, education), then drill into subcategories with higher levels. Use this to discover what statistical data series are available.',
     inputSchema: browseCbsCatalogInputSchema,
     outputSchema: browseCbsCatalogOutputSchema,
-    execute: async ({ level, subject, language, page, pageSize }) => {
+    execute: async ({ level, subject, language, page, pageSize = 25 }) => {
         // Construct API URL for reference
         const apiUrl = buildSeriesUrl(CBS_SERIES_PATHS.CATALOG_LEVEL, {
             id: level,

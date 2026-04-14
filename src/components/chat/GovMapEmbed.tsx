@@ -9,7 +9,7 @@ import { GOVMAP_PORTAL_BASE_URL } from '@/data-sources/govmap/api/govmap.endpoin
 
 function isValidGovmapUrl(url: string): boolean {
     try {
-        return new URL(url).origin === GOVMAP_PORTAL_BASE_URL;
+        return new URL(url).origin.includes(GOVMAP_PORTAL_BASE_URL.replace(/^https?:\/\//, ''));
     } catch {
         return false;
     }
@@ -57,6 +57,8 @@ export function GovMapEmbed({ portalUrl, title }: DisplayGovmapInput) {
     const [open, setOpen] = useState(true);
     const iframeRef = useRef<HTMLIFrameElement>(null);
     const embedUrl = useMemo(() => buildEmbedUrl(portalUrl), [portalUrl]);
+
+    console.log({ embedUrl });
 
     const resetToOriginal = useCallback(() => {
         if (iframeRef.current) {

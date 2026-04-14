@@ -13,6 +13,7 @@ import { getMastraModelId } from '../model';
 import { buildRoutingInstructions, ROUTING_CONFIG } from './config';
 import { AgentConfig } from '../agent.config';
 import { AGENT_SCORERS } from '../evals/eval.config';
+import { ContextCleanupProcessor } from '../processors/context-cleanup.processor';
 import { ClientTools } from '@/lib/tools/client';
 import { ENV } from '@/lib/env';
 import { createCbsAgent } from '@/data-sources/cbs';
@@ -65,8 +66,8 @@ export function createRoutingAgent(modelId: string, subAgents: Record<string, Ag
             ...ClientTools,
         },
         scorers: AGENT_SCORERS,
-        inputProcessors: [],
-        outputProcessors: [],
+        inputProcessors: [new ContextCleanupProcessor()],
+        outputProcessors: [new ContextCleanupProcessor()],
     });
 }
 

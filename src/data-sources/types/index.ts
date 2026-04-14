@@ -12,6 +12,7 @@ export {
     commonErrorOutput,
     toolOutputSchema,
     type CommonToolInput,
+    type CommonSuccessOutput,
     type ToolOutputSchemaType,
 } from './tool-schemas';
 

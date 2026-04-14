@@ -145,9 +145,9 @@ export const getParcelInfo = createTool({
             return {
                 success: true as const,
                 address: autocomplete.results[0].text,
-                parcels,
-                neighborhoods,
-                blocks,
+                parcels: parcels.slice(0, 20),
+                neighborhoods: neighborhoods.slice(0, 20),
+                blocks: blocks.slice(0, 20),
                 totalFound,
                 apiUrl,
                 portalUrl,

@@ -7,32 +7,32 @@
  * by fetching the sub-agent's separate memory thread using subAgentThreadId.
  */
 
-import type { UIMessage } from 'ai';
+import { getToolName, isToolUIPart, type UIMessage } from 'ai';
 import { toAISdkV5Messages } from '@mastra/ai-sdk/ui';
 import type { MastraMemory } from '@mastra/core/memory';
-import {
-    type AgentDataPart,
-    type AgentDataToolCall,
-    type AgentDataToolResult,
-    isToolPart,
-    type ToolCallPart,
-} from '@/components/chat/types';
-import { stripToolResult, TOOL_ARGS_KEEP_FIELDS } from '@/agents/processors/truncate-tool-results.processor';
+import type { AgentDataPart, AgentDataToolCall, AgentDataToolResult } from '@/components/chat/types';
+import type { AgentDelegationResult } from '@/agents/types';
+import { stripToolResult, TOOL_ARGS_KEEP_FIELDS } from '@/agents/utils';
 import { pick } from 'es-toolkit';
 
-function stripToolArgs(args: Record<string, unknown>): Record<string, unknown> {
-    return pick(args, [...TOOL_ARGS_KEEP_FIELDS]);
+function asRecord(value: unknown): Record<string, unknown> {
+    return (typeof value === 'object' && value !== null ? value : {}) as Record<string, unknown>;
+}
+
+function stripToolArgs(args: unknown): Record<string, unknown> {
+    return pick(asRecord(args), [...TOOL_ARGS_KEEP_FIELDS]);
+}
+
+interface SubAgentRef {
+    messageIndex: number;
+    partIndex: number;
+    agentName: string;
+    threadId: string;
+    resourceId: string;
 }
 
 export async function enrichWithSubAgentData(uiMessages: UIMessage[], memory: MastraMemory): Promise<void> {
-    // Collect all sub-agent thread references from tool-agent-* parts
-    const subAgentRefs: Array<{
-        messageIndex: number;
-        partIndex: number;
-        agentName: string;
-        threadId: string;
-        resourceId: string;
-    }> = [];
+    const subAgentRefs: SubAgentRef[] = [];
 
     for (let mi = 0; mi < uiMessages.length; mi++) {
         const msg = uiMessages[mi];
@@ -40,30 +40,28 @@ export async function enrichWithSubAgentData(uiMessages: UIMessage[], memory: Ma
 
         for (let pi = 0; pi < msg.parts.length; pi++) {
             const part = msg.parts[pi];
-            if (!part.type.startsWith('tool-agent-')) continue;
+            if (!isToolUIPart(part)) continue;
 
-            const toolPart = part as unknown as ToolCallPart;
-            if (toolPart.state !== 'output-available' || !toolPart.output) continue;
+            const toolName = getToolName(part);
+            if (!toolName.startsWith('agent-')) continue;
+            if (part.state !== 'output-available' || part.output == null) continue;
 
-            const output = toolPart.output as Record<string, unknown>;
-            const threadId = output.subAgentThreadId;
-            const resourceId = output.subAgentResourceId;
-
-            if (typeof threadId !== 'string' || typeof resourceId !== 'string') continue;
+            const output = part.output as AgentDelegationResult;
+            const { subAgentThreadId, subAgentResourceId } = output;
+            if (!subAgentThreadId || !subAgentResourceId) continue;
 
             subAgentRefs.push({
                 messageIndex: mi,
                 partIndex: pi,
-                agentName: part.type.replace('tool-agent-', ''),
-                threadId,
-                resourceId,
+                agentName: toolName.replace('agent-', ''),
+                threadId: subAgentThreadId,
+                resourceId: subAgentResourceId,
             });
         }
     }
 
     if (subAgentRefs.length === 0) return;
 
-    // Fetch sub-agent threads in parallel
     const results = await Promise.all(
         subAgentRefs.map(async (ref) => {
             try {
@@ -79,7 +77,6 @@ export async function enrichWithSubAgentData(uiMessages: UIMessage[], memory: Ma
         }),
     );
 
-    // Reconstruct and inject data-tool-agent parts (process in reverse to preserve indices)
     for (const { ref, subMessages } of results.reverse()) {
         if (subMessages.length === 0) continue;
 
@@ -89,22 +86,22 @@ export async function enrichWithSubAgentData(uiMessages: UIMessage[], memory: Ma
         for (const subMsg of subMessages) {
             if (subMsg.role !== 'assistant') continue;
             for (const subPart of subMsg.parts) {
-                if (!isToolPart(subPart)) continue;
-                const tp = subPart as unknown as ToolCallPart;
-                const toolName = subPart.type.replace('tool-', '');
+                if (!isToolUIPart(subPart)) continue;
+
+                const toolName = getToolName(subPart);
 
                 toolCalls.push({
-                    toolCallId: tp.toolCallId ?? '',
+                    toolCallId: subPart.toolCallId,
                     toolName,
-                    args: stripToolArgs((tp.input ?? {}) as Record<string, unknown>),
+                    args: stripToolArgs(subPart.state === 'input-streaming' ? undefined : subPart.input),
                 });
 
-                if (tp.state === 'output-available' && tp.output != null) {
+                if (subPart.state === 'output-available' && subPart.output != null) {
                     toolResults.push({
-                        toolCallId: tp.toolCallId ?? '',
+                        toolCallId: subPart.toolCallId,
                         toolName,
-                        args: stripToolArgs((tp.input ?? {}) as Record<string, unknown>),
-                        result: stripToolResult((tp.output ?? {}) as Record<string, unknown>),
+                        args: stripToolArgs(subPart.input),
+                        result: stripToolResult(asRecord(subPart.output)),
                     });
                 }
             }
@@ -127,7 +124,6 @@ export async function enrichWithSubAgentData(uiMessages: UIMessage[], memory: Ma
             },
         };
 
-        // Inject right after the tool-agent-* part
         const msg = uiMessages[ref.messageIndex];
         msg.parts.splice(ref.partIndex + 1, 0, reconstructed as unknown as (typeof msg.parts)[number]);
     }

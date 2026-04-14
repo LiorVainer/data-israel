@@ -71,7 +71,7 @@ export const getDatasetDetails = createTool({
         try {
             const dataset = await dataGovApi.dataset.show(id);
 
-            const resources = dataset.resources.map((r) => ({
+            const resources = dataset.resources.slice(0, 20).map((r) => ({
                 id: r.id,
                 name: r.name,
                 url: r.url,

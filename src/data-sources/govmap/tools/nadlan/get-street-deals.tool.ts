@@ -20,7 +20,7 @@ export const getStreetDealsInputSchema = z.object({
         .describe(
             'Street polygon ID obtained from the deals-by-radius endpoint (via findRecentNadlanDeals). The autocomplete endpoint does NOT return polygon IDs.',
         ),
-    limit: z.number().int().min(1).max(500).optional().describe('Max deals to return (default: 100)'),
+    limit: z.number().int().min(1).max(500).optional().describe('Max deals to return (default: 30)'),
     dealType: z
         .union([z.literal(1), z.literal(2)])
         .optional()
@@ -73,7 +73,7 @@ export const getStreetNadlanDeals = createTool({
         'Get real estate deals for a specific street polygon. Requires a polygon_id from the deals-by-radius endpoint (returned internally by findRecentNadlanDeals). dealType: 1=new/first-hand, 2=used/second-hand (default 2).',
     inputSchema: getStreetDealsInputSchema,
     outputSchema: getStreetDealsOutputSchema,
-    execute: async ({ polygonId, limit = 100, dealType = 2 }) => {
+    execute: async ({ polygonId, limit = 30, dealType = 2 }) => {
         const dealTypeDescription = dealType === 1 ? 'יד ראשונה (חדש)' : 'יד שנייה (משומש)';
         const apiUrl = buildStreetDealsUrl(polygonId, { limit, dealType });
 

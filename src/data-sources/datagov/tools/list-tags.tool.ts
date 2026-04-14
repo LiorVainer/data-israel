@@ -50,7 +50,7 @@ export const listTags = createTool({
 
             return {
                 success: true as const,
-                tags,
+                tags: Array.isArray(tags) ? tags.slice(0, 100) : tags,
                 apiUrl,
             };
         } catch (error) {

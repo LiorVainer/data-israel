@@ -14,7 +14,7 @@ import { AgentConfig } from '@/agents/agent.config';
 import { AGENT_SCORERS } from '@/agents/evals/eval.config';
 import { EnsureTextOutputProcessor } from '@/agents/processors/ensure-text-output.processor';
 import { FailedToolCallGuardProcessor } from '@/agents/processors/failed-tool-call-guard.processor';
-import { TruncateToolResultsProcessor } from '@/agents/processors/truncate-tool-results.processor';
+import { ContextCleanupProcessor } from '@/agents/processors/context-cleanup.processor';
 import { budgetMcpClient } from './budget.mcp';
 import { getOrFetchMcpTools } from '@/lib/cache/agent-cache';
 
@@ -103,7 +103,7 @@ export async function createBudgetAgent(modelId: string): Promise<Agent> {
         model: modelId,
         tools,
         inputProcessors: [new FailedToolCallGuardProcessor(), new EnsureTextOutputProcessor()],
-        outputProcessors: [new TruncateToolResultsProcessor()],
+        outputProcessors: [new ContextCleanupProcessor()],
         memory: new Memory({
             options: {
                 lastMessages: MEMORY.LAST_MESSAGES,

@@ -18,7 +18,7 @@ export const getCbsPriceDataInputSchema = z.object({
     indexCode: z.string().describe('Price index code (get from browseCbsPriceIndices with mode "indices")'),
     startPeriod: z.string().optional().describe('Start date in mm-yyyy format (e.g., "01-2020")'),
     endPeriod: z.string().optional().describe('End date in mm-yyyy format (e.g., "12-2024")'),
-    last: z.number().int().min(1).max(500).optional().describe('Return only the N most recent values'),
+    last: z.number().int().min(1).max(100).optional().describe('Return only the N most recent values (default: 24)'),
     includeCoefficients: z.boolean().optional().describe('Include adjustment coefficients in response'),
     language: z.enum(['he', 'en']).optional().describe('Response language (default: Hebrew)'),
     ...commonToolInput,
@@ -36,8 +36,8 @@ export const getCbsPriceDataOutputSchema = toolOutputSchema({
                     monthDesc: z.string(),
                     value: z.number(),
                     baseDesc: z.string(),
-                    percentChange: z.number(),
-                    percentYearChange: z.number(),
+                    percentChange: z.number().nullable(),
+                    percentYearChange: z.number().nullable(),
                 }),
             ),
         }),
@@ -60,7 +60,7 @@ export const getCbsPriceData = createTool({
         'Get CBS price index values over time. Returns historical index values with dates and percentage changes. Use after browsing price indices to get an index code.',
     inputSchema: getCbsPriceDataInputSchema,
     outputSchema: getCbsPriceDataOutputSchema,
-    execute: async ({ indexCode, startPeriod, endPeriod, last, includeCoefficients, language }) => {
+    execute: async ({ indexCode, startPeriod, endPeriod, last = 24, includeCoefficients, language }) => {
         // Construct API URL
         const apiUrl = buildPriceIndexUrl(CBS_PRICE_INDEX_PATHS.PRICE, {
             id: indexCode,

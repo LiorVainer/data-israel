@@ -11,7 +11,7 @@ import { AGENT_SCORERS } from '@/agents/evals/eval.config';
 import { RamiLevyTools } from './tools';
 import { EnsureTextOutputProcessor } from '@/agents/processors/ensure-text-output.processor';
 import { FailedToolCallGuardProcessor } from '@/agents/processors/failed-tool-call-guard.processor';
-import { TruncateToolResultsProcessor } from '@/agents/processors/truncate-tool-results.processor';
+import { ContextCleanupProcessor } from '@/agents/processors/context-cleanup.processor';
 
 const { MEMORY } = AgentConfig;
 
@@ -79,7 +79,7 @@ export function createRamiLevyAgent(modelId: string): Agent {
         model: modelId,
         tools: RamiLevyTools,
         inputProcessors: [new FailedToolCallGuardProcessor(), new EnsureTextOutputProcessor()],
-        outputProcessors: [new TruncateToolResultsProcessor()],
+        outputProcessors: [new ContextCleanupProcessor()],
         memory: new Memory({
             options: {
                 lastMessages: MEMORY.LAST_MESSAGES,

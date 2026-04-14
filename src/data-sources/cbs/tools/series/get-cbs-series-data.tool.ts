@@ -18,7 +18,13 @@ export const getCbsSeriesDataInputSchema = z.object({
     seriesId: z.string().describe('Series code/ID (get from catalog browsing)'),
     startPeriod: z.string().optional().describe('Start date in mm-yyyy format (e.g., "01-2020")'),
     endPeriod: z.string().optional().describe('End date in mm-yyyy format (e.g., "12-2024")'),
-    last: z.number().int().min(1).max(500).optional().describe('Return only the N most recent data points'),
+    last: z
+        .number()
+        .int()
+        .min(1)
+        .max(100)
+        .optional()
+        .describe('Return only the N most recent data points (default: 24)'),
     language: z.enum(['he', 'en']).optional().describe('Response language (default: Hebrew)'),
     ...commonToolInput,
 });

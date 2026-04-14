@@ -117,7 +117,7 @@ export const findNearbyServices = createTool({
             for (const [layerName, entities] of layerResults) {
                 const category = getServiceCategory(layerName);
                 if (category) {
-                    services[category] = entities;
+                    services[category] = entities.slice(0, 15);
                 }
                 const first = entities[0];
                 if (first?.centroid && (first.distance ?? Infinity) < closestDistance) {

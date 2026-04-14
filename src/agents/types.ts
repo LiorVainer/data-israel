@@ -35,3 +35,20 @@ export type AppUITools = {
  * - No more `as ToolCallPart` casts needed
  */
 export type AppUIMessage = UIMessage<never, never, AppUITools>;
+
+/**
+ * Shape of the result returned by a sub-agent delegation tool (`agent-<name>`).
+ * Matches Mastra's internal `agentOutputSchema` Zod schema (not exported as a type).
+ */
+export interface AgentDelegationResult {
+    text: string;
+    subAgentThreadId?: string;
+    subAgentResourceId?: string;
+    subAgentToolResults?: Array<{
+        toolName: string;
+        toolCallId: string;
+        result: unknown;
+        args?: unknown;
+        isError?: boolean;
+    }>;
+}

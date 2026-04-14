@@ -72,13 +72,13 @@ export const getDatasetSchema = createTool({
                     datasetType: schema.dataset_type,
                     about: schema.about,
                     aboutUrl: schema.about_url,
-                    datasetFields: schema.dataset_fields?.map((f) => ({
+                    datasetFields: schema.dataset_fields?.slice(0, 30).map((f) => ({
                         fieldName: f.field_name,
                         label: f.label,
                         required: f.required,
                         helpText: f.help_text,
                     })),
-                    resourceFields: schema.resource_fields?.map((f) => ({
+                    resourceFields: schema.resource_fields?.slice(0, 30).map((f) => ({
                         fieldName: f.field_name,
                         label: f.label,
                         required: f.required,

@@ -66,7 +66,7 @@ export const findRecentDealsInputSchema = z.object({
         ),
     yearsBack: z.number().int().min(1).max(10).optional().describe('How many years back to search (default: 2)'),
     radiusMeters: z.number().int().min(10).max(5000).optional().describe('Search radius in meters (default: 50)'),
-    maxDeals: z.number().int().min(1).max(200).optional().describe('Maximum deals to return (default: 100)'),
+    maxDeals: z.number().int().min(1).max(200).optional().describe('Maximum deals to return (default: 25)'),
     dealType: z
         .union([z.literal(1), z.literal(2)])
         .optional()
@@ -106,7 +106,7 @@ export const findRecentNadlanDeals = createTool({
         'Find recent real estate deals near an Israeli address. Internally performs a multi-step flow: (1) autocomplete the address to get ITM coordinates, (2) discover nearby street polygons, (3) fetch deals from those polygons. Provide a FULL Hebrew address (street + number + city). Returns deal details including price (NIS), area (sqm), price per sqm, property type, and market statistics. This is the main tool for property transaction research.',
     inputSchema: findRecentDealsInputSchema,
     outputSchema: findRecentDealsOutputSchema,
-    execute: async ({ address, yearsBack = 2, radiusMeters = 50, maxDeals = 100, dealType = 2 }) => {
+    execute: async ({ address, yearsBack = 2, radiusMeters = 50, maxDeals = 25, dealType = 2 }) => {
         const dealTypeDescription = dealType === 1 ? 'יד ראשונה (חדש)' : 'יד שנייה (משומש)';
         const portalUrl = buildGovmapPortalUrl(undefined, undefined, address);
 

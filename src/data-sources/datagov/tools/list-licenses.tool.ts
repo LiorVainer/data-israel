@@ -48,7 +48,7 @@ export const listLicenses = createTool({
 
             return {
                 success: true as const,
-                licenses: licenses.map((l) => ({
+                licenses: licenses.slice(0, 50).map((l) => ({
                     id: l.id,
                     title: l.title,
                     url: l.url,

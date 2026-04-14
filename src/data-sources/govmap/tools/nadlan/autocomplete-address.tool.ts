@@ -58,9 +58,10 @@ export const autocompleteNadlanAddress = createTool({
                 };
             }
 
+            const topResults = result.results.slice(0, 5);
             return {
                 success: true as const,
-                results: result.results.map((r) => ({
+                results: topResults.map((r) => ({
                     text: r.text,
                     id: r.id,
                     type: r.type,

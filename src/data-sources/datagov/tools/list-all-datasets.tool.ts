@@ -44,7 +44,7 @@ export const listAllDatasets = createTool({
             return {
                 success: true as const,
                 count: datasetIds.length,
-                datasetIds,
+                datasetIds: datasetIds.slice(0, 100),
                 apiUrl,
             };
         } catch (error) {

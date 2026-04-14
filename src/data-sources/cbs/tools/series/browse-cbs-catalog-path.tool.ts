@@ -22,7 +22,7 @@ export const browseCbsCatalogPathInputSchema = z.object({
         ),
     language: z.enum(['he', 'en']).optional().describe('Response language (default: Hebrew)'),
     page: z.number().int().min(1).optional().describe('Page number (default 1)'),
-    pageSize: z.number().int().min(1).max(1000).optional().describe('Items per page (default 100, max 1000)'),
+    pageSize: z.number().int().min(1).max(100).optional().describe('Items per page (default 25, max 100)'),
 });
 
 export const browseCbsCatalogPathOutputSchema = toolOutputSchema({
@@ -52,7 +52,7 @@ export const browseCbsCatalogPath = createTool({
         'Browse the CBS catalog by a specific hierarchical path (e.g., "2,1,1,2,379"). Use this after discovering categories with browse-cbs-catalog to navigate directly to a known location in the catalog tree.',
     inputSchema: browseCbsCatalogPathInputSchema,
     outputSchema: browseCbsCatalogPathOutputSchema,
-    execute: async ({ path, language, page, pageSize }) => {
+    execute: async ({ path, language, page, pageSize = 25 }) => {
         // Construct API URL for reference
         const apiUrl = buildSeriesUrl(CBS_SERIES_PATHS.CATALOG_PATH, {
             id: path,

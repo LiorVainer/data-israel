@@ -36,8 +36,8 @@ const inputSchema = z.object({
         .min(100)
         .max(50000)
         .optional()
-        .default(5000)
-        .describe('רדיוס חיפוש במטרים (ברירת מחדל: 5000)'),
+        .default(2000)
+        .describe('רדיוס חיפוש במטרים (ברירת מחדל: 2000)'),
     categories: z.array(tourismCategorySchema).optional().describe(TOURISM_CATEGORIES_DESCRIBE),
     zoom: z
         .number()
@@ -76,7 +76,7 @@ export const findNearbyTourism = createTool({
     description: `חיפוש אטרקציות תיירות ופנאי ליד כתובת. ${TOURISM_FILTER_SUFFIX}`,
     inputSchema,
     outputSchema: findNearbyTourismOutputSchema,
-    execute: async ({ address, radius = 5000, categories, zoom }) => {
+    execute: async ({ address, radius = 2000, categories, zoom }) => {
         const apiUrl = buildEntitiesByPointUrl();
         const layerIds =
             categories && categories.length > 0
@@ -108,7 +108,7 @@ export const findNearbyTourism = createTool({
             for (const [layerName, entities] of layerResults) {
                 const category = getTourismCategory(layerName);
                 if (category) {
-                    tourism[category] = entities;
+                    tourism[category] = entities.slice(0, 15);
                 }
                 const first = entities[0];
                 if (first?.centroid && (first.distance ?? Infinity) < closestDistance) {

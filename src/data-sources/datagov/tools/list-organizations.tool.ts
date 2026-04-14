@@ -44,7 +44,7 @@ export const listOrganizations = createTool({
             return {
                 success: true as const,
                 count: organizations.length,
-                organizations,
+                organizations: organizations.slice(0, 100),
                 apiUrl,
             };
         } catch (error) {
