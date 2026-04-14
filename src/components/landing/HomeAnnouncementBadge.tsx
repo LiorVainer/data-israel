@@ -107,8 +107,7 @@ export function HomeAnnouncementBadge({ className }: { className?: string }) {
             text='נוספו מקורות מידע חדשים והצגת מפה'
             learnMoreText='למידע נוסף'
             details={announcementDetails}
-            dialogTitle='עדכון חדש'
-            dialogDescription='אפריל 2026'
+            dialogTitle='עדכון חדש - אפריל 2026'
             className={className}
         />
     );
