@@ -11,14 +11,30 @@ export {
     commonSuccessOutput,
     commonErrorOutput,
     toolOutputSchema,
+    type CommonToolInput,
     type ToolOutputSchemaType,
 } from './tool-schemas';
 
 // Display types
-export type { DataSource, DataSourceConfig, AgentDisplayInfo } from './display.types';
+export { DATA_SOURCES_CATEGORIES } from './display.types';
+export type {
+    DataSource,
+    DataSourceConfig,
+    AgentDisplayInfo,
+    DataSourceCategory,
+    LandingConfig,
+    SuggestionPrompt,
+    SuggestionsConfig,
+} from './display.types';
 
 // Tool types
-export type { ToolSource, ToolSourceResolver, ToolTranslation } from './tool.types';
+export type {
+    ToolSource,
+    ToolSourceConfig,
+    ToolSourceResolver,
+    ToolResourceExtractor,
+    ToolTranslation,
+} from './tool.types';
 
 // Data source definition
 export type { DataSourceDefinition } from './data-source.types';

@@ -10,8 +10,7 @@
  * - not previously dismissed (localStorage key: 'notification-prompt-dismissed')
  */
 
-import type { FC } from 'react';
-import { useEffect, useState } from 'react';
+import { memo, useEffect, useState } from 'react';
 import { BellRing, X } from 'lucide-react';
 
 const DISMISSED_KEY = 'notification-prompt-dismissed';
@@ -24,12 +23,12 @@ interface NotificationPromptProps {
     hasMessages: boolean;
 }
 
-export const NotificationPrompt: FC<NotificationPromptProps> = ({
+export const NotificationPrompt = memo(function NotificationPrompt({
     isSupported,
     isSubscribed,
     subscribe,
     hasMessages,
-}) => {
+}: NotificationPromptProps) {
     const [isDismissed, setIsDismissed] = useState(true); // Start hidden to avoid flash
     const [isSubscribing, setIsSubscribing] = useState(false);
 
@@ -48,7 +47,6 @@ export const NotificationPrompt: FC<NotificationPromptProps> = ({
     }, []);
 
     const shouldShow = isSupported && !isSubscribed && hasMessages && !isDismissed;
-    console.log({ isSupported, isSubscribed, hasMessages, isDismissed, shouldShow });
 
     if (!shouldShow) {
         return null;
@@ -105,4 +103,4 @@ export const NotificationPrompt: FC<NotificationPromptProps> = ({
             </div>
         </div>
     );
-};
+});

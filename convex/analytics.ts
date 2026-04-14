@@ -75,14 +75,10 @@ function extractMessageText(content: unknown): string {
         if (parsed !== null && typeof parsed === 'object') {
             const obj = parsed as Record<string, unknown>;
             if (Array.isArray(obj.parts)) {
-                const textPart = (obj.parts as Array<{ type?: string; text?: string }>).find(
-                    (p) => p.type === 'text',
-                );
+                const textPart = (obj.parts as Array<{ type?: string; text?: string }>).find((p) => p.type === 'text');
                 return textPart?.text ?? '';
             } else if (Array.isArray(parsed)) {
-                const textPart = (parsed as Array<{ type?: string; text?: string }>).find(
-                    (p) => p.type === 'text',
-                );
+                const textPart = (parsed as Array<{ type?: string; text?: string }>).find((p) => p.type === 'text');
                 return textPart?.text ?? '';
             } else if (typeof obj.text === 'string') {
                 return obj.text;
@@ -97,11 +93,7 @@ function extractMessageText(content: unknown): string {
 /** Filter out sub-agent threads and internal threads (resourceId "routingAgent"). */
 function isMainThread(thread: Record<string, unknown>): boolean {
     const resourceId = thread.resourceId as string;
-    return (
-        !resourceId.endsWith('-datagovAgent') &&
-        !resourceId.endsWith('-cbsAgent') &&
-        resourceId !== 'routingAgent'
-    );
+    return !resourceId.endsWith('-datagovAgent') && !resourceId.endsWith('-cbsAgent') && resourceId !== 'routingAgent';
 }
 
 /** Get the current authenticated user's resourceId (Clerk subject) to exclude from stats. */
@@ -149,9 +141,7 @@ export const getOverviewStats = query({
                       .collect()
                 : await ctx.db.query('mastra_threads').collect();
 
-        const threads = allThreads.filter(
-            (t) => isMainThread(t) && t.resourceId !== callerResourceId,
-        );
+        const threads = allThreads.filter((t) => isMainThread(t) && t.resourceId !== callerResourceId);
         const totalThreads = threads.length;
 
         // --- Count messages from thread_usage (lightweight) instead of mastra_messages ---
@@ -185,9 +175,7 @@ export const getOverviewStats = query({
         // --- Total registered users & guests (all-time counts, excluding current admin) ---
         const allUsers = await ctx.db.query('users').collect();
         const allGuests = await ctx.db.query('guests').collect();
-        const filteredUsers = callerResourceId
-            ? allUsers.filter((u) => u.clerkId !== callerResourceId)
-            : allUsers;
+        const filteredUsers = callerResourceId ? allUsers.filter((u) => u.clerkId !== callerResourceId) : allUsers;
         const totalRegisteredUsers = filteredUsers.length;
         const totalGuests = allGuests.length;
 
@@ -252,11 +240,14 @@ export const getOverviewStats = query({
             guestActiveIds.size > 0 ? Math.round((guestThreadCount / guestActiveIds.size) * 10) / 10 : 0;
         // Per-thread averages (messages / active threads) per user type — consistent with the KPI
         const avgMessagesPerUser =
-            registeredActiveThreadCount > 0 ? Math.round((registeredMsgSum / registeredActiveThreadCount) * 10) / 10 : 0;
+            registeredActiveThreadCount > 0
+                ? Math.round((registeredMsgSum / registeredActiveThreadCount) * 10) / 10
+                : 0;
         const avgMessagesPerGuest =
             guestActiveThreadCount > 0 ? Math.round((guestMsgSum / guestActiveThreadCount) * 10) / 10 : 0;
         const activeThreadCount = activeThreads.length;
-        const avgMessagesPerThread = activeThreadCount > 0 ? Math.round((totalMessages / activeThreadCount) * 10) / 10 : 0;
+        const avgMessagesPerThread =
+            activeThreadCount > 0 ? Math.round((totalMessages / activeThreadCount) * 10) / 10 : 0;
 
         return {
             totalThreads,
@@ -303,9 +294,7 @@ export const getThreadOrigins = query({
                       .collect()
                 : await ctx.db.query('mastra_threads').collect();
 
-        const threads = allThreads.filter(
-            (t) => isMainThread(t) && t.resourceId !== callerResourceId,
-        );
+        const threads = allThreads.filter((t) => isMainThread(t) && t.resourceId !== callerResourceId);
 
         // Build a label→count map, initialised with all prompt card labels + free text
         const counts = new Map<string, number>(PROMPT_CARD_ENTRIES.map((c) => [c.label, 0]));
@@ -373,9 +362,7 @@ export const getThreadsOverTime = query({
                       .collect()
                 : await ctx.db.query('mastra_threads').collect();
 
-        const threads = allThreads.filter(
-            (t) => isMainThread(t) && t.resourceId !== callerResourceId,
-        );
+        const threads = allThreads.filter((t) => isMainThread(t) && t.resourceId !== callerResourceId);
 
         // Group threads by time bucket (skip empty/abandoned threads)
         const bucketCounts = new Map<string, number>();
@@ -539,9 +526,7 @@ export const getFreeTextPrompts = query({
                       .collect()
                 : await ctx.db.query('mastra_threads').collect();
 
-        const threads = allThreads.filter(
-            (t) => isMainThread(t) && t.resourceId !== callerResourceId,
-        );
+        const threads = allThreads.filter((t) => isMainThread(t) && t.resourceId !== callerResourceId);
 
         // Build prompt→label lookup for detecting prompt-card messages
         const promptCardTexts = new Set(PROMPT_CARD_ENTRIES.map((c) => c.prompt));
@@ -569,5 +554,45 @@ export const getFreeTextPrompts = query({
 
         // Return sorted by createdAt descending (newest first)
         return freeTexts.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+    },
+});
+
+// ---------------------------------------------------------------------------
+// getAnswerRatingStats
+// ---------------------------------------------------------------------------
+
+export interface AnswerRatingStats {
+    totalAnswers: number;
+    totalRated: number;
+    goodCount: number;
+    badCount: number;
+}
+
+export const getAnswerRatingStats = query({
+    args: {
+        sinceTimestamp: v.optional(v.number()),
+    },
+    handler: async (ctx, { sinceTimestamp }): Promise<AnswerRatingStats> => {
+        const allAnswers = await ctx.db.query('answers').collect();
+        const answers =
+            sinceTimestamp !== undefined ? allAnswers.filter((a) => a.createdAt >= sinceTimestamp) : allAnswers;
+
+        const allRatings = await ctx.db.query('answer_ratings').collect();
+        const ratings =
+            sinceTimestamp !== undefined ? allRatings.filter((r) => r.createdAt >= sinceTimestamp) : allRatings;
+
+        let goodCount = 0;
+        let badCount = 0;
+        for (const rating of ratings) {
+            if (rating.rating === 'good') goodCount++;
+            else badCount++;
+        }
+
+        return {
+            totalAnswers: answers.length,
+            totalRated: ratings.length,
+            goodCount,
+            badCount,
+        };
     },
 });

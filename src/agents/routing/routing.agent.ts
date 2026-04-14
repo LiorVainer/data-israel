@@ -9,17 +9,11 @@ import { Agent } from '@mastra/core/agent';
 import { Memory } from '@mastra/memory';
 import { ConvexVector } from '@mastra/convex';
 import { openrouter } from '@openrouter/ai-sdk-provider';
-import {
-    PromptInjectionDetector,
-    UnicodeNormalizer,
-    SystemPromptScrubber,
-} from '@mastra/core/processors';
 import { getMastraModelId } from '../model';
-import { ROUTING_CONFIG } from './config';
+import { buildRoutingInstructions, ROUTING_CONFIG } from './config';
 import { AgentConfig } from '../agent.config';
 import { AGENT_SCORERS } from '../evals/eval.config';
 import { ClientTools } from '@/lib/tools/client';
-import { TruncateToolResultsProcessor } from '../processors/truncate-tool-results.processor';
 import { ENV } from '@/lib/env';
 import { createCbsAgent } from '@/data-sources/cbs';
 import { createDatagovAgent } from '@/data-sources/datagov';
@@ -43,10 +37,13 @@ const vector =
 
 /** Factory: creates a routing agent with the given model and sub-agents */
 export function createRoutingAgent(modelId: string, subAgents: Record<string, Agent>): Agent {
+    // Build instructions listing only the actually-registered sub-agents
+    const instructions = buildRoutingInstructions(Object.keys(subAgents));
+
     return new Agent({
         id: 'routingAgent',
         name: ROUTING_CONFIG.name,
-        instructions: ROUTING_CONFIG.instructions,
+        instructions,
         model: modelId,
         memory: new Memory({
             ...(vector && { vector }),
@@ -68,23 +65,8 @@ export function createRoutingAgent(modelId: string, subAgents: Record<string, Ag
             ...ClientTools,
         },
         scorers: AGENT_SCORERS,
-        inputProcessors: [
-            new UnicodeNormalizer({ stripControlChars: true, collapseWhitespace: true }),
-            new PromptInjectionDetector({
-                model: GUARD_MODEL,
-                threshold: 0.8,
-                strategy: 'block',
-                detectionTypes: ['injection', 'jailbreak', 'system-override'],
-            }),
-        ],
-        outputProcessors: [
-            new SystemPromptScrubber({
-                model: GUARD_MODEL,
-                strategy: 'redact',
-                redactionMethod: 'remove',
-            }),
-            new TruncateToolResultsProcessor(),
-        ],
+        inputProcessors: [],
+        outputProcessors: [],
     });
 }
 

@@ -10,11 +10,11 @@ export type AgentName = keyof typeof agents;
 type AllTools = typeof ClientTools & typeof allDataSourceTools;
 
 /** Extract input type from a Mastra Tool */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+
 type InferMastraToolInput<T> = T extends Tool<infer TIn, any, any, any, any, any, any> ? TIn : never;
 
 /** Extract output type from a Mastra Tool */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+
 type InferMastraToolOutput<T> = T extends Tool<any, infer TOut, any, any, any, any, any> ? TOut : never;
 
 /** Inferred UI tool types - each tool's input/output is fully typed */
@@ -31,7 +31,7 @@ export type AppUITools = {
  *
  * With this type:
  * - part.type === 'tool-suggestFollowUps' narrows to typed part.input.suggestions
- * - part.type === 'tool-generateDataGovSourceUrl' narrows to typed part.output
+ * - part.type === 'tool-searchDatasets' narrows to typed part.output
  * - No more `as ToolCallPart` casts needed
  */
 export type AppUIMessage = UIMessage<never, never, AppUITools>;

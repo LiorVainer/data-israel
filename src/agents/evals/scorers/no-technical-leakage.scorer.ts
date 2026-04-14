@@ -18,7 +18,7 @@ const LEAKAGE_PATTERNS = [
     {
         name: 'Tool name',
         pattern:
-            /\b(searchDatasets|queryDatastoreResource|getDatasetDetails|getResourceDetails|browseCbsCatalog|getCbsSeriesData|browseCbsPriceIndices|generateDataGovSourceUrl|generateCbsSourceUrl|suggestFollowUps)\b/,
+            /\b(searchDatasets|queryDatastoreResource|getDatasetDetails|getResourceDetails|browseCbsCatalog|getCbsSeriesData|browseCbsPriceIndices|suggestFollowUps)\b/,
     },
     {
         name: 'CKAN field',

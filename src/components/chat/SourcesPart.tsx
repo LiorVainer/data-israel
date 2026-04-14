@@ -17,7 +17,10 @@ interface ProviderGroup {
 }
 
 /** Display config per provider group — full Hebrew names for readability */
-const PROVIDER_DISPLAY: Record<GroupKey, { nameLabel: string; summaryLabel: string; borderClass: string; tintClass: string }> = {
+const PROVIDER_DISPLAY: Record<
+    GroupKey,
+    { nameLabel: string; summaryLabel: string; borderClass: string; tintClass: string }
+> = {
     datagov: {
         nameLabel: 'מידע ממשלתי — data.gov.il',
         summaryLabel: DATA_SOURCE_CONFIG.datagov.nameLabel,
@@ -30,6 +33,42 @@ const PROVIDER_DISPLAY: Record<GroupKey, { nameLabel: string; summaryLabel: stri
         borderClass: 'border-r-badge-cbs',
         tintClass: 'bg-badge-cbs/10 text-badge-cbs-foreground',
     },
+    budget: {
+        nameLabel: 'תקציב המדינה — מפתח התקציב',
+        summaryLabel: DATA_SOURCE_CONFIG.budget.nameLabel,
+        borderClass: 'border-r-badge-budget',
+        tintClass: 'bg-badge-budget/10 text-badge-budget-foreground',
+    },
+    govmap: {
+        nameLabel: 'המפה הממשלתית — govmap.gov.il',
+        summaryLabel: DATA_SOURCE_CONFIG.govmap.nameLabel,
+        borderClass: 'border-r-badge-govmap',
+        tintClass: 'bg-badge-govmap/10 text-badge-govmap-foreground',
+    },
+    health: {
+        nameLabel: 'משרד הבריאות — תרופות ובריאות ציבורית',
+        summaryLabel: DATA_SOURCE_CONFIG.health.nameLabel,
+        borderClass: 'border-r-badge-health',
+        tintClass: 'bg-badge-health/10 text-badge-health-foreground',
+    },
+    knesset: {
+        nameLabel: 'הכנסת — הצעות חוק וועדות',
+        summaryLabel: 'כנסת',
+        borderClass: 'border-r-badge-knesset',
+        tintClass: 'bg-badge-knesset/10 text-badge-knesset-foreground',
+    },
+    shufersal: {
+        nameLabel: 'שופרסל — מחירי מוצרים',
+        summaryLabel: 'שופרסל',
+        borderClass: 'border-r-badge-shufersal',
+        tintClass: 'bg-badge-shufersal/10 text-badge-shufersal-foreground',
+    },
+    'rami-levy': {
+        nameLabel: 'רמי לוי — מחירי מוצרים',
+        summaryLabel: 'רמי לוי',
+        borderClass: 'border-r-badge-rami-levy',
+        tintClass: 'bg-badge-rami-levy/10 text-badge-rami-levy-foreground',
+    },
     other: {
         nameLabel: 'מקורות נוספים',
         summaryLabel: 'אחר',
@@ -39,7 +78,17 @@ const PROVIDER_DISPLAY: Record<GroupKey, { nameLabel: string; summaryLabel: stri
 };
 
 /** Ordered keys for rendering sections */
-const PROVIDER_ORDER: GroupKey[] = ['datagov', 'cbs', 'other'];
+const PROVIDER_ORDER: GroupKey[] = [
+    'datagov',
+    'cbs',
+    'budget',
+    'knesset',
+    'govmap',
+    'health',
+    'shufersal',
+    'rami-levy',
+    'other',
+];
 
 export interface SourcesPartProps {
     sources: EnrichedSourceUrl[];
@@ -50,6 +99,12 @@ export function SourcesPart({ sources }: SourcesPartProps) {
         const groups: Record<GroupKey, ProviderGroup> = {
             datagov: { portal: [], api: [] },
             cbs: { portal: [], api: [] },
+            budget: { portal: [], api: [] },
+            govmap: { portal: [], api: [] },
+            health: { portal: [], api: [] },
+            knesset: { portal: [], api: [] },
+            shufersal: { portal: [], api: [] },
+            'rami-levy': { portal: [], api: [] },
             other: { portal: [], api: [] },
         };
         for (const s of sources) {
@@ -87,13 +142,7 @@ export function SourcesPart({ sources }: SourcesPartProps) {
                     const group = grouped[key];
                     const total = group.portal.length + group.api.length;
                     if (total === 0) return null;
-                    return (
-                        <ProviderSection
-                            key={key}
-                            groupKey={key}
-                            group={group}
-                        />
-                    );
+                    return <ProviderSection key={key} groupKey={key} group={group} />;
                 })}
             </SourcesContent>
         </Sources>
@@ -117,40 +166,22 @@ function ProviderSection({ groupKey, group }: ProviderSectionProps) {
     return (
         <div className={cn('border-r-2 space-y-3', display.borderClass)}>
             {/* Provider header badge */}
-            <span
-                className={cn(
-                    'inline-block rounded-md px-2 py-0.5 text-[11px] font-semibold',
-                    display.tintClass,
-                )}
-            >
+            <span className={cn('inline-block rounded-md px-2 py-0.5 text-[11px] font-semibold', display.tintClass)}>
                 {display.nameLabel}
             </span>
 
             {/* Portal links */}
             {hasPortal && (
-                <SubSourceGroup
-                    icon={<GlobeIcon className='h-3 w-3' />}
-                    label='דפי מקור'
-                    count={group.portal.length}
-                >
+                <SubSourceGroup icon={<GlobeIcon className='h-3 w-3' />} label='דפי מקור' count={group.portal.length}>
                     {group.portal.map((source) => (
-                        <SourceLink
-                            key={source.sourceId}
-                            source={source}
-                            icon='portal'
-                            className={display.tintClass}
-                        />
+                        <SourceLink key={source.sourceId} source={source} icon='portal' className={display.tintClass} />
                     ))}
                 </SubSourceGroup>
             )}
 
             {/* API / raw data links */}
             {hasApi && (
-                <SubSourceGroup
-                    icon={<CodeIcon className='h-3 w-3' />}
-                    label='מידע גולמי'
-                    count={group.api.length}
-                >
+                <SubSourceGroup icon={<CodeIcon className='h-3 w-3' />} label='מידע גולמי' count={group.api.length}>
                     {group.api.map((source) => (
                         <SourceLink
                             key={source.sourceId}
@@ -181,12 +212,12 @@ function SubSourceGroup({ icon, label, count, children }: SubSourceGroupProps) {
         <Collapsible>
             <CollapsibleTrigger className='flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors pr-3'>
                 {icon}
-                <span>{label} ({count})</span>
+                <span>
+                    {label} ({count})
+                </span>
                 <ChevronDownIcon className='h-3 w-3 transition-transform duration-200 [[data-state=open]>&]:rotate-180' />
             </CollapsibleTrigger>
-            <CollapsibleContent className='mt-1.5 space-y-1 pr-3'>
-                {children}
-            </CollapsibleContent>
+            <CollapsibleContent className='mt-1.5 space-y-1 pr-3'>{children}</CollapsibleContent>
         </Collapsible>
     );
 }
@@ -229,10 +260,11 @@ function SourceLink({ source, icon, className }: SourceLinkProps) {
             )}
         >
             <Icon className='h-3.5 w-3.5 shrink-0' />
-            <span className='truncate flex-1 min-w-0'>
-                {source.title ?? new URL(source.url).hostname}
-            </span>
-            <span className='hidden md:inline truncate max-w-[300px] text-[11px] opacity-60 text-muted-foreground' dir='ltr'>
+            <span className='truncate flex-1 min-w-0'>{source.title ?? new URL(source.url).hostname}</span>
+            <span
+                className='hidden md:inline truncate max-w-[300px] text-[11px] opacity-60 text-muted-foreground'
+                dir='ltr'
+            >
                 {formatUrlForDisplay(source.url)}
             </span>
             <ExternalLinkIcon className='h-3 w-3 shrink-0 mr-auto opacity-50' />

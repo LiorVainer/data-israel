@@ -4,7 +4,6 @@ import { motion } from 'framer-motion';
 import { HeroSubtitle, HeroTitle } from '@/components/ui/shape-landing-hero';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Logo } from '@/components/ui/logo';
-import { CTAButton } from '@/components/cta-button';
 import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { DonateDialog } from '@/components/landing/DonateDialog';
@@ -32,7 +31,7 @@ export function HeroSection({ onStartConversation }: HeroSectionProps) {
     return (
         <div className='w-full max-w-4xl mx-auto text-center flex flex-col items-center justify-center gap-8 md:gap-12'>
             <motion.div
-                className='flex flex-col gap-2 md:gap-4 items-center'
+                className='relative flex flex-col gap-2 md:gap-4 items-center'
                 variants={fadeUpVariants}
                 initial='hidden'
                 animate='visible'
@@ -40,8 +39,8 @@ export function HeroSection({ onStartConversation }: HeroSectionProps) {
                 <Logo width={isMobile ? 50 : 60} aria-label='DataGov Logo' />
                 <h1 className='text-primary dark:text-logo-gradient-end font-bold md:text-lg'>דאטה ישראל</h1>
             </motion.div>
-            <div className='flex-shrink-0 flex flex-col items-center gap-18 md:gap-16 4xl:gap-20'>
-                <div className='flex flex-col gap-2'>
+            <div className='flex-shrink-0 flex flex-col items-center gap-8 md:gap-16 4xl:gap-20'>
+                <div className='flex flex-col gap-2 items-center'>
                     <HeroTitle line1='שואלים על ישראל.' line2='מקבלים נתונים רשמיים.' />
                     <div>
                         <HeroSubtitle>AI המחובר למאגרי מידע ציבוריים.</HeroSubtitle>
@@ -55,18 +54,19 @@ export function HeroSection({ onStartConversation }: HeroSectionProps) {
                     transition={{ delay: 0.8, duration: 0.5 }}
                 >
                     {onStartConversation && (
-                        <CTAButton onClick={onStartConversation} className='min-w-52 md:min-w-52'>
-                            <span className='flex items-center font-bold gap-3 justify-center'>
-                                התחילו לשאול
-                                <ArrowLeft className='w-4 h-4' />
-                            </span>
-                        </CTAButton>
+                        <Button
+                            onClick={onStartConversation}
+                            className='min-w-52 md:min-w-52 gap-3 rounded-full px-6 py-2.5 md:px-9 md:py-2.5 h-auto text-sm md:text-base'
+                        >
+                            התחילו לשאול
+                            <ArrowLeft className='w-4 h-4' />
+                        </Button>
                     )}
                     <DonateDialog>
                         <Button
                             variant='outline'
                             size='lg'
-                            className='min-w-52 md:min-w-52 gap-3 rounded-full px-6 py-2.5 md:px-9 md:py-2.5 h-auto text-sm md:text-base '
+                            className='min-w-52 md:min-w-52 gap-3 rounded-full px-6 py-2.5 md:px-9 md:py-2.5 h-auto text-sm md:text-base'
                         >
                             לתמיכה במיזם
                             {/*<Heart className='w-4 h-4 fill-background/80 dark:fill-background text-foreground/80 dark:text-foreground font-normal' />*/}

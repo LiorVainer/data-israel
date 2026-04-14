@@ -9,8 +9,8 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: "Geist", "Geist Fallback", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "Geist Mono", "Geist Mono Fallback", ui-monospace, monospace;
   --color-action: var(--action);
   --color-action-dark: var(--action-dark);
   --color-action-tint: var(--action-tint);
@@ -50,6 +50,18 @@
   --color-badge-datagov-foreground: var(--badge-datagov-foreground);
   --color-badge-cbs: var(--badge-cbs);
   --color-badge-cbs-foreground: var(--badge-cbs-foreground);
+  --color-badge-budget: var(--badge-budget);
+  --color-badge-budget-foreground: var(--badge-budget-foreground);
+  --color-badge-govmap: var(--badge-govmap);
+  --color-badge-govmap-foreground: var(--badge-govmap-foreground);
+--color-badge-health: var(--badge-health);
+  --color-badge-health-foreground: var(--badge-health-foreground);
+  --color-badge-knesset: var(--badge-knesset);
+  --color-badge-knesset-foreground: var(--badge-knesset-foreground);
+  --color-badge-shufersal: var(--badge-shufersal);
+  --color-badge-shufersal-foreground: var(--badge-shufersal-foreground);
+  --color-badge-rami-levy: var(--badge-rami-levy);
+  --color-badge-rami-levy-foreground: var(--badge-rami-levy-foreground);
   /* Semantic status colors */
   --color-success: var(--success);
   --color-error: var(--error);
@@ -100,6 +112,18 @@
   --badge-datagov-foreground: oklch(0.35 0.1 85);
   --badge-cbs: oklch(0.896 0.059 62.816);
   --badge-cbs-foreground: oklch(0.35 0.1 55);
+  --badge-budget: oklch(0.88 0.08 155);
+  --badge-budget-foreground: oklch(0.3 0.1 155);
+  --badge-govmap: oklch(0.895 0.08 160);
+  --badge-govmap-foreground: oklch(0.35 0.1 155);
+--badge-health: oklch(0.88 0.09 15);
+  --badge-health-foreground: oklch(0.35 0.1 15);
+  --badge-knesset: oklch(0.88 0.09 250);
+  --badge-knesset-foreground: oklch(0.3 0.12 250);
+  --badge-shufersal: oklch(0.88 0.12 145);
+  --badge-shufersal-foreground: oklch(0.3 0.1 145);
+  --badge-rami-levy: oklch(0.88 0.1 220);
+  --badge-rami-levy-foreground: oklch(0.3 0.12 220);
   /* Semantic status colors */
   --success: oklch(0.508 0.118 165.612); /* emerald-700 */
   --error: oklch(0.505 0.213 27.518);   /* red-700 */
@@ -136,7 +160,7 @@
   --accent: oklch(0.60 0.14 245);
   --accent-foreground: oklch(0.95 0.01 250);
   --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(0.95 0.01 250 / 28%);
+  --border: oklch(0.8 0.01 250 / 28%);
   --input: oklch(0.95 0.01 250 / 25%);
   --ring: oklch(0.55 0.15 250);
   /* Chart colors - varied modern palette (dark mode) */
@@ -150,6 +174,18 @@
   --badge-datagov-foreground: oklch(0.9 0.08 85);
   --badge-cbs: oklch(0.45 0.12 55);
   --badge-cbs-foreground: oklch(0.9 0.08 55);
+  --badge-budget: oklch(0.4 0.1 155);
+  --badge-budget-foreground: oklch(0.9 0.07 155);
+  --badge-govmap: oklch(0.45 0.1 160);
+  --badge-govmap-foreground: oklch(0.9 0.08 160);
+--badge-health: oklch(0.42 0.09 15);
+  --badge-health-foreground: oklch(0.9 0.08 15);
+  --badge-knesset: oklch(0.4 0.1 250);
+  --badge-knesset-foreground: oklch(0.9 0.08 250);
+  --badge-shufersal: oklch(0.4 0.12 145);
+  --badge-shufersal-foreground: oklch(0.9 0.08 145);
+  --badge-rami-levy: oklch(0.4 0.1 220);
+  --badge-rami-levy-foreground: oklch(0.9 0.08 220);
   --action: oklch(0.78 0.14 64.119);
   --action-dark: oklch(0.6 0.15 55);
   --action-tint: oklch(0.25 0.03 51);

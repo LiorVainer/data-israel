@@ -1,7 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { BarChart3, Globe, MessageSquareText, ShieldCheck } from 'lucide-react';
+import { BarChart3, Globe, Map, MessageSquareText, ShieldCheck, SlidersHorizontal } from 'lucide-react';
 import type { ReactNode } from 'react';
 
 interface FeatureProps {
@@ -47,8 +47,20 @@ const FEATURES = [
     },
     {
         icon: <Globe className='w-6 h-6' />,
-        title: 'שני מאגרים רשמיים',
-        description: 'חיפוש אוטומטי ב-data.gov.il ובלמ״ס (הלשכה המרכזית לסטטיסטיקה).',
+        title: '8 מאגרי מידע רשמיים',
+        description:
+            'חיפוש אוטומטי ב-data.gov.il, למ״ס, מפתח התקציב, הכנסת, GovMap, משרד הבריאות, מאגר התרופות ורשתות מזון.',
+    },
+    {
+        icon: <Map className='w-6 h-6' />,
+        title: 'מפה אינטראקטיבית',
+        description: 'שאלות על נדל״ן, תכנון עירוני, שירותים ציבוריים וגוש-חלקה מוצגות על מפה אינטראקטיבית.',
+    },
+    {
+        icon: <SlidersHorizontal className='w-6 h-6' />,
+        title: 'בחירת מקורות מידע',
+        description:
+            'ניתן לסנן ולבחור אילו מקורות מידע ישמשו לתשובה — בחירת מקורות ספציפיים מאפשרת תשובות מדויקות ורלוונטיות יותר.',
     },
 ] as const;
 
@@ -72,15 +84,16 @@ export function AboutSection() {
                     המידע הציבוריים של ישראל, באמצעות בינה מלאכותית.
                 </p>
                 <p className='text-base md:text-lg text-muted-foreground leading-relaxed max-w-2xl'>
-                    המיזם עושה שימוש בבינה מלאכותית כדי לנתח נתונים ממקורות רשמיים כגון data.gov.il והלמ״ס, ולהציג
-                    תשובות מבוססות נתונים — כולל טבלאות, גרפים וקישורים למקור.
+                    המיזם עושה שימוש בבינה מלאכותית כדי לנתח נתונים מ-8 מקורות רשמיים — כולל data.gov.il, הלמ״ס, מפתח
+                    התקציב, הכנסת, GovMap, משרד הבריאות, מאגר התרופות ורשתות מזון — ולהציג תשובות מבוססות נתונים כולל
+                    טבלאות, גרפים, מפות וקישורים למקור.
                 </p>
                 <p className='text-base md:text-lg text-foreground font-medium leading-relaxed max-w-2xl'>
                     כל תשובה נשענת על מידע רשמי.
                 </p>
             </motion.div>
 
-            <div className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
+            <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4'>
                 {FEATURES.map((feature, i) => (
                     <Feature
                         key={feature.title}

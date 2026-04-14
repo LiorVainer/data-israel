@@ -1,37 +1,46 @@
 'use client';
 
 import type { ChatStatus } from 'ai';
-import type { MouseEvent } from 'react';
-import { useEffect, useRef, useState } from 'react';
-import { PromptInput, PromptInputSubmit, PromptInputTextarea } from '@/components/ai-elements/prompt-input';
+import { memo, type MouseEvent } from 'react';
+import {
+    PromptInput,
+    PromptInputFooter,
+    PromptInputSubmit,
+    PromptInputTextarea,
+} from '@/components/ai-elements/prompt-input';
+import {
+    DatabaseIcon,
+    DataSourcePicker,
+    DataSourcePickerContent,
+    DataSourcePickerTrigger,
+    getPickerFooterLabel,
+    getPickerLabel,
+} from '@/components/chat/DataSourcePicker';
+import type { DataSource } from '@/data-sources/registry';
 
 interface InputSectionProps {
     onSubmit?: (text: string) => void;
     status?: ChatStatus;
     onStop?: () => void;
     placeholder?: string;
+    enabledSources: DataSource[];
+    onToggleSource: (sourceId: DataSource) => void;
+    onSelectAllSources: () => void;
+    onUnselectAllSources: () => void;
 }
 
-/** Height threshold (px) above which the input switches from pill to rounded rect. */
-const MULTILINE_THRESHOLD = 56;
-
-export function InputSection({ onSubmit, status, onStop, placeholder = 'מה תרצה לדעת?' }: InputSectionProps) {
+export const InputSection = memo(function InputSection({
+    onSubmit,
+    status,
+    onStop,
+    placeholder = 'מה תרצה לדעת?',
+    enabledSources,
+    onToggleSource,
+    onSelectAllSources,
+    onUnselectAllSources,
+}: InputSectionProps) {
     const isBusy = status === 'streaming' || status === 'submitted';
     const isReady = status === 'ready' || status === undefined;
-    const containerRef = useRef<HTMLDivElement>(null);
-    const [isMultiline, setIsMultiline] = useState(false);
-
-    useEffect(() => {
-        const el = containerRef.current;
-        if (!el) return;
-
-        const observer = new ResizeObserver(([entry]) => {
-            if (!entry) return;
-            setIsMultiline(entry.contentRect.height > MULTILINE_THRESHOLD);
-        });
-        observer.observe(el);
-        return () => observer.disconnect();
-    }, []);
 
     const handleSubmit = (message: { text: string }) => {
         if (isBusy || !onSubmit) return;
@@ -44,23 +53,34 @@ export function InputSection({ onSubmit, status, onStop, placeholder = 'מה ת�
         onStop?.();
     };
 
-    const multilineOverride = '[&_form]:rounded-2xl [&_[data-slot=input-group]]:rounded-2xl';
-
     return (
-        <div ref={containerRef} className={isMultiline ? multilineOverride : ''}>
-            <PromptInput onSubmit={handleSubmit} className='bg-background flex rounded-full'>
+        <div>
+            <PromptInput onSubmit={handleSubmit}>
                 <PromptInputTextarea
-                    className='h-fit min-h-0 p-0 ps-2 md:ps-3 text-sm md:text-base'
+                    className='h-fit min-h-0 p-0 ps-1 text-sm md:text-base'
                     placeholder={placeholder}
-                    disabled={isBusy}
                 />
-                <PromptInputSubmit
-                    className='self-end rounded-full bg-action text-white dark:text-black transition-all duration-300 ease-out hover:scale-105 hover:bg-action-dark active:scale-[1.02] active:translate-y-px'
-                    status={status !== 'streaming' ? status : 'submitted'}
-                    onClick={isBusy ? handleStopClick : undefined}
-                    disabled={!isReady && isBusy}
-                />
+                <PromptInputFooter className='px-0 pb-0'>
+                    <DataSourcePicker
+                        enabledSources={enabledSources}
+                        onToggle={onToggleSource}
+                        onSelectAll={onSelectAllSources}
+                        onUnselectAll={onUnselectAllSources}
+                    >
+                        <DataSourcePickerTrigger className='flex h-7 items-center gap-1.5 rounded-full border border-border/60 bg-muted/50 px-2.5 text-xs transition-colors hover:bg-muted disabled:pointer-events-none disabled:opacity-50'>
+                            <DatabaseIcon className='size-3.5' />
+                            <span>{getPickerLabel(enabledSources)}</span>
+                        </DataSourcePickerTrigger>
+                        <DataSourcePickerContent footerLabel={getPickerFooterLabel(enabledSources)} />
+                    </DataSourcePicker>
+                    <PromptInputSubmit
+                        className='self-end rounded-md bg-primary text-white dark:text-black transition-all duration-300 ease-out hover:scale-105 hover:bg-action-dark active:scale-[1.02] active:translate-y-px'
+                        status={status !== 'streaming' ? status : 'submitted'}
+                        onClick={isBusy ? handleStopClick : undefined}
+                        disabled={isBusy}
+                    />
+                </PromptInputFooter>
             </PromptInput>
         </div>
     );
-}
+});

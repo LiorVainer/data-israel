@@ -9,7 +9,6 @@ import { cn } from '@/lib/utils';
 import { DataIsraelLoader } from './DataIsraelLoader';
 import { AgentInternalCallsChain } from './AgentInternalCallsChain';
 import { getToolDataSourceConfig } from '@/data-sources/registry';
-import { getToolInfo } from './MessageToolCalls';
 import type { AgentInternalToolCall } from './ToolCallParts';
 import type { LucideIcon } from 'lucide-react';
 import type { StepStatus } from './types';
@@ -128,12 +127,12 @@ export function ToolCallStep({ step }: ToolCallStepProps) {
                             target='_blank'
                             rel='noopener noreferrer'
                             className={cn(
-                                'rounded-sm px-1.5 py-0.5 text-[10px] font-medium transition-colors',
+                                'rounded-sm px-1.5 py-0.5 text-[12px] transition-colors',
                                 dataSourceConfig.className,
                             )}
                             onClick={(e) => e.stopPropagation()}
                         >
-                            {dataSourceConfig.nameLabel}
+                            {dataSourceConfig.urlLabel.replace(/^https?:\/\//, '')}
                         </a>
                     )}
                 </span>

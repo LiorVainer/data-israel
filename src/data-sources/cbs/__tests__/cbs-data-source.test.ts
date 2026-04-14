@@ -48,9 +48,12 @@ vi.mock('@/lib/env', () => ({
 
 vi.mock('@mastra/core/evals', () => {
     const createChainable = (): Record<string, unknown> => {
-        const proxy: Record<string, unknown> = new Proxy({}, {
-            get: () => vi.fn(() => proxy),
-        });
+        const proxy: Record<string, unknown> = new Proxy(
+            {},
+            {
+                get: () => vi.fn(() => proxy),
+            },
+        );
         return proxy;
     };
     return {
@@ -106,8 +109,8 @@ describe('CBS data source contract', () => {
         }
     });
 
-    it('all sourceResolver keys exist in tools', () => {
-        for (const key of Object.keys(CbsDataSource.sourceResolvers)) {
+    it('all sourceConfig keys exist in tools', () => {
+        for (const key of Object.keys(CbsDataSource.sourceConfigs ?? {})) {
             expect(CbsDataSource.tools).toHaveProperty(key);
         }
     });
@@ -117,24 +120,11 @@ describe('CBS data source contract', () => {
         expect(agent.id).toBe('cbsAgent');
     });
 
-    it('source resolvers return null for failed output', () => {
-        for (const resolver of Object.values(CbsDataSource.sourceResolvers)) {
-            if (!resolver) continue;
-            expect(resolver({}, { success: false })).toBeNull();
-        }
-    });
-
-    it('source resolvers return ToolSource for valid output with apiUrl', () => {
-        for (const resolver of Object.values(CbsDataSource.sourceResolvers)) {
-            if (!resolver) continue;
-            const result = resolver(
-                { searchedResourceName: 'test' },
-                { success: true, apiUrl: 'https://example.com/api' },
-            );
-            expect(result).not.toBeNull();
-            expect(result).toHaveProperty('url');
-            expect(result).toHaveProperty('title');
-            expect(result).toHaveProperty('urlType');
+    it('sourceConfigs have Hebrew title strings', () => {
+        for (const [key, config] of Object.entries(CbsDataSource.sourceConfigs ?? {})) {
+            expect(config).toBeDefined();
+            expect(typeof config?.title).toBe('string');
+            expect(config?.title.length).toBeGreaterThan(0);
         }
     });
 
@@ -167,7 +157,6 @@ describe('CBS data source contract', () => {
             'getCbsPriceData',
             'calculateCbsPriceIndex',
             'searchCbsLocalities',
-            'generateCbsSourceUrl',
         ];
         for (const name of expectedTools) {
             expect(CbsDataSource.tools).toHaveProperty(name);

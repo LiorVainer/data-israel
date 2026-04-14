@@ -6,6 +6,7 @@ import QueryClientProvider from '@/context/QueryClientProvider';
 import { UserProvider } from '@/context/UserContext';
 import { ThemeProvider } from '@/context/ThemeProvider';
 import { AppSidebar } from '@/components/navigation/AppSidebar';
+import { DirectionProvider } from '@/components/ui/direction';
 import { Toaster } from '@/components/ui/sonner';
 import { Analytics } from '@vercel/analytics/next';
 import { SpeedInsights } from '@vercel/speed-insights/next';
@@ -80,20 +81,22 @@ export default function RootLayout({
     return (
         <html lang='he' dir='rtl' suppressHydrationWarning>
             <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-                <ClerkProvider>
-                    <ThemeProvider>
-                        <QueryClientProvider>
-                            <ConvexClientProvider>
-                                <UserProvider>
-                                    <AppSidebar>{children}</AppSidebar>
-                                </UserProvider>
-                            </ConvexClientProvider>
-                        </QueryClientProvider>
-                        <Toaster />
-                        <Analytics />
-                        <SpeedInsights />
-                    </ThemeProvider>
-                </ClerkProvider>
+                <DirectionProvider dir='rtl'>
+                    <ClerkProvider>
+                        <ThemeProvider>
+                            <QueryClientProvider>
+                                <ConvexClientProvider>
+                                    <UserProvider>
+                                        <AppSidebar>{children}</AppSidebar>
+                                    </UserProvider>
+                                </ConvexClientProvider>
+                            </QueryClientProvider>
+                            <Toaster />
+                            <Analytics />
+                            <SpeedInsights />
+                        </ThemeProvider>
+                    </ClerkProvider>
+                </DirectionProvider>
             </body>
         </html>
     );

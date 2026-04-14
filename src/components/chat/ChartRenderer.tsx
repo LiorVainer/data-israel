@@ -4,10 +4,18 @@ import { ResponsiveBar } from '@nivo/bar';
 import { ResponsiveLine } from '@nivo/line';
 import type { LineCustomSvgLayerProps } from '@nivo/line';
 import { ResponsivePie } from '@nivo/pie';
-import type { DisplayBarChartInput, DisplayChartInput, DisplayLineChartInput, DisplayPieChartInput } from '@/lib/tools/client/display-chart';
+import type {
+    DisplayBarChartInput,
+    DisplayChartInput,
+    DisplayLineChartInput,
+    DisplayPieChartInput,
+} from '@/lib/tools/client/display-chart';
 import { Shimmer } from '@/components/ai-elements/shimmer';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { useTheme } from 'next-themes';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { ChevronDown, BarChart2 } from 'lucide-react';
+import { useState } from 'react';
 
 /** Modern chart palette — varied hues for visual distinction */
 const CHART_COLORS = ['var(--chart-1)', 'var(--chart-2)', 'var(--chart-3)', 'var(--chart-4)', 'var(--chart-5)'];
@@ -284,7 +292,10 @@ function LineChartRenderer({ data, config, title }: LineChartRendererProps) {
 
     // Custom layer that renders point labels with edge-awareness:
     // skips first/last points to avoid overlap with Y-axis and right edge
-    const PointLabelsLayer = ({ points, innerWidth }: LineCustomSvgLayerProps<{ id: string; data: { x: string | number; y: number }[] }>) => {
+    const PointLabelsLayer = ({
+        points,
+        innerWidth,
+    }: LineCustomSvgLayerProps<{ id: string; data: { x: string | number; y: number }[] }>) => {
         if (isMobile) return null;
         const edgePad = 40;
         return (
@@ -317,7 +328,7 @@ function LineChartRenderer({ data, config, title }: LineChartRendererProps) {
     return (
         <div className='w-full' dir='rtl'>
             {title && <h4 className='text-center text-sm font-medium mb-2 text-foreground'>{title}</h4>}
-            <div className='h-[400px] [&_svg]:overflow-visible'>
+            <div className='h-[400px] overflow-hidden'>
                 <ResponsiveLine
                     data={data}
                     margin={margin}
@@ -386,9 +397,7 @@ function PieChartRenderer({ data, config, title }: PieChartRendererProps) {
     const { innerRadius = 0 } = config;
     const nivoTheme = useNivoTheme();
     const isMobile = useIsMobile();
-    const margin = isMobile
-        ? { top: 10, right: 10, bottom: 60, left: 10 }
-        : PIE_MARGINS.desktop;
+    const margin = isMobile ? { top: 10, right: 10, bottom: 60, left: 10 } : PIE_MARGINS.desktop;
 
     return (
         <div className='w-full' dir='rtl'>
@@ -447,23 +456,56 @@ export interface ChartRendererProps {
     data: DisplayChartInput;
 }
 
+const CHART_LABELS: Record<string, string> = {
+    bar: 'תרשים עמודות',
+    line: 'תרשים קו',
+    pie: 'תרשים עוגה',
+};
+
 export function ChartRenderer({ data }: ChartRendererProps) {
     const { chartType, title } = data;
+    const [open, setOpen] = useState(true);
 
+    let chart: React.ReactNode;
     switch (chartType) {
         case 'bar': {
             const barData = data as DisplayBarChartInput & { chartType: 'bar' };
-            return <BarChartRenderer data={barData.data} config={barData.config} title={title} />;
+            chart = <BarChartRenderer data={barData.data} config={barData.config} title={title} />;
+            break;
         }
         case 'line': {
             const lineData = data as DisplayLineChartInput & { chartType: 'line' };
-            return <LineChartRenderer data={lineData.data} config={lineData.config} title={title} />;
+            chart = <LineChartRenderer data={lineData.data} config={lineData.config} title={title} />;
+            break;
         }
         case 'pie': {
             const pieData = data as DisplayPieChartInput & { chartType: 'pie' };
-            return <PieChartRenderer data={pieData.data} config={pieData.config} title={title} />;
+            chart = <PieChartRenderer data={pieData.data} config={pieData.config} title={title} />;
+            break;
         }
         default:
             return <ChartError error='סוג תרשים לא נתמך' />;
     }
+
+    const label = CHART_LABELS[chartType] ?? 'תרשים';
+    const description = title ?? label;
+
+    return (
+        <Collapsible
+            open={open}
+            onOpenChange={setOpen}
+            className='w-full overflow-hidden rounded-lg border border-border'
+        >
+            <CollapsibleTrigger className='flex w-full items-center justify-between gap-2 bg-muted/30 px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted/50'>
+                <div className='flex items-center gap-2'>
+                    <BarChart2 className='size-3.5 shrink-0' />
+                    <span>{description}</span>
+                </div>
+                <ChevronDown className={`size-3.5 transition-transform ${open ? 'rotate-180' : ''}`} />
+            </CollapsibleTrigger>
+            <CollapsibleContent>
+                <div className='p-3'>{chart}</div>
+            </CollapsibleContent>
+        </Collapsible>
+    );
 }

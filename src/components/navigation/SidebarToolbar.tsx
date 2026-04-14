@@ -2,7 +2,8 @@
 
 import { SquarePen } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { SidebarGroup, SidebarMenu, SidebarMenuButton, useSidebar } from '@/components/ui/sidebar';
+import { SidebarGroup, SidebarMenu, useSidebar } from '@/components/ui/sidebar';
+import { Button } from '@/components/ui/button';
 
 export function SidebarToolbar() {
     const router = useRouter();
@@ -23,10 +24,10 @@ export function SidebarToolbar() {
     return (
         <SidebarGroup className='w-full'>
             <SidebarMenu>
-                <SidebarMenuButton onClick={handleNewChat}>
+                <Button onClick={handleNewChat}>
                     <SquarePen size={16} />
                     שיחה חדשה
-                </SidebarMenuButton>
+                </Button>
             </SidebarMenu>
         </SidebarGroup>
     );

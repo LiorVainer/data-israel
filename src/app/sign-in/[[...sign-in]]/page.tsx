@@ -10,7 +10,6 @@ import { FcGoogle } from 'react-icons/fc';
 export default function SignInPage() {
     return (
         <div className='relative flex w-full min-h-dvh items-center justify-center overflow-hidden'>
-
             <SignIn.Root>
                 <Clerk.Loading>
                     {(isGlobalLoading) => (
@@ -21,7 +20,7 @@ export default function SignInPage() {
                                         <Logo className='size-14' />
                                     </div>
                                     <div className='text-center space-y-2.5'>
-                                        <h1 className='text-3xl font-bold tracking-tight'>ברוכים הבאים לדאטה ישראל</h1>
+                                        <h1 className='text-2xl font-bold tracking-tight'>דאטה ישראל</h1>
                                         <p className='text-base text-muted-foreground'>AI לנתונים הציבוריים של ישראל</p>
                                     </div>
                                 </div>
@@ -42,7 +41,7 @@ export default function SignInPage() {
                                                     ) : (
                                                         <>
                                                             <FcGoogle className='size-5' />
-                                                            המשך עם Google
+                                                            התחבר עם Google
                                                         </>
                                                     )
                                                 }

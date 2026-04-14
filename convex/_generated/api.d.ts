@@ -18,6 +18,7 @@ import type * as mastra_storage from "../mastra/storage.js";
 import type * as promptRevisions from "../promptRevisions.js";
 import type * as pushSubscriptions from "../pushSubscriptions.js";
 import type * as rag from "../rag.js";
+import type * as ratings from "../ratings.js";
 import type * as resources from "../resources.js";
 import type * as scores from "../scores.js";
 import type * as search from "../search.js";
@@ -41,6 +42,7 @@ declare const fullApi: ApiFromModules<{
   promptRevisions: typeof promptRevisions;
   pushSubscriptions: typeof pushSubscriptions;
   rag: typeof rag;
+  ratings: typeof ratings;
   resources: typeof resources;
   scores: typeof scores;
   search: typeof search;
@@ -441,12 +443,17 @@ export declare const components: {
         "internal",
         {
           chunkContext?: { after: number; before: number };
-          embedding: Array<number>;
+          dimension?: number;
+          embedding?: Array<number>;
           filters: Array<{ name: string; value: any }>;
           limit: number;
           modelId: string;
           namespace: string;
+          searchType?: "vector" | "text" | "hybrid";
+          textQuery?: string;
+          textWeight?: number;
           vectorScoreThreshold?: number;
+          vectorWeight?: number;
         },
         {
           entries: Array<{

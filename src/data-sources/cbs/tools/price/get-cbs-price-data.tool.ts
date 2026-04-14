@@ -9,21 +9,6 @@ import { z } from 'zod';
 import { cbsApi } from '../../api/cbs.client';
 import { buildPriceIndexUrl, CBS_PRICE_INDEX_PATHS } from '../../api/cbs.endpoints';
 import { commonToolInput, toolOutputSchema } from '@/data-sources/types';
-import type { ToolSourceResolver } from '@/data-sources/types';
-
-// ============================================================================
-// Helpers
-// ============================================================================
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-    return typeof value === 'object' && value !== null;
-}
-
-function getString(obj: unknown, key: string): string | undefined {
-    if (!isRecord(obj)) return undefined;
-    const val = obj[key];
-    return typeof val === 'string' ? val : undefined;
-}
 
 // ============================================================================
 // Schemas
@@ -75,14 +60,7 @@ export const getCbsPriceData = createTool({
         'Get CBS price index values over time. Returns historical index values with dates and percentage changes. Use after browsing price indices to get an index code.',
     inputSchema: getCbsPriceDataInputSchema,
     outputSchema: getCbsPriceDataOutputSchema,
-    execute: async ({
-        indexCode,
-        startPeriod,
-        endPeriod,
-        last,
-        includeCoefficients,
-        language,
-    }) => {
+    execute: async ({ indexCode, startPeriod, endPeriod, last, includeCoefficients, language }) => {
         // Construct API URL
         const apiUrl = buildPriceIndexUrl(CBS_PRICE_INDEX_PATHS.PRICE, {
             id: indexCode,
@@ -132,19 +110,3 @@ export const getCbsPriceData = createTool({
         }
     },
 });
-
-// ============================================================================
-// Source URL Resolver
-// ============================================================================
-
-/** Source URL resolver — co-located with the tool that produces the data */
-export const resolveSourceUrl: ToolSourceResolver = (input, output) => {
-    const apiUrl = getString(output, 'apiUrl');
-    if (!apiUrl) return null;
-    const name = getString(input, 'searchedResourceName');
-    return {
-        url: apiUrl,
-        title: name ? `נתוני מחירים — ${name}` : 'נתוני מחירים - הלמ"ס',
-        urlType: 'api',
-    };
-};

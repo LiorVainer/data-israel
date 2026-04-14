@@ -1,3 +1,4 @@
+import { memo, useMemo } from 'react';
 import { cn } from '@/lib/utils';
 
 interface AmbientGlowProps {
@@ -10,35 +11,53 @@ interface AmbientGlowProps {
     className?: string;
 }
 
-export function AmbientGlow({ top = '0', left = '50%', size = 800, className }: AmbientGlowProps) {
+const LIGHT_BACKGROUND = 'radial-gradient(circle, oklch(0.80 0.10 250 / 0.2), transparent 70%)';
+const DARK_BACKGROUND = 'radial-gradient(circle, oklch(0.55 0.18 250 / 0.2), transparent 70%)';
+
+export const AmbientGlow = memo(function AmbientGlow({
+    top = '0',
+    left = '50%',
+    size = 800,
+    className,
+}: AmbientGlowProps) {
     const half = size / 2;
+
+    const lightStyle = useMemo(
+        () => ({
+            top,
+            left,
+            width: size,
+            height: size,
+            marginTop: -half,
+            marginLeft: -half,
+            background: LIGHT_BACKGROUND,
+        }),
+        [top, left, size, half],
+    );
+
+    const darkStyle = useMemo(
+        () => ({
+            top,
+            left,
+            width: size,
+            height: size,
+            marginTop: -half,
+            marginLeft: -half,
+            background: DARK_BACKGROUND,
+        }),
+        [top, left, size, half],
+    );
 
     return (
         <>
             <div
                 className={cn('pointer-events-none absolute z-5 rounded-full dark:hidden', className)}
-                style={{
-                    top,
-                    left,
-                    width: size,
-                    height: size,
-                    marginTop: -half,
-                    marginLeft: -half,
-                    background: 'radial-gradient(circle, oklch(0.80 0.10 250 / 0.2), transparent 70%)',
-                }}
+                style={lightStyle}
             />
             <div
                 className={cn('pointer-events-none absolute z-[-5] rounded-full hidden dark:block', className)}
-                style={{
-                    top,
-                    left,
-                    width: size,
-                    height: size,
-                    marginTop: -half,
-                    marginLeft: -half,
-                    background: 'radial-gradient(circle, oklch(0.55 0.18 250 / 0.2), transparent 70%)',
-                }}
+                style={darkStyle}
             />
         </>
     );
-}
+});

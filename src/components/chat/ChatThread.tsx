@@ -2,10 +2,10 @@
 
 import { useChat } from '@ai-sdk/react';
 import { DefaultChatTransport, UIMessage } from 'ai';
-import { useCallback, useEffect, useMemo, useRef } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useAuth } from '@clerk/nextjs';
 import { useQuery } from '@tanstack/react-query';
-import { useQuery as useConvexQuery } from 'convex/react';
+import { useMutation, useQuery as useConvexQuery } from 'convex/react';
 import { api } from '@/convex/_generated/api';
 import { AgentConfig } from '@/agents/agent.config';
 import { threadService } from '@/services/thread.service';
@@ -29,6 +29,8 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
 import { LogIn, X } from 'lucide-react';
+import { ALL_DATA_SOURCE_IDS } from '@/data-sources/registry';
+import type { DataSource } from '@/data-sources/registry';
 
 /** Header name for passing user ID to API */
 const USER_ID_HEADER = 'x-user-id';
@@ -38,6 +40,14 @@ interface ChatThreadProps {
 }
 
 const LOGIN_PROMPT_KEY = 'login-prompt-dismissed';
+
+function extractMessageText(message: UIMessage): string {
+    return message.parts
+        .filter((p): p is Extract<UIMessage['parts'][number], { type: 'text' }> => p.type === 'text')
+        .map((p) => p.text)
+        .join('\n')
+        .trim();
+}
 
 export function ChatThread({ id }: ChatThreadProps) {
     const { userId: clerkUserId, isLoaded: isAuthLoaded } = useAuth();
@@ -52,6 +62,14 @@ export function ChatThread({ id }: ChatThreadProps) {
     const contextWindow = useConvexQuery(api.threads.getThreadContextWindow, { threadId: id });
     const totalTokens = contextWindow?.totalTokens ?? 0;
 
+    const threadSettings = useConvexQuery(api.threads.getThreadSettings, { threadId: id });
+    const userSettings = useConvexQuery(api.users.getUserSettings);
+    const upsertThreadSettings = useMutation(api.threads.upsertThreadSettings);
+
+    const createAnswer = useMutation(api.ratings.createAnswer);
+    const upsertRating = useMutation(api.ratings.upsertRating);
+    const threadRatings = useConvexQuery(api.ratings.getRatingsForThread, userId ? { threadId: id, userId } : 'skip');
+
     const searchParams = useSearchParams();
     const [initialMessageData, , removeInitialMessage] = useSessionStorage<InitialMessageData>(INITIAL_MESSAGE_KEY);
     const startedAsNew = useRef(initialMessageData?.chatId === id || searchParams.has('new'));
@@ -60,6 +78,50 @@ export function ChatThread({ id }: ChatThreadProps) {
     // without recreating the transport on every auth state change.
     const userIdRef = useRef(userId);
     userIdRef.current = userId;
+
+    const [enabledSources, setEnabledSources] = useState<DataSource[]>([...ALL_DATA_SOURCE_IDS]);
+    const didInitSources = useRef(false);
+
+    useEffect(() => {
+        if (didInitSources.current) return;
+        // Wait for queries to resolve (undefined = loading, null = no record)
+        if (threadSettings === undefined || userSettings === undefined) return;
+        didInitSources.current = true;
+
+        if (threadSettings?.length) {
+            setEnabledSources(threadSettings as DataSource[]);
+        } else if (userSettings?.length) {
+            setEnabledSources(userSettings as DataSource[]);
+        }
+        // else: keep default (all sources)
+    }, [threadSettings, userSettings]);
+
+    const isInitialMount = useRef(true);
+
+    useEffect(() => {
+        if (isInitialMount.current) {
+            isInitialMount.current = false;
+            return;
+        }
+        // All selected = delete the record (default state)
+        const sourcesToSave = enabledSources.length === ALL_DATA_SOURCE_IDS.length ? [] : enabledSources;
+        void upsertThreadSettings({ threadId: id, enabledSources: sourcesToSave });
+    }, [enabledSources, id, upsertThreadSettings]);
+
+    // Ref so the memoized transport always reads the latest value
+    const enabledSourcesRef = useRef(enabledSources);
+    enabledSourcesRef.current = enabledSources;
+
+    const handleToggleSource = useCallback((sourceId: DataSource) => {
+        setEnabledSources((prev) => {
+            const next = prev.includes(sourceId) ? prev.filter((id) => id !== sourceId) : [...prev, sourceId];
+            // Prevent empty: if nothing left, re-enable all
+            return next.length === 0 ? [...ALL_DATA_SOURCE_IDS] : next;
+        });
+    }, []);
+
+    const handleSelectAllSources = useCallback(() => setEnabledSources([...ALL_DATA_SOURCE_IDS]), []);
+    const handleUnselectAllSources = useCallback(() => setEnabledSources([]), []);
 
     const transport = useMemo(
         () =>
@@ -81,6 +143,10 @@ export function ChatThread({ id }: ChatThreadProps) {
                                 thread: id,
                                 resource: userIdRef.current,
                             },
+                            // Only send filter when not all sources are selected
+                            ...(enabledSourcesRef.current.length < ALL_DATA_SOURCE_IDS.length && {
+                                enabledSources: enabledSourcesRef.current,
+                            }),
                         },
                     };
                 },
@@ -93,6 +159,7 @@ export function ChatThread({ id }: ChatThreadProps) {
         messages: [] as UIMessage[],
         transport,
         resume: true,
+        experimental_throttle: 50,
         onError: (error) => {
             console.error('[ChatThread] useChat error:', error.message);
             toast.error('חלה שגיאה. נסו שוב או פתחו שיחה חדשה.');
@@ -171,6 +238,31 @@ export function ChatThread({ id }: ChatThreadProps) {
     //     );
     // }, [messages, clerkUserId, router]);
 
+    const prevStatus = useRef(status);
+    useEffect(() => {
+        const wasStreaming = prevStatus.current === 'streaming' || prevStatus.current === 'submitted';
+        prevStatus.current = status;
+
+        if (!wasStreaming || status !== 'ready') return;
+        if (!userId) return;
+
+        const lastAssistant = messages.filter((m) => m.role === 'assistant').at(-1);
+        const lastUser = messages.filter((m) => m.role === 'user').at(-1);
+        if (!lastAssistant || !lastUser) return;
+
+        const assistantResponse = extractMessageText(lastAssistant);
+        const userPrompt = extractMessageText(lastUser);
+        if (!assistantResponse) return;
+
+        void createAnswer({
+            threadId: id,
+            messageId: lastAssistant.id,
+            userId,
+            userPrompt,
+            assistantResponse,
+        });
+    }, [status, messages, userId, id, createAnswer]);
+
     const handleSend = useCallback(
         (text: string) => {
             if (!messages.length && startedAsNew.current) {
@@ -179,6 +271,14 @@ export function ChatThread({ id }: ChatThreadProps) {
             void sendMessage({ text });
         },
         [messages.length, id, sendMessage],
+    );
+
+    const handleRate = useCallback(
+        (messageId: string, rating: 'good' | 'bad') => {
+            if (!userId) return;
+            void upsertRating({ messageId, userId, rating });
+        },
+        [userId, upsertRating],
     );
 
     const isStreaming = status === 'submitted' || status === 'streaming';
@@ -192,8 +292,6 @@ export function ChatThread({ id }: ChatThreadProps) {
         () => extractSuggestions(lastAssistantMessage),
         [lastAssistantMessage],
     );
-
-    console.log({ messages });
 
     return (
         <div className='relative h-full w-full overflow-hidden'>
@@ -215,8 +313,10 @@ export function ChatThread({ id }: ChatThreadProps) {
                                         key={message.id}
                                         message={message}
                                         isLastMessage={messageIndex === messages.length - 1}
-                                        isStreaming={isStreaming}
+                                        isStreaming={isStreaming && messageIndex === messages.length - 1}
                                         onRegenerate={regenerate}
+                                        currentRating={threadRatings?.[message.id] ?? null}
+                                        onRate={(rating) => handleRate(message.id, rating)}
                                     />
                                 ))}
                                 {status === 'submitted' && <LoadingShimmer />}
@@ -239,6 +339,10 @@ export function ChatThread({ id }: ChatThreadProps) {
                             onSubmit={handleSend}
                             status={startedAsNew.current && !hasMessages ? undefined : status}
                             onStop={stop}
+                            enabledSources={enabledSources}
+                            onToggleSource={handleToggleSource}
+                            onSelectAllSources={handleSelectAllSources}
+                            onUnselectAllSources={handleUnselectAllSources}
                         />
                         <NotificationPrompt
                             isSupported={pushSubscription.isSupported}

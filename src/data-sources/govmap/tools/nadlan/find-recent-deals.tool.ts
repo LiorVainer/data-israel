@@ -1,0 +1,161 @@
+/**
+ * Find Recent Deals Tool
+ *
+ * Main tool: finds recent real estate deals near a given address.
+ * Orchestrates address geocoding, polygon search, and deal retrieval.
+ */
+
+import { createTool } from '@mastra/core/tools';
+import { z } from 'zod';
+import { nadlanApi } from '../../api/nadlan/nadlan.client';
+import { buildGovmapPortalUrl } from '../../api/nadlan/nadlan.endpoints';
+import { commonToolInput, toolOutputSchema } from '@/data-sources/types';
+// ============================================================================
+// Schemas
+// ============================================================================
+
+const dealSchema = z.object({
+    id: z.number(),
+    dealAmount: z.number().describe('Transaction amount in NIS'),
+    dealDate: z.string().describe('Transaction date'),
+    assetArea: z.number().nullable().optional().describe('Property area in sqm'),
+    pricePerSqm: z.number().nullable().optional().describe('Price per sqm in NIS'),
+    settlementName: z.string().nullable().optional().describe('City/settlement name'),
+    streetName: z.string().nullable().optional().describe('Street name'),
+    houseNumber: z.string().nullable().optional().describe('House number'),
+    assetType: z.string().nullable().optional().describe('Property type'),
+    neighborhood: z.string().nullable().optional().describe('Neighborhood'),
+    floor: z.string().nullable().optional().describe('Floor description'),
+    floorNumber: z.number().nullable().optional().describe('Numeric floor'),
+    rooms: z.number().nullable().optional().describe('Number of rooms'),
+    dealSource: z.string().nullable().optional().describe('Deal source: same_building, street, neighborhood'),
+});
+
+const statisticsSchema = z.object({
+    totalDeals: z.number(),
+    priceStats: z
+        .object({
+            mean: z.number(),
+            min: z.number(),
+            max: z.number(),
+            median: z.number(),
+        })
+        .optional(),
+    areaStats: z
+        .object({
+            mean: z.number(),
+            min: z.number(),
+            max: z.number(),
+        })
+        .optional(),
+    pricePerSqmStats: z
+        .object({
+            mean: z.number(),
+            min: z.number(),
+            max: z.number(),
+            median: z.number(),
+        })
+        .optional(),
+});
+
+export const findRecentDealsInputSchema = z.object({
+    address: z
+        .string()
+        .describe(
+            'Full Israeli address in Hebrew including street name, house number, and city (e.g. "סוקולוב 38 חולון"). A city name alone will not return useful results.',
+        ),
+    yearsBack: z.number().int().min(1).max(10).optional().describe('How many years back to search (default: 2)'),
+    radiusMeters: z.number().int().min(10).max(5000).optional().describe('Search radius in meters (default: 50)'),
+    maxDeals: z.number().int().min(1).max(200).optional().describe('Maximum deals to return (default: 100)'),
+    dealType: z
+        .union([z.literal(1), z.literal(2)])
+        .optional()
+        .describe('1=first hand (new), 2=second hand (default: 2)'),
+    ...commonToolInput,
+});
+
+export const findRecentDealsOutputSchema = toolOutputSchema({
+    searchParameters: z.object({
+        address: z.string(),
+        yearsBack: z.number(),
+        radiusMeters: z.number(),
+        maxDeals: z.number(),
+        dealType: z.number(),
+        dealTypeDescription: z.string(),
+    }),
+    searchCoordinates: z
+        .object({
+            longitude: z.number(),
+            latitude: z.number(),
+        })
+        .optional(),
+    statistics: statisticsSchema,
+    deals: z.array(dealSchema),
+});
+
+export type FindRecentDealsInput = z.infer<typeof findRecentDealsInputSchema>;
+export type FindRecentDealsOutput = z.infer<typeof findRecentDealsOutputSchema>;
+
+// ============================================================================
+// Tool Definition
+// ============================================================================
+
+export const findRecentNadlanDeals = createTool({
+    id: 'findRecentNadlanDeals',
+    description:
+        'Find recent real estate deals near an Israeli address. Internally performs a multi-step flow: (1) autocomplete the address to get ITM coordinates, (2) discover nearby street polygons, (3) fetch deals from those polygons. Provide a FULL Hebrew address (street + number + city). Returns deal details including price (NIS), area (sqm), price per sqm, property type, and market statistics. This is the main tool for property transaction research.',
+    inputSchema: findRecentDealsInputSchema,
+    outputSchema: findRecentDealsOutputSchema,
+    execute: async ({ address, yearsBack = 2, radiusMeters = 50, maxDeals = 100, dealType = 2 }) => {
+        const dealTypeDescription = dealType === 1 ? 'יד ראשונה (חדש)' : 'יד שנייה (משומש)';
+        const portalUrl = buildGovmapPortalUrl(undefined, undefined, address);
+
+        try {
+            const result = await nadlanApi.findRecentDealsForAddress(
+                address,
+                yearsBack,
+                radiusMeters,
+                maxDeals,
+                dealType,
+            );
+
+            if (!result.deals.length) {
+                return {
+                    success: false as const,
+                    error: `לא נמצאו עסקאות ${dealTypeDescription} ליד הכתובת "${address}"`,
+                    portalUrl,
+                };
+            }
+
+            return {
+                success: true as const,
+                searchParameters: {
+                    address,
+                    yearsBack,
+                    radiusMeters,
+                    maxDeals,
+                    dealType,
+                    dealTypeDescription,
+                },
+                searchCoordinates: result.searchCoordinates
+                    ? { longitude: result.searchCoordinates.longitude, latitude: result.searchCoordinates.latitude }
+                    : undefined,
+                statistics: result.statistics,
+                deals: result.deals,
+                portalUrl: result.searchCoordinates
+                    ? buildGovmapPortalUrl(
+                          result.searchCoordinates.longitude,
+                          result.searchCoordinates.latitude,
+                          address,
+                      )
+                    : portalUrl,
+            };
+        } catch (error) {
+            return {
+                success: false as const,
+                error: error instanceof Error ? error.message : String(error),
+                portalUrl,
+            };
+        }
+    },
+});

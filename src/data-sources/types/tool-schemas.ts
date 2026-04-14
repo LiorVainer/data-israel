@@ -32,6 +32,12 @@ export const commonSuccessOutput = {
     ...externalUrls,
 };
 
+/** Typed shape of the common tool input fields (inferred from commonToolInput schema) */
+export type CommonToolInput = z.infer<z.ZodObject<typeof commonToolInput>>;
+
+/** Typed shape of the common success output (success flag + external URLs) */
+export type CommonSuccessOutput = z.infer<typeof commonSuccessOutput>;
+
 /** Common error output shape */
 export const commonErrorOutput = z.object({
     success: z.literal(false),

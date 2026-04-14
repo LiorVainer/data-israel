@@ -8,7 +8,7 @@ import { BarChart2Icon } from 'lucide-react';
 import type { DataSourceConfig } from '@/data-sources/types';
 
 /** CBS agent display label (Hebrew) */
-export const cbsDisplayLabel = 'בודק בנתוני הלשכה המרכזית לסטטיסטיקה';
+export const cbsDisplayLabel = 'הלמ"ס';
 
 /** CBS agent display icon */
 export const cbsDisplayIcon = BarChart2Icon;
