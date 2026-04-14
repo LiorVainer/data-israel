@@ -234,7 +234,7 @@ export const DataSourcePickerContent = memo(function DataSourcePickerContent({
 
 export function getPickerLabel(enabledSources: DataSource[]) {
     const allSelected = enabledSources.length === totalSources || enabledSources.length === 0;
-    if (allSelected) return 'סנן מקורות מידע';
+    if (allSelected) return 'בחר מקורות מידע רלוונטיים';
     if (enabledSources.length === 1) {
         return pickerItems.find((item) => item.id === enabledSources[0])?.label ?? '1 מקורות מידע נבחרו';
     }

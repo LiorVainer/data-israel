@@ -74,7 +74,7 @@ export const InputSection = memo(function InputSection({
                         <DataSourcePickerContent footerLabel={getPickerFooterLabel(enabledSources)} />
                     </DataSourcePicker>
                     <PromptInputSubmit
-                        className='self-end rounded-md bg-action text-white dark:text-black transition-all duration-300 ease-out hover:scale-105 hover:bg-action-dark active:scale-[1.02] active:translate-y-px'
+                        className='self-end rounded-md bg-primary text-white dark:text-black transition-all duration-300 ease-out hover:scale-105 hover:bg-action-dark active:scale-[1.02] active:translate-y-px'
                         status={status !== 'streaming' ? status : 'submitted'}
                         onClick={isBusy ? handleStopClick : undefined}
                         disabled={isBusy}

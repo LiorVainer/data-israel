@@ -127,12 +127,12 @@ export function ToolCallStep({ step }: ToolCallStepProps) {
                             target='_blank'
                             rel='noopener noreferrer'
                             className={cn(
-                                'rounded-sm px-1.5 py-0.5 text-[12px] font-semibold transition-colors',
+                                'rounded-sm px-1.5 py-0.5 text-[12px] transition-colors',
                                 dataSourceConfig.className,
                             )}
                             onClick={(e) => e.stopPropagation()}
                         >
-                            {dataSourceConfig.url.replace(/^https?:\/\//, '')}
+                            {dataSourceConfig.urlLabel.replace(/^https?:\/\//, '')}
                         </a>
                     )}
                 </span>

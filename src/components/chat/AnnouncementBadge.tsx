@@ -63,9 +63,9 @@ export function AnnouncementBadge({
 
     const badgeContent = (
         <>
-            <div className='flex items-center gap-2'>
+            <div className='flex items-center gap-4'>
                 {label && (
-                    <div className='flex items-center gap-1 rounded-full bg-primary px-3 py-1 font-sans text-xs font-medium text-primary-foreground'>
+                    <div className='flex items-center gap-1 rounded-full bg-action px-3 py-1 font-sans text-xs font-medium text-primary-foreground'>
                         <Sparkles className='h-3 w-3' />
                         {label}
                     </div>

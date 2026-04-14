@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import { ChevronDown, ExternalLinkIcon, LocateFixedIcon, MapIcon } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Shimmer } from '@/components/ai-elements/shimmer';
@@ -12,6 +12,25 @@ function isValidGovmapUrl(url: string): boolean {
         return new URL(url).origin === GOVMAP_PORTAL_BASE_URL;
     } catch {
         return false;
+    }
+}
+
+/**
+ * Strips the `bs` param from a GovMap portal URL for embedding. `bs`
+ * auto-selects an entity and opens its popup, causing GovMap's JS to focus()
+ * the popup element — the browser then scroll-into-views every ancestor scroll
+ * container, jumping the page. No reliable cross-origin fix exists (open W3C
+ * spec gap: w3c/csswg-drafts#7134). The layer entities are still rendered on
+ * the map via the `lay` param; `bs` only auto-opens one entity's popup. The
+ * full URL with `bs` is preserved for the "open in GovMap" external link.
+ */
+function buildEmbedUrl(url: string): string {
+    try {
+        const u = new URL(url);
+        u.searchParams.delete('bs');
+        return u.toString();
+    } catch {
+        return url;
     }
 }
 
@@ -37,13 +56,14 @@ export function GovMapEmbed({ portalUrl, title }: DisplayGovmapInput) {
     const [isLoading, setIsLoading] = useState(true);
     const [open, setOpen] = useState(true);
     const iframeRef = useRef<HTMLIFrameElement>(null);
+    const embedUrl = useMemo(() => buildEmbedUrl(portalUrl), [portalUrl]);
 
     const resetToOriginal = useCallback(() => {
         if (iframeRef.current) {
-            iframeRef.current.src = portalUrl;
+            iframeRef.current.src = embedUrl;
             setIsLoading(true);
         }
-    }, [portalUrl]);
+    }, [embedUrl]);
 
     if (!isValidGovmapUrl(portalUrl)) {
         return <GovMapEmbedError error='כתובת מפה לא תקינה' />;
@@ -71,7 +91,7 @@ export function GovMapEmbed({ portalUrl, title }: DisplayGovmapInput) {
                             className='flex cursor-pointer items-center gap-1 pe-2 text-xs text-muted-foreground transition-colors hover:text-foreground'
                         >
                             <span className='hidden sm:inline'>חזור למיקום</span>
-                            <LocateFixedIcon className='h-3.5 w-3.5 sm:h-3 sm:w-3' />
+                            <LocateFixedIcon className='h-3.5 w-3.5' />
                         </button>
                     )}
                     <a
@@ -81,12 +101,12 @@ export function GovMapEmbed({ portalUrl, title }: DisplayGovmapInput) {
                         className='flex items-center gap-1 ps-2 text-xs text-muted-foreground transition-colors hover:text-foreground'
                     >
                         <span className='hidden sm:inline'>פתח ב-GovMap</span>
-                        <ExternalLinkIcon className='h-3.5 w-3.5 sm:h-3 sm:w-3' />
+                        <ExternalLinkIcon className='h-3.5 w-3.5' />
                     </a>
                 </div>
             </div>
             <CollapsibleContent>
-                <div className='relative'>
+                <div className='relative h-[400px] overflow-clip'>
                     {isLoading && (
                         <div className='absolute inset-0 z-10 flex items-center justify-center bg-muted/30'>
                             <Shimmer as='span' duration={1.5}>
@@ -96,9 +116,9 @@ export function GovMapEmbed({ portalUrl, title }: DisplayGovmapInput) {
                     )}
                     <iframe
                         ref={iframeRef}
-                        src={portalUrl}
+                        src={embedUrl}
                         title={headerTitle}
-                        className='h-[400px] w-full'
+                        className='h-full w-full'
                         sandbox='allow-scripts allow-same-origin allow-popups'
                         loading='lazy'
                         onLoad={() => setIsLoading(false)}
