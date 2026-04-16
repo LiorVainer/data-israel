@@ -11,6 +11,7 @@
 
 import { query, type QueryCtx } from './_generated/server';
 import { v } from 'convex/values';
+import type { Id } from './_generated/dataModel';
 
 // ---------------------------------------------------------------------------
 // Prompt card strings inlined from src/constants/prompt-cards.ts
@@ -594,5 +595,44 @@ export const getAnswerRatingStats = query({
             goodCount,
             badCount,
         };
+    },
+});
+
+// ---------------------------------------------------------------------------
+// getAnswersList
+// ---------------------------------------------------------------------------
+
+export interface AnswerEntry {
+    answerId: Id<'answers'>;
+    userPrompt: string;
+    assistantResponse: string;
+    createdAt: number;
+    rating: 'good' | 'bad' | null;
+}
+
+export const getAnswersList = query({
+    args: {
+        sinceTimestamp: v.optional(v.number()),
+    },
+    handler: async (ctx, { sinceTimestamp }): Promise<AnswerEntry[]> => {
+        const allAnswers = await ctx.db.query('answers').withIndex('by_created').order('desc').take(200);
+        const answers =
+            sinceTimestamp !== undefined ? allAnswers.filter((a) => a.createdAt >= sinceTimestamp) : allAnswers;
+
+        // Single scan of answer_ratings → Map<answerId, rating>
+        const allRatings = await ctx.db.query('answer_ratings').collect();
+        const ratingMap = new Map<string, 'good' | 'bad'>();
+        for (const r of allRatings) {
+            // Keep only the latest rating per answer (last write wins)
+            ratingMap.set(r.answerId, r.rating);
+        }
+
+        return answers.slice(0, 100).map((a) => ({
+            answerId: a._id,
+            userPrompt: a.userPrompt,
+            assistantResponse: a.assistantResponse,
+            createdAt: a.createdAt,
+            rating: ratingMap.get(a._id) ?? null,
+        }));
     },
 });

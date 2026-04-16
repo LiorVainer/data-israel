@@ -12,6 +12,7 @@ import { ThreadsOverTimeChart } from './charts/ThreadsOverTimeChart';
 import { AgentDelegationChart } from './charts/AgentDelegationChart';
 import { FreeTextPromptsList } from './FreeTextPromptsList';
 import { AnswerRatingStats } from './AnswerRatingStats';
+import { AnswersList } from './AnswersList';
 
 // ---------------------------------------------------------------------------
 // Time range types
@@ -125,6 +126,25 @@ function DashboardSkeleton({ isMobile }: { isMobile: boolean }) {
                     </div>
                 </div>
             </section>
+            {/* Answers list skeleton */}
+            <section>
+                <Skeleton className='mb-3 h-4 w-32' />
+                <div className='rounded-lg border bg-card p-4 space-y-3'>
+                    <Skeleton className='h-8 w-full' />
+                    {Array.from({ length: 3 }).map((_, i) => (
+                        <div key={i} className='space-y-2 border-t pt-3'>
+                            <div className='flex justify-between'>
+                                <Skeleton className='h-3 w-24' />
+                                <Skeleton className='h-3 w-4' />
+                            </div>
+                            <Skeleton className='h-3 w-16' />
+                            <Skeleton className='h-8 w-full' />
+                            <Skeleton className='h-3 w-16' />
+                            <Skeleton className='h-12 w-full' />
+                        </div>
+                    ))}
+                </div>
+            </section>
         </div>
     );
 }
@@ -150,6 +170,7 @@ export function AnalyticsDashboard() {
     const agentDelegation = useQuery(api.analytics.getAgentDelegationBreakdown, { sinceTimestamp });
     const freeTextPrompts = useQuery(api.analytics.getFreeTextPrompts, { sinceTimestamp });
     const ratingStats = useQuery(api.analytics.getAnswerRatingStats, { sinceTimestamp });
+    const answersList = useQuery(api.analytics.getAnswersList, { sinceTimestamp });
 
     return (
         <div className='space-y-6'>
@@ -234,6 +255,13 @@ export function AnalyticsDashboard() {
                             goodCount={ratingStats?.goodCount ?? 0}
                             badCount={ratingStats?.badCount ?? 0}
                         />
+                    </section>
+
+                    {/* Section F: Answers list */}
+                    <section aria-label='תשובות ושאלות'>
+                        <div className='rounded-lg border bg-card p-4'>
+                            <AnswersList data={answersList ?? []} />
+                        </div>
                     </section>
                 </>
             )}
