@@ -6,7 +6,9 @@ import { api } from '@/convex/_generated/api';
 import { Skeleton } from '@/components/ui/skeleton';
 import { AnswerRatingStats } from './AnswerRatingStats';
 import { AnswersList } from './AnswersList';
+import { AnswersOverTimeChart } from './charts/AnswersOverTimeChart';
 import { getSinceTimestamp, type TimeRange } from './AnalyticsDashboard';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 const TIME_RANGES: TimeRange[] = ['שעה אחרונה', '24 שעות', '7 ימים', '30 ימים', 'הכל'];
 
@@ -36,6 +38,14 @@ function TimeRangeSelector({ selected, onChange }: { selected: TimeRange; onChan
 function ConversationsSkeleton() {
     return (
         <div className='space-y-6'>
+            {/* Line chart skeleton */}
+            <section>
+                <div className='rounded-lg border bg-card p-4'>
+                    <Skeleton className='mb-4 h-4 w-32' />
+                    <Skeleton className='h-[300px]' />
+                </div>
+            </section>
+
             {/* Rating stats skeleton */}
             <section>
                 <Skeleton className='mb-3 h-4 w-28' />
@@ -74,9 +84,12 @@ function ConversationsSkeleton() {
 export function ConversationsDashboard() {
     const [selectedRange, setSelectedRange] = useState<TimeRange>('7 ימים');
     const sinceTimestamp = useMemo(() => getSinceTimestamp(selectedRange), [selectedRange]);
+    const bucketSize: 'hour' | 'day' = selectedRange === 'שעה אחרונה' || selectedRange === '24 שעות' ? 'hour' : 'day';
+    const isMobile = useIsMobile();
 
     const ratingStats = useQuery(api.analytics.getAnswerRatingStats, { sinceTimestamp });
     const answersList = useQuery(api.analytics.getAnswersList, { sinceTimestamp });
+    const answersOverTime = useQuery(api.analytics.getAnswersOverTime, { sinceTimestamp, bucketSize });
 
     return (
         <div className='space-y-6'>
@@ -90,6 +103,13 @@ export function ConversationsDashboard() {
                 <ConversationsSkeleton />
             ) : (
                 <>
+                    {/* Answers over time chart */}
+                    <section aria-label='תשובות לאורך זמן'>
+                        <div className='rounded-lg border bg-card p-4'>
+                            <AnswersOverTimeChart data={answersOverTime ?? []} isMobile={isMobile} />
+                        </div>
+                    </section>
+
                     {/* Section E: Answer rating stats */}
                     <section aria-label='דירוג תשובות'>
                         <h2 className='mb-3 text-sm font-medium text-muted-foreground'>דירוג תשובות</h2>

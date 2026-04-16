@@ -7,7 +7,6 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { StatCard } from './StatCard';
 import { UserGuestBreakdownCard } from './UserGuestBreakdownCard';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ThreadsOverTimeChart } from './charts/ThreadsOverTimeChart';
 import { AgentDelegationChart } from './charts/AgentDelegationChart';
 
 // ---------------------------------------------------------------------------
@@ -96,22 +95,16 @@ function DashboardSkeleton({ isMobile }: { isMobile: boolean }) {
                 </div>
             </section>
 
-            {/* Charts skeleton */}
+            {/* Chart skeleton */}
             <section>
                 <Skeleton className='mb-3 h-4 w-16' />
-                <div className='space-y-6'>
-                    <div className='rounded-lg border bg-card p-4'>
-                        <Skeleton className='mb-4 h-4 w-32' />
-                        <Skeleton className={isMobile ? 'h-[300px]' : 'h-[400px]'} />
+                <div className='rounded-lg border bg-card p-4'>
+                    <Skeleton className='mb-4 h-4 w-24' />
+                    <div className='flex justify-center gap-4 mb-2'>
+                        <Skeleton className='h-3 w-16' />
+                        <Skeleton className='h-3 w-16' />
                     </div>
-                    <div className='rounded-lg border bg-card p-4'>
-                        <Skeleton className='mb-4 h-4 w-24' />
-                        <div className='flex justify-center gap-4 mb-2'>
-                            <Skeleton className='h-3 w-16' />
-                            <Skeleton className='h-3 w-16' />
-                        </div>
-                        <Skeleton className={`mx-auto rounded-full ${isMobile ? 'size-[250px]' : 'size-[300px]'}`} />
-                    </div>
+                    <Skeleton className={`mx-auto rounded-full ${isMobile ? 'size-[250px]' : 'size-[300px]'}`} />
                 </div>
             </section>
         </div>
@@ -127,10 +120,8 @@ export function AnalyticsDashboard() {
     const isMobile = useIsMobile();
 
     const sinceTimestamp = useMemo(() => getSinceTimestamp(selectedRange), [selectedRange]);
-    const bucketSize: 'hour' | 'day' = selectedRange === 'שעה אחרונה' || selectedRange === '24 שעות' ? 'hour' : 'day';
 
     const stats = useQuery(api.analytics.getOverviewStats, { sinceTimestamp });
-    const threadsOverTime = useQuery(api.analytics.getThreadsOverTime, { sinceTimestamp, bucketSize });
     const agentDelegation = useQuery(api.analytics.getAgentDelegationBreakdown, { sinceTimestamp });
 
     return (
@@ -183,13 +174,8 @@ export function AnalyticsDashboard() {
                     {/* Section C: Charts */}
                     <section aria-label='גרפים'>
                         <h2 className='mb-3 text-sm font-medium text-muted-foreground'>גרפים</h2>
-                        <div className='space-y-6'>
-                            <div className='rounded-lg border bg-card p-4'>
-                                <ThreadsOverTimeChart data={threadsOverTime ?? []} isMobile={isMobile} />
-                            </div>
-                            <div className='rounded-lg border bg-card p-4'>
-                                <AgentDelegationChart data={agentDelegation ?? []} isMobile={isMobile} />
-                            </div>
+                        <div className='rounded-lg border bg-card p-4'>
+                            <AgentDelegationChart data={agentDelegation ?? []} isMobile={isMobile} />
                         </div>
                     </section>
                 </>

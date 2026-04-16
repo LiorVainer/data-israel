@@ -457,6 +457,45 @@ export interface AgentDelegationEntry {
     count: number;
 }
 
+// ---------------------------------------------------------------------------
+// getAnswersOverTime
+// ---------------------------------------------------------------------------
+
+export const getAnswersOverTime = query({
+    args: {
+        sinceTimestamp: v.optional(v.number()),
+        bucketSize: v.union(v.literal('hour'), v.literal('day')),
+    },
+    handler: async (ctx, { sinceTimestamp, bucketSize }): Promise<ThreadsBucketEntry[]> => {
+        const allAnswers = await ctx.db.query('answers').withIndex('by_created').order('asc').collect();
+        const answers =
+            sinceTimestamp !== undefined ? allAnswers.filter((a) => a.createdAt >= sinceTimestamp) : allAnswers;
+
+        const bucketCounts = new Map<string, number>();
+
+        for (const answer of answers) {
+            const d = new Date(answer.createdAt);
+            let bucket: string;
+
+            if (bucketSize === 'hour') {
+                bucket = new Date(
+                    Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(), d.getUTCHours(), 0, 0, 0),
+                ).toISOString();
+            } else {
+                bucket = new Date(
+                    Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(), 0, 0, 0, 0),
+                ).toISOString();
+            }
+
+            bucketCounts.set(bucket, (bucketCounts.get(bucket) ?? 0) + 1);
+        }
+
+        return Array.from(bucketCounts.entries())
+            .sort((a, b) => a[0].localeCompare(b[0]))
+            .map(([bucket, count]) => ({ bucket, count }));
+    },
+});
+
 // Agent suffix → display label mapping.
 // Must be inlined here — Convex functions cannot import from src/.
 const AGENT_SUFFIX_LABELS: Record<string, string> = {
