@@ -11,6 +11,7 @@ import { ModelPickerDialog } from '@/components/admin/ModelPickerDialog';
 import { ModelPriceDisplay } from '@/components/admin/ModelPriceDisplay';
 import { ConfirmModelChangeDialog, type PendingChange } from '@/components/admin/ConfirmModelChangeDialog';
 import { AnalyticsDashboard } from '@/components/admin/AnalyticsDashboard';
+import { ConversationsDashboard } from '@/components/admin/ConversationsDashboard';
 import { DataIsraelLoader } from '@/components/chat/DataIsraelLoader';
 import { AlertTriangle, ChevronDown, Layers, RefreshCw, ShieldAlert, Users } from 'lucide-react';
 import { toast } from 'sonner';
@@ -185,6 +186,7 @@ export default function AdminPage() {
                             <TabsList className='mb-6'>
                                 <TabsTrigger value='models'>מודלים</TabsTrigger>
                                 <TabsTrigger value='analytics'>אנליטקות</TabsTrigger>
+                                <TabsTrigger value='conversations'>שיחות</TabsTrigger>
                             </TabsList>
 
                             {/* Models Tab */}
@@ -352,6 +354,11 @@ export default function AdminPage() {
                             {/* Analytics Tab */}
                             <TabsContent value='analytics'>
                                 <AnalyticsDashboard />
+                            </TabsContent>
+
+                            {/* Conversations Tab */}
+                            <TabsContent value='conversations'>
+                                <ConversationsDashboard />
                             </TabsContent>
                         </Tabs>
                     </DirectionProvider>
