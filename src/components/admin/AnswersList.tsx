@@ -24,17 +24,30 @@ function formatDate(ts: number): string {
     });
 }
 
+type RatingFilter = 'all' | 'good' | 'bad' | 'unrated';
+
+const RATING_FILTERS: { value: RatingFilter; label: string }[] = [
+    { value: 'all', label: 'הכל' },
+    { value: 'good', label: '👍 טוב' },
+    { value: 'bad', label: '👎 לא טוב' },
+    { value: 'unrated', label: '— ללא דירוג' },
+];
+
 export function AnswersList({ data }: AnswersListProps) {
     const [search, setSearch] = useState('');
+    const [ratingFilter, setRatingFilter] = useState<RatingFilter>('all');
     const [expanded, setExpanded] = useState<Set<string>>(new Set());
 
-    const filtered = search
-        ? data.filter(
-              (d) =>
-                  d.userPrompt.toLowerCase().includes(search.toLowerCase()) ||
-                  d.assistantResponse.toLowerCase().includes(search.toLowerCase()),
-          )
-        : data;
+    const filtered = data.filter((d) => {
+        if (ratingFilter === 'good' && d.rating !== 'good') return false;
+        if (ratingFilter === 'bad' && d.rating !== 'bad') return false;
+        if (ratingFilter === 'unrated' && d.rating !== null) return false;
+        if (search) {
+            const q = search.toLowerCase();
+            return d.userPrompt.toLowerCase().includes(q) || d.assistantResponse.toLowerCase().includes(q);
+        }
+        return true;
+    });
 
     function toggleExpand(id: string) {
         setExpanded((prev) => {
@@ -58,6 +71,24 @@ export function AnswersList({ data }: AnswersListProps) {
                     dir='rtl'
                 />
             </div>
+            <div className='mb-3 flex flex-wrap gap-1' role='group' aria-label='סינון לפי דירוג'>
+                {RATING_FILTERS.map(({ value, label }) => (
+                    <button
+                        key={value}
+                        type='button'
+                        onClick={() => setRatingFilter(value)}
+                        aria-pressed={ratingFilter === value}
+                        className={[
+                            'rounded-md border px-3 py-1 text-sm font-medium transition-colors',
+                            ratingFilter === value
+                                ? 'bg-primary text-primary-foreground border-primary'
+                                : 'bg-background text-muted-foreground hover:text-foreground hover:bg-muted',
+                        ].join(' ')}
+                    >
+                        {label}
+                    </button>
+                ))}
+            </div>
             <div className='max-h-[500px] overflow-y-auto rounded-md border divide-y divide-border'>
                 {filtered.length === 0 ? (
                     <div className='flex h-20 items-center justify-center text-sm text-muted-foreground'>
@@ -66,7 +97,6 @@ export function AnswersList({ data }: AnswersListProps) {
                 ) : (
                     filtered.map((entry) => {
                         const id = entry.answerId;
-                        const isExpanded = expanded.has(id);
                         return (
                             <div key={id} className='px-3 py-3 hover:bg-muted/30 transition-colors space-y-2'>
                                 {/* Header row: timestamp + rating badge */}
