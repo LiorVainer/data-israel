@@ -7,10 +7,8 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { StatCard } from './StatCard';
 import { UserGuestBreakdownCard } from './UserGuestBreakdownCard';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ThreadOriginChart } from './charts/ThreadOriginChart';
 import { ThreadsOverTimeChart } from './charts/ThreadsOverTimeChart';
 import { AgentDelegationChart } from './charts/AgentDelegationChart';
-import { FreeTextPromptsList } from './FreeTextPromptsList';
 
 // ---------------------------------------------------------------------------
 // Time range types
@@ -102,25 +100,17 @@ function DashboardSkeleton({ isMobile }: { isMobile: boolean }) {
             <section>
                 <Skeleton className='mb-3 h-4 w-16' />
                 <div className='space-y-6'>
-                    {/* Line chart skeleton */}
                     <div className='rounded-lg border bg-card p-4'>
                         <Skeleton className='mb-4 h-4 w-32' />
                         <Skeleton className={isMobile ? 'h-[300px]' : 'h-[400px]'} />
                     </div>
-                    {/* Pie charts skeleton */}
-                    <div className={`grid gap-6 ${isMobile ? 'grid-cols-1' : 'grid-cols-2'}`}>
-                        {Array.from({ length: 2 }).map((_, i) => (
-                            <div key={i} className='rounded-lg border bg-card p-4'>
-                                <Skeleton className='mb-4 h-4 w-24' />
-                                <div className='flex justify-center gap-4 mb-2'>
-                                    <Skeleton className='h-3 w-16' />
-                                    <Skeleton className='h-3 w-16' />
-                                </div>
-                                <Skeleton
-                                    className={`mx-auto rounded-full ${isMobile ? 'size-[250px]' : 'size-[300px]'}`}
-                                />
-                            </div>
-                        ))}
+                    <div className='rounded-lg border bg-card p-4'>
+                        <Skeleton className='mb-4 h-4 w-24' />
+                        <div className='flex justify-center gap-4 mb-2'>
+                            <Skeleton className='h-3 w-16' />
+                            <Skeleton className='h-3 w-16' />
+                        </div>
+                        <Skeleton className={`mx-auto rounded-full ${isMobile ? 'size-[250px]' : 'size-[300px]'}`} />
                     </div>
                 </div>
             </section>
@@ -136,18 +126,12 @@ export function AnalyticsDashboard() {
     const [selectedRange, setSelectedRange] = useState<TimeRange>('7 ימים');
     const isMobile = useIsMobile();
 
-    // Memoize sinceTimestamp so useQuery args stay stable between renders.
-    // Recomputes only when selectedRange changes (avoids infinite re-render from Date.now()).
-
     const sinceTimestamp = useMemo(() => getSinceTimestamp(selectedRange), [selectedRange]);
-
     const bucketSize: 'hour' | 'day' = selectedRange === 'שעה אחרונה' || selectedRange === '24 שעות' ? 'hour' : 'day';
 
     const stats = useQuery(api.analytics.getOverviewStats, { sinceTimestamp });
-    const threadOrigins = useQuery(api.analytics.getThreadOrigins, { sinceTimestamp });
     const threadsOverTime = useQuery(api.analytics.getThreadsOverTime, { sinceTimestamp, bucketSize });
     const agentDelegation = useQuery(api.analytics.getAgentDelegationBreakdown, { sinceTimestamp });
-    const freeTextPrompts = useQuery(api.analytics.getFreeTextPrompts, { sinceTimestamp });
 
     return (
         <div className='space-y-6'>
@@ -196,30 +180,16 @@ export function AnalyticsDashboard() {
                         </div>
                     </section>
 
-                    {/* Section C: Charts grid */}
+                    {/* Section C: Charts */}
                     <section aria-label='גרפים'>
                         <h2 className='mb-3 text-sm font-medium text-muted-foreground'>גרפים</h2>
                         <div className='space-y-6'>
-                            {/* Threads over time — full width */}
                             <div className='rounded-lg border bg-card p-4'>
                                 <ThreadsOverTimeChart data={threadsOverTime ?? []} isMobile={isMobile} />
                             </div>
-                            {/* Pie charts side by side on desktop */}
-                            <div className={`grid gap-6 ${isMobile ? 'grid-cols-1' : 'grid-cols-2'}`}>
-                                <div className='rounded-lg border bg-card p-4'>
-                                    <ThreadOriginChart data={threadOrigins ?? []} isMobile={isMobile} />
-                                </div>
-                                <div className='rounded-lg border bg-card p-4'>
-                                    <AgentDelegationChart data={agentDelegation ?? []} isMobile={isMobile} />
-                                </div>
+                            <div className='rounded-lg border bg-card p-4'>
+                                <AgentDelegationChart data={agentDelegation ?? []} isMobile={isMobile} />
                             </div>
-                        </div>
-                    </section>
-
-                    {/* Section D: Free text prompts */}
-                    <section aria-label='שאילתות חופשיות'>
-                        <div className='rounded-lg border bg-card p-4'>
-                            <FreeTextPromptsList data={freeTextPrompts ?? []} />
                         </div>
                     </section>
                 </>

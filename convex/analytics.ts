@@ -457,10 +457,18 @@ export interface AgentDelegationEntry {
     count: number;
 }
 
-const AGENT_LABELS = {
-    DATAGOV: 'data.gov.il',
-    CBS: 'הלמ\u05f3ס',
-} as const;
+// Agent suffix → display label mapping.
+// Must be inlined here — Convex functions cannot import from src/.
+const AGENT_SUFFIX_LABELS: Record<string, string> = {
+    datagovAgent: 'data.gov.il',
+    cbsAgent: 'הלמ"ס',
+    budgetAgent: 'תקציב המדינה',
+    govmapAgent: 'מערכת המפות הממשלתית',
+    healthAgent: 'משרד הבריאות',
+    knessetAgent: 'הכנסת',
+    ramiLevyAgent: 'רמי לוי',
+    shufersalAgent: 'שופרסל',
+};
 
 export const getAgentDelegationBreakdown = query({
     args: {
@@ -481,24 +489,23 @@ export const getAgentDelegationBreakdown = query({
         // Count sub-agent threads by resourceId suffix.
         // Each sub-agent thread represents one delegation call to that agent.
         // Exclude sub-agent threads belonging to the current admin user.
-        let datagovCount = 0;
-        let cbsCount = 0;
+        const counts = new Map<string, number>();
 
         for (const thread of threads) {
             const resourceId = thread.resourceId as string;
             if (callerResourceId && resourceId.startsWith(callerResourceId)) continue;
-            if (resourceId.endsWith('-datagovAgent')) {
-                datagovCount++;
-            } else if (resourceId.endsWith('-cbsAgent')) {
-                cbsCount++;
+
+            for (const suffix of Object.keys(AGENT_SUFFIX_LABELS)) {
+                if (resourceId.endsWith(`-${suffix}`)) {
+                    counts.set(suffix, (counts.get(suffix) ?? 0) + 1);
+                    break;
+                }
             }
         }
 
-        const results: AgentDelegationEntry[] = [];
-        if (datagovCount > 0) results.push({ label: AGENT_LABELS.DATAGOV, count: datagovCount });
-        if (cbsCount > 0) results.push({ label: AGENT_LABELS.CBS, count: cbsCount });
-
-        return results.sort((a, b) => b.count - a.count);
+        return Array.from(counts.entries())
+            .map(([suffix, count]) => ({ label: AGENT_SUFFIX_LABELS[suffix]!, count }))
+            .sort((a, b) => b.count - a.count);
     },
 });
 
