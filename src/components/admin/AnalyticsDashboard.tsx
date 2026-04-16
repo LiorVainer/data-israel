@@ -11,7 +11,6 @@ import { ThreadOriginChart } from './charts/ThreadOriginChart';
 import { ThreadsOverTimeChart } from './charts/ThreadsOverTimeChart';
 import { AgentDelegationChart } from './charts/AgentDelegationChart';
 import { FreeTextPromptsList } from './FreeTextPromptsList';
-import { AnswerRatingStats } from './AnswerRatingStats';
 
 // ---------------------------------------------------------------------------
 // Time range types
@@ -149,7 +148,6 @@ export function AnalyticsDashboard() {
     const threadsOverTime = useQuery(api.analytics.getThreadsOverTime, { sinceTimestamp, bucketSize });
     const agentDelegation = useQuery(api.analytics.getAgentDelegationBreakdown, { sinceTimestamp });
     const freeTextPrompts = useQuery(api.analytics.getFreeTextPrompts, { sinceTimestamp });
-    const ratingStats = useQuery(api.analytics.getAnswerRatingStats, { sinceTimestamp });
 
     return (
         <div className='space-y-6'>
@@ -223,17 +221,6 @@ export function AnalyticsDashboard() {
                         <div className='rounded-lg border bg-card p-4'>
                             <FreeTextPromptsList data={freeTextPrompts ?? []} />
                         </div>
-                    </section>
-
-                    {/* Section E: Answer ratings */}
-                    <section aria-label='דירוג תשובות'>
-                        <h2 className='mb-3 text-sm font-medium text-muted-foreground'>דירוג תשובות</h2>
-                        <AnswerRatingStats
-                            totalAnswers={ratingStats?.totalAnswers ?? 0}
-                            totalRated={ratingStats?.totalRated ?? 0}
-                            goodCount={ratingStats?.goodCount ?? 0}
-                            badCount={ratingStats?.badCount ?? 0}
-                        />
                     </section>
                 </>
             )}
