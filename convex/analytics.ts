@@ -604,6 +604,7 @@ export const getAnswerRatingStats = query({
 
 export interface AnswerEntry {
     answerId: Id<'answers'>;
+    threadId: string;
     userPrompt: string;
     assistantResponse: string;
     createdAt: number;
@@ -629,6 +630,7 @@ export const getAnswersList = query({
 
         return answers.slice(0, 100).map((a) => ({
             answerId: a._id,
+            threadId: a.threadId,
             userPrompt: a.userPrompt,
             assistantResponse: a.assistantResponse,
             createdAt: a.createdAt,

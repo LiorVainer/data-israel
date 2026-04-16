@@ -51,13 +51,20 @@ function extractMessageText(message: UIMessage): string {
 
 export function ChatThread({ id }: ChatThreadProps) {
     const { userId: clerkUserId, isLoaded: isAuthLoaded } = useAuth();
-    const { guestId } = useUser();
+    const { guestId, isAdmin } = useUser();
     const isMobile = useIsMobile();
     const router = useRouter();
 
     // Wait for auth to load before resolving userId — prevents storing
     // messages with guestId when the user is actually authenticated.
     const userId = isAuthLoaded ? (clerkUserId ?? guestId) : null;
+
+    // Admins can view any thread — look up the thread's actual owner resourceId
+    // so that memory.recall() in GET /api/chat retrieves the correct messages.
+    const threadResourceId = useConvexQuery(api.threads.getThreadResourceId, isAdmin ? { threadId: id } : 'skip');
+    // Use the thread's actual resourceId for message fetching when available (admin case),
+    // otherwise fall back to the current user's own id.
+    const messageResourceId = isAdmin && threadResourceId ? threadResourceId : userId;
 
     const contextWindow = useConvexQuery(api.threads.getThreadContextWindow, { threadId: id });
     const totalTokens = contextWindow?.totalTokens ?? 0;
@@ -169,9 +176,9 @@ export function ChatThread({ id }: ChatThreadProps) {
     const isNewConversation = startedAsNew.current && !messages.length;
 
     const { data: savedMessages, isFetching: isLoadingMessages } = useQuery({
-        queryKey: ['threads', id, 'messages', userId],
-        queryFn: () => threadService.getMessages(id, userId!),
-        enabled: !startedAsNew.current && !!userId,
+        queryKey: ['threads', id, 'messages', messageResourceId],
+        queryFn: () => threadService.getMessages(id, messageResourceId!),
+        enabled: !startedAsNew.current && !!messageResourceId,
     });
 
     const didLoad = useRef(false);

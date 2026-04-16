@@ -410,3 +410,35 @@ export const upsertThreadBilling = mutation({
         });
     },
 });
+
+/**
+ * Returns the resourceId (owner) of a thread. Admin-only.
+ *
+ * Used by ChatThread when an admin views another user's conversation:
+ * the admin's userId won't match the thread's resourceId, so we look it up
+ * here and pass it to the GET /api/chat endpoint for correct message recall.
+ *
+ * @param threadId - The Mastra UUID of the thread
+ * @returns resourceId string, or null if thread not found
+ */
+export const getThreadResourceId = query({
+    args: { threadId: v.string() },
+    handler: async (ctx, { threadId }) => {
+        const identity = await ctx.auth.getUserIdentity();
+        if (!identity) throw new Error('Authentication required');
+
+        const user = await ctx.db
+            .query('users')
+            .withIndex('by_clerk_id', (q) => q.eq('clerkId', identity.subject))
+            .first();
+
+        if (!user || user.role !== 'admin') throw new Error('Admin access required');
+
+        const thread = await ctx.db
+            .query('mastra_threads')
+            .withIndex('by_record_id', (q) => q.eq('id', threadId))
+            .unique();
+
+        return thread?.resourceId ?? null;
+    },
+});

@@ -1,7 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { Search } from 'lucide-react';
+import { ExternalLink, Search } from 'lucide-react';
+import Link from 'next/link';
 import { Input } from '@/components/ui/input';
 import type { AnswerEntry } from '@/convex/analytics';
 
@@ -99,9 +100,22 @@ export function AnswersList({ data }: AnswersListProps) {
                         const id = entry.answerId;
                         return (
                             <div key={id} className='px-3 py-3 hover:bg-muted/30 transition-colors space-y-2'>
-                                {/* Header row: timestamp + rating badge */}
+                                {/* Header row: timestamp + link + rating badge */}
                                 <div className='flex items-center justify-between gap-2'>
-                                    <span className='text-xs text-muted-foreground'>{formatDate(entry.createdAt)}</span>
+                                    <div className='flex items-center gap-2'>
+                                        <span className='text-xs text-muted-foreground'>
+                                            {formatDate(entry.createdAt)}
+                                        </span>
+                                        <Link
+                                            href={`/chat/${entry.threadId}`}
+                                            target='_blank'
+                                            rel='noopener noreferrer'
+                                            className='text-muted-foreground hover:text-foreground transition-colors'
+                                            title='פתח שיחה'
+                                        >
+                                            <ExternalLink className='size-3' />
+                                        </Link>
+                                    </div>
                                     {entry.rating !== null ? (
                                         <span className='text-base leading-none'>{RATING_BADGE[entry.rating]}</span>
                                     ) : (
