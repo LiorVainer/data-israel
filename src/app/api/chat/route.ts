@@ -23,6 +23,7 @@ import { deferTitleGeneration } from '@/lib/chat/defer-title-generation';
 import { hasCompletedWithSuggestions } from '@/lib/chat/stop-conditions';
 import { createUsageTracker, toConvexUsage } from '@/lib/chat/usage-tracker';
 import { prepareChatContext } from '@/lib/chat/prepare-chat-context';
+import { DELEGATION_FEEDBACK_TEXT } from '@/constants/chat';
 
 const { CHAT } = AgentConfig;
 const isDev = process.env.NODE_ENV === 'development';
@@ -66,7 +67,15 @@ export async function GET(req: Request) {
         }
     }
 
-    return NextResponse.json(uiMessages);
+    const filtered = uiMessages.filter((msg) => {
+        if (msg.role !== 'assistant') return true;
+        const textParts = msg.parts.filter((p) => p.type === 'text');
+        if (textParts.length !== 1) return true;
+        const text = textParts[0].text;
+        return !text.includes(DELEGATION_FEEDBACK_TEXT) && !text.includes('הסוכן החזיר תוצאות כלים');
+    });
+
+    return NextResponse.json(filtered);
 }
 
 // ─── POST /api/chat ─────────────────────────────────────────────────────────
@@ -94,10 +103,7 @@ export async function POST(req: Request) {
                     onDelegationStart: async () => ({ modifiedMaxSteps: 15 }),
                     onDelegationComplete: async (context) => {
                         if (context.success && !context.result.text?.trim()) {
-                            return {
-                                feedback:
-                                    'הסוכן החזיר תוצאות כלים אך ללא טקסט מסכם. הנתונים נמצאים בתוצאות הכלים — פרש אותם ישירות וכתוב תשובה מלאה.',
-                            };
+                            return { feedback: DELEGATION_FEEDBACK_TEXT };
                         }
                     },
                 },

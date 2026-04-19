@@ -128,9 +128,11 @@ export interface OverviewStats {
 export const getOverviewStats = query({
     args: {
         sinceTimestamp: v.optional(v.number()),
+        untilTimestamp: v.optional(v.number()),
     },
-    handler: async (ctx, { sinceTimestamp }): Promise<OverviewStats> => {
+    handler: async (ctx, { sinceTimestamp, untilTimestamp }): Promise<OverviewStats> => {
         const sinceIso = sinceTimestamp !== undefined ? toIsoString(sinceTimestamp) : undefined;
+        const untilIso = untilTimestamp !== undefined ? toIsoString(untilTimestamp) : undefined;
         const callerResourceId = await getCallerResourceId(ctx);
 
         // --- Threads in range (main threads only, excluding sub-agent, internal & current admin) ---
@@ -142,7 +144,12 @@ export const getOverviewStats = query({
                       .collect()
                 : await ctx.db.query('mastra_threads').collect();
 
-        const threads = allThreads.filter((t) => isMainThread(t) && t.resourceId !== callerResourceId);
+        const threads = allThreads.filter(
+            (t) =>
+                isMainThread(t) &&
+                t.resourceId !== callerResourceId &&
+                (untilIso === undefined || (t.createdAt as string) <= untilIso),
+        );
         const totalThreads = threads.length;
 
         // --- Count messages from thread_usage (lightweight) instead of mastra_messages ---
@@ -464,12 +471,16 @@ export interface AgentDelegationEntry {
 export const getAnswersOverTime = query({
     args: {
         sinceTimestamp: v.optional(v.number()),
+        untilTimestamp: v.optional(v.number()),
         bucketSize: v.union(v.literal('hour'), v.literal('day')),
     },
-    handler: async (ctx, { sinceTimestamp, bucketSize }): Promise<ThreadsBucketEntry[]> => {
+    handler: async (ctx, { sinceTimestamp, untilTimestamp, bucketSize }): Promise<ThreadsBucketEntry[]> => {
         const allAnswers = await ctx.db.query('answers').withIndex('by_created').order('asc').collect();
-        const answers =
-            sinceTimestamp !== undefined ? allAnswers.filter((a) => a.createdAt >= sinceTimestamp) : allAnswers;
+        const answers = allAnswers.filter(
+            (a) =>
+                (sinceTimestamp === undefined || a.createdAt >= sinceTimestamp) &&
+                (untilTimestamp === undefined || a.createdAt <= untilTimestamp),
+        );
 
         const bucketCounts = new Map<string, number>();
 
@@ -512,18 +523,23 @@ const AGENT_SUFFIX_LABELS: Record<string, string> = {
 export const getAgentDelegationBreakdown = query({
     args: {
         sinceTimestamp: v.optional(v.number()),
+        untilTimestamp: v.optional(v.number()),
     },
-    handler: async (ctx, { sinceTimestamp }): Promise<AgentDelegationEntry[]> => {
+    handler: async (ctx, { sinceTimestamp, untilTimestamp }): Promise<AgentDelegationEntry[]> => {
         const sinceIso = sinceTimestamp !== undefined ? toIsoString(sinceTimestamp) : undefined;
+        const untilIso = untilTimestamp !== undefined ? toIsoString(untilTimestamp) : undefined;
         const callerResourceId = await getCallerResourceId(ctx);
 
-        const threads =
+        const allThreads =
             sinceIso !== undefined
                 ? await ctx.db
                       .query('mastra_threads')
                       .withIndex('by_created', (q) => q.gte('createdAt', sinceIso))
                       .collect()
                 : await ctx.db.query('mastra_threads').collect();
+
+        const threads =
+            untilIso !== undefined ? allThreads.filter((t) => (t.createdAt as string) <= untilIso) : allThreads;
 
         // Count sub-agent threads by resourceId suffix.
         // Each sub-agent thread represents one delegation call to that agent.
@@ -618,15 +634,22 @@ export interface AnswerRatingStats {
 export const getAnswerRatingStats = query({
     args: {
         sinceTimestamp: v.optional(v.number()),
+        untilTimestamp: v.optional(v.number()),
     },
-    handler: async (ctx, { sinceTimestamp }): Promise<AnswerRatingStats> => {
+    handler: async (ctx, { sinceTimestamp, untilTimestamp }): Promise<AnswerRatingStats> => {
         const allAnswers = await ctx.db.query('answers').collect();
-        const answers =
-            sinceTimestamp !== undefined ? allAnswers.filter((a) => a.createdAt >= sinceTimestamp) : allAnswers;
+        const answers = allAnswers.filter(
+            (a) =>
+                (sinceTimestamp === undefined || a.createdAt >= sinceTimestamp) &&
+                (untilTimestamp === undefined || a.createdAt <= untilTimestamp),
+        );
 
         const allRatings = await ctx.db.query('answer_ratings').collect();
-        const ratings =
-            sinceTimestamp !== undefined ? allRatings.filter((r) => r.createdAt >= sinceTimestamp) : allRatings;
+        const ratings = allRatings.filter(
+            (r) =>
+                (sinceTimestamp === undefined || r.createdAt >= sinceTimestamp) &&
+                (untilTimestamp === undefined || r.createdAt <= untilTimestamp),
+        );
 
         let goodCount = 0;
         let badCount = 0;
@@ -660,11 +683,15 @@ export interface AnswerEntry {
 export const getAnswersList = query({
     args: {
         sinceTimestamp: v.optional(v.number()),
+        untilTimestamp: v.optional(v.number()),
     },
-    handler: async (ctx, { sinceTimestamp }): Promise<AnswerEntry[]> => {
+    handler: async (ctx, { sinceTimestamp, untilTimestamp }): Promise<AnswerEntry[]> => {
         const allAnswers = await ctx.db.query('answers').withIndex('by_created').order('desc').take(200);
-        const answers =
-            sinceTimestamp !== undefined ? allAnswers.filter((a) => a.createdAt >= sinceTimestamp) : allAnswers;
+        const answers = allAnswers.filter(
+            (a) =>
+                (sinceTimestamp === undefined || a.createdAt >= sinceTimestamp) &&
+                (untilTimestamp === undefined || a.createdAt <= untilTimestamp),
+        );
 
         // Single scan of answer_ratings → Map<answerId, rating>
         const allRatings = await ctx.db.query('answer_ratings').collect();

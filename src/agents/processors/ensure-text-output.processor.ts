@@ -19,7 +19,7 @@ import type { Processor, ProcessInputStepArgs, ProcessInputStepResult } from '@m
 export class EnsureTextOutputProcessor implements Processor {
     readonly id = 'ensure-text-output';
 
-    constructor(private readonly stepThreshold: number = 8) {}
+    constructor(private readonly stepThreshold: number = 4) {}
 
     async processInputStep({
         stepNumber,

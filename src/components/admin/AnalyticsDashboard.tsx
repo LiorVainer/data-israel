@@ -8,6 +8,8 @@ import { StatCard } from './StatCard';
 import { UserGuestBreakdownCard } from './UserGuestBreakdownCard';
 import { Skeleton } from '@/components/ui/skeleton';
 import { AgentDelegationChart } from './charts/AgentDelegationChart';
+import { DateRangePicker } from './DateRangePicker';
+import type { DateRange } from './DateRangePicker';
 
 // ---------------------------------------------------------------------------
 // Time range types
@@ -41,7 +43,13 @@ export function getSinceTimestamp(range: TimeRange): number | undefined {
 // Sub-components
 // ---------------------------------------------------------------------------
 
-function TimeRangeSelector({ selected, onChange }: { selected: TimeRange; onChange: (range: TimeRange) => void }) {
+function TimeRangeSelector({
+    selected,
+    onChange,
+}: {
+    selected: TimeRange | null;
+    onChange: (range: TimeRange) => void;
+}) {
     return (
         <div className='flex flex-wrap gap-1' role='group' aria-label='טווח זמן'>
             {TIME_RANGES.map((range) => (
@@ -117,19 +125,48 @@ function DashboardSkeleton({ isMobile }: { isMobile: boolean }) {
 
 export function AnalyticsDashboard() {
     const [selectedRange, setSelectedRange] = useState<TimeRange>('7 ימים');
+    const [customDateRange, setCustomDateRange] = useState<DateRange | undefined>(undefined);
     const isMobile = useIsMobile();
 
-    const sinceTimestamp = useMemo(() => getSinceTimestamp(selectedRange), [selectedRange]);
+    const sinceTimestamp = useMemo(() => {
+        if (customDateRange?.from) {
+            const d = new Date(customDateRange.from);
+            d.setHours(0, 0, 0, 0);
+            return d.getTime();
+        }
+        return getSinceTimestamp(selectedRange);
+    }, [customDateRange, selectedRange]);
 
-    const stats = useQuery(api.analytics.getOverviewStats, { sinceTimestamp });
-    const agentDelegation = useQuery(api.analytics.getAgentDelegationBreakdown, { sinceTimestamp });
+    const untilTimestamp = useMemo(() => {
+        if (customDateRange?.from) {
+            const end = customDateRange.to ?? customDateRange.from;
+            const d = new Date(end);
+            d.setHours(23, 59, 59, 999);
+            return d.getTime();
+        }
+        return undefined;
+    }, [customDateRange]);
+
+    function handlePresetChange(range: TimeRange) {
+        setCustomDateRange(undefined);
+        setSelectedRange(range);
+    }
+
+    const stats = useQuery(api.analytics.getOverviewStats, { sinceTimestamp, untilTimestamp });
+    const agentDelegation = useQuery(api.analytics.getAgentDelegationBreakdown, { sinceTimestamp, untilTimestamp });
 
     return (
         <div className='space-y-6'>
             {/* Time Range Selector */}
             <div className='flex flex-col gap-2'>
                 <h2 className='text-sm font-medium'>טווח זמן</h2>
-                <TimeRangeSelector selected={selectedRange} onChange={setSelectedRange} />
+                <div className='flex flex-wrap items-center gap-1'>
+                    <TimeRangeSelector
+                        selected={customDateRange ? null : selectedRange}
+                        onChange={handlePresetChange}
+                    />
+                    <DateRangePicker value={customDateRange} onChange={setCustomDateRange} />
+                </div>
             </div>
 
             {stats === undefined ? (

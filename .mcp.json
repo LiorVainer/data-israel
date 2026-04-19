@@ -34,7 +34,8 @@
         "-y",
         "convex@latest",
         "mcp",
-        "start"
+        "start",
+	"--dangerously-enable-production-deployments"
       ]
     },
     "sentry": {

@@ -160,7 +160,7 @@ export const EnhancedChatInput: FC<EnhancedChatInputProps> = ({
                     <Button
                         type='submit'
                         size='icon'
-                        variant='gradient'
+                        variant='default'
                         disabled={!canSubmit}
                         className={cn(
                             'w-9 h-9 transform-gpu hover:scale-105 active:scale-95',

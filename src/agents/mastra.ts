@@ -46,7 +46,7 @@ const observability = sentryDsn
                       new SentryExporter({
                           dsn: sentryDsn,
                           environment: ENV.NODE_ENV,
-                          tracesSampleRate: 0.1,
+                          tracesSampleRate: 1.0,
                       }),
                   ],
               },
