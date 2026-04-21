@@ -663,6 +663,16 @@ export const CLIENT_TOOL_NAMES = [
     'suggestFollowUps',
 ] as const;
 
+/** Regex matching any internal tool name — derived from all registered tools. Memoized. */
+let _internalToolNamePattern: RegExp | null = null;
+export function getInternalToolNamePattern(): RegExp {
+    if (!_internalToolNamePattern) {
+        const allNames = [...Object.keys(allDataSourceTools), ...CLIENT_TOOL_NAMES];
+        _internalToolNamePattern = new RegExp(`\\b(${allNames.join('|')})\\b`);
+    }
+    return _internalToolNamePattern;
+}
+
 // ============================================================================
 // Server-only Agent References
 // ============================================================================

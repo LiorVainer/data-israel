@@ -24,6 +24,7 @@ import { hasCompletedWithSuggestions } from '@/lib/chat/stop-conditions';
 import { createUsageTracker, toConvexUsage } from '@/lib/chat/usage-tracker';
 import { prepareChatContext } from '@/lib/chat/prepare-chat-context';
 import { DELEGATION_FEEDBACK_TEXT } from '@/constants/chat';
+import { getInternalToolNamePattern } from '@/data-sources/registry';
 
 const { CHAT } = AgentConfig;
 const isDev = process.env.NODE_ENV === 'development';
@@ -64,6 +65,20 @@ export async function GET(req: Request) {
             await enrichWithSubAgentData(uiMessages, memory);
         } catch (e) {
             console.error('[chat GET] enrichWithSubAgentData failed:', e);
+        }
+    }
+
+    const toolNamePattern = getInternalToolNamePattern();
+    for (const msg of uiMessages) {
+        if (msg.role !== 'assistant') continue;
+        for (const part of msg.parts) {
+            if (part.type === 'text' && toolNamePattern.test(part.text)) {
+                part.text = part.text
+                    .split('\n')
+                    .filter((line) => !toolNamePattern.test(line))
+                    .join('\n')
+                    .trim();
+            }
         }
     }
 
