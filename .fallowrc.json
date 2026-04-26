@@ -1,0 +1,42 @@
+{
+  "$schema": "https://raw.githubusercontent.com/fallow-rs/fallow/main/schema.json",
+  "ignorePatterns": [
+    "src/components/ai-elements/**",
+    "src/components/ui/**",
+    "public/**",
+    "convex/_generated/**",
+    "**/__tests__/**",
+    "**/*.test.ts",
+    "**/*.test.tsx",
+    "**/*.spec.ts",
+    "**/*.spec.tsx",
+    "**/*.typecheck.ts"
+  ],
+  "ignoreDependencies": [
+    "@nivo/core",
+    "@radix-ui/react-avatar",
+    "@radix-ui/react-collapsible",
+    "@radix-ui/react-dialog",
+    "@radix-ui/react-dropdown-menu",
+    "@radix-ui/react-hover-card",
+    "@radix-ui/react-label",
+    "@radix-ui/react-progress",
+    "@radix-ui/react-scroll-area",
+    "@radix-ui/react-select",
+    "@radix-ui/react-separator",
+    "@radix-ui/react-slot",
+    "@radix-ui/react-tooltip",
+    "@radix-ui/react-use-controllable-state",
+    "@xyflow/react",
+    "class-variance-authority",
+    "cmdk",
+    "embla-carousel-react",
+    "nanoid",
+    "radix-ui",
+    "shiki",
+    "streamdown",
+    "tokenlens",
+    "use-stick-to-bottom",
+    "vaul"
+  ]
+}

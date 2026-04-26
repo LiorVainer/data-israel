@@ -98,10 +98,11 @@ Build a **Next.js application** that allows users to chat with an AI agent about
 
 ### Code Quality Gates
 
-All three must pass before committing:
+All four must pass before committing:
 1. `npm run build` - Production build must succeed
 2. `npm run lint` - ESLint checks must pass
 3. `npm run vibecheck` - Code quality analyzer (target: 93/100+)
+4. `npm run fallow` - Fallow codebase intelligence (dead code, duplication, complexity); see `code-quality` capability spec for the ignore-pattern policy and post-feature check sequence
 
 ### File Exclusions
 

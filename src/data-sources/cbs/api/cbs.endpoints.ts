@@ -85,7 +85,7 @@ export const CBS_ENDPOINTS = {
 // ============================================================================
 
 /** Allowed values for Series API paths */
-export type CbsSeriesPath = (typeof CBS_SERIES_PATHS)[keyof typeof CBS_SERIES_PATHS];
+export type CbsSeriesPathRoute = (typeof CBS_SERIES_PATHS)[keyof typeof CBS_SERIES_PATHS];
 
 /** Allowed values for Price Index API paths */
 export type CbsPriceIndexPath = (typeof CBS_PRICE_INDEX_PATHS)[keyof typeof CBS_PRICE_INDEX_PATHS];
@@ -215,7 +215,7 @@ export function buildCalculatorUrl(segments: CalculatorPathSegments, params?: Ur
  * buildSeriesUrl(CBS_SERIES_PATHS.CATALOG_LEVEL, { id: 1, lang: 'he' })
  * // Returns: "https://apis.cbs.gov.il/series/catalog/level?format=json&id=1&lang=he"
  */
-export function buildSeriesUrl(path: CbsSeriesPath, params?: UrlParams): string {
+export function buildSeriesUrl(path: CbsSeriesPathRoute, params?: UrlParams): string {
     return buildCbsUrl(CBS_SERIES_BASE_URL, path, params);
 }
 

@@ -111,6 +111,7 @@ export type SearchDrugByNameOutput = z.infer<typeof searchDrugByNameOutputSchema
 // Source URL Resolver
 // ============================================================================
 
+// fallow-ignore-next-line duplicate-exports
 export const resolveSourceUrl: ToolSourceResolver<SearchDrugByNameInput, SearchDrugByNameOutput> = (input, output) => {
     if (!output.success) return [];
     const name = input.searchedResourceName ?? input.drugName;

@@ -130,6 +130,7 @@ export type GetDrugDetailsOutput = z.infer<typeof getDrugDetailsOutputSchema>;
 // Source URL Resolver
 // ============================================================================
 
+// fallow-ignore-next-line duplicate-exports
 export const resolveSourceUrl: ToolSourceResolver<GetDrugDetailsInput, GetDrugDetailsOutput> = (input, output) => {
     if (!output.success) return [];
     if (!output.portalUrl) return [];

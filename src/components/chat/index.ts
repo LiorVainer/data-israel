@@ -1,6 +1,7 @@
 // Types
-export type { ToolState, ToolCallPart, SourceUrlUIPart, ToolInfo, StepStatus } from './types';
+export type { ToolState, ToolCallPart, SourceUrlUIPart, StepStatus } from './types';
 export { isToolPart, getToolStatus } from './types';
+export type { ToolInfo } from '@/lib/utils/tool-info';
 
 // Components
 export { ToolCallParts } from './ToolCallParts';

@@ -55,13 +55,26 @@ npx convex dev   # Start Convex dev server + regenerate `convex/_generated/api`
 ```bash
 npm run lint       # Run ESLint
 npm run vibecheck  # Run vibecheck code quality analyzer
+npm run fallow     # Fallow codebase intelligence (dead code + duplication + complexity)
 tsc                # Type-check without emitting
 ```
 > See `.claude/rules/typescript-strict.md` for strict-mode and `any`/`as` rules — loads automatically when editing TypeScript files.
 
+`.fallowrc.json` excludes vendored UI (`src/components/ai-elements/**`, `src/components/ui/**`), generated Convex code, `public/**`, and test fixtures. The `code-quality` capability spec at `openspec/specs/code-quality/spec.md` (or active proposal `openspec/changes/add-fallow-codebase-cleanup/`) defines the gate, ignore-pattern policy, and post-feature check sequence.
+
 ## Post-Change Verification
 
 Hooks auto-run ESLint --fix per edit and a quality gate (tsc + vibecheck + tests) on Stop. For major changes, also run: `npm run build`
+
+### Post-Feature Quality Checks
+
+After completing any feature or bug fix, run this sequence and resolve any reported issues before declaring the work done:
+
+1. `npx eslint --fix .` — fix lint issues
+2. `tsc --noEmit` — type check passes
+3. `npm run fallow` — Fallow reports no new dead code, duplicate exports, or complexity hotspots
+4. Triage anything Fallow flags (delete, dedupe, suppress with `// fallow-ignore-next-line <rule>`, or open a follow-up task)
+5. Report task complete
 
 ## Architecture
 

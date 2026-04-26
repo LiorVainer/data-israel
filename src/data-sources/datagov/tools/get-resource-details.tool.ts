@@ -104,6 +104,7 @@ export const getResourceDetails = createTool({
 // ============================================================================
 
 /** Co-located source URL resolver for getResourceDetails */
+// fallow-ignore-next-line duplicate-exports
 export const resolveSourceUrl: ToolSourceResolver<GetResourceDetailsInput, GetResourceDetailsOutput> = (
     input,
     output,

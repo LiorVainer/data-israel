@@ -133,6 +133,7 @@ export const queryDatastoreResource = createTool({
 // ============================================================================
 
 /** Co-located source URL resolver for queryDatastoreResource */
+// fallow-ignore-next-line duplicate-exports
 export const resolveSourceUrl: ToolSourceResolver<QueryDatastoreResourceInput, QueryDatastoreResourceOutput> = (
     input,
     output,

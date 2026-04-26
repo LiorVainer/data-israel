@@ -83,6 +83,7 @@ export const getOrganizationDetails = createTool({
 // ============================================================================
 
 /** Co-located source URL resolver for getOrganizationDetails */
+// fallow-ignore-next-line duplicate-exports
 export const resolveSourceUrl: ToolSourceResolver<GetOrganizationDetailsInput, GetOrganizationDetailsOutput> = (
     input,
     output,
