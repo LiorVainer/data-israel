@@ -61,3 +61,6 @@ certificates
 .claude/rules.log
 
 graphify-out
+
+# Fallow cache
+.fallow

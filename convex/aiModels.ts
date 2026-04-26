@@ -7,6 +7,7 @@
 
 import { query, mutation } from './_generated/server';
 import { v } from 'convex/values';
+import { requireAdmin } from './_shared/auth';
 
 /**
  * Get all AI model configurations.
@@ -32,25 +33,8 @@ export const upsert = mutation({
         modelId: v.string(),
     },
     handler: async (ctx, { agentId, modelId }) => {
-        const identity = await ctx.auth.getUserIdentity();
-        if (!identity) {
-            throw new Error('Authentication required');
-        }
+        const { updatedBy, updatedAt } = await requireAdmin(ctx);
 
-        // Check admin role from Convex users table
-        const user = await ctx.db
-            .query('users')
-            .withIndex('by_clerk_id', (q) => q.eq('clerkId', identity.subject))
-            .first();
-
-        if (!user || user.role !== 'admin') {
-            throw new Error('Admin access required');
-        }
-
-        const updatedBy = identity.subject;
-        const updatedAt = Date.now();
-
-        // Check if a record exists for this agentId
         const existing = await ctx.db
             .query('ai_models')
             .withIndex('by_agent_id', (q) => q.eq('agentId', agentId))
@@ -77,22 +61,7 @@ export const bulkUpsert = mutation({
         modelId: v.string(),
     },
     handler: async (ctx, { agentIds, modelId }) => {
-        const identity = await ctx.auth.getUserIdentity();
-        if (!identity) {
-            throw new Error('Authentication required');
-        }
-
-        const user = await ctx.db
-            .query('users')
-            .withIndex('by_clerk_id', (q) => q.eq('clerkId', identity.subject))
-            .first();
-
-        if (!user || user.role !== 'admin') {
-            throw new Error('Admin access required');
-        }
-
-        const updatedBy = identity.subject;
-        const updatedAt = Date.now();
+        const { updatedBy, updatedAt } = await requireAdmin(ctx);
 
         for (const agentId of agentIds) {
             const existing = await ctx.db

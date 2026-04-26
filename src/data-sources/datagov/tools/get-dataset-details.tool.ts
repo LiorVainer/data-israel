@@ -126,6 +126,7 @@ export const getDatasetDetails = createTool({
 // ============================================================================
 
 /** Co-located source URL resolver for getDatasetDetails */
+// fallow-ignore-next-line duplicate-exports
 export const resolveSourceUrl: ToolSourceResolver<GetDatasetDetailsInput, GetDatasetDetailsOutput> = (
     input,
     output,

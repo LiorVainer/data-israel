@@ -1,4 +1,3 @@
-import type { LucideIcon } from 'lucide-react';
 import type { DataSource } from '@/data-sources/registry';
 
 /**
@@ -66,14 +65,6 @@ export interface ToolCallPart {
     input?: unknown;
     output?: unknown;
     errorText?: string;
-}
-
-/**
- * Tool info containing display name and icon
- */
-export interface ToolInfo {
-    name: string;
-    icon: LucideIcon;
 }
 
 /**

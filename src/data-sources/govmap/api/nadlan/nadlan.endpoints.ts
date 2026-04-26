@@ -75,13 +75,12 @@ export function buildNeighborhoodDealsUrl(polygonId: string, params?: UrlParams)
 /**
  * Builds a GovMap portal URL for viewing the Nadlan layer on the map.
  *
- * Wraps the shared buildGovmapPortalUrl with the NADLAN layer hardcoded,
- * preserving the original 3-arg signature used by tool files.
+ * Wraps the shared buildGovmapPortalUrl with the NADLAN layer hardcoded.
  *
  * @param longitude - ITM X coordinate
  * @param latitude - ITM Y coordinate
  * @param query - Optional search query
  */
-export function buildGovmapPortalUrl(longitude?: number, latitude?: number, query?: string): string {
+export function buildNadlanPortalUrl(longitude?: number, latitude?: number, query?: string): string {
     return buildPortalUrlBase(longitude, latitude, query, GOVMAP_LAYERS.NADLAN);
 }
