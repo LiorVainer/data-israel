@@ -150,7 +150,7 @@
   "packageManager": "pnpm@10.5.0",
   "pnpm": {
     "patchedDependencies": {
-      "@mastra/core": "patches/@mastra__core.patch"
+      "@mastra/core@1.24.1": "patches/@mastra__core@1.24.1.patch"
     }
   }
 }

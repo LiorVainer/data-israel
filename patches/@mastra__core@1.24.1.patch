@@ -1,0 +1,102 @@
+diff --git a/dist/chunk-234T424F.js b/dist/chunk-234T424F.js
+index 56f153122203bda0b21767513cb9151a74685cc8..f79d6f7c97f836c7c98162bd2e0a45600bbd806a 100644
+--- a/dist/chunk-234T424F.js
++++ b/dist/chunk-234T424F.js
+@@ -32,8 +32,8 @@ var CoreToolBuilder = class extends MastraBase {
+       }
+       if (isZodObject(schema)) {
+         this.originalTool.inputSchema = schema.extend({
+-          suspendedToolRunId: z.string().describe("The runId of the suspended tool").nullable().optional(),
+-          resumeData: z.any().describe("The resumeData object created from the resumeSchema of suspended tool").optional()
++          suspendedToolRunId: z.string().describe("The runId of the suspended tool").optional(),
++          resumeData: z.string().describe("The resumeData object created from the resumeSchema of suspended tool (JSON-encoded)").optional()
+         });
+       } else {
+         const jsonSchema2 = standardSchemaToJSONSchema(schema, { io: "input" });
+@@ -41,11 +41,12 @@ var CoreToolBuilder = class extends MastraBase {
+           jsonSchema2.properties = {
+             ...jsonSchema2.properties,
+             suspendedToolRunId: {
+-              type: ["string", "null"],
++              type: "string",
+               description: "The runId of the suspended tool"
+             },
+             resumeData: {
+-              description: "The resumeData object created from the resumeSchema of suspended tool"
++              type: "string",
++              description: "The resumeData object created from the resumeSchema of suspended tool (JSON-encoded)"
+             }
+           };
+           this.originalTool.inputSchema = toStandardSchema(jsonSchema2);
+diff --git a/dist/chunk-4TUIZXRS.js b/dist/chunk-4TUIZXRS.js
+index e7a19ee4249b73fd7df3425bd5fc9799d0366ecf..b59567f960db81cbb8fcf06ea14a6f41877eaa0a 100644
+--- a/dist/chunk-4TUIZXRS.js
++++ b/dist/chunk-4TUIZXRS.js
+@@ -22504,12 +22504,12 @@ ${errorMessages}`,
+         const agentInputSchema = z.object({
+           prompt: z.string().describe("The prompt to send to the agent"),
+           // Using .nullish() instead of .optional() because OpenAI sends null for unfilled optional fields
+-          threadId: z.string().nullish().describe("Thread ID for conversation continuity for memory messages"),
+-          resourceId: z.string().nullish().describe("Resource/user identifier for memory messages"),
+-          instructions: z.string().nullish().describe(
++          threadId: z.string().optional().describe("Thread ID for conversation continuity for memory messages"),
++          resourceId: z.string().optional().describe("Resource/user identifier for memory messages"),
++          instructions: z.string().optional().describe(
+             "Additional instructions to append to the agent instructions. Only provide if you have specific guidance beyond what the agent already knows. Leave empty in most cases."
+           ),
+-          maxSteps: z.number().min(3).nullish().describe("Maximum number of execution steps for the sub-agent")
++          maxSteps: z.number().min(3).optional().describe("Maximum number of execution steps for the sub-agent")
+           // using minimum of 3 to ensure if the agent has a tool call, the llm gets executed again after the tool call step, using the tool call result
+           // to return a proper llm response
+         });
+diff --git a/dist/chunk-XS3FHQ34.cjs b/dist/chunk-XS3FHQ34.cjs
+index 02d900da2d909db776ef484af891f835a2599743..00cf1bef7e97b2414b5e076ecb6623d350f594dc 100644
+--- a/dist/chunk-XS3FHQ34.cjs
++++ b/dist/chunk-XS3FHQ34.cjs
+@@ -34,8 +34,8 @@ var CoreToolBuilder = class extends chunkFCQNDFEW_cjs.MastraBase {
+       }
+       if (chunkRLPRSIR2_cjs.isZodObject(schema)) {
+         this.originalTool.inputSchema = schema.extend({
+-          suspendedToolRunId: v4.z.string().describe("The runId of the suspended tool").nullable().optional(),
+-          resumeData: v4.z.any().describe("The resumeData object created from the resumeSchema of suspended tool").optional()
++          suspendedToolRunId: v4.z.string().describe("The runId of the suspended tool").optional(),
++          resumeData: v4.z.string().describe("The resumeData object created from the resumeSchema of suspended tool (JSON-encoded)").optional()
+         });
+       } else {
+         const jsonSchema2 = chunkXB4FLS7A_cjs.standardSchemaToJSONSchema(schema, { io: "input" });
+@@ -43,11 +43,12 @@ var CoreToolBuilder = class extends chunkFCQNDFEW_cjs.MastraBase {
+           jsonSchema2.properties = {
+             ...jsonSchema2.properties,
+             suspendedToolRunId: {
+-              type: ["string", "null"],
++              type: "string",
+               description: "The runId of the suspended tool"
+             },
+             resumeData: {
+-              description: "The resumeData object created from the resumeSchema of suspended tool"
++              type: "string",
++              description: "The resumeData object created from the resumeSchema of suspended tool (JSON-encoded)"
+             }
+           };
+           this.originalTool.inputSchema = chunkXB4FLS7A_cjs.toStandardSchema(jsonSchema2);
+diff --git a/dist/chunk-ZYCSOEMD.cjs b/dist/chunk-ZYCSOEMD.cjs
+index efe877abd27f9961b61919f5afcd850e795ba162..be2452e8d78e87aa2841ec9ba6d64e475fd53c94 100644
+--- a/dist/chunk-ZYCSOEMD.cjs
++++ b/dist/chunk-ZYCSOEMD.cjs
+@@ -22529,12 +22529,12 @@ ${errorMessages}`,
+         const agentInputSchema = v4.z.object({
+           prompt: v4.z.string().describe("The prompt to send to the agent"),
+           // Using .nullish() instead of .optional() because OpenAI sends null for unfilled optional fields
+-          threadId: v4.z.string().nullish().describe("Thread ID for conversation continuity for memory messages"),
+-          resourceId: v4.z.string().nullish().describe("Resource/user identifier for memory messages"),
+-          instructions: v4.z.string().nullish().describe(
++          threadId: v4.z.string().optional().describe("Thread ID for conversation continuity for memory messages"),
++          resourceId: v4.z.string().optional().describe("Resource/user identifier for memory messages"),
++          instructions: v4.z.string().optional().describe(
+             "Additional instructions to append to the agent instructions. Only provide if you have specific guidance beyond what the agent already knows. Leave empty in most cases."
+           ),
+-          maxSteps: v4.z.number().min(3).nullish().describe("Maximum number of execution steps for the sub-agent")
++          maxSteps: v4.z.number().min(3).optional().describe("Maximum number of execution steps for the sub-agent")
+           // using minimum of 3 to ensure if the agent has a tool call, the llm gets executed again after the tool call step, using the tool call result
+           // to return a proper llm response
+         });
